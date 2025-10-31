@@ -21,6 +21,14 @@ class Project(models.Model):
         LEVEL1_APPROVED = "LEVEL1_APPROVED", "一级审核通过"
         LEVEL1_REJECTED = "LEVEL1_REJECTED", "一级审核不通过"
         IN_PROGRESS = "IN_PROGRESS", "进行中"
+        CLOSURE_DRAFT = "CLOSURE_DRAFT", "结题草稿"
+        CLOSURE_SUBMITTED = "CLOSURE_SUBMITTED", "结题已提交"
+        CLOSURE_LEVEL2_REVIEWING = "CLOSURE_LEVEL2_REVIEWING", "结题二级审核中"
+        CLOSURE_LEVEL2_APPROVED = "CLOSURE_LEVEL2_APPROVED", "结题二级审核通过"
+        CLOSURE_LEVEL2_REJECTED = "CLOSURE_LEVEL2_REJECTED", "结题二级审核不通过"
+        CLOSURE_LEVEL1_REVIEWING = "CLOSURE_LEVEL1_REVIEWING", "结题一级审核中"
+        CLOSURE_LEVEL1_APPROVED = "CLOSURE_LEVEL1_APPROVED", "结题一级审核通过"
+        CLOSURE_LEVEL1_REJECTED = "CLOSURE_LEVEL1_REJECTED", "结题一级审核不通过"
         COMPLETED = "COMPLETED", "已完成"
         CLOSED = "CLOSED", "已结题"
 
@@ -95,7 +103,7 @@ class Project(models.Model):
 
     # 状态信息
     status = models.CharField(
-        max_length=20,
+        max_length=30,
         choices=ProjectStatus.choices,
         default=ProjectStatus.DRAFT,
         verbose_name="项目状态",
@@ -104,10 +112,16 @@ class Project(models.Model):
     # 学院信息（用于二级管理员筛选）
     college = models.CharField(max_length=100, verbose_name="所属学院")
 
+    # 项目排名（二级管理员可修改）
+    ranking = models.IntegerField(null=True, blank=True, verbose_name="项目排名")
+
     # 时间戳
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
     submitted_at = models.DateTimeField(null=True, blank=True, verbose_name="提交时间")
+    closure_applied_at = models.DateTimeField(
+        null=True, blank=True, verbose_name="结题申请时间"
+    )
 
     class Meta:
         db_table = "projects"
@@ -185,3 +199,76 @@ class ProjectProgress(models.Model):
 
     def __str__(self):
         return f"{self.project.title} - {self.title}"
+
+
+class ProjectAchievement(models.Model):
+    """
+    项目研究成果模型
+    支持多种类型的成果：论文、专利、软著、竞赛奖项等
+    """
+
+    class AchievementType(models.TextChoices):
+        PAPER = "PAPER", "论文"
+        PATENT = "PATENT", "专利"
+        SOFTWARE_COPYRIGHT = "SOFTWARE_COPYRIGHT", "软件著作权"
+        COMPETITION_AWARD = "COMPETITION_AWARD", "竞赛奖项"
+        OTHER = "OTHER", "其他"
+
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name="achievements",
+        verbose_name="项目",
+    )
+    achievement_type = models.CharField(
+        max_length=30,
+        choices=AchievementType.choices,
+        verbose_name="成果类型",
+    )
+    title = models.CharField(max_length=200, verbose_name="成果名称")
+    description = models.TextField(verbose_name="成果描述")
+
+    # 论文相关字段
+    authors = models.CharField(max_length=200, blank=True, verbose_name="作者")
+    journal = models.CharField(max_length=200, blank=True, verbose_name="期刊/会议名称")
+    publication_date = models.DateField(null=True, blank=True, verbose_name="发表日期")
+    doi = models.CharField(max_length=100, blank=True, verbose_name="DOI")
+
+    # 专利相关字段
+    patent_no = models.CharField(max_length=100, blank=True, verbose_name="专利号")
+    patent_type = models.CharField(max_length=50, blank=True, verbose_name="专利类型")
+    applicant = models.CharField(max_length=200, blank=True, verbose_name="申请人")
+
+    # 软著相关字段
+    copyright_no = models.CharField(max_length=100, blank=True, verbose_name="登记号")
+    copyright_owner = models.CharField(
+        max_length=200, blank=True, verbose_name="著作权人"
+    )
+
+    # 竞赛相关字段
+    competition_name = models.CharField(
+        max_length=200, blank=True, verbose_name="竞赛名称"
+    )
+    award_level = models.CharField(max_length=50, blank=True, verbose_name="获奖等级")
+    award_date = models.DateField(null=True, blank=True, verbose_name="获奖日期")
+
+    # 附件
+    attachment = models.FileField(
+        upload_to="achievements/", blank=True, null=True, verbose_name="成果附件"
+    )
+
+    # 时间戳
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+
+    class Meta:
+        db_table = "project_achievements"
+        verbose_name = "项目成果"
+        verbose_name_plural = verbose_name
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["project", "achievement_type"]),
+        ]
+
+    def __str__(self):
+        return f"{self.project.project_no} - {self.title}"

@@ -3,7 +3,7 @@
 """
 
 from rest_framework import serializers
-from .models import Project, ProjectMember, ProjectProgress
+from .models import Project, ProjectMember, ProjectProgress, ProjectAchievement
 
 
 class ProjectMemberSerializer(serializers.ModelSerializer):
@@ -38,6 +38,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     )
     status_display = serializers.CharField(source="get_status_display", read_only=True)
     level_display = serializers.CharField(source="get_level_display", read_only=True)
+    achievements_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
@@ -69,9 +70,12 @@ class ProjectSerializer(serializers.ModelSerializer):
             "status",
             "status_display",
             "college",
+            "ranking",
+            "achievements_count",
             "created_at",
             "updated_at",
             "submitted_at",
+            "closure_applied_at",
         ]
         read_only_fields = [
             "id",
@@ -79,7 +83,27 @@ class ProjectSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "submitted_at",
+            "closure_applied_at",
         ]
+
+    def get_achievements_count(self, obj):
+        """获取项目成果数量"""
+        return obj.achievements.count()
+
+    def validate_proposal_file(self, value):
+        """
+        验证申报书文件
+        """
+        if value:
+            # 检查文件格式
+            if not value.name.lower().endswith(".pdf"):
+                raise serializers.ValidationError("申报书必须是PDF格式")
+
+            # 检查文件大小（不超过2MB）
+            if value.size > 2 * 1024 * 1024:
+                raise serializers.ValidationError("申报书文件大小不能超过2MB")
+
+        return value
 
     def create(self, validated_data):
         # 自动生成项目编号
@@ -161,3 +185,101 @@ class ProjectSubmitSerializer(serializers.Serializer):
             return value
         except Project.DoesNotExist:
             raise serializers.ValidationError("项目不存在")
+
+
+class ProjectAchievementSerializer(serializers.ModelSerializer):
+    """
+    项目成果序列化器
+    """
+
+    achievement_type_display = serializers.CharField(
+        source="get_achievement_type_display", read_only=True
+    )
+
+    class Meta:
+        model = ProjectAchievement
+        fields = [
+            "id",
+            "project",
+            "achievement_type",
+            "achievement_type_display",
+            "title",
+            "description",
+            "authors",
+            "journal",
+            "publication_date",
+            "doi",
+            "patent_no",
+            "patent_type",
+            "applicant",
+            "copyright_no",
+            "copyright_owner",
+            "competition_name",
+            "award_level",
+            "award_date",
+            "attachment",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+    def validate(self, attrs):
+        """
+        根据成果类型验证必填字段
+        """
+        achievement_type = attrs.get("achievement_type")
+
+        if achievement_type == ProjectAchievement.AchievementType.PAPER:
+            if not attrs.get("authors") or not attrs.get("journal"):
+                raise serializers.ValidationError("论文成果需要填写作者和期刊信息")
+
+        elif achievement_type == ProjectAchievement.AchievementType.PATENT:
+            if not attrs.get("applicant"):
+                raise serializers.ValidationError("专利成果需要填写申请人")
+
+        elif achievement_type == ProjectAchievement.AchievementType.SOFTWARE_COPYRIGHT:
+            if not attrs.get("copyright_owner"):
+                raise serializers.ValidationError("软著成果需要填写著作权人")
+
+        elif achievement_type == ProjectAchievement.AchievementType.COMPETITION_AWARD:
+            if not attrs.get("competition_name") or not attrs.get("award_level"):
+                raise serializers.ValidationError("竞赛成果需要填写竞赛名称和获奖等级")
+
+        return attrs
+
+
+class ProjectClosureSerializer(serializers.Serializer):
+    """
+    项目结题申请序列化器
+    """
+
+    project_id = serializers.IntegerField()
+    final_report = serializers.FileField(required=True, help_text="结题报告书（必需）")
+    is_draft = serializers.BooleanField(default=False, help_text="是否保存为草稿")
+
+    def validate_project_id(self, value):
+        """
+        验证项目ID和项目状态
+        """
+        try:
+            project = Project.objects.get(id=value)
+            # 只有进行中的项目才能结题
+            if project.status != Project.ProjectStatus.IN_PROGRESS:
+                raise serializers.ValidationError("只有进行中的项目才能申请结题")
+            return value
+        except Project.DoesNotExist:
+            raise serializers.ValidationError("项目不存在")
+
+    def validate_final_report(self, value):
+        """
+        验证结题报告文件
+        """
+        # 检查文件格式
+        if not value.name.lower().endswith(".pdf"):
+            raise serializers.ValidationError("结题报告必须是PDF格式")
+
+        # 检查文件大小（不超过2MB）
+        if value.size > 2 * 1024 * 1024:
+            raise serializers.ValidationError("结题报告文件大小不能超过2MB")
+
+        return value

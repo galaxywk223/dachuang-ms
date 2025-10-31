@@ -1,0 +1,88 @@
+dachuang-ms/
+├── .gitignore
+├── export-tree.ps1
+├── backend/
+│   ├── manage.py
+│   ├── requirements.txt
+│   ├── apps/
+│   │   ├── __init__.py
+│   │   ├── notifications/
+│   │   │   ├── __init__.py
+│   │   │   ├── admin.py
+│   │   │   ├── apps.py
+│   │   │   ├── models.py
+│   │   │   ├── serializers.py
+│   │   │   ├── services.py
+│   │   │   ├── urls.py
+│   │   │   └── views.py
+│   │   ├── projects/
+│   │   │   ├── __init__.py
+│   │   │   ├── admin.py
+│   │   │   ├── apps.py
+│   │   │   ├── models.py
+│   │   │   ├── serializers.py
+│   │   │   ├── services.py
+│   │   │   ├── urls.py
+│   │   │   └── views.py
+│   │   ├── reviews/
+│   │   │   ├── __init__.py
+│   │   │   ├── admin.py
+│   │   │   ├── apps.py
+│   │   │   ├── models.py
+│   │   │   ├── serializers.py
+│   │   │   ├── services.py
+│   │   │   ├── urls.py
+│   │   │   └── views.py
+│   │   └── users/
+│   │       ├── __init__.py
+│   │       ├── admin.py
+│   │       ├── apps.py
+│   │       ├── models.py
+│   │       ├── serializers.py
+│   │       ├── services.py
+│   │       ├── urls.py
+│   │       ├── views.py
+│   │       └── migrations/
+│   │           ├── __init__.py
+│   │           └── 0001_initial.py
+│   └── config/
+│       ├── __init__.py
+│       ├── asgi.py
+│       ├── settings.py
+│       ├── urls.py
+│       └── wsgi.py
+└── frontend/
+    ├── index.html
+    ├── package.json
+    ├── vite.config.js
+    └── src/
+        ├── App.vue
+        ├── main.js
+        ├── api/
+        │   ├── auth.js
+        │   ├── notification.js
+        │   ├── project.js
+        │   └── review.js
+        ├── layouts/
+        │   └── MainLayout.vue
+        ├── router/
+        │   └── index.js
+        ├── stores/
+        │   └── user.js
+        ├── utils/
+        │   └── request.js
+        └── views/
+            ├── Dashboard.vue
+            ├── Login.vue
+            ├── NotFound.vue
+            ├── Notifications.vue
+            ├── Profile.vue
+            ├── admin/
+            │   ├── AllProjects.vue
+            │   ├── Level1Reviews.vue
+            │   ├── Level2Reviews.vue
+            │   └── Projects.vue
+            └── student/
+                ├── ProjectDetail.vue
+                ├── ProjectForm.vue
+                └── Projects.vue

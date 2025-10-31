@@ -21,6 +21,9 @@ class ReviewSerializer(serializers.ModelSerializer):
         source="get_review_level_display", read_only=True
     )
     status_display = serializers.CharField(source="get_status_display", read_only=True)
+    closure_rating_display = serializers.CharField(
+        source="get_closure_rating_display", read_only=True
+    )
 
     class Meta:
         model = Review
@@ -38,6 +41,8 @@ class ReviewSerializer(serializers.ModelSerializer):
             "status_display",
             "comments",
             "score",
+            "closure_rating",
+            "closure_rating_display",
             "created_at",
             "reviewed_at",
         ]
@@ -57,4 +62,9 @@ class ReviewActionSerializer(serializers.Serializer):
     )
     score = serializers.IntegerField(
         required=False, min_value=0, max_value=100, help_text="评分（0-100）"
+    )
+    closure_rating = serializers.ChoiceField(
+        choices=Review.ClosureRating.choices,
+        required=False,
+        help_text="结题评价等级（仅结题审核需要）",
     )

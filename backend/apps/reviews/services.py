@@ -56,7 +56,7 @@ class ReviewService:
 
     @staticmethod
     @transaction.atomic
-    def approve_review(review, reviewer, comments="", score=None):
+    def approve_review(review, reviewer, comments="", score=None, closure_rating=None):
         """
         审核通过
         """
@@ -65,16 +65,37 @@ class ReviewService:
         review.comments = comments
         review.score = score
         review.reviewed_at = timezone.now()
+
+        # 如果是结题审核，设置评价等级
+        if review.review_type == Review.ReviewType.CLOSURE and closure_rating:
+            review.closure_rating = closure_rating
+
         review.save()
 
         # 更新项目状态
         project = review.project
-        if review.review_level == Review.ReviewLevel.LEVEL2:
-            project.status = Project.ProjectStatus.LEVEL2_APPROVED
-        elif review.review_level == Review.ReviewLevel.LEVEL1:
-            project.status = Project.ProjectStatus.LEVEL1_APPROVED
-            # 一级审核通过后，项目进入进行中状态
-            project.status = Project.ProjectStatus.IN_PROGRESS
+
+        # 申报审核
+        if review.review_type == Review.ReviewType.APPLICATION:
+            if review.review_level == Review.ReviewLevel.LEVEL2:
+                project.status = Project.ProjectStatus.LEVEL2_APPROVED
+                # 二级审核通过后，自动创建一级审核记录
+                ReviewService.create_level1_review(project)
+            elif review.review_level == Review.ReviewLevel.LEVEL1:
+                project.status = Project.ProjectStatus.LEVEL1_APPROVED
+                # 一级审核通过后，项目进入进行中状态
+                project.status = Project.ProjectStatus.IN_PROGRESS
+
+        # 结题审核
+        elif review.review_type == Review.ReviewType.CLOSURE:
+            if review.review_level == Review.ReviewLevel.LEVEL2:
+                project.status = Project.ProjectStatus.CLOSURE_LEVEL2_APPROVED
+                # 二级审核通过后，自动创建一级审核记录
+                ReviewService.create_closure_level1_review(project)
+            elif review.review_level == Review.ReviewLevel.LEVEL1:
+                project.status = Project.ProjectStatus.CLOSURE_LEVEL1_APPROVED
+                # 一级审核通过后，项目结题
+                project.status = Project.ProjectStatus.CLOSED
 
         project.save()
         return True
@@ -93,10 +114,55 @@ class ReviewService:
 
         # 更新项目状态
         project = review.project
-        if review.review_level == Review.ReviewLevel.LEVEL2:
-            project.status = Project.ProjectStatus.LEVEL2_REJECTED
-        elif review.review_level == Review.ReviewLevel.LEVEL1:
-            project.status = Project.ProjectStatus.LEVEL1_REJECTED
+
+        # 申报审核
+        if review.review_type == Review.ReviewType.APPLICATION:
+            if review.review_level == Review.ReviewLevel.LEVEL2:
+                project.status = Project.ProjectStatus.LEVEL2_REJECTED
+            elif review.review_level == Review.ReviewLevel.LEVEL1:
+                project.status = Project.ProjectStatus.LEVEL1_REJECTED
+
+        # 结题审核
+        elif review.review_type == Review.ReviewType.CLOSURE:
+            if review.review_level == Review.ReviewLevel.LEVEL2:
+                project.status = Project.ProjectStatus.CLOSURE_LEVEL2_REJECTED
+            elif review.review_level == Review.ReviewLevel.LEVEL1:
+                project.status = Project.ProjectStatus.CLOSURE_LEVEL1_REJECTED
+
+        project.save()
+        return True
+
+    @staticmethod
+    @transaction.atomic
+    def create_closure_level2_review(project):
+        """
+        创建结题二级审核记录
+        """
+        # 更新项目状态
+        project.status = Project.ProjectStatus.CLOSURE_LEVEL2_REVIEWING
+        project.save()
+
+        return ReviewService.create_review(
+            project=project,
+            review_type=Review.ReviewType.CLOSURE,
+            review_level=Review.ReviewLevel.LEVEL2,
+        )
+
+    @staticmethod
+    @transaction.atomic
+    def create_closure_level1_review(project):
+        """
+        创建结题一级审核记录
+        """
+        # 更新项目状态
+        project.status = Project.ProjectStatus.CLOSURE_LEVEL1_REVIEWING
+        project.save()
+
+        return ReviewService.create_review(
+            project=project,
+            review_type=Review.ReviewType.CLOSURE,
+            review_level=Review.ReviewLevel.LEVEL1,
+        )
 
         project.save()
         return True

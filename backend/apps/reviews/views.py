@@ -78,8 +78,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
         score = serializer.validated_data.get("score")
 
         # 执行审核
+        closure_rating = serializer.validated_data.get("closure_rating")
+
         if action_type == "approve":
-            result = ReviewService.approve_review(review, user, comments, score)
+            result = ReviewService.approve_review(
+                review, user, comments, score, closure_rating
+            )
         else:
             result = ReviewService.reject_review(review, user, comments)
 

@@ -24,6 +24,13 @@ class Review(models.Model):
         APPROVED = "APPROVED", "审核通过"
         REJECTED = "REJECTED", "审核不通过"
 
+    class ClosureRating(models.TextChoices):
+        EXCELLENT = "EXCELLENT", "优秀"
+        GOOD = "GOOD", "良好"
+        QUALIFIED = "QUALIFIED", "合格"
+        UNQUALIFIED = "UNQUALIFIED", "不合格"
+        DEFERRED = "DEFERRED", "延期"
+
     # 基本信息
     project = models.ForeignKey(
         "projects.Project",
@@ -56,6 +63,15 @@ class Review(models.Model):
     # 审核意见
     comments = models.TextField(blank=True, verbose_name="审核意见")
     score = models.IntegerField(null=True, blank=True, verbose_name="评分")
+
+    # 结题审核专用字段
+    closure_rating = models.CharField(
+        max_length=20,
+        choices=ClosureRating.choices,
+        null=True,
+        blank=True,
+        verbose_name="结题评价",
+    )
 
     # 时间戳
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
