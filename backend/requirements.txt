@@ -11,16 +11,10 @@ djangorestframework-simplejwt==5.3.0
 psycopg2-binary==2.9.9
 
 # 图片处理
-Pillow==10.1.0
+Pillow==10.3.0  
 
 # 环境变量管理
 python-decouple==3.8
 
-# 时区支持
-pytz==2023.3
-
 # API 文档
 drf-yasg==1.21.7
-
-# 开发工具
-python-dotenv==1.0.0
