@@ -30,7 +30,7 @@ request.interceptors.request.use(
 // 响应拦截器
 request.interceptors.response.use(
   (response: AxiosResponse<ApiResponse>) => {
-    return response.data;
+    return response;
   },
   async (error: AxiosError<ApiResponse>) => {
     if (error.response) {
