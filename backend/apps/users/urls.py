@@ -5,10 +5,12 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import AuthViewSet, UserViewSet, LoginLogViewSet
+from .views_management import UserManagementViewSet
 
 router = DefaultRouter()
 router.register(r"users", UserViewSet, basename="user")
 router.register(r"logs", LoginLogViewSet, basename="login-log")
+router.register(r"admin/users", UserManagementViewSet, basename="admin-users")
 
 urlpatterns = [
     path("login/", AuthViewSet.as_view({"post": "login"}), name="login"),

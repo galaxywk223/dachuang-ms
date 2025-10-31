@@ -3,7 +3,31 @@
 """
 
 from rest_framework import serializers
-from .models import Project, ProjectMember, ProjectProgress, ProjectAchievement
+from .models import (
+    Project,
+    ProjectMember,
+    ProjectAdvisor,
+    ProjectProgress,
+    ProjectAchievement,
+)
+
+
+class ProjectAdvisorSerializer(serializers.ModelSerializer):
+    """
+    项目指导教师序列化器
+    """
+
+    class Meta:
+        model = ProjectAdvisor
+        fields = [
+            "id",
+            "name",
+            "title",
+            "department",
+            "contact",
+            "email",
+            "order",
+        ]
 
 
 class ProjectMemberSerializer(serializers.ModelSerializer):
@@ -12,7 +36,6 @@ class ProjectMemberSerializer(serializers.ModelSerializer):
     """
 
     user_name = serializers.CharField(source="user.real_name", read_only=True)
-    employee_id = serializers.CharField(source="user.employee_id", read_only=True)
 
     class Meta:
         model = ProjectMember
@@ -20,7 +43,8 @@ class ProjectMemberSerializer(serializers.ModelSerializer):
             "id",
             "user",
             "user_name",
-            "employee_id",
+            "student_id",
+            "department",
             "role",
             "join_date",
             "contribution",
@@ -36,8 +60,14 @@ class ProjectSerializer(serializers.ModelSerializer):
     members_info = ProjectMemberSerializer(
         source="projectmember_set", many=True, read_only=True
     )
+    advisors_info = ProjectAdvisorSerializer(
+        source="advisors", many=True, read_only=True
+    )
     status_display = serializers.CharField(source="get_status_display", read_only=True)
     level_display = serializers.CharField(source="get_level_display", read_only=True)
+    category_display = serializers.CharField(
+        source="get_category_display", read_only=True
+    )
     achievements_count = serializers.SerializerMethodField()
 
     class Meta:
@@ -49,14 +79,20 @@ class ProjectSerializer(serializers.ModelSerializer):
             "description",
             "level",
             "level_display",
+            "category",
+            "category_display",
             "leader",
             "leader_name",
+            "leader_student_id",
+            "leader_contact",
+            "leader_email",
             "members_info",
-            "advisor",
-            "advisor_title",
-            "category",
-            "research_field",
-            "keywords",
+            "advisors_info",
+            "is_key_field",
+            "college",
+            "major_code",
+            "self_funding",
+            "category_description",
             "start_date",
             "end_date",
             "budget",
@@ -65,11 +101,11 @@ class ProjectSerializer(serializers.ModelSerializer):
             "expected_results",
             "innovation_points",
             "proposal_file",
+            "attachment_file",
             "final_report",
             "achievement_file",
             "status",
             "status_display",
-            "college",
             "ranking",
             "achievements_count",
             "created_at",
@@ -96,12 +132,14 @@ class ProjectSerializer(serializers.ModelSerializer):
         """
         if value:
             # 检查文件格式
-            if not value.name.lower().endswith(".pdf"):
-                raise serializers.ValidationError("申报书必须是PDF格式")
+            allowed_extensions = [".pdf", ".doc", ".docx"]
+            ext = value.name.lower()[value.name.rfind(".") :]
+            if ext not in allowed_extensions:
+                raise serializers.ValidationError("申报书必须是PDF或Word格式")
 
-            # 检查文件大小（不超过2MB）
-            if value.size > 2 * 1024 * 1024:
-                raise serializers.ValidationError("申报书文件大小不能超过2MB")
+            # 检查文件大小（不超过20MB）
+            if value.size > 20 * 1024 * 1024:
+                raise serializers.ValidationError("申报书文件大小不能超过20MB")
 
         return value
 
@@ -112,10 +150,6 @@ class ProjectSerializer(serializers.ModelSerializer):
         year = datetime.datetime.now().year
         count = Project.objects.filter(project_no__startswith=f"DC{year}").count() + 1
         validated_data["project_no"] = f"DC{year}{count:04d}"
-
-        # 自动设置学院为负责人的学院
-        leader = validated_data["leader"]
-        validated_data["college"] = leader.college
 
         return super().create(validated_data)
 

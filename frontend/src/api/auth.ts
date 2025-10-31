@@ -6,7 +6,8 @@ import type { ApiResponse, User, LoginResponse } from "@/types";
  */
 export function login(
   employeeId: string,
-  password: string
+  password: string,
+  role: string = "student"
 ): Promise<ApiResponse<LoginResponse>> {
   return request({
     url: "/auth/login/",
@@ -14,6 +15,7 @@ export function login(
     data: {
       employee_id: employeeId,
       password,
+      role,
     },
   });
 }

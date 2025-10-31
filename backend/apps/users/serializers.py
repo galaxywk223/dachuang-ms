@@ -40,16 +40,21 @@ class LoginSerializer(serializers.Serializer):
 
     employee_id = serializers.CharField(required=True, help_text="学号/工号")
     password = serializers.CharField(required=True, write_only=True, help_text="密码")
+    role = serializers.CharField(
+        required=False, default="student", help_text="登录角色"
+    )
 
     default_error_messages = {
         "invalid_credentials": "学号/工号或密码错误",
         "inactive": "用户账号已被禁用",
         "required": "必须提供学号/工号和密码",
+        "role_mismatch": "登录身份与账号角色不匹配",
     }
 
     def validate(self, attrs):
         employee_id = attrs.get("employee_id")
         password = attrs.get("password")
+        role = attrs.get("role", "student")
 
         if not (employee_id and password):
             raise serializers.ValidationError(self.error_messages["required"])
@@ -68,6 +73,12 @@ class LoginSerializer(serializers.Serializer):
 
         if not user.is_active:
             raise serializers.ValidationError(self.error_messages["inactive"])
+
+        # 验证角色匹配
+        if role == "student" and user.role != "STUDENT":
+            raise serializers.ValidationError(self.error_messages["role_mismatch"])
+        elif role == "admin" and user.role not in ["LEVEL1_ADMIN", "LEVEL2_ADMIN"]:
+            raise serializers.ValidationError(self.error_messages["role_mismatch"])
 
         attrs["user"] = user
         return attrs

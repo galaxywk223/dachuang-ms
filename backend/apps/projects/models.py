@@ -37,23 +37,45 @@ class Project(models.Model):
         PROVINCIAL = "PROVINCIAL", "省级"
         SCHOOL = "SCHOOL", "校级"
 
+    class ProjectCategory(models.TextChoices):
+        INNOVATION_TRAINING = "INNOVATION_TRAINING", "创新训练项目"
+        ENTREPRENEURSHIP_TRAINING = "ENTREPRENEURSHIP_TRAINING", "创业训练项目"
+        ENTREPRENEURSHIP_PRACTICE = "ENTREPRENEURSHIP_PRACTICE", "创业实践项目"
+
     # 基本信息
-    project_no = models.CharField(max_length=50, unique=True, verbose_name="项目编号")
+    project_no = models.CharField(
+        max_length=50, unique=True, verbose_name="项目编号", blank=True
+    )
     title = models.CharField(max_length=200, verbose_name="项目名称")
-    description = models.TextField(verbose_name="项目简介")
+    description = models.TextField(verbose_name="项目简介", blank=True)
     level = models.CharField(
         max_length=20,
         choices=ProjectLevel.choices,
         default=ProjectLevel.SCHOOL,
         verbose_name="项目级别",
     )
+    category = models.CharField(
+        max_length=50,
+        choices=ProjectCategory.choices,
+        verbose_name="项目类别",
+        default="INNOVATION_TRAINING",
+    )
 
-    # 项目负责人
+    # 项目负责人信息
     leader = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
         related_name="led_projects",
         verbose_name="项目负责人",
+    )
+    leader_student_id = models.CharField(
+        max_length=20, verbose_name="项目负责人学号", blank=True, default=""
+    )
+    leader_contact = models.CharField(
+        max_length=50, verbose_name="负责人联系方式", blank=True, default=""
+    )
+    leader_email = models.EmailField(
+        verbose_name="负责人联系邮箱", blank=True, default=""
     )
 
     # 项目成员
@@ -64,16 +86,20 @@ class Project(models.Model):
         verbose_name="项目成员",
     )
 
-    # 指导老师
-    advisor = models.CharField(max_length=50, verbose_name="指导教师")
-    advisor_title = models.CharField(
-        max_length=50, blank=True, verbose_name="指导教师职称"
-    )
-
     # 项目详情
-    category = models.CharField(max_length=100, verbose_name="项目类别")
-    research_field = models.CharField(max_length=100, verbose_name="研究领域")
-    keywords = models.CharField(max_length=200, blank=True, verbose_name="关键词")
+    is_key_field = models.BooleanField(default=False, verbose_name="重点领域项目")
+    college = models.CharField(
+        max_length=100, verbose_name="学院", blank=True, default=""
+    )
+    major_code = models.CharField(
+        max_length=50, verbose_name="项目所属专业代码", blank=True, default=""
+    )
+    self_funding = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0, verbose_name="项目自筹（元）"
+    )
+    category_description = models.TextField(
+        blank=True, default="", verbose_name="立项类别描述"
+    )
 
     # 时间和经费
     start_date = models.DateField(null=True, blank=True, verbose_name="开始日期")
@@ -92,6 +118,9 @@ class Project(models.Model):
     proposal_file = models.FileField(
         upload_to="proposals/", blank=True, null=True, verbose_name="申报书"
     )
+    attachment_file = models.FileField(
+        upload_to="attachments/", blank=True, null=True, verbose_name="上传文件"
+    )
 
     # 结题材料
     final_report = models.FileField(
@@ -108,9 +137,6 @@ class Project(models.Model):
         default=ProjectStatus.DRAFT,
         verbose_name="项目状态",
     )
-
-    # 学院信息（用于二级管理员筛选）
-    college = models.CharField(max_length=100, verbose_name="所属学院")
 
     # 项目排名（二级管理员可修改）
     ranking = models.IntegerField(null=True, blank=True, verbose_name="项目排名")
@@ -138,6 +164,35 @@ class Project(models.Model):
         return f"{self.project_no} - {self.title}"
 
 
+class ProjectAdvisor(models.Model):
+    """
+    项目指导教师模型
+    """
+
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE, related_name="advisors", verbose_name="项目"
+    )
+    name = models.CharField(max_length=50, verbose_name="指导教师姓名")
+    title = models.CharField(max_length=50, verbose_name="指导教师职称")
+    department = models.CharField(
+        max_length=100, verbose_name="指导教师单位", blank=True
+    )
+    contact = models.CharField(
+        max_length=50, verbose_name="指导教师联系方式", blank=True
+    )
+    email = models.EmailField(verbose_name="指导教师邮箱", blank=True)
+    order = models.IntegerField(default=0, verbose_name="排序")
+
+    class Meta:
+        db_table = "project_advisors"
+        verbose_name = "项目指导教师"
+        verbose_name_plural = verbose_name
+        ordering = ["order"]
+
+    def __str__(self):
+        return f"{self.project.title} - {self.name}"
+
+
 class ProjectMember(models.Model):
     """
     项目成员关联模型
@@ -157,6 +212,8 @@ class ProjectMember(models.Model):
         default=MemberRole.MEMBER,
         verbose_name="角色",
     )
+    student_id = models.CharField(max_length=20, verbose_name="学号", blank=True)
+    department = models.CharField(max_length=100, verbose_name="成员姓名", blank=True)
     join_date = models.DateField(auto_now_add=True, verbose_name="加入日期")
     contribution = models.TextField(blank=True, verbose_name="贡献说明")
 

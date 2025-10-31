@@ -11,15 +11,17 @@ export const useUserStore = defineStore("user", () => {
 
   async function loginAction(
     employeeId: string,
-    password: string
+    password: string,
+    role: string = "student"
   ): Promise<boolean> {
     try {
-      const response = await login(employeeId, password);
+      const response = await login(employeeId, password, role);
       if (response.code === 200) {
         token.value = response.data.access_token;
         user.value = response.data.user;
         localStorage.setItem("token", response.data.access_token);
         localStorage.setItem("refresh_token", response.data.refresh_token);
+        localStorage.setItem("user_role", role);
         return true;
       }
       return false;

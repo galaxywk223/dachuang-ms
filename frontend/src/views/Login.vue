@@ -1,135 +1,97 @@
 <template>
   <div class="login-container">
-    <el-card class="login-card">
-      <template #header>
-        <div class="card-header">
-          <h2>大创项目管理平台</h2>
-        </div>
-      </template>
-      
-      <el-form
-        ref="loginFormRef"
-        :model="loginForm"
-        :rules="rules"
-        label-width="80px"
-      >
-        <el-form-item label="学号/工号" prop="employeeId">
-          <el-input
-            v-model="loginForm.employeeId"
-            placeholder="请输入学号或工号"
-            clearable
-          />
-        </el-form-item>
-        
-        <el-form-item label="密码" prop="password">
-          <el-input
-            v-model="loginForm.password"
-            type="password"
-            placeholder="请输入密码"
-            show-password
-            @keyup.enter="handleLogin"
-          />
-        </el-form-item>
-        
-        <el-form-item>
-          <el-button
-            type="primary"
-            style="width: 100%"
-            :loading="loading"
-            @click="handleLogin"
-          >
-            登录
-          </el-button>
-        </el-form-item>
-      </el-form>
-      
-      <div class="tips">
-        <el-alert
-          title="默认密码为：123456"
-          type="info"
-          :closable="false"
-        />
+    <div class="login-box">
+      <h1 class="title">大 创 项 目 管 理 平 台</h1>
+
+      <div class="login-card">
+        <h2 class="card-title">系统登陆</h2>
+
+        <LoginForm :loading="loading" @submit="handleLogin" />
       </div>
-    </el-card>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/user'
-import { ElMessage } from 'element-plus'
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import { useUserStore } from "@/stores/user";
+import { ElMessage } from "element-plus";
+import LoginForm from "@/components/forms/LoginForm.vue";
 
-const router = useRouter()
-const userStore = useUserStore()
+const router = useRouter();
+const userStore = useUserStore();
 
-const loginFormRef = ref(null)
-const loading = ref(false)
+const loading = ref(false);
 
-const loginForm = reactive({
-  employeeId: '',
-  password: ''
-})
+const handleLogin = async ({ employeeId, password, role }) => {
+  loading.value = true;
+  try {
+    const success = await userStore.loginAction(employeeId, password, role);
 
-const rules = {
-  employeeId: [
-    { required: true, message: '请输入学号或工号', trigger: 'blur' }
-  ],
-  password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, message: '密码长度不能少于6位', trigger: 'blur' }
-  ]
-}
+    if (success) {
+      ElMessage.success("登录成功");
 
-const handleLogin = async () => {
-  if (!loginFormRef.value) return
-  
-  await loginFormRef.value.validate(async (valid) => {
-    if (valid) {
-      loading.value = true
-      try {
-        const success = await userStore.loginAction(
-          loginForm.employeeId,
-          loginForm.password
-        )
-        
-        if (success) {
-          ElMessage.success('登录成功')
-          router.push('/')
-        } else {
-          ElMessage.error('登录失败，请检查学号/工号和密码')
-        }
-      } finally {
-        loading.value = false
+      // 根据角色跳转到不同页面
+      if (role === "student") {
+        // 学生跳转到申请项目页面
+        router.push("/establishment/apply");
+      } else if (role === "admin") {
+        // 管理员跳转到管理员首页
+        router.push("/admin/dashboard");
       }
+    } else {
+      ElMessage.error("登录失败，请检查用户名和密码");
     }
-  })
-}
+  } finally {
+    loading.value = false;
+  }
+};
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .login-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4a6fa5 0%, #3d5a80 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 500px;
+  padding: 20px;
+}
+
+.title {
+  color: white;
+  font-size: 48px;
+  font-weight: 500;
+  margin-bottom: 60px;
+  letter-spacing: 12px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 .login-card {
-  width: 450px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  padding: 50px 40px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
 }
 
-.card-header {
+.card-title {
   text-align: center;
-}
-
-.card-header h2 {
-  margin: 0;
+  font-size: 28px;
+  font-weight: 500;
   color: #303133;
-}
-
-.tips {
-  margin-top: 20px;
+  margin: 0 0 40px 0;
 }
 </style>

@@ -7,23 +7,26 @@ import axios, {
 } from "axios";
 import { ElMessage } from "element-plus";
 import type { ApiResponse } from "@/types";
+import { CONFIG } from "@/config";
 
 const request: AxiosInstance = axios.create({
-  baseURL: "/api/v1",
-  timeout: 10000,
+  baseURL: `${CONFIG.api.BASE_URL}/api/${CONFIG.api.API_VERSION}`,
+  timeout: CONFIG.api.TIMEOUT,
 });
 
 // 请求拦截器
 request.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem(CONFIG.app.STORAGE_KEYS.TOKEN);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
   (error: AxiosError) => {
-    console.error("Request error:", error);
+    if (CONFIG.env.DEBUG) {
+      console.error("Request error:", error);
+    }
     return Promise.reject(error);
   }
 );

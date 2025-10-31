@@ -11,6 +11,7 @@ export interface User {
   id: number;
   employee_id: string;
   username: string;
+  real_name?: string;
   email: string;
   role: UserRole;
   department?: string;
