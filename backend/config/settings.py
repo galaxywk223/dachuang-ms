@@ -155,6 +155,10 @@ CORS_ALLOW_ALL_ORIGINS = True  # 开发环境可以使用，生产环境需要�
 CORS_ALLOW_CREDENTIALS = True
 
 # Logging
+# Ensure log directory exists
+LOG_DIR = BASE_DIR / "logs"
+LOG_DIR.mkdir(exist_ok=True)
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -171,7 +175,8 @@ LOGGING = {
         },
         "file": {
             "class": "logging.FileHandler",
-            "filename": "logs/debug.log",
+            # Use absolute path to avoid issues with working directory
+            "filename": str(LOG_DIR / "debug.log"),
             "formatter": "verbose",
         },
     },
