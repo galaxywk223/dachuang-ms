@@ -3,6 +3,7 @@ import axios, {
   InternalAxiosRequestConfig,
   AxiosResponse,
   AxiosError,
+  AxiosRequestConfig,
 } from "axios";
 import { ElMessage } from "element-plus";
 import type { ApiResponse } from "@/types";
@@ -27,10 +28,11 @@ request.interceptors.request.use(
   }
 );
 
-// 响应拦截器
+// 响应拦截器：把 AxiosResponse 统一转换为后端的业务响应结构 { code, message, data }
 request.interceptors.response.use(
   (response: AxiosResponse<ApiResponse>) => {
-    return response;
+    // 用类型断言把业务数据封装成 Promise 以符合 axios 对返回值的兼容 (可以是 response 或 promise)
+    return response.data as unknown as AxiosResponse<ApiResponse>;
   },
   async (error: AxiosError<ApiResponse>) => {
     if (error.response) {
@@ -64,3 +66,11 @@ request.interceptors.response.use(
 );
 
 export default request;
+
+// 业务泛型封装：让调用端获得严格的 ApiResponse<T> 类型
+export function apiRequest<T = any>(
+  config: AxiosRequestConfig
+): Promise<ApiResponse<T>> {
+  // 由于响应拦截器已经把返回值从 AxiosResponse 转成 ApiResponse，这里做类型断言
+  return request(config) as unknown as Promise<ApiResponse<T>>;
+}

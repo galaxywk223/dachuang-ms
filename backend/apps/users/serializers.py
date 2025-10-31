@@ -36,31 +36,40 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
-    """
-    登录序列化器
-    """
+    """登录序列化器（仅允许使用学号/工号 employee_id 登录）"""
 
     employee_id = serializers.CharField(required=True, help_text="学号/工号")
     password = serializers.CharField(required=True, write_only=True, help_text="密码")
+
+    default_error_messages = {
+        "invalid_credentials": "学号/工号或密码错误",
+        "inactive": "用户账号已被禁用",
+        "required": "必须提供学号/工号和密码",
+    }
 
     def validate(self, attrs):
         employee_id = attrs.get("employee_id")
         password = attrs.get("password")
 
-        if employee_id and password:
-            try:
-                user = User.objects.get(employee_id=employee_id)
-                if user.check_password(password):
-                    if not user.is_active:
-                        raise serializers.ValidationError("用户账号已被禁用")
-                    attrs["user"] = user
-                else:
-                    raise serializers.ValidationError("学号/工号或密码错误")
-            except User.DoesNotExist:
-                raise serializers.ValidationError("学号/工号或密码错误")
-        else:
-            raise serializers.ValidationError("必须提供学号/工号和密码")
+        if not (employee_id and password):
+            raise serializers.ValidationError(self.error_messages["required"])
 
+        try:
+            user = User.objects.get(employee_id=employee_id)
+        except User.DoesNotExist:
+            raise serializers.ValidationError(
+                self.error_messages["invalid_credentials"]
+            )
+
+        if not user.check_password(password):
+            raise serializers.ValidationError(
+                self.error_messages["invalid_credentials"]
+            )
+
+        if not user.is_active:
+            raise serializers.ValidationError(self.error_messages["inactive"])
+
+        attrs["user"] = user
         return attrs
 
 

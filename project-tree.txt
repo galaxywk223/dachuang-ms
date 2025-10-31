@@ -1,6 +1,7 @@
 dachuang-ms/
 ├── .gitignore
 ├── export-tree.ps1
+├── project-tree.txt
 ├── backend/
 │   ├── manage.py
 │   ├── requirements.txt
@@ -52,25 +53,35 @@ dachuang-ms/
 │       ├── urls.py
 │       └── wsgi.py
 └── frontend/
+    ├── .eslintrc.cjs
     ├── index.html
     ├── package.json
-    ├── vite.config.js
+    ├── tsconfig.json
+    ├── tsconfig.node.json
+    ├── vite.config.ts
     └── src/
         ├── App.vue
-        ├── main.js
+        ├── main.ts
+        ├── vite-env.d.ts
         ├── api/
-        │   ├── auth.js
-        │   ├── notification.js
-        │   ├── project.js
-        │   └── review.js
+        │   ├── auth.ts
+        │   ├── notification.ts
+        │   ├── project.ts
+        │   └── review.ts
         ├── layouts/
         │   └── MainLayout.vue
         ├── router/
-        │   └── index.js
+        │   └── index.ts
         ├── stores/
-        │   └── user.js
+        │   └── user.ts
+        ├── styles/
+        │   ├── global.scss
+        │   ├── mixins.scss
+        │   └── variables.scss
+        ├── types/
+        │   └── index.ts
         ├── utils/
-        │   └── request.js
+        │   └── request.ts
         └── views/
             ├── Dashboard.vue
             ├── Login.vue
