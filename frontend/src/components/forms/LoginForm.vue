@@ -8,11 +8,11 @@
     @submit.prevent="handleSubmit"
   >
     <div class="input-group">
-      <label class="input-label">Username / Employee ID</label>
+      <label class="input-label">学号 / 工号</label>
       <el-form-item prop="employeeId">
         <el-input
           v-model="loginForm.employeeId"
-          placeholder="Enter your ID"
+          placeholder="请输入学号或工号"
           size="large"
           class="modern-input"
         >
@@ -24,12 +24,12 @@
     </div>
 
     <div class="input-group">
-      <label class="input-label">Password</label>
+      <label class="input-label">密码</label>
       <el-form-item prop="password">
         <el-input
           v-model="loginForm.password"
           type="password"
-          placeholder="••••••••"
+          placeholder="请输入密码"
           show-password
           size="large"
           class="modern-input"
@@ -43,11 +43,11 @@
     </div>
 
     <div class="input-group">
-      <label class="input-label">Role</label>
+      <label class="input-label">身份选择</label>
       <el-form-item prop="role">
         <el-select
           v-model="loginForm.role"
-          placeholder="Select Role"
+          placeholder="请选择登录身份"
           size="large"
           class="modern-select"
           style="width: 100%"
@@ -55,15 +55,15 @@
           <template #prefix>
             <el-icon class="input-icon"><Avatar /></el-icon>
           </template>
-          <el-option label="Student" value="student" />
-          <el-option label="Administrator" value="admin" />
+          <el-option label="学生" value="student" />
+          <el-option label="管理员" value="admin" />
         </el-select>
       </el-form-item>
     </div>
 
     <div class="form-actions">
-      <el-checkbox v-model="loginForm.rememberMe" class="custom-checkbox">Remember me</el-checkbox>
-      <a href="#" class="forgot-link">Forgot Password?</a>
+      <el-checkbox v-model="loginForm.rememberMe" class="custom-checkbox">记住我</el-checkbox>
+      <a href="#" class="forgot-link">忘记密码？</a>
     </div>
 
     <el-button
@@ -72,13 +72,13 @@
       :loading="loading"
       @click="handleSubmit"
     >
-      Sign In
+      登 录
       <el-icon class="el-icon--right"><ArrowRight /></el-icon>
     </el-button>
 
     <div class="demo-tips">
       <el-alert 
-        title="Demo Access: Password is '123456'" 
+        title="演示账号默认密码：123456" 
         type="info" 
         show-icon 
         :closable="false"
@@ -112,13 +112,13 @@ const loginForm = reactive({
 
 const rules = {
   employeeId: [
-    { required: true, message: "Please enter your ID", trigger: "blur" },
+    { required: true, message: "请输入学号或工号", trigger: "blur" },
   ],
   password: [
-    { required: true, message: "Please enter password", trigger: "blur" },
-    { min: 6, message: "Password must be at least 6 characters", trigger: "blur" },
+    { required: true, message: "请输入密码", trigger: "blur" },
+    { min: 6, message: "密码长度不能少于6位", trigger: "blur" },
   ],
-  role: [{ required: true, message: "Please select role", trigger: "change" }],
+  role: [{ required: true, message: "请选择登录身份", trigger: "change" }],
 };
 
 const handleSubmit = async () => {

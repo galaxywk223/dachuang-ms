@@ -7,23 +7,23 @@
           <div class="logo-circle">
             <span class="logo-text">MS</span>
           </div>
-          <h1 class="brand-title">Dachuang <br/> Management</h1>
+          <h1 class="brand-title">大创项目<br/>管理平台</h1>
           <p class="brand-subtitle">
-            Efficiently manage your innovation projects with our professional platform.
+            专业、高效、创新的大学生创新创业项目全流程管理系统
           </p>
           
           <div class="brand-features">
             <div class="feature-item">
               <div class="feature-icon">✨</div>
-              <span>Smart Tracking</span>
+              <span>智能追踪</span>
             </div>
             <div class="feature-item">
               <div class="feature-icon">🚀</div>
-              <span>Fast Approval</span>
+              <span>快速审批</span>
             </div>
             <div class="feature-item">
               <div class="feature-icon">📊</div>
-              <span>Data Insight</span>
+              <span>数据洞察</span>
             </div>
           </div>
         </div>
@@ -38,14 +38,14 @@
       <div class="form-panel">
         <div class="form-container">
           <div class="form-header">
-            <h2 class="welcome-title">Welcome Back</h2>
-            <p class="welcome-subtitle">Please enter your details to sign in</p>
+            <h2 class="welcome-title">欢迎使用</h2>
+            <p class="welcome-subtitle">请登录您的账户以继续</p>
           </div>
 
           <LoginForm :loading="loading" @submit="handleLogin" />
           
           <div class="form-footer">
-             © {{ new Date().getFullYear() }} Dachuang Management System
+             © {{ new Date().getFullYear() }} 大创项目管理系统 版权所有
           </div>
         </div>
       </div>
