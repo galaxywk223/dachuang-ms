@@ -50,3 +50,6 @@ yarn-error.log*
 # System
 .DS_Store
 Thumbs.db
+
+# Local Scripts
+local_scripts/
