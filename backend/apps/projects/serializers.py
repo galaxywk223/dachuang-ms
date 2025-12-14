@@ -81,6 +81,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             "level_display",
             "category",
             "category_display",
+            "source",
             "leader",
             "leader_name",
             "leader_student_id",

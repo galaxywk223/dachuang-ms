@@ -60,6 +60,12 @@ class Project(models.Model):
         verbose_name="项目类别",
         default="INNOVATION_TRAINING",
     )
+    source = models.CharField(
+        max_length=50,
+        verbose_name="项目来源",
+        blank=True,
+        default="",
+    )
 
     # 项目负责人信息
     leader = models.ForeignKey(
