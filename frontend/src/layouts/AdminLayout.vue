@@ -1,8 +1,10 @@
 <template>
   <el-container class="admin-layout">
-    <el-aside width="250px" class="sidebar">
+    <!-- 侧边栏 -->
+    <el-aside width="240px" class="sidebar">
       <div class="logo">
-        <h2>管理员系统</h2>
+        <div class="logo-icon"></div>
+        <h2>大创管理系统</h2>
       </div>
 
       <el-menu
@@ -10,6 +12,9 @@
         class="sidebar-menu"
         router
         :unique-opened="true"
+        background-color="transparent"
+        text-color="#94a3b8"
+        active-text-color="#ffffff"
       >
         <el-menu-item index="/admin/dashboard">
           <el-icon><DataAnalysis /></el-icon>
@@ -45,23 +50,34 @@
       </el-menu>
     </el-aside>
 
-    <el-container>
-      <el-header class="header">
+    <!-- 右侧主体 -->
+    <el-container class="main-container">
+      <el-header class="header text-ellipsis">
         <div class="header-left">
-          <span class="page-title">{{ currentPageTitle }}</span>
+          <el-breadcrumb separator="/">
+            <el-breadcrumb-item :to="{ path: '/admin/dashboard' }"
+              >首页</el-breadcrumb-item
+            >
+            <el-breadcrumb-item>{{ currentPageTitle }}</el-breadcrumb-item>
+          </el-breadcrumb>
         </div>
         <div class="header-right">
-          <el-dropdown @command="handleCommand">
+          <el-dropdown @command="handleCommand" trigger="click">
             <div class="user-info">
-              <el-avatar :size="32">{{ userName }}</el-avatar>
               <span class="username">{{ userName }}</span>
+              <el-avatar :size="36" class="user-avatar"
+                >{{ userName.charAt(0) }}
+              </el-avatar>
+              <el-icon class="el-icon--right"><ArrowDown /></el-icon>
             </div>
             <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item command="profile">个人信息</el-dropdown-item>
-                <el-dropdown-item command="logout" divided
-                  >退出登录</el-dropdown-item
-                >
+              <el-dropdown-menu class="user-dropdown">
+                <el-dropdown-item command="profile">
+                  <el-icon><User /></el-icon>个人信息
+                </el-dropdown-item>
+                <el-dropdown-item divided command="logout">
+                  <el-icon><SwitchButton /></el-icon>退出登录
+                </el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -69,7 +85,11 @@
       </el-header>
 
       <el-main class="main-content">
-        <router-view />
+        <router-view v-slot="{ Component }">
+          <transition name="fade-transform" mode="out-in">
+            <component :is="Component" />
+          </transition>
+        </router-view>
       </el-main>
     </el-container>
   </el-container>
@@ -86,6 +106,8 @@ import {
   Files,
   User,
   Setting,
+  ArrowDown,
+  SwitchButton,
 } from "@element-plus/icons-vue";
 
 const route = useRoute();
@@ -93,7 +115,7 @@ const router = useRouter();
 const userStore = useUserStore();
 
 const activeMenu = computed(() => route.path);
-const currentPageTitle = computed(() => route.meta.title || "管理员系统");
+const currentPageTitle = computed(() => route.meta.title || "控制台");
 const userName = computed(
   () => userStore.user?.real_name || userStore.user?.username || "管理员"
 );
@@ -120,76 +142,132 @@ const handleCommand = async (command: string) => {
 </script>
 
 <style scoped lang="scss">
+@use "@/styles/variables.scss" as *;
+
 .admin-layout {
   height: 100vh;
+  background-color: $background-base;
 }
 
 .sidebar {
-  background: #304156;
+  background-color: $background-dark; // Slate 900
   color: #fff;
+  transition: width 0.3s;
+  display: flex;
+  flex-direction: column;
+  z-index: $z-index-sticky;
+  box-shadow: $box-shadow-md;
 
   .logo {
-    height: 60px;
+    height: 64px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    background: #2a3f54;
-    border-bottom: 1px solid #1f2d3d;
+    padding: 0 20px;
+    background-color: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, $primary-color, $primary-light);
+      border-radius: 8px;
+      margin-right: 12px;
+    }
 
     h2 {
       margin: 0;
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 600;
+      letter-spacing: 0.5px;
       color: #fff;
     }
   }
 
   .sidebar-menu {
     border: none;
-    background: transparent;
+    flex: 1;
+    padding: 12px 0;
 
     :deep(.el-menu-item),
     :deep(.el-sub-menu__title) {
-      color: #bfcbd9;
+      height: 50px;
+      line-height: 50px;
+      margin: 4px 12px;
+      border-radius: 8px;
+      padding-left: 16px !important;
 
       &:hover {
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: rgba(255, 255, 255, 0.08);
         color: #fff;
       }
 
       &.is-active {
-        background-color: #409eff;
+        background: linear-gradient(
+          90deg,
+          rgba($primary-color, 0.9),
+          rgba($primary-color, 0.7)
+        );
         color: #fff;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba($primary-color, 0.3);
+      }
+
+      .el-icon {
+        margin-right: 10px;
+        font-size: 18px;
       }
     }
 
     :deep(.el-sub-menu) {
       .el-menu-item {
-        background-color: rgba(0, 0, 0, 0.2);
-        min-width: 0;
+        padding-left: 48px !important;
+        background-color: transparent;
 
         &.is-active {
-          background-color: #409eff;
+          background: rgba(255, 255, 255, 0.08);
+          box-shadow: none;
+          color: $primary-light;
         }
       }
     }
   }
 }
 
+.main-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
 .header {
+  height: 64px;
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid $border-light;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 20px;
-  background: #fff;
-  border-bottom: 1px solid #e6e6e6;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  padding: 0 32px;
+  box-shadow: $box-shadow-sm;
+  z-index: 10;
 
   .header-left {
-    .page-title {
-      font-size: 18px;
+    display: flex;
+    align-items: center;
+
+    :deep(.el-breadcrumb__inner) {
+      font-weight: normal;
+      color: $text-secondary;
+
+      &.is-link:hover {
+        color: $primary-color;
+      }
+    }
+
+    :deep(.el-breadcrumb__item:last-child .el-breadcrumb__inner) {
+      color: $text-primary;
       font-weight: 500;
-      color: #303133;
     }
   }
 
@@ -197,20 +275,59 @@ const handleCommand = async (command: string) => {
     .user-info {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       cursor: pointer;
+      padding: 6px 10px;
+      border-radius: 8px;
+      transition: background 0.2s;
+
+      &:hover {
+        background: $background-base;
+      }
 
       .username {
         font-size: 14px;
-        color: #606266;
+        font-weight: 500;
+        color: $text-primary;
+      }
+
+      .user-avatar {
+        background-color: $primary-light;
+        color: #fff;
+        font-weight: 600;
+        border: 2px solid #fff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .el-icon--right {
+        color: $text-secondary;
+        font-size: 12px;
       }
     }
   }
 }
 
 .main-content {
-  background: #f0f2f5;
-  padding: 20px;
+  flex: 1;
+  padding: 24px 32px;
   overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+
+// 页面切换动画
+.fade-transform-enter-active,
+.fade-transform-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fade-transform-enter-from {
+  opacity: 0;
+  transform: translateX(-15px);
+}
+
+.fade-transform-leave-to {
+  opacity: 0;
+  transform: translateX(15px);
 }
 </style>

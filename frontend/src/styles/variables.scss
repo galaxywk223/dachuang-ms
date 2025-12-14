@@ -1,22 +1,26 @@
-// 颜色变量
-$primary-color: #409eff;
-$success-color: #67c23a;
-$warning-color: #e6a23c;
-$danger-color: #f56c6c;
-$info-color: #909399;
+// 颜色变量 - Modern Palette (Indigo & Slate)
+$primary-color: #4f46e5; // Indigo 600
+$primary-light: #818cf8; // Indigo 400
+$primary-dark: #3730a3; // Indigo 800
 
-$text-primary: #303133;
-$text-regular: #606266;
-$text-secondary: #909399;
-$text-placeholder: #c0c4cc;
+$success-color: #10b981; // Emerald 500
+$warning-color: #f59e0b; // Amber 500
+$danger-color: #ef4444; // Red 500
+$info-color: #64748b; // Slate 500
 
-$border-base: #dcdfe6;
-$border-light: #e4e7ed;
-$border-lighter: #ebeef5;
-$border-extra-light: #f2f6fc;
+// Neutral Colors (Slate)
+$text-primary: #1e293b; // Slate 800
+$text-regular: #475569; // Slate 600
+$text-secondary: #94a3b8; // Slate 400
+$text-placeholder: #cbd5e1; // Slate 300
 
-$background-base: #f5f7fa;
-$background-light: #fafafa;
+$border-base: #e2e8f0; // Slate 200
+$border-light: #f1f5f9; // Slate 100
+$border-lighter: #f8fafc; // Slate 50
+
+$background-base: #f8fafc; // Slate 50
+$background-light: #ffffff;
+$background-dark: #0f172a; // Slate 900
 
 // 间距变量
 $spacing-xs: 4px;
@@ -24,36 +28,42 @@ $spacing-sm: 8px;
 $spacing-md: 16px;
 $spacing-lg: 24px;
 $spacing-xl: 32px;
+$spacing-xxl: 48px;
 
 // 圆角变量
-$border-radius-base: 4px;
-$border-radius-small: 2px;
-$border-radius-large: 8px;
-$border-radius-round: 20px;
+$border-radius-small: 4px;
+$border-radius-base: 8px;
+$border-radius-large: 12px;
+$border-radius-round: 9999px;
 
-// 阴影变量
+// 阴影变量 - Tailor-made shadows
+$box-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 $box-shadow-base:
-  0 2px 4px rgba(0, 0, 0, 0.12),
-  0 0 6px rgba(0, 0, 0, 0.04);
-$box-shadow-light: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-$box-shadow-dark:
-  0 2px 4px rgba(0, 0, 0, 0.12),
-  0 0 6px rgba(0, 0, 0, 0.12);
+  0 1px 3px 0 rgba(0, 0, 0, 0.1),
+  0 1px 2px 0 rgba(0, 0, 0, 0.06);
+$box-shadow-md:
+  0 4px 6px -1px rgba(0, 0, 0, 0.1),
+  0 2px 4px -1px rgba(0, 0, 0, 0.06);
+$box-shadow-lg:
+  0 10px 15px -3px rgba(0, 0, 0, 0.1),
+  0 4px 6px -2px rgba(0, 0, 0, 0.05);
 
 // 字体大小
-$font-size-extra-small: 12px;
-$font-size-small: 13px;
-$font-size-base: 14px;
-$font-size-medium: 16px;
-$font-size-large: 18px;
-$font-size-extra-large: 20px;
+$font-size-xs: 12px;
+$font-size-sm: 14px;
+$font-size-base: 16px; // Modern web uses larger base font
+$font-size-lg: 18px;
+$font-size-xl: 20px;
+$font-size-2xl: 24px;
 
 // 过渡动画
-$transition-base: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
-$transition-fade: opacity 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+$transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-fade: opacity 0.3s ease-in-out;
 
 // Z-index 层级
 $z-index-dropdown: 1000;
+$z-index-sticky: 1500;
 $z-index-modal: 2000;
 $z-index-notification: 3000;
 $z-index-message: 4000;
