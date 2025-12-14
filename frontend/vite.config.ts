@@ -11,6 +11,11 @@ export default defineConfig({
     },
   },
   server: {
+    // Use polling so file changes on Windows/WSL mounts are detected reliably
+    watch: {
+      usePolling: true,
+      interval: 150,
+    },
     port: 3000,
     proxy: {
       "/api": {
