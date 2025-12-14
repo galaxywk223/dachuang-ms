@@ -1,5 +1,5 @@
 // 基础样式 - 全局重置和基础样式定义
-@import "./variables.scss";
+@use "./variables.scss" as *;
 
 // 全局重置
 * {

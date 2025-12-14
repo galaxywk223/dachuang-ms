@@ -2,4 +2,4 @@
 @use "./variables.scss" as *;
 
 // 导入基础样式（全局重置）
-@import "./base.scss";
+@use "./base.scss";
