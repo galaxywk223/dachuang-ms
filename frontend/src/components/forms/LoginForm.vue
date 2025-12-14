@@ -3,65 +3,94 @@
     ref="loginFormRef"
     :model="loginForm"
     :rules="rules"
-    label-width="80px"
+    label-width="0"
+    class="login-form-content"
     @submit.prevent="handleSubmit"
   >
-    <el-form-item label="学号/工号" prop="employeeId">
-      <el-input
-        v-model="loginForm.employeeId"
-        placeholder="请输入学号或工号"
-        clearable
-        size="large"
+    <div class="input-group">
+      <label class="input-label">Username / Employee ID</label>
+      <el-form-item prop="employeeId">
+        <el-input
+          v-model="loginForm.employeeId"
+          placeholder="Enter your ID"
+          size="large"
+          class="modern-input"
+        >
+          <template #prefix>
+            <el-icon class="input-icon"><User /></el-icon>
+          </template>
+        </el-input>
+      </el-form-item>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Password</label>
+      <el-form-item prop="password">
+        <el-input
+          v-model="loginForm.password"
+          type="password"
+          placeholder="••••••••"
+          show-password
+          size="large"
+          class="modern-input"
+          @keyup.enter="handleSubmit"
+        >
+          <template #prefix>
+            <el-icon class="input-icon"><Lock /></el-icon>
+          </template>
+        </el-input>
+      </el-form-item>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Role</label>
+      <el-form-item prop="role">
+        <el-select
+          v-model="loginForm.role"
+          placeholder="Select Role"
+          size="large"
+          class="modern-select"
+          style="width: 100%"
+        >
+          <template #prefix>
+            <el-icon class="input-icon"><Avatar /></el-icon>
+          </template>
+          <el-option label="Student" value="student" />
+          <el-option label="Administrator" value="admin" />
+        </el-select>
+      </el-form-item>
+    </div>
+
+    <div class="form-actions">
+      <el-checkbox v-model="loginForm.rememberMe" class="custom-checkbox">Remember me</el-checkbox>
+      <a href="#" class="forgot-link">Forgot Password?</a>
+    </div>
+
+    <el-button
+      type="primary"
+      class="login-btn"
+      :loading="loading"
+      @click="handleSubmit"
+    >
+      Sign In
+      <el-icon class="el-icon--right"><ArrowRight /></el-icon>
+    </el-button>
+
+    <div class="demo-tips">
+      <el-alert 
+        title="Demo Access: Password is '123456'" 
+        type="info" 
+        show-icon 
+        :closable="false"
+        class="custom-alert" 
       />
-    </el-form-item>
-
-    <el-form-item label="密码" prop="password">
-      <el-input
-        v-model="loginForm.password"
-        type="password"
-        placeholder="请输入密码"
-        show-password
-        size="large"
-        @keyup.enter="handleSubmit"
-      />
-    </el-form-item>
-
-    <el-form-item label="选择身份" prop="role">
-      <el-select
-        v-model="loginForm.role"
-        placeholder="请选择身份"
-        size="large"
-        style="width: 100%"
-      >
-        <el-option label="学生" value="student" />
-        <el-option label="二级管理员" value="admin" />
-      </el-select>
-    </el-form-item>
-
-    <el-form-item>
-      <el-checkbox v-model="loginForm.rememberMe">记住我</el-checkbox>
-    </el-form-item>
-
-    <el-form-item>
-      <el-button
-        type="primary"
-        style="width: 100%"
-        size="large"
-        :loading="loading"
-        @click="handleSubmit"
-      >
-        登录
-      </el-button>
-    </el-form-item>
+    </div>
   </el-form>
-
-  <div class="tips">
-    <el-alert title="默认密码为：123456" type="info" :closable="false" />
-  </div>
 </template>
 
 <script setup>
 import { ref, reactive } from "vue";
+import { User, Lock, Avatar, ArrowRight } from "@element-plus/icons-vue";
 
 const emit = defineEmits(["submit"]);
 
@@ -83,13 +112,13 @@ const loginForm = reactive({
 
 const rules = {
   employeeId: [
-    { required: true, message: "请输入学号或工号", trigger: "blur" },
+    { required: true, message: "Please enter your ID", trigger: "blur" },
   ],
   password: [
-    { required: true, message: "请输入密码", trigger: "blur" },
-    { min: 6, message: "密码长度不能少于6位", trigger: "blur" },
+    { required: true, message: "Please enter password", trigger: "blur" },
+    { min: 6, message: "Password must be at least 6 characters", trigger: "blur" },
   ],
-  role: [{ required: true, message: "请选择身份", trigger: "change" }],
+  role: [{ required: true, message: "Please select role", trigger: "change" }],
 };
 
 const handleSubmit = async () => {
@@ -108,7 +137,104 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped lang="scss">
-.tips {
-  margin-top: 20px;
+.login-form-content {
+  width: 100%;
+}
+
+.input-group {
+  margin-bottom: 20px;
+}
+
+.input-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #334155;
+}
+
+/* Customizing Element Plus Inputs */
+:deep(.modern-input .el-input__wrapper),
+:deep(.modern-select .el-select__wrapper) {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  box-shadow: none !important;
+  border-radius: 8px;
+  padding: 12px 16px;
+  height: auto;
+  transition: all 0.2s;
+  
+  &:hover, &.is-focus {
+    background-color: #fff;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+  }
+}
+
+:deep(.modern-input .el-input__inner) {
+  font-weight: 500;
+  color: #1e293b;
+  height: 24px;
+}
+
+.input-icon {
+  font-size: 16px;
+  color: #64748b;
+  margin-right: 8px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.forgot-link {
+  font-size: 14px;
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.login-btn {
+  width: 100%;
+  height: 52px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  background-color: #2563eb;
+  border-color: #2563eb;
+  margin-bottom: 24px;
+  transition: all 0.2s;
+  
+  &:hover {
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.demo-tips {
+  margin-top: 24px;
+}
+
+.custom-alert {
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+}
+
+:deep(.custom-alert .el-alert__title) {
+  color: #475569;
 }
 </style>

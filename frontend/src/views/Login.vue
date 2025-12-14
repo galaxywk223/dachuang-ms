@@ -1,12 +1,53 @@
 <template>
   <div class="login-container">
-    <div class="login-box">
-      <h1 class="title">大 创 项 目 管 理 平 台</h1>
+    <div class="split-layout">
+      <!-- Left Side: Visual Branding -->
+      <div class="brand-panel">
+        <div class="brand-content">
+          <div class="logo-circle">
+            <span class="logo-text">MS</span>
+          </div>
+          <h1 class="brand-title">Dachuang <br/> Management</h1>
+          <p class="brand-subtitle">
+            Efficiently manage your innovation projects with our professional platform.
+          </p>
+          
+          <div class="brand-features">
+            <div class="feature-item">
+              <div class="feature-icon">✨</div>
+              <span>Smart Tracking</span>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">🚀</div>
+              <span>Fast Approval</span>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">📊</div>
+              <span>Data Insight</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="abstract-shapes">
+          <div class="shape shape-1"></div>
+          <div class="shape shape-2"></div>
+        </div>
+      </div>
 
-      <div class="login-card">
-        <h2 class="card-title">系统登陆</h2>
+      <!-- Right Side: Login Form -->
+      <div class="form-panel">
+        <div class="form-container">
+          <div class="form-header">
+            <h2 class="welcome-title">Welcome Back</h2>
+            <p class="welcome-subtitle">Please enter your details to sign in</p>
+          </div>
 
-        <LoginForm :loading="loading" @submit="handleLogin" />
+          <LoginForm :loading="loading" @submit="handleLogin" />
+          
+          <div class="form-footer">
+             © {{ new Date().getFullYear() }} Dachuang Management System
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -31,15 +72,14 @@ const handleLogin = async ({ employeeId, password, role }) => {
 
     if (success) {
       ElMessage.success("登录成功");
-
-      // 根据角色跳转到不同页面
-      if (role === "student") {
-        // 学生跳转到申请项目页面
-        router.push("/establishment/apply");
-      } else if (role === "admin") {
-        // 管理员跳转到管理员首页
-        router.push("/admin/dashboard");
-      }
+      
+      setTimeout(() => {
+        if (role === "student") {
+          router.push("/establishment/apply");
+        } else if (role === "admin") {
+          router.push("/admin/dashboard");
+        }
+      }, 500);
     } else {
       ElMessage.error("登录失败，请检查用户名和密码");
     }
@@ -51,47 +91,177 @@ const handleLogin = async ({ employeeId, password, role }) => {
 
 <style scoped lang="scss">
 .login-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #4a6fa5 0%, #3d5a80 100%);
-  position: relative;
+  width: 100vw;
+  height: 100vh;
   overflow: hidden;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #ffffff;
 }
 
-.login-box {
+.split-layout {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+/* Left Panel Styles */
+.brand-panel {
+  flex: 1;
+  background: linear-gradient(135deg, #2b32b2 0%, #1488cc 100%);
+  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  width: 100%;
-  max-width: 500px;
-  padding: 20px;
-}
-
-.title {
+  justify-content: center;
+  padding: 80px;
   color: white;
-  font-size: 48px;
-  font-weight: 500;
-  margin-bottom: 60px;
-  letter-spacing: 12px;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  
+  @media (max-width: 900px) {
+    display: none;
+  }
 }
 
-.login-card {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
-  padding: 50px 40px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+.brand-content {
+  position: relative;
+  z-index: 10;
+  max-width: 480px;
+}
+
+.logo-circle {
+  width: 64px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-.card-title {
-  text-align: center;
-  font-size: 28px;
+.logo-text {
+  font-weight: 800;
+  font-size: 24px;
+  letter-spacing: -1px;
+}
+
+.brand-title {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 24px;
+  letter-spacing: -0.02em;
+}
+
+.brand-subtitle {
+  font-size: 18px;
+  line-height: 1.6;
+  opacity: 0.8;
+  margin-bottom: 48px;
+  font-weight: 300;
+}
+
+.brand-features {
+  display: flex;
+  gap: 24px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 10px 16px;
+  border-radius: 50px;
+  font-size: 14px;
   font-weight: 500;
-  color: #303133;
-  margin: 0 0 40px 0;
+  backdrop-filter: blur(5px);
+}
+
+.abstract-shapes {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  
+  .shape {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.5;
+  }
+  
+  .shape-1 {
+    width: 600px;
+    height: 600px;
+    background: #FF0080;
+    top: -20%;
+    right: -20%;
+    animation: float 15s infinite ease-in-out;
+  }
+  
+  .shape-2 {
+    width: 500px;
+    height: 500px;
+    background: #7928CA;
+    bottom: -10%;
+    left: -10%;
+    animation: float 20s infinite ease-in-out reverse;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(30px, 30px); }
+}
+
+/* Right Panel Styles */
+.form-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #ffffff;
+  padding: 40px;
+}
+
+.form-container {
+  width: 100%;
+  max-width: 420px;
+  animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.form-header {
+  margin-bottom: 40px;
+  
+  .welcome-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+  }
+  
+  .welcome-subtitle {
+    color: #666;
+    font-size: 16px;
+  }
+}
+
+.form-footer {
+  margin-top: 40px;
+  text-align: center;
+  font-size: 12px;
+  color: #999;
 }
 </style>
