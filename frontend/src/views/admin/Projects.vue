@@ -19,9 +19,12 @@
           clearable
           style="width: 150px"
         >
-          <el-option label="国家级" value="NATIONAL" />
-          <el-option label="省级" value="PROVINCIAL" />
-          <el-option label="校级" value="SCHOOL" />
+          <el-option
+            v-for="item in levelOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
         </el-select>
         <el-select
           v-model="filters.category"
@@ -29,9 +32,12 @@
           clearable
           style="width: 150px"
         >
-          <el-option label="创新训练" value="INNOVATION_TRAINING" />
-          <el-option label="创业训练" value="ENTREPRENEURSHIP_TRAINING" />
-          <el-option label="创业实践" value="ENTREPRENEURSHIP_PRACTICE" />
+          <el-option
+            v-for="item in categoryOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
         </el-select>
         <el-select
           v-model="filters.status"
@@ -39,11 +45,12 @@
           clearable
           style="width: 150px"
         >
-          <el-option label="草稿" value="DRAFT" />
-          <el-option label="待审核" value="SUBMITTED" />
-          <el-option label="进行中" value="IN_PROGRESS" />
-          <el-option label="已完成" value="COMPLETED" />
-          <el-option label="已关闭" value="CLOSED" />
+          <el-option
+            v-for="item in statusOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
         </el-select>
         <el-button type="primary" @click="handleSearch">
           <el-icon><Search /></el-icon>
@@ -103,9 +110,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, computed } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { Search } from "@element-plus/icons-vue";
+import { useDictionary } from "@/composables/useDictionary";
+import { DICT_CODES } from "@/api/dictionary";
+
+const { loadDictionaries, getOptions } = useDictionary();
 
 const loading = ref(false);
 const projects = ref<any[]>([]);
@@ -119,6 +130,11 @@ const filters = reactive({
   category: "",
   status: "",
 });
+
+// 从字典获取下拉选项
+const levelOptions = computed(() => getOptions(DICT_CODES.PROJECT_LEVEL));
+const categoryOptions = computed(() => getOptions(DICT_CODES.PROJECT_CATEGORY));
+const statusOptions = computed(() => getOptions(DICT_CODES.PROJECT_STATUS));
 
 const fetchProjects = async () => {
   loading.value = true;
@@ -236,7 +252,13 @@ const handleDelete = async (row: any) => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
+  // 加载需要的字典数据
+  await loadDictionaries([
+    DICT_CODES.PROJECT_LEVEL,
+    DICT_CODES.PROJECT_CATEGORY,
+    DICT_CODES.PROJECT_STATUS,
+  ]);
   fetchProjects();
 });
 </script>
