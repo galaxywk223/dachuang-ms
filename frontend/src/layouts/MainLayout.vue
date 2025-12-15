@@ -131,7 +131,7 @@
 import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { ElMessageBox } from 'element-plus';
 import {
   School, DocumentAdd, DocumentChecked, Document, 
   QuestionFilled, Expand, Fold, Bell, ArrowDown, 
@@ -177,42 +177,51 @@ const handleCommand = async (command: string) => {
 
 .layout-container {
   height: 100vh;
-  background-color: $color-bg-body;
+  background-color: #f8fafc; // Light Slate
 }
 
 .app-sidebar {
-  background-color: $slate-900;
+  background: linear-gradient(135deg, #312e81 0%, #4338ca 100%); // Deep Indigo (Matches Login)
   transition: width $transition-base;
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  border-right: none;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-shadow: 4px 0 24px rgba(0,0,0,0.1); // Add depth
+  z-index: 20;
 
   .logo-area {
-    height: 64px;
+    height: 70px; // Slightly taller
     display: flex;
     align-items: center;
     padding: 0 20px;
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     
     .logo-icon {
-      width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, $primary-500, $primary-700);
-      border-radius: 8px;
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.2); // Glassy
+      backdrop-filter: blur(10px);
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
       color: white;
       flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+
+      .el-icon { font-size: 20px; }
     }
 
     .app-title {
-      margin-left: 12px;
+      margin-left: 14px;
       color: white;
-      font-weight: 600;
+      font-weight: 700;
       font-size: 16px;
       white-space: nowrap;
+      letter-spacing: 0.5px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     &.collapsed {
@@ -223,23 +232,40 @@ const handleCommand = async (command: string) => {
 
   .sidebar-menu {
     border-right: none;
-    padding-top: 10px;
+    padding-top: 16px;
 
     :deep(.el-menu-item), :deep(.el-sub-menu__title) {
       height: 50px;
-      margin: 4px 10px;
+      margin: 4px 12px;
       border-radius: $radius-md;
       
       &:hover {
-        background-color: rgba(255,255,255, 0.08);
+        background-color: rgba(255,255,255, 0.1);
         color: white;
       }
 
       &.is-active {
-        background: linear-gradient(90deg, $primary-600, $primary-500);
+        background: rgba(255, 255, 255, 0.15); // Translucent active
         color: white;
-        box-shadow: 0 4px 12px rgba($primary-600, 0.3);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        font-weight: 600;
+        
+        &::before {
+             content: '';
+             position: absolute;
+             left: 0;
+             top: 50%;
+             transform: translateY(-50%);
+             width: 4px;
+             height: 20px;
+             background: #6366f1; // Indigo accent
+             border-radius: 0 4px 4px 0;
+        }
       }
+    }
+    
+    :deep(.el-sub-menu .el-menu-item) {
+        min-width: unset;
     }
   }
 }
@@ -249,48 +275,61 @@ const handleCommand = async (command: string) => {
 }
 
 .app-header {
-  height: 64px;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
+  height: 70px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
-  box-shadow: $shadow-sm;
+  padding: 0 32px;
+  border-bottom: 1px solid $slate-100;
   z-index: 10;
 
   .header-left {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 20px;
 
     .toggle-btn {
-      color: $slate-600;
+      color: $slate-500;
+      transition: color 0.2s;
+      
       &:hover { color: $primary-600; }
+    }
+    
+    .breadcrumb {
+        font-size: 14px;
     }
   }
 
   .header-right {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 24px;
 
     .icon-btn {
-      color: $slate-500;
-      &:hover { color: $slate-700; background: $slate-100; }
+      color: $slate-400;
+      transition: all 0.2s;
+      
+      &:hover { 
+          color: $slate-700; 
+          background: $slate-50;
+      }
     }
 
     .user-profile {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       cursor: pointer;
-      padding: 4px 8px;
-      border-radius: 20px;
+      padding: 6px 12px;
+      border-radius: 30px;
       transition: background $transition-fast;
+      border: 1px solid transparent;
 
       &:hover {
-        background: $slate-100;
+        background: $slate-50;
+        border-color: $slate-200;
       }
 
       .username {
@@ -300,19 +339,19 @@ const handleCommand = async (command: string) => {
       }
 
       .avatar-gradient {
-        background: linear-gradient(135deg, $primary-400, $primary-600);
-        font-weight: 600;
+        background: linear-gradient(135deg, #6366f1, #818cf8);
+        font-weight: 700;
         color: white;
         border: 2px solid white;
-        box-shadow: $shadow-sm;
+        box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
       }
     }
   }
 }
 
 .app-main {
-  padding: 24px;
-  background-color: $slate-50;
+  padding: 32px; // More breathing room
+  background-color: #f8fafc;
   overflow-y: auto;
 }
 
@@ -326,7 +365,7 @@ const handleCommand = async (command: string) => {
 
 .fade-transform-enter-active,
 .fade-transform-leave-active {
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .fade-transform-enter-from {
   opacity: 0;
