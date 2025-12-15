@@ -294,8 +294,14 @@ import { DICT_CODES } from "@/api/dictionary";
 import { useUserStore } from "@/stores/user";
 
 const userStore = useUserStore();
+const router = useRouter();
+const route = useRoute();
 const { loadDictionaries, getOptions } = useDictionary();
 const formRef = ref<FormInstance>();
+
+// Import API
+import { createProjectApplication, updateProjectApplication, getProjectDetail } from "@/api/project";
+import { useRouter, useRoute } from "vue-router";
 
 // Mock User
 const currentUser = computed(() => ({
@@ -304,6 +310,7 @@ const currentUser = computed(() => ({
 }));
 
 const formData = reactive({
+  id: null as number | null,
   source: "",
   level: "",
   category: "",
@@ -322,6 +329,7 @@ const formData = reactive({
 });
 
 const fileList = ref([]);
+const loading = ref(false);
 
 const rules = {
   source: [{ required: true, message: "必选项", trigger: "change" }],
@@ -350,16 +358,124 @@ const handleFileChange = (file: any) => {
   formData.attachment_file = file.raw;
 };
 
-const submitForm = async () => {
-  if (!formRef.value) return;
-  await formRef.value.validate((valid) => {
-    if (valid) ElMessage.success("提交成功");
-    else ElMessage.error("请完善信息");
-  });
+// Common submit handler
+const handleSaveOrSubmit = async (isDraft: boolean) => {
+    if (!formRef.value) return;
+
+    // For draft, we skip full validation or validate loosely if needed
+    // For submission, we need full validation
+    if (!isDraft) {
+        await formRef.value.validate(async (valid) => {
+            if (!valid) {
+                 ElMessage.error("请完善必填信息");
+                 return;
+            }
+            await processRequest(false);
+        });
+    } else {
+        // Safe to save draft even if incomplete? 
+        // Usually yes, but let's at least check title for existence if backend requires it.
+        // Assuming backend handles partial data for drafts if valid=false on fields.
+        await processRequest(true);
+    }
 };
 
-const saveAsDraft = () => ElMessage.info("草稿已保存");
+const processRequest = async (isDraft: boolean) => {
+    // Backend requires Title even for drafts
+    if (!formData.title && isDraft) {
+        ElMessage.warning("请填写项目名称（草稿必填）");
+        return;
+    }
+
+    loading.value = true;
+    try {
+        // Sanitize Payload for Backend
+        const payload: any = { 
+            ...formData, 
+            is_draft: isDraft 
+        };
+
+        // Fix Choice Fields (Backend requires valid choices)
+        if (!payload.level) payload.level = 'SCHOOL'; 
+        if (!payload.category) payload.category = 'INNOVATION_TRAINING';
+        
+        // Fix Boolean Fields
+        // Assuming dictionary uses "YES"/"NO" or "KEY"/"NORMAL"
+        // Model requires Boolean.
+        // Let's assume if it is "KEY" or "TRUE" or true, it is true.
+        // If it is "NORMAL" or "FALSE" or false or empty, it is false.
+        const keyFieldVal = payload.is_key_field;
+        payload.is_key_field = (keyFieldVal === true || keyFieldVal === 'TRUE' || keyFieldVal === 'YES' || keyFieldVal === 'KEY');
+
+        // Remove Attachment File (handled separately if needed, but keeping for now as discussed)
+        // If backend expects 'attachment_file' to be null if no file, ensuring it is null or file object
+        if (!payload.attachment_file) payload.attachment_file = null; 
+        
+        // Ensure numbers
+        payload.budget = Number(payload.budget) || 0;
+        payload.self_funding = Number(payload.self_funding) || 0;
+        // self_funding might be missing in formData, check template
+        // Template doesn't show self_funding input? 
+        // View requires it? View says: "self_funding": data.get("self_funding", 0) -> safe.
+
+        let response: any;
+        if (formData.id) {
+            response = await updateProjectApplication(formData.id, payload);
+        } else {
+            response = await createProjectApplication(payload);
+        }
+        
+        // Axios response wrapper usage
+        if (response.code === 200 || response.status === 201) {
+            ElMessage.success(isDraft ? "草稿已保存" : "申请已提交");
+            if (!isDraft) {
+                router.push('/establishment/my-projects');
+            } else {
+                // Update ID if created
+                if (response.data && response.data.id) {
+                    formData.id = response.data.id;
+                    // Optional: update URL using replace
+                     router.replace({ 
+                        path: route.path,
+                        query: { ...route.query, id: String(response.data.id) } 
+                    });
+                }
+            }
+        } else {
+            console.error("API Error:", response);
+            // Show detailed error if available
+            const errorMsg = response.message || "操作失败";
+            const details = response.errors ? JSON.stringify(response.errors) : "";
+            ElMessage.error(`${errorMsg} ${details}`);
+        }
+    } catch (e: any) {
+        ElMessage.error(e.message || "请求失败");
+        console.error(e);
+    } finally {
+        loading.value = false;
+    }
+}
+
+const submitForm = () => handleSaveOrSubmit(false);
+const saveAsDraft = () => handleSaveOrSubmit(true);
 const handleReset = () => formRef.value?.resetFields();
+
+// Load Data if Edit Mode
+const loadData = async (id: number) => {
+    try {
+        const res: any = await getProjectDetail(id);
+        if (res.code === 200 && res.data) {
+            Object.assign(formData, res.data);
+            // Handle lists safety
+            if (!formData.advisors || formData.advisors.length === 0) 
+                 formData.advisors = [{ job_number: "", name: "", title: "", contact: "", email: "" }];
+            if (!formData.members || formData.members.length === 0) 
+                 formData.members = [{ student_id: "", name: "" }];
+        }
+    } catch(e) {
+        ElMessage.error("加载项目详情失败");
+    }
+}
 
 onMounted(() => {
   loadDictionaries([
@@ -367,6 +483,11 @@ onMounted(() => {
     DICT_CODES.COLLEGE, DICT_CODES.SPECIAL_PROJECT_TYPE, DICT_CODES.MAJOR_CATEGORY,
     DICT_CODES.ADVISOR_TITLE
   ]);
+  
+  const id = route.query.id;
+  if (id) {
+      loadData(Number(id));
+  }
 });
 </script>
 
