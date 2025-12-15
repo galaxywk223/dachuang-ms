@@ -1,0 +1,99 @@
+@import './variables.scss';
+
+// Global Reset & Base Styles
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: $font-family-sans;
+    background-color: $color-bg-body;
+    color: $color-text-primary;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+    transition: $transition-fast;
+}
+
+// Custom Scrollbar
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: $slate-300;
+    border-radius: 4px;
+
+    &:hover {
+        background: $slate-400;
+    }
+}
+
+// Utility Classes
+.text-primary {
+    color: $primary-600;
+}
+
+.text-success {
+    color: $success;
+}
+
+.text-warning {
+    color: $warning;
+}
+
+.text-danger {
+    color: $danger;
+}
+
+.bg-white {
+    background-color: $color-bg-card;
+}
+
+.bg-glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.card-base {
+    background: $color-bg-card;
+    border-radius: $radius-lg;
+    box-shadow: $shadow-md;
+    border: 1px solid $color-border;
+}
+
+// Element Plus Overrides (Global)
+:root {
+    --el-color-primary: #{$primary-600};
+    --el-color-success: #{$success};
+    --el-color-warning: #{$warning};
+    --el-color-danger: #{$danger};
+    --el-border-radius-base: #{$radius-md};
+    --el-font-family: #{$font-family-sans};
+}
+
+// Fade Transition for Router View
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}

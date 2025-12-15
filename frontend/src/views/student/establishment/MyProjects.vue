@@ -1,33 +1,39 @@
 <template>
   <div class="my-projects-page">
-    <div class="page-header">
-      <h2>我的项目</h2>
-      <p>查看和管理我申请的所有项目</p>
-    </div>
+    <el-card class="page-header" shadow="hover">
+      <div class="header-content">
+        <div>
+          <h2>我的项目</h2>
+          <p>查看和管理我申请的所有项目</p>
+        </div>
+        <el-button type="primary" size="large" @click="$router.push('/establishment/apply')">
+            发起新项目
+        </el-button>
+      </div>
+    </el-card>
 
     <div class="page-content">
       <!-- 筛选区域 -->
-      <div class="filter-section">
+      <el-card class="filter-section" shadow="never">
         <el-form :inline="true" :model="filterForm" class="filter-form">
-          <el-form-item label="展开">
-            <el-switch v-model="filterForm.expanded" />
-          </el-form-item>
-
-          <el-form-item label="项目名称">
+          <el-form-item label="名称">
             <el-input
               v-model="filterForm.title"
-              placeholder="请输入"
+              placeholder="搜索项目名称"
               clearable
+              prefix-icon="Search"
               style="width: 200px"
+              class="modern-input"
             />
           </el-form-item>
 
-          <el-form-item label="项目级别">
+          <el-form-item label="级别">
             <el-select
               v-model="filterForm.level"
-              placeholder="请选择"
+              placeholder="全部级别"
               clearable
-              style="width: 150px"
+              style="width: 140px"
+              class="modern-select"
             >
               <el-option label="全部" value="" />
               <el-option label="国家级" value="NATIONAL" />
@@ -36,195 +42,104 @@
             </el-select>
           </el-form-item>
 
-          <el-form-item label="项目类别">
+          <el-form-item label="类别">
             <el-select
               v-model="filterForm.category"
-              placeholder="请选择"
+              placeholder="全部类别"
               clearable
-              style="width: 180px"
+              style="width: 160px"
+              class="modern-select"
             >
               <el-option label="全部" value="" />
-              <el-option label="创新训练项目" value="INNOVATION_TRAINING" />
-              <el-option
-                label="创业训练项目"
-                value="ENTREPRENEURSHIP_TRAINING"
-              />
-              <el-option
-                label="创业实践项目"
-                value="ENTREPRENEURSHIP_PRACTICE"
-              />
+              <el-option label="创新训练" value="INNOVATION_TRAINING" />
+              <el-option label="创业训练" value="ENTREPRENEURSHIP_TRAINING" />
+              <el-option label="创业实践" value="ENTREPRENEURSHIP_PRACTICE" />
             </el-select>
           </el-form-item>
 
           <el-form-item>
-            <el-button type="primary" @click="handleSearch">
-              <el-icon><Search /></el-icon>
-              搜索
-            </el-button>
-            <el-button @click="handleReset">
-              <el-icon><RefreshLeft /></el-icon>
-              重置
-            </el-button>
+            <el-button type="primary" @click="handleSearch" :icon="Search">搜索</el-button>
+            <el-button @click="handleReset" :icon="RefreshLeft">重置</el-button>
           </el-form-item>
         </el-form>
-      </div>
+      </el-card>
 
       <!-- 表格区域 -->
-      <el-table
-        v-loading="loading"
-        :data="tableData"
-        stripe
-        border
-        style="width: 100%"
-        :header-cell-style="{ background: '#f5f7fa', color: '#606266' }"
-      >
-        <el-table-column type="expand" width="50">
-          <template #default="{ row }">
-            <div class="expand-content">
-              <p><strong>项目简介：</strong>{{ row.description || "暂无" }}</p>
-              <p>
-                <strong>立项类别描述：</strong
-                >{{ row.category_description || "暂无" }}
-              </p>
-              <p><strong>审核状态：</strong>{{ row.status_display }}</p>
-              <p v-if="row.created_at">
-                <strong>创建时间：</strong>{{ formatDate(row.created_at) }}
-              </p>
-              <p v-if="row.submitted_at">
-                <strong>提交时间：</strong>{{ formatDate(row.submitted_at) }}
-              </p>
-            </div>
-          </template>
-        </el-table-column>
+      <el-card class="table-card" shadow="never">
+        <el-table
+          v-loading="loading"
+          :data="tableData"
+          style="width: 100%"
+          :header-cell-style="{ background: '#f8fafc', color: '#475569', fontWeight: '600' }"
+          class="modern-table"
+        >
+          <el-table-column type="expand" width="50">
+            <template #default="{ row }">
+              <div class="expand-content">
+                <p><strong>项目简介：</strong>{{ row.description || "暂无" }}</p>
+                <p><strong>类别描述：</strong>{{ row.category_description || "暂无" }}</p>
+                <p v-if="row.created_at"><strong>创建时间：</strong>{{ formatDate(row.created_at) }}</p>
+              </div>
+            </template>
+          </el-table-column>
 
-        <el-table-column
-          prop="title"
-          label="项目名称"
-          min-width="200"
-          show-overflow-tooltip
-        />
+          <el-table-column prop="title" label="项目名称" min-width="200" show-overflow-tooltip>
+             <template #default="{ row }">
+               <span class="project-title-link" @click="handleView(row)">{{ row.title }}</span>
+             </template>
+          </el-table-column>
 
-        <el-table-column
-          prop="level_display"
-          label="项目级别"
-          width="100"
-          align="center"
-        />
+          <el-table-column prop="level_display" label="级别" width="100" align="center">
+            <template #default="{ row }">
+               <el-tag :type="getLevelType(row.level)" effect="plain" size="small">{{ row.level_display }}</el-tag>
+            </template>
+          </el-table-column>
 
-        <el-table-column
-          prop="category_display"
-          label="项目类别"
-          width="150"
-          align="center"
-        />
+          <el-table-column prop="category_display" label="类别" width="140" align="center" />
 
-        <el-table-column label="是否重点领域项目" width="140" align="center">
-          <template #default="{ row }">
-            <el-tag :type="row.is_key_field ? 'success' : 'info'" size="small">
-              {{ row.is_key_field ? "是" : "否" }}
-            </el-tag>
-          </template>
-        </el-table-column>
+          <el-table-column label="负责人信息" width="180">
+            <template #default="{ row }">
+               <div class="user-cell">
+                  <div class="user-name">{{ row.leader_name }}</div>
+                  <div class="user-id">{{ row.leader_student_id }}</div>
+               </div>
+            </template>
+          </el-table-column>
 
-        <el-table-column label="重点领域项目代码" width="150" align="center">
-          <template #default="{ row }">
-            {{ row.major_code || "-" }}
-          </template>
-        </el-table-column>
+          <el-table-column label="状态" width="120" align="center">
+            <template #default="{ row }">
+              <div class="status-indicator">
+                <span class="status-dot" :class="getStatusColor(row.status)"></span>
+                <span>{{ row.status_display }}</span>
+              </div>
+            </template>
+          </el-table-column>
 
-        <el-table-column
-          prop="leader_name"
-          label="负责人姓名"
-          width="120"
-          align="center"
-        />
+          <el-table-column label="操作" width="180" align="center" fixed="right">
+            <template #default="{ row }">
+              <el-button type="primary" link size="small" @click="handleView(row)">详情</el-button>
+              <el-divider direction="vertical" v-if="row.status === 'DRAFT'" />
+              <el-button v-if="row.status === 'DRAFT'" type="primary" link size="small" @click="handleEdit(row)">编辑</el-button>
+              <el-divider direction="vertical" v-if="row.status === 'DRAFT'" />
+              <el-button v-if="row.status === 'DRAFT'" type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
 
-        <el-table-column
-          prop="leader_student_id"
-          label="负责人学号"
-          width="120"
-          align="center"
-        />
-
-        <el-table-column
-          prop="college"
-          label="学院"
-          width="120"
-          align="center"
-        />
-
-        <el-table-column
-          prop="leader_contact"
-          label="联系电话"
-          width="120"
-          align="center"
-        />
-
-        <el-table-column
-          prop="leader_email"
-          label="邮箱"
-          width="180"
-          show-overflow-tooltip
-        />
-
-        <el-table-column label="项目经费" width="100" align="center">
-          <template #default="{ row }">
-            {{ row.self_funding || 0 }}
-          </template>
-        </el-table-column>
-
-        <el-table-column label="审核节点" width="120" align="center">
-          <template #default="{ row }">
-            <el-tag :type="getStatusType(row.status)" size="small">
-              {{ row.status_display }}
-            </el-tag>
-          </template>
-        </el-table-column>
-
-        <el-table-column label="操作" width="200" align="center" fixed="right">
-          <template #default="{ row }">
-            <el-button
-              type="primary"
-              size="small"
-              link
-              @click="handleView(row)"
-            >
-              查看
-            </el-button>
-            <el-button
-              v-if="row.status === 'DRAFT'"
-              type="warning"
-              size="small"
-              link
-              @click="handleEdit(row)"
-            >
-              编辑
-            </el-button>
-            <el-button
-              v-if="row.status === 'DRAFT'"
-              type="danger"
-              size="small"
-              link
-              @click="handleDelete(row)"
-            >
-              删除
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <!-- 分页 -->
-      <div class="pagination-container">
-        <el-pagination
-          v-model:current-page="pagination.page"
-          v-model:page-size="pagination.pageSize"
-          :page-sizes="[10, 20, 50, 100]"
-          :total="pagination.total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
-      </div>
+        <!-- 分页 -->
+        <div class="pagination-container">
+          <el-pagination
+            v-model:current-page="pagination.page"
+            v-model:page-size="pagination.pageSize"
+            :page-sizes="[10, 20, 50]"
+            :total="pagination.total"
+            layout="total, sizes, prev, pager, next, jumper"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            background
+          />
+        </div>
+      </el-card>
     </div>
   </div>
 </template>
@@ -238,7 +153,6 @@ import { useRouter } from "vue-router";
 
 const router = useRouter();
 
-// 筛选表单
 const filterForm = reactive({
   expanded: false,
   title: "",
@@ -246,35 +160,27 @@ const filterForm = reactive({
   category: "",
 });
 
-// 表格数据
 const tableData = ref<any[]>([]);
 const loading = ref(false);
 
-// 分页
 const pagination = reactive({
   page: 1,
   pageSize: 10,
   total: 0,
 });
 
-// 获取项目列表
 const fetchProjects = async () => {
   loading.value = true;
   try {
     const params: any = {
       page: pagination.page,
       page_size: pagination.pageSize,
+      ...filterForm
     };
-
-    if (filterForm.title) {
-      params.title = filterForm.title;
-    }
-    if (filterForm.level) {
-      params.level = filterForm.level;
-    }
-    if (filterForm.category) {
-      params.category = filterForm.category;
-    }
+    // Clean empty params
+    if (!params.title) delete params.title;
+    if (!params.level) delete params.level;
+    if (!params.category) delete params.category;
 
     const response: any = await getMyProjects(params);
     if (response.code === 200) {
@@ -290,26 +196,16 @@ const fetchProjects = async () => {
   }
 };
 
-// 格式化日期
 const formatDate = (date: string) => {
   if (!date) return "-";
-  const d = new Date(date);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  const hours = String(d.getHours()).padStart(2, "0");
-  const minutes = String(d.getMinutes()).padStart(2, "0");
-  const seconds = String(d.getSeconds()).padStart(2, "0");
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  return new Date(date).toLocaleString();
 };
 
-// 搜索
 const handleSearch = () => {
   pagination.page = 1;
   fetchProjects();
 };
 
-// 重置
 const handleReset = () => {
   filterForm.title = "";
   filterForm.level = "";
@@ -318,48 +214,37 @@ const handleReset = () => {
   fetchProjects();
 };
 
-// 分页大小改变
 const handleSizeChange = (size: number) => {
   pagination.pageSize = size;
   fetchProjects();
 };
 
-// 页码改变
 const handleCurrentChange = (page: number) => {
   pagination.page = page;
   fetchProjects();
 };
 
-// 获取状态类型
-const getStatusType = (status: string) => {
-  const typeMap: Record<string, string> = {
-    DRAFT: "info",
-    SUBMITTED: "warning",
-    LEVEL2_REVIEWING: "warning",
-    LEVEL2_APPROVED: "success",
-    LEVEL2_REJECTED: "danger",
-    LEVEL1_REVIEWING: "warning",
-    LEVEL1_APPROVED: "success",
-    LEVEL1_REJECTED: "danger",
-    IN_PROGRESS: "primary",
-    COMPLETED: "success",
-  };
-  return typeMap[status] || "info";
+const getLevelType = (level: string) => {
+    if (level === 'NATIONAL') return 'danger';
+    if (level === 'PROVINCIAL') return 'warning';
+    return 'info';
 };
 
-// 查看详情
+const getStatusColor = (status: string) => {
+    if (['COMPLETED', 'LEVEL1_APPROVED', 'LEVEL2_APPROVED'].includes(status)) return 'bg-success';
+    if (['LEVEL1_REJECTED', 'LEVEL2_REJECTED'].includes(status)) return 'bg-danger';
+    if (['SUBMITTED', 'LEVEL1_REVIEWING'].includes(status)) return 'bg-warning';
+    return 'bg-info'; // Draft or default
+};
+
 const handleView = (row: any) => {
-  // TODO: 跳转到项目详情页
   ElMessage.info("查看项目详情功能待开发");
 };
 
-// 编辑项目
 const handleEdit = (row: any) => {
-  // TODO: 跳转到编辑页面
   router.push(`/establishment/apply?id=${row.id}`);
 };
 
-// 删除项目
 const handleDelete = async (row: any) => {
   try {
     await ElMessageBox.confirm("确定要删除该项目吗？删除后无法恢复。", "提示", {
@@ -367,91 +252,163 @@ const handleDelete = async (row: any) => {
       cancelButtonText: "取消",
       type: "warning",
     });
-
     const response: any = await deleteProject(row.id);
     if (response.code === 200 || response.status === 204) {
       ElMessage.success("删除成功");
       fetchProjects();
-    } else {
-      ElMessage.error(response.message || "删除失败");
     }
-  } catch (error: any) {
-    if (error !== "cancel") {
-      ElMessage.error(error.message || "删除失败");
-    }
+  } catch (e) {
+      // ignore cancel
   }
 };
 
-// 页面加载时获取数据
 onMounted(() => {
   fetchProjects();
 });
 </script>
 
 <style scoped lang="scss">
+@use "@/styles/variables.scss" as *;
+
 .my-projects-page {
-  .page-header {
-    background: #ffffff;
-    padding: 24px;
-    border-radius: 8px;
-    margin-bottom: 24px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  border: none;
+  background: linear-gradient(135deg, white 0%, $primary-50 100%);
+  border-radius: $radius-lg;
+  margin-bottom: 24px;
+
+  :deep(.el-card__body) {
+    padding: 24px 32px;
+  }
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 
     h2 {
       margin: 0 0 8px 0;
-      font-size: 24px;
-      color: #262626;
+      font-size: $font-size-2xl;
+      color: $slate-900;
+      font-weight: 700;
     }
 
     p {
       margin: 0;
-      color: #8c8c8c;
-      font-size: 14px;
+      color: $slate-500;
+      font-size: $font-size-sm;
     }
   }
+}
 
-  .page-content {
-    background: #ffffff;
+.filter-section {
+  border: none;
+  background: white;
+  margin-bottom: 24px;
+  border-radius: $radius-lg;
+  
+  :deep(.el-card__body) {
     padding: 24px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-
-    .filter-section {
-      margin-bottom: 20px;
-      padding: 16px;
-      background: #fafafa;
-      border-radius: 4px;
-
-      .filter-form {
-        margin-bottom: 0;
-
-        :deep(.el-form-item) {
-          margin-bottom: 0;
-        }
-      }
-    }
-
-    .expand-content {
-      padding: 16px;
-      background: #fafafa;
-
-      p {
-        margin: 8px 0;
-        line-height: 1.6;
-        color: #606266;
-
-        strong {
-          color: #303133;
-          margin-right: 8px;
-        }
-      }
-    }
-
-    .pagination-container {
-      margin-top: 20px;
-      display: flex;
-      justify-content: flex-end;
+  }
+  
+  .filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    
+    :deep(.el-form-item) {
+      margin-bottom: 0;
+      margin-right: 0;
     }
   }
+}
+
+.table-card {
+  border: none;
+  border-radius: $radius-lg;
+  
+  :deep(.el-card__body) {
+    padding: 0;
+  }
+}
+
+.modern-table {
+  :deep(.el-table__row) {
+    td {
+      padding: 16px 0;
+    }
+  }
+}
+
+.expand-content {
+  padding: 16px 24px;
+  background: $slate-50;
+  border-radius: $radius-md;
+  
+  p {
+    margin: 8px 0;
+    color: $slate-600;
+    font-size: $font-size-sm;
+  }
+}
+
+.project-title-link {
+  color: $slate-900;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s;
+  
+  &:hover {
+    color: $primary-600;
+  }
+}
+
+.user-cell {
+  .user-name {
+    font-weight: 500;
+    color: $slate-800;
+  }
+  .user-id {
+    font-size: $font-size-xs;
+    color: $slate-500;
+  }
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: $font-size-sm;
+  
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  
+  .bg-success { background: $success; }
+  .bg-warning { background: $warning; }
+  .bg-danger { background: $danger; }
+  .bg-info { background: $slate-400; }
+}
+
+.pagination-container {
+  padding: 16px 24px;
+  border-top: 1px solid $slate-100;
+  display: flex;
+  justify-content: flex-end;
+}
+
+// Override Element Inputs
+:deep(.modern-input .el-input__wrapper),
+:deep(.modern-select .el-input__wrapper) {
+  box-shadow: 0 0 0 1px $slate-200 inset;
+  &:hover { box-shadow: 0 0 0 1px $primary-300 inset; }
+  &.is-focus { box-shadow: 0 0 0 1px $primary-600 inset; }
 }
 </style>

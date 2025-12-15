@@ -1,474 +1,339 @@
 <template>
-  <el-container class="main-layout">
-    <el-aside width="240px" class="sidebar">
-      <div class="logo">
-        <el-icon class="logo-icon"><School /></el-icon>
-        <h3>大创项目管理平台</h3>
+  <el-container class="layout-container">
+    <!-- Sidebar -->
+    <el-aside :width="isCollapse ? '64px' : '260px'" class="app-sidebar">
+      <div class="logo-area" :class="{ 'collapsed': isCollapse }">
+        <div class="logo-icon">
+          <el-icon><School /></el-icon>
+        </div>
+        <transition name="fade">
+          <span v-show="!isCollapse" class="app-title">大创管理平台</span>
+        </transition>
       </div>
-      <el-menu
-        :default-active="activeMenu"
-        router
-        background-color="#001529"
-        text-color="#8c8c8c"
-        active-text-color="#ffffff"
-        class="sidebar-menu"
-      >
-        <!-- 立项管理 -->
-        <el-sub-menu index="establishment">
-          <template #title>
-            <el-icon><DocumentAdd /></el-icon>
-            <span>立项管理</span>
-          </template>
-          <el-menu-item index="/establishment/apply">
-            <el-icon><Edit /></el-icon>
-            <span>申请项目</span>
-          </el-menu-item>
-          <el-menu-item index="/establishment/my-projects">
-            <el-icon><User /></el-icon>
-            <span>我的项目</span>
-          </el-menu-item>
-          <el-menu-item index="/establishment/drafts">
-            <el-icon><Files /></el-icon>
-            <span>草稿箱</span>
-          </el-menu-item>
-        </el-sub-menu>
 
-        <!-- 中期管理 -->
-        <el-sub-menu index="midterm">
-          <template #title>
-            <el-icon><Document /></el-icon>
-            <span>中期管理</span>
-          </template>
-          <el-menu-item index="/midterm/submit">
-            <el-icon><Edit /></el-icon>
-            <span>提交中期检查</span>
-          </el-menu-item>
-          <el-menu-item index="/midterm/my-checks">
-            <el-icon><User /></el-icon>
-            <span>我的中期检查</span>
-          </el-menu-item>
-          <el-menu-item index="/midterm/drafts">
-            <el-icon><Files /></el-icon>
-            <span>草稿箱</span>
-          </el-menu-item>
-        </el-sub-menu>
+      <el-scrollbar>
+        <el-menu
+          :default-active="activeMenu"
+          :collapse="isCollapse"
+          :collapse-transition="false"
+          unique-opened
+          router
+          background-color="transparent"
+          text-color="#94a3b8"
+          active-text-color="#ffffff"
+          class="sidebar-menu"
+        >
+          <!-- 立项管理 -->
+          <el-sub-menu index="establishment">
+            <template #title>
+              <el-icon><DocumentAdd /></el-icon>
+              <span>立项管理</span>
+            </template>
+            <el-menu-item index="/establishment/apply">申请项目</el-menu-item>
+            <el-menu-item index="/establishment/my-projects">我的项目</el-menu-item>
+            <el-menu-item index="/establishment/drafts">草稿箱</el-menu-item>
+          </el-sub-menu>
 
-        <!-- 结题管理 -->
-        <el-sub-menu index="closure">
-          <template #title>
-            <el-icon><DocumentChecked /></el-icon>
-            <span>结题管理</span>
-          </template>
-          <el-menu-item index="/closure/pending">
-            <el-icon><Clock /></el-icon>
-            <span>待结题项目</span>
-          </el-menu-item>
-          <el-menu-item index="/closure/applied">
-            <el-icon><Document /></el-icon>
-            <span>已申请结题项目</span>
-          </el-menu-item>
-          <el-menu-item index="/closure/drafts">
-            <el-icon><Files /></el-icon>
-            <span>草稿箱</span>
-          </el-menu-item>
-        </el-sub-menu>
+          <!-- 中期管理 -->
+          <el-sub-menu index="midterm">
+            <template #title>
+              <el-icon><Document /></el-icon>
+              <span>中期管理</span>
+            </template>
+            <el-menu-item index="/midterm/submit">提交中期检查</el-menu-item>
+            <el-menu-item index="/midterm/my-checks">我的中期检查</el-menu-item>
+            <el-menu-item index="/midterm/drafts">草稿箱</el-menu-item>
+          </el-sub-menu>
 
-        <!-- 使用帮助 -->
-        <el-menu-item index="/help">
-          <el-icon><QuestionFilled /></el-icon>
-          <span>使用帮助</span>
-        </el-menu-item>
-      </el-menu>
+          <!-- 结题管理 -->
+          <el-sub-menu index="closure">
+            <template #title>
+              <el-icon><DocumentChecked /></el-icon>
+              <span>结题管理</span>
+            </template>
+            <el-menu-item index="/closure/pending">待结题项目</el-menu-item>
+            <el-menu-item index="/closure/applied">已申请结题</el-menu-item>
+            <el-menu-item index="/closure/drafts">草稿箱</el-menu-item>
+          </el-sub-menu>
+
+          <!-- 使用帮助 -->
+          <el-menu-item index="/help">
+            <el-icon><QuestionFilled /></el-icon>
+            <template #title>使用帮助</template>
+          </el-menu-item>
+        </el-menu>
+      </el-scrollbar>
     </el-aside>
 
-    <el-container>
-      <el-header class="main-header">
-        <div class="header-content">
-          <div class="left">
-            <el-button
-              v-if="!sidebarCollapsed"
-              :icon="Fold"
-              text
-              @click="toggleSidebar"
-              class="collapse-btn"
-            />
-            <el-button
-              v-else
-              :icon="Expand"
-              text
-              @click="toggleSidebar"
-              class="collapse-btn"
-            />
-            <span class="page-title">{{ pageTitle }}</span>
-          </div>
-          <div class="right">
-            <span class="welcome-text"
-              >您好, {{ userStore.user?.real_name || "用户" }}</span
-            >
-            <el-badge
-              :value="unreadCount"
-              :hidden="unreadCount === 0"
-              class="notifications-badge"
-            >
-              <el-button
-                :icon="Bell"
-                circle
-                text
-                @click="$router.push('/notifications')"
-              />
+    <!-- Main Content -->
+    <el-container class="main-wrapper">
+      <el-header class="app-header">
+        <div class="header-left">
+          <el-button
+            type="text"
+            class="toggle-btn"
+            @click="toggleSidebar"
+          >
+            <el-icon :size="20">
+              <Expand v-if="isCollapse" />
+              <Fold v-else />
+            </el-icon>
+          </el-button>
+          
+          <el-breadcrumb separator="/" class="breadcrumb">
+            <el-breadcrumb-item>首页</el-breadcrumb-item>
+            <el-breadcrumb-item>{{ route.meta.title || '控制台' }}</el-breadcrumb-item>
+          </el-breadcrumb>
+        </div>
+
+        <div class="header-right">
+          <!-- TODO: Notifications -->
+          <el-button circle text class="icon-btn">
+            <el-badge is-dot class="badge-dot" :hidden="!hasUnread">
+              <el-icon :size="20"><Bell /></el-icon>
             </el-badge>
-            <el-dropdown @command="handleCommand" class="user-dropdown">
-              <div class="user-info">
-                <el-avatar :size="32" class="user-avatar">
-                  {{ userStore.user?.real_name?.[0] || "U" }}
-                </el-avatar>
-                <el-icon class="dropdown-icon"><ArrowDown /></el-icon>
-              </div>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item command="profile">
-                    <el-icon><User /></el-icon>个人信息
-                  </el-dropdown-item>
-                  <el-dropdown-item command="logout" divided>
-                    <el-icon><SwitchButton /></el-icon>退出登录
-                  </el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
-          </div>
+          </el-button>
+
+          <el-dropdown trigger="click" @command="handleCommand">
+            <div class="user-profile">
+              <el-avatar :size="36" class="avatar-gradient">
+                {{ userInitials }}
+              </el-avatar>
+              <span class="username">{{ userName }}</span>
+              <el-icon><ArrowDown /></el-icon>
+            </div>
+            <template #dropdown>
+              <el-dropdown-menu class="custom-dropdown">
+                <el-dropdown-item command="profile">
+                  <el-icon><User /></el-icon>个人中心
+                </el-dropdown-item>
+                <el-dropdown-item divided command="logout">
+                  <el-icon><SwitchButton /></el-icon>退出登录
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
         </div>
       </el-header>
 
-      <el-main>
-        <router-view />
+      <el-main class="app-main">
+        <router-view v-slot="{ Component }">
+          <transition name="fade-transform" mode="out-in">
+            <component :is="Component" />
+          </transition>
+        </router-view>
       </el-main>
     </el-container>
   </el-container>
 </template>
 
-<script setup>
-import { computed, onMounted, ref } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { useUserStore } from "@/stores/user";
+<script setup lang="ts">
+import { ref, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useUserStore } from '@/stores/user';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import {
-  DocumentAdd,
-  DocumentChecked,
-  Document,
-  Folder,
-  QuestionFilled,
-  Bell,
-  User,
-  School,
-  Fold,
-  Expand,
-  ArrowDown,
-  SwitchButton,
-  Edit,
-  Files,
-  Clock,
-} from "@element-plus/icons-vue";
-import { ElMessageBox } from "element-plus";
+  School, DocumentAdd, DocumentChecked, Document, 
+  QuestionFilled, Expand, Fold, Bell, ArrowDown, 
+  User, SwitchButton
+} from '@element-plus/icons-vue';
 
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
 
-// 侧边栏状态
-const sidebarCollapsed = ref(false);
-
-// 未读通知数量
-const unreadCount = ref(0);
+const isCollapse = ref(false);
+const hasUnread = ref(true); // Demo state
 
 const activeMenu = computed(() => route.path);
-const pageTitle = computed(() => route.meta.title || "大创项目管理平台");
+const userName = computed(() => userStore.user?.real_name || '学生用户');
+const userInitials = computed(() => userName.value?.[0] || 'S');
 
-// 切换侧边栏
 const toggleSidebar = () => {
-  sidebarCollapsed.value = !sidebarCollapsed.value;
+  isCollapse.value = !isCollapse.value;
 };
 
-// 获取用户信息和通知数量
-onMounted(async () => {
-  if (!userStore.user) {
-    await userStore.fetchProfile();
-  }
-  // TODO: 获取未读通知数量
-  // unreadCount.value = await fetchUnreadNotificationCount()
-});
-
-const handleCommand = async (command) => {
-  if (command === "logout") {
-    await ElMessageBox.confirm("确定要退出登录吗？", "提示", {
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
-      type: "warning",
-    });
-    await userStore.logoutAction();
-    router.push("/login");
-  } else if (command === "profile") {
-    router.push("/profile");
+const handleCommand = async (command: string) => {
+  if (command === 'logout') {
+    try {
+      await ElMessageBox.confirm('确定要退出登录吗？', '提示', {
+        type: 'warning',
+        confirmButtonText: '退出',
+        cancelButtonText: '取消'
+      });
+      await userStore.logoutAction();
+      router.push('/login');
+    } catch {
+      // cancel
+    }
+  } else if (command === 'profile') {
+    // Navigate to profile
   }
 };
 </script>
 
 <style scoped lang="scss">
-.main-layout {
+@use "@/styles/variables.scss" as *;
+
+.layout-container {
   height: 100vh;
-  background: #f0f2f5;
+  background-color: $color-bg-body;
 }
 
-// 侧边栏样式
-.sidebar {
-  background: linear-gradient(180deg, #001529 0%, #002140 100%);
-  box-shadow: 2px 0 6px 0 rgba(0, 21, 41, 0.35);
-  transition: all 0.3s;
+.app-sidebar {
+  background-color: $slate-900;
+  transition: width $transition-base;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 
-  .logo {
+  .logo-area {
     height: 64px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    color: #fff;
-    background: rgba(255, 255, 255, 0.05);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-
+    padding: 0 20px;
+    background: rgba(0, 0, 0, 0.1);
+    
     .logo-icon {
-      font-size: 28px;
-      margin-right: 12px;
-      color: #1890ff;
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, $primary-500, $primary-700);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      flex-shrink: 0;
     }
 
-    h3 {
-      margin: 0;
-      font-size: 18px;
+    .app-title {
+      margin-left: 12px;
+      color: white;
       font-weight: 600;
-      letter-spacing: 0.5px;
+      font-size: 16px;
+      white-space: nowrap;
+    }
+
+    &.collapsed {
+      padding: 0;
+      justify-content: center;
     }
   }
 
   .sidebar-menu {
-    border: none;
+    border-right: none;
+    padding-top: 10px;
 
-    :deep(.el-sub-menu) {
-      .el-sub-menu__title {
-        height: 48px;
-        line-height: 48px;
-        margin: 4px 12px;
-        border-radius: 8px;
-        transition: all 0.3s;
-
-        &:hover {
-          background: rgba(24, 144, 255, 0.1) !important;
-          color: #ffffff !important;
-        }
-
-        .el-icon {
-          margin-right: 12px;
-          font-size: 16px;
-          color: inherit;
-        }
-      }
-
-      .el-menu {
-        background-color: #000c17 !important;
-      }
-
-      .el-menu-item {
-        height: 44px;
-        line-height: 44px;
-        margin: 4px 12px;
-        padding-left: 48px !important;
-        border-radius: 8px;
-        transition: all 0.3s;
-
-        &:hover {
-          background: rgba(24, 144, 255, 0.1) !important;
-          color: #ffffff !important;
-        }
-
-        &.is-active {
-          background: linear-gradient(
-            90deg,
-            #1890ff 0%,
-            #40a9ff 100%
-          ) !important;
-          color: #ffffff !important;
-          box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
-        }
-
-        .el-icon {
-          margin-right: 8px;
-          font-size: 14px;
-        }
-      }
-    }
-
-    :deep(.el-menu-item) {
-      height: 48px;
-      line-height: 48px;
-      margin: 4px 12px;
-      border-radius: 8px;
-      transition: all 0.3s;
-
+    :deep(.el-menu-item), :deep(.el-sub-menu__title) {
+      height: 50px;
+      margin: 4px 10px;
+      border-radius: $radius-md;
+      
       &:hover {
-        background: rgba(24, 144, 255, 0.1) !important;
-        color: #ffffff !important;
+        background-color: rgba(255,255,255, 0.08);
+        color: white;
       }
 
       &.is-active {
-        background: linear-gradient(90deg, #1890ff 0%, #40a9ff 100%) !important;
-        color: #ffffff !important;
-        box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
-
-        &::before {
-          display: none;
-        }
-      }
-
-      .el-icon {
-        margin-right: 12px;
-        font-size: 16px;
+        background: linear-gradient(90deg, $primary-600, $primary-500);
+        color: white;
+        box-shadow: 0 4px 12px rgba($primary-600, 0.3);
       }
     }
   }
 }
 
-// 头部样式
-.main-header {
-  background: #ffffff;
-  border-bottom: 1px solid #f0f0f0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  padding: 0 24px;
+.main-wrapper {
+  flex-direction: column;
+}
 
-  .header-content {
+.app-header {
+  height: 64px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  box-shadow: $shadow-sm;
+  z-index: 10;
+
+  .header-left {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    height: 100%;
+    gap: 16px;
 
-    .left {
+    .toggle-btn {
+      color: $slate-600;
+      &:hover { color: $primary-600; }
+    }
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+
+    .icon-btn {
+      color: $slate-500;
+      &:hover { color: $slate-700; background: $slate-100; }
+    }
+
+    .user-profile {
       display: flex;
       align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 20px;
+      transition: background $transition-fast;
 
-      .collapse-btn {
-        font-size: 18px;
-        color: #666;
-        margin-right: 16px;
-
-        &:hover {
-          background: #f5f5f5;
-        }
+      &:hover {
+        background: $slate-100;
       }
 
-      .page-title {
-        font-size: 18px;
+      .username {
         font-weight: 500;
-        color: #262626;
-      }
-    }
-
-    .right {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-
-      .welcome-text {
+        color: $slate-700;
         font-size: 14px;
-        color: #262626;
-        margin-right: 8px;
       }
 
-      .notifications-badge {
-        .el-button {
-          color: #666;
-          font-size: 18px;
-
-          &:hover {
-            background: #f5f5f5;
-            color: #1890ff;
-          }
-        }
-      }
-
-      .user-dropdown {
-        .user-info {
-          display: flex;
-          align-items: center;
-          cursor: pointer;
-          padding: 8px 12px;
-          border-radius: 20px;
-          transition: all 0.3s;
-
-          &:hover {
-            background: #f5f5f5;
-          }
-
-          .user-avatar {
-            margin-right: 8px;
-            background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
-            font-weight: 500;
-          }
-
-          .dropdown-icon {
-            font-size: 12px;
-            color: #999;
-            transition: transform 0.3s;
-          }
-        }
-
-        &:hover .dropdown-icon {
-          transform: rotate(180deg);
-        }
+      .avatar-gradient {
+        background: linear-gradient(135deg, $primary-400, $primary-600);
+        font-weight: 600;
+        color: white;
+        border: 2px solid white;
+        box-shadow: $shadow-sm;
       }
     }
   }
 }
 
-// 主内容区域样式
-:deep(.el-main) {
-  background: #f0f2f5;
+.app-main {
   padding: 24px;
+  background-color: $slate-50;
   overflow-y: auto;
-
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
-
-    &:hover {
-      background: #a8a8a8;
-    }
-  }
 }
 
-// 下拉菜单样式
-:deep(.el-dropdown-menu) {
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border: 1px solid #e8e8e8;
-  padding: 8px;
+/* Transitions */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.2s;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
 
-  .el-dropdown-menu__item {
-    border-radius: 6px;
-    padding: 8px 12px;
-    margin: 2px 0;
-
-    .el-icon {
-      margin-right: 8px;
-    }
-
-    &:hover {
-      background: #f5f5f5;
-      color: #1890ff;
-    }
-  }
+.fade-transform-enter-active,
+.fade-transform-leave-active {
+  transition: all 0.3s ease;
+}
+.fade-transform-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.fade-transform-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 </style>

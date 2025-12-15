@@ -1,69 +1,68 @@
-// 颜色变量 - Modern Palette (Indigo & Slate)
-$primary-color: #4f46e5; // Indigo 600
-$primary-light: #818cf8; // Indigo 400
-$primary-dark: #3730a3; // Indigo 800
+// Premium Design System Variables
 
-$success-color: #10b981; // Emerald 500
-$warning-color: #f59e0b; // Amber 500
-$danger-color: #ef4444; // Red 500
-$info-color: #64748b; // Slate 500
+// 1. Color Palette - Deep Indigo & Slate
+// Primary Brand Colors
+$primary-50:  #eef2ff;
+$primary-100: #e0e7ff;
+$primary-200: #c7d2fe;
+$primary-300: #a5b4fc;
+$primary-400: #818cf8;
+$primary-500: #6366f1;
+$primary-600: #4f46e5; // MAIN BRAND COLOR
+$primary-700: #4338ca;
+$primary-800: #3730a3;
+$primary-900: #312e81;
+
+// Semantic Colors
+$success: #10b981; // Emerald
+$warning: #f59e0b; // Amber
+$danger:  #ef4444; // Red
+$info:    #3b82f6; // Blue
 
 // Neutral Colors (Slate)
-$text-primary: #1e293b; // Slate 800
-$text-regular: #475569; // Slate 600
-$text-secondary: #94a3b8; // Slate 400
-$text-placeholder: #cbd5e1; // Slate 300
+$slate-50:  #f8fafc;
+$slate-100: #f1f5f9;
+$slate-200: #e2e8f0;
+$slate-300: #cbd5e1;
+$slate-400: #94a3b8;
+$slate-500: #64748b;
+$slate-600: #475569;
+$slate-700: #334155;
+$slate-800: #1e293b;
+$slate-900: #0f172a;
 
-$border-base: #e2e8f0; // Slate 200
-$border-light: #f1f5f9; // Slate 100
-$border-lighter: #f8fafc; // Slate 50
+// Functional Mappings
+$color-bg-body:       $slate-50;
+$color-bg-card:       #ffffff;
+$color-bg-sidebar:    $slate-900;
+$color-text-primary:  $slate-900;
+$color-text-regular:  $slate-600;
+$color-text-light:    $slate-400;
+$color-border:        $slate-200;
+$color-border-light:  $slate-100;
 
-$background-base: #f8fafc; // Slate 50
-$background-light: #ffffff;
-$background-dark: #0f172a; // Slate 900
+// 2. Typography
+$font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+$font-size-xs: 0.75rem;  // 12px
+$font-size-sm: 0.875rem; // 14px
+$font-size-base: 1rem;   // 16px
+$font-size-lg: 1.125rem; // 18px
+$font-size-xl: 1.25rem;  // 20px
+$font-size-2xl: 1.5rem;  // 24px
+$font-size-3xl: 1.875rem;// 30px
 
-// 间距变量
-$spacing-xs: 4px;
-$spacing-sm: 8px;
-$spacing-md: 16px;
-$spacing-lg: 24px;
-$spacing-xl: 32px;
-$spacing-xxl: 48px;
+// 3. Spacing & Layout
+$radius-sm: 0.375rem; // 6px
+$radius-md: 0.5rem;   // 8px - Standard
+$radius-lg: 0.75rem;  // 12px
+$radius-xl: 1rem;     // 16px
 
-// 圆角变量
-$border-radius-small: 4px;
-$border-radius-base: 8px;
-$border-radius-large: 12px;
-$border-radius-round: 9999px;
+// 4. Shadows (Tailwind-inspired)
+$shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+$shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+$shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+$shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 
-// 阴影变量 - Tailor-made shadows
-$box-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-$box-shadow-base:
-  0 1px 3px 0 rgba(0, 0, 0, 0.1),
-  0 1px 2px 0 rgba(0, 0, 0, 0.06);
-$box-shadow-md:
-  0 4px 6px -1px rgba(0, 0, 0, 0.1),
-  0 2px 4px -1px rgba(0, 0, 0, 0.06);
-$box-shadow-lg:
-  0 10px 15px -3px rgba(0, 0, 0, 0.1),
-  0 4px 6px -2px rgba(0, 0, 0, 0.05);
-
-// 字体大小
-$font-size-xs: 12px;
-$font-size-sm: 14px;
-$font-size-base: 16px; // Modern web uses larger base font
-$font-size-lg: 18px;
-$font-size-xl: 20px;
-$font-size-2xl: 24px;
-
-// 过渡动画
-$transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-$transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-$transition-fade: opacity 0.3s ease-in-out;
-
-// Z-index 层级
-$z-index-dropdown: 1000;
-$z-index-sticky: 1500;
-$z-index-modal: 2000;
-$z-index-notification: 3000;
-$z-index-message: 4000;
+// 5. Transitions
+$transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+$transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);

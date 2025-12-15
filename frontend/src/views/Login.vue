@@ -78,6 +78,9 @@ const handleLogin = async ({ employeeId, password, role }) => {
           router.push("/establishment/apply");
         } else if (role === "admin") {
           router.push("/admin/dashboard");
+        } else {
+             // Default fallback
+             router.push("/establishment/apply");
         }
       }, 500);
     } else {
@@ -90,12 +93,14 @@ const handleLogin = async ({ employeeId, password, role }) => {
 </script>
 
 <style scoped lang="scss">
+@use "@/styles/variables.scss" as *;
+
 .login-container {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: #ffffff;
+  font-family: $font-family-sans;
+  background-color: $color-bg-body;
 }
 
 .split-layout {
@@ -107,7 +112,8 @@ const handleLogin = async ({ employeeId, password, role }) => {
 /* Left Panel Styles */
 .brand-panel {
   flex: 1;
-  background: linear-gradient(135deg, #2b32b2 0%, #1488cc 100%);
+  // Gradient from variables
+  background: linear-gradient(135deg, $primary-800 0%, $primary-500 100%);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -124,20 +130,20 @@ const handleLogin = async ({ employeeId, password, role }) => {
 .brand-content {
   position: relative;
   z-index: 10;
-  max-width: 480px;
+  max-width: 520px;
 }
 
 .logo-circle {
   width: 64px;
   height: 64px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(10px);
-  border-radius: 16px;
+  border-radius: $radius-lg;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 40px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .logo-text {
@@ -147,7 +153,7 @@ const handleLogin = async ({ employeeId, password, role }) => {
 }
 
 .brand-title {
-  font-size: 56px;
+  font-size: 3.5rem; // Large headline
   font-weight: 800;
   line-height: 1.1;
   margin-bottom: 24px;
@@ -155,16 +161,17 @@ const handleLogin = async ({ employeeId, password, role }) => {
 }
 
 .brand-subtitle {
-  font-size: 18px;
+  font-size: $font-size-lg;
   line-height: 1.6;
-  opacity: 0.8;
+  opacity: 0.9;
   margin-bottom: 48px;
   font-weight: 300;
+  color: $primary-100;
 }
 
 .brand-features {
   display: flex;
-  gap: 24px;
+  gap: 20px;
 }
 
 .feature-item {
@@ -174,9 +181,10 @@ const handleLogin = async ({ employeeId, password, role }) => {
   background: rgba(255, 255, 255, 0.1);
   padding: 10px 16px;
   border-radius: 50px;
-  font-size: 14px;
+  font-size: $font-size-sm;
   font-weight: 500;
   backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .abstract-shapes {
@@ -191,14 +199,14 @@ const handleLogin = async ({ employeeId, password, role }) => {
   .shape {
     position: absolute;
     border-radius: 50%;
-    filter: blur(60px);
-    opacity: 0.5;
+    filter: blur(80px);
+    opacity: 0.4;
   }
   
   .shape-1 {
     width: 600px;
     height: 600px;
-    background: #FF0080;
+    background: #4f46e5; // Indigo
     top: -20%;
     right: -20%;
     animation: float 15s infinite ease-in-out;
@@ -207,7 +215,7 @@ const handleLogin = async ({ employeeId, password, role }) => {
   .shape-2 {
     width: 500px;
     height: 500px;
-    background: #7928CA;
+    background: #ec4899; // Pink/Magenta for contrast
     bottom: -10%;
     left: -10%;
     animation: float 20s infinite ease-in-out reverse;
@@ -226,7 +234,7 @@ const handleLogin = async ({ employeeId, password, role }) => {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background-color: #ffffff;
+  background-color: $color-bg-card; // White
   padding: 40px;
 }
 
@@ -245,23 +253,23 @@ const handleLogin = async ({ employeeId, password, role }) => {
   margin-bottom: 40px;
   
   .welcome-title {
-    font-size: 32px;
+    font-size: 2rem;
     font-weight: 700;
-    color: #1a1a1a;
+    color: $slate-900;
     margin-bottom: 12px;
     letter-spacing: -0.5px;
   }
   
   .welcome-subtitle {
-    color: #666;
-    font-size: 16px;
+    color: $slate-500;
+    font-size: $font-size-base;
   }
 }
 
 .form-footer {
   margin-top: 40px;
   text-align: center;
-  font-size: 12px;
-  color: #999;
+  font-size: $font-size-xs;
+  color: $slate-400;
 }
 </style>
