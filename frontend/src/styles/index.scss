@@ -76,6 +76,7 @@ a {
 }
 
 // Element Plus Overrides (Global)
+// Element Plus Overrides (Global)
 :root {
     --el-color-primary: #{$primary-600};
     --el-color-success: #{$success};
@@ -83,6 +84,8 @@ a {
     --el-color-danger: #{$danger};
     --el-border-radius-base: #{$radius-md};
     --el-font-family: #{$font-family-sans};
+    --el-box-shadow-light: #{$shadow-md};
+    --el-button-font-weight: 500;
 }
 
 // Fade Transition for Router View

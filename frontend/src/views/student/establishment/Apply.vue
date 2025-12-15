@@ -1,17 +1,18 @@
 <template>
-  <div class="page-container">
-    <!-- Main Content Card with Integrated Header -->
-    <el-card class="main-card" :body-style="{ padding: '24px' }">
-      <template #header>
-        <div class="card-header-flex">
-          <div class="header-title">基本信息填报</div>
-          <div class="header-actions">
-            <el-button @click="handleReset">重置</el-button>
-            <el-button type="info" plain @click="saveAsDraft">保存草稿</el-button>
-            <el-button type="primary" @click="submitForm">提交申请</el-button>
-          </div>
+  <div class="apply-page">
+    <div class="form-container">
+      <!-- Header -->
+      <div class="page-header">
+        <div class="title-bar">
+           <span class="title">基本信息填报</span>
+           <el-tag size="small" type="primary" effect="plain" round>项目申报</el-tag>
         </div>
-      </template>
+        <div class="actions">
+           <el-button @click="handleReset">重置</el-button>
+           <el-button type="info" plain @click="saveAsDraft">保存草稿</el-button>
+           <el-button type="primary" @click="submitForm">提交申请</el-button>
+        </div>
+      </div>
 
       <el-form
         ref="formRef"
@@ -21,11 +22,14 @@
         label-width="120px"
         status-icon
         size="default"
+        class="main-form"
       >
         <!-- 1. 基本信息 -->
         <div class="form-section">
-          <h3 class="section-title">基本信息</h3>
-          <el-row :gutter="24">
+          <div class="section-header">
+              <span class="section-title">基本信息</span>
+          </div>
+          <el-row :gutter="32">
             <el-col :span="8">
               <el-form-item label="项目来源" prop="source">
                 <el-select v-model="formData.source" placeholder="请选择" class="w-full">
@@ -71,8 +75,6 @@
                  />
                </el-form-item>
             </el-col>
-          </el-row>
-          <el-row :gutter="24">
             <el-col :span="8">
               <el-form-item label="所属学院" prop="college">
                 <el-select v-model="formData.college" placeholder="请选择" class="w-full">
@@ -92,8 +94,10 @@
 
         <!-- 2. 团队信息 -->
         <div class="form-section">
-          <h3 class="section-title">团队负责人信息</h3>
-          <el-row :gutter="24">
+          <div class="section-header">
+              <span class="section-title">负责人信息</span>
+          </div>
+          <el-row :gutter="32">
             <el-col :span="8">
               <el-form-item label="负责人姓名">
                 <el-input v-model="currentUser.name" disabled class="is-disabled-soft" />
@@ -122,30 +126,37 @@
 
         <!-- 3. 指导教师 (Dynamic Table) -->
         <div class="form-section">
-          <h3 class="section-title">指导教师信息</h3>
+          <div class="section-header">
+              <span class="section-title">指导教师</span>
+          </div>
           <div class="dynamic-input-row">
             <el-row :gutter="12">
                <el-col :span="5">
-                 <el-input v-model="newAdvisor.job_number" placeholder="工号" size="default" />
+                 <el-input v-model="newAdvisor.job_number" placeholder="工号" />
                </el-col>
                <el-col :span="5">
-                 <el-input v-model="newAdvisor.name" placeholder="姓名" size="default" />
+                 <el-input v-model="newAdvisor.name" placeholder="姓名" />
                </el-col>
                <el-col :span="5">
-                 <el-select v-model="newAdvisor.title" placeholder="职称" size="default">
+                 <el-select v-model="newAdvisor.title" placeholder="职称">
                     <el-option v-for="item in advisorTitleOptions" :key="item.value" :label="item.label" :value="item.value" />
                  </el-select>
                </el-col>
                <el-col :span="5">
-                 <el-input v-model="newAdvisor.contact" placeholder="电话" size="default" />
+                 <el-input v-model="newAdvisor.contact" placeholder="电话" />
                </el-col>
                <el-col :span="4">
-                 <el-button type="primary" plain size="default" @click="handleAddNewAdvisor">添加教师</el-button>
+                 <el-button type="primary" plain @click="handleAddNewAdvisor" style="width: 100%">添加教师</el-button>
                </el-col>
             </el-row>
           </div>
           
-          <el-table :data="formData.advisors" style="width: 100%; margin-top: 12px;" border size="small">
+          <el-table 
+            :data="formData.advisors" 
+            style="width: 100%; margin-top: 12px;" 
+            border
+            :header-cell-style="{ background: '#f8fafc', color: '#475569' }"
+          >
              <el-table-column prop="job_number" label="工号" width="140" />
              <el-table-column prop="name" label="姓名" width="140" />
              <el-table-column prop="title" label="职称" width="140">
@@ -167,22 +178,29 @@
 
         <!-- 4. 项目成员 (Dynamic Table) -->
         <div class="form-section">
-          <h3 class="section-title">项目成员信息</h3>
+          <div class="section-header">
+              <span class="section-title">项目成员</span>
+          </div>
            <div class="dynamic-input-row">
             <el-row :gutter="12">
                <el-col :span="8">
-                 <el-input v-model="newMember.student_id" placeholder="成员学号" size="default" />
+                 <el-input v-model="newMember.student_id" placeholder="成员学号" />
                </el-col>
                <el-col :span="8">
-                 <el-input v-model="newMember.name" placeholder="成员姓名" size="default" />
+                 <el-input v-model="newMember.name" placeholder="成员姓名" />
                </el-col>
                <el-col :span="8">
-                 <el-button type="primary" plain size="default" @click="handleAddNewMember">添加成员</el-button>
+                 <el-button type="primary" plain @click="handleAddNewMember" style="width: 100%">添加成员</el-button>
                </el-col>
             </el-row>
           </div>
 
-          <el-table :data="formData.members" style="width: 100%; margin-top: 12px;" border size="small">
+          <el-table 
+            :data="formData.members" 
+            style="width: 100%; margin-top: 12px;" 
+            border 
+            :header-cell-style="{ background: '#f8fafc', color: '#475569' }"
+          >
              <el-table-column prop="student_id" label="学号" width="180" />
              <el-table-column prop="name" label="姓名" />
              <el-table-column label="操作" width="80" align="center">
@@ -198,7 +216,9 @@
 
         <!-- 5. 申报内容 -->
         <div class="form-section">
-          <h3 class="section-title">申报内容</h3>
+          <div class="section-header">
+              <span class="section-title">申报内容</span>
+          </div>
           <el-row>
              <el-col :span="24">
                 <el-form-item label="预期成果" prop="expected_results">
@@ -229,7 +249,9 @@
 
         <!-- 6. 附件 -->
         <div class="form-section no-border">
-           <h3 class="section-title">附件上传</h3>
+           <div class="section-header">
+              <span class="section-title">附件上传</span>
+          </div>
            <el-form-item label="申请书" prop="attachment_file">
               <el-upload
                 action="#"
@@ -244,7 +266,7 @@
                     <div class="el-upload__tip">只能上传pdf文件，且不超过2MB</div>
                  </template>
               </el-upload>
-              <div class="mt-2 text-sm text-gray-500">
+              <div class="mt-2 text-sm text-gray-500" style="margin-left: 16px;">
                   <a href="#" class="link-download">
                      <el-icon><Download /></el-icon> 下载申请书模板
                   </a>
@@ -253,8 +275,7 @@
         </div>
 
       </el-form>
-    </el-card>
-
+    </div>
   </div>
 </template>
 
@@ -389,7 +410,6 @@ const handleSaveOrSubmit = async (isDraft: boolean) => {
     if (!isDraft) {
         if(formData.advisors.length === 0) {
              console.warn("No advisors added, user might have forgotten to click add");
-             // Optional: check if newAdvisor has data and prompt?
         }
         await formRef.value.validate(async (valid) => {
             if (!valid) {
@@ -550,74 +570,93 @@ onMounted(() => {
 <style scoped lang="scss">
 @use "@/styles/variables.scss" as *;
 
-.page-container {
-  /* Inherits bg from MainLayout, but ensure standard gray */
-  background-color: #f0f2f5; 
-  min-height: 100%;
+.apply-page {
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
-.main-card {
-  border: none;
-  border-radius: 4px; /* Standard Admin Radius */
-  box-shadow: 0 1px 4px rgba(0,21,41,0.08) !important;
-  background: #fff;
-  margin-top: 24px; /* Separation from breadcrumb */
+.form-container {
+  background: white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+  border: 1px solid $color-border-light;
+  overflow: hidden;
 }
 
-/* Card Header Flex Layout */
-.card-header-flex {
+.page-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid $slate-100;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  
+  .title-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      
+      .title {
+          font-size: 16px;
+          font-weight: 600;
+          color: $slate-800;
+          position: relative;
+          padding-left: 14px;
+          
+          &::before {
+              content: '';
+              position: absolute;
+              left: 0;
+              top: 50%;
+              transform: translateY(-50%);
+              width: 4px;
+              height: 16px;
+              background: $primary-600;
+              border-radius: 2px;
+          }
+      }
+  }
 }
 
-.header-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.header-actions {
-  display: flex;
-  gap: 12px;
+.main-form {
+    padding: 32px;
 }
 
 .form-section {
-  margin-bottom: 32px;
+  margin-bottom: 40px;
   
   &:last-child {
     margin-bottom: 0;
   }
+  
+  .section-header {
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px dashed $slate-200;
+      padding-bottom: 8px;
+      
+      .section-title {
+          font-size: 15px;
+          font-weight: 600;
+          color: $slate-700;
+      }
+  }
 }
 
-.section-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 24px 0;
-  padding-left: 10px;
-  border-left: 3px solid $primary-600;
-  line-height: 1.2;
-}
-
-/* Form Density & Alignment */
 .w-full { width: 100%; }
 
-.el-form-item {
-  margin-bottom: 24px; /* Balanced spacing */
-}
-
-/* Dynamic Area */
 .dynamic-input-row {
-  background: #fafafa;
+  background: $slate-50;
   padding: 16px;
-  border-radius: 4px;
-  border: 1px dashed #d9d9d9;
+  border-radius: $radius-md;
+  border: 1px dashed $slate-200;
   margin-bottom: 12px;
 }
 
 .empty-text {
-  color: #909399;
+  color: $slate-400;
   font-size: 13px;
   text-align: center;
   padding: 8px 0;
@@ -629,16 +668,8 @@ onMounted(() => {
   align-items: center;
   gap: 4px;
   text-decoration: none;
+  font-weight: 500;
   
   &:hover { text-decoration: underline; }
-}
-
-/* Overrides for specific admin feel */
-:deep(.el-input__wrapper), :deep(.el-select__wrapper) {
-  border-radius: 2px; /* Sharper edges for enterprise feel */
-}
-
-:deep(.el-input__inner) {
-  font-size: 14px;
 }
 </style>

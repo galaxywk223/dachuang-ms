@@ -1,12 +1,12 @@
 <template>
   <div class="projects-page">
     <!-- 筛选区域 -->
-    <el-card class="filter-section" shadow="never">
+    <div class="filter-section">
       <el-form :inline="true" :model="filters" class="filter-form">
         <el-form-item label="名称/编号">
           <el-input
             v-model="filters.search"
-            placeholder="搜索项目名称或编号"
+            placeholder="项目名称或编号"
             clearable
             :prefix-icon="Search"
             style="width: 200px"
@@ -16,9 +16,9 @@
         <el-form-item label="级别">
           <el-select
             v-model="filters.level"
-            placeholder="全部"
+            placeholder="全部级别"
             clearable
-            style="width: 140px"
+            style="width: 120px"
           >
            <el-option v-for="item in levelOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
@@ -27,9 +27,9 @@
         <el-form-item label="类别">
           <el-select
             v-model="filters.category"
-            placeholder="全部"
+            placeholder="全部类别"
             clearable
-            style="width: 140px"
+            style="width: 120px"
           >
             <el-option v-for="item in categoryOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
@@ -38,9 +38,9 @@
         <el-form-item label="状态">
           <el-select
             v-model="filters.status"
-            placeholder="全部"
+            placeholder="全部状态"
             clearable
-            style="width: 140px"
+            style="width: 120px"
           >
            <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
@@ -51,24 +51,26 @@
           <el-button @click="handleReset" :icon="RefreshLeft">重置</el-button>
         </el-form-item>
       </el-form>
-    </el-card>
+    </div>
 
     <!-- 表格区域 -->
-    <el-card class="table-card" shadow="never">
-      <template #header>
-        <div class="card-header">
-           <span class="title">项目列表</span>
+    <div class="table-container">
+      <div class="table-header">
+        <div class="title-bar">
+           <span class="title">项目管理</span>
+           <el-tag type="info" size="small" effect="plain" round class="count-tag">共 {{ total }} 项</el-tag>
+        </div>
+        <div class="actions">
            <el-button type="primary" :icon="Plus" @click="handleCreate"> 申报项目 </el-button>
         </div>
-      </template>
+      </div>
 
       <el-table
         v-loading="loading"
         :data="projects"
         style="width: 100%"
-        :header-cell-style="{ background: '#f8fafc', color: '#1e293b', fontWeight: '600', fontSize: '13px' }"
-        :cell-style="{ color: '#334155', fontSize: '13px' }"
-        border
+        :header-cell-style="{ background: '#f8fafc', color: '#475569', fontWeight: '600', height: '48px' }"
+        :cell-style="{ color: '#334155', height: '48px' }"
       >
         <el-table-column type="index" label="序号" width="60" align="center" />
         
@@ -78,13 +80,17 @@
            </template>
         </el-table-column>
 
-        <el-table-column prop="title" label="项目名称" min-width="200" show-overflow-tooltip>
+        <el-table-column prop="title" label="项目名称" min-width="220" show-overflow-tooltip>
           <template #default="{ row }">
             <span class="project-title">{{ row.title }}</span>
           </template>
         </el-table-column>
 
-        <el-table-column prop="category_display" label="类别" width="120" align="center" />
+        <el-table-column prop="category_display" label="类别" width="120" align="center">
+            <template #default="{ row }">
+                <el-tag effect="light" size="small" type="info">{{ row.category_display }}</el-tag>
+            </template>
+        </el-table-column>
         
         <el-table-column prop="level_display" label="级别" width="100" align="center">
            <template #default="{ row }">
@@ -94,9 +100,12 @@
 
         <el-table-column prop="leader_name" label="负责人" width="100" align="center" />
 
-        <el-table-column label="状态" width="120" align="center">
+        <el-table-column label="状态" width="140" align="center">
           <template #default="{ row }">
-              <el-tag :type="getStatusColor(row.status)" size="small">{{ row.status_display }}</el-tag>
+              <div class="status-dot">
+                  <span class="dot" :class="getStatusClass(row.status)"></span>
+                  <span>{{ row.status_display }}</span>
+              </div>
           </template>
         </el-table-column>
 
@@ -109,20 +118,21 @@
         </el-table-column>
       </el-table>
 
-      <div class="pagination-container">
+      <div class="pagination-footer">
         <el-pagination
           v-model:current-page="currentPage"
           v-model:page-size="pageSize"
-          :page-sizes="[10, 20, 50, 100]"
+          :page-sizes="[10, 20, 50]"
           :total="total"
           layout="total, sizes, prev, pager, next, jumper"
           @size-change="handleSizeChange"
           @current-change="handlePageChange"
           background
           size="small"
+          class="custom-pagination"
         />
       </div>
-    </el-card>
+    </div>
   </div>
 </template>
 
@@ -234,11 +244,11 @@ const getLevelType = (level: string) => {
     return 'info';
 };
 
-const getStatusColor = (status: string) => {
-    if (status.includes('APPROVED')) return 'success';
-    if (status.includes('REJECTED')) return 'danger';
-    if (status.includes('REVIEWING') || status === 'SUBMITTED') return 'warning';
-    return 'info';
+const getStatusClass = (status: string) => {
+    if (status.includes('APPROVED')) return 'dot-success';
+    if (status.includes('REJECTED')) return 'dot-danger';
+    if (status.includes('REVIEWING') || status === 'SUBMITTED') return 'dot-warning';
+    return 'dot-info';
 };
 
 onMounted(() => {
@@ -254,16 +264,19 @@ onMounted(() => {
 <style scoped lang="scss">
 @use "@/styles/variables.scss" as *;
 
+.projects-page {
+    padding: 24px;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
 .filter-section {
-  border: none;
   background: white;
+  padding: 20px 24px 0 24px;
+  border-radius: $radius-lg;
   margin-bottom: 16px;
-  border-radius: 4px;
-  
-  :deep(.el-card__body) {
-    padding: 18px 24px;
-    padding-bottom: 0;
-  }
+  box-shadow: $shadow-sm;
+  border: 1px solid $color-border-light;
   
   .filter-form {
     display: flex;
@@ -277,60 +290,83 @@ onMounted(() => {
   }
 }
 
-.table-card {
-  border: none;
-  border-radius: 4px;
-  
-  .card-header {
+.table-container {
+  background: white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+  border: 1px solid $color-border-light;
+  overflow: hidden;
+
+  .table-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid $slate-100;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      
-      .title {
-          font-size: 16px;
-          font-weight: 600;
-          color: $slate-800;
-          position: relative;
-          padding-left: 12px;
+      justify-content: space-between;
+
+      .title-bar {
+          display: flex;
+          align-items: center;
+          gap: 12px;
           
-          &::before {
-              content: '';
-              position: absolute;
-              left: 0;
-              top: 50%;
-              transform: translateY(-50%);
-              width: 4px;
-              height: 16px;
-              background: $primary-600;
-              border-radius: 2px;
+          .title {
+              font-size: 16px;
+              font-weight: 600;
+              color: $slate-800;
+              position: relative;
+              padding-left: 14px;
+              
+              &::before {
+                  content: '';
+                  position: absolute;
+                  left: 0;
+                  top: 50%;
+                  transform: translateY(-50%);
+                  width: 4px;
+                  height: 16px;
+                  background: $primary-600;
+                  border-radius: 2px;
+              }
           }
       }
   }
-
-  :deep(.el-card__header) {
-      padding: 16px 24px;
-      border-bottom: 1px solid $slate-100;
-  }
-  
-  :deep(.el-card__body) {
-    padding: 24px;
-  }
 }
 
-.pagination-container {
-  padding-top: 24px;
-  display: flex;
-  justify-content: flex-end;
+.pagination-footer {
+    padding: 16px 24px;
+    border-top: 1px solid $slate-100;
+    display: flex;
+    justify-content: flex-end;
 }
 
 .project-title {
     font-weight: 500;
     color: $slate-800;
+    font-size: 14px;
 }
 
 .font-mono {
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
     color: $slate-600;
+}
+
+.status-dot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 13px;
+    
+    .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        
+        &.dot-success { background: $success; box-shadow: 0 0 0 2px rgba($success, 0.2); }
+        &.dot-warning { background: $warning; box-shadow: 0 0 0 2px rgba($warning, 0.2); }
+        &.dot-danger { background: $danger; box-shadow: 0 0 0 2px rgba($danger, 0.2); }
+        &.dot-info { background: $slate-400; }
+    }
 }
 </style>

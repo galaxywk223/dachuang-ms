@@ -84,13 +84,15 @@ const handleLogin = async (formData: any) => {
 </script>
 
 <style scoped lang="scss">
+@use "@/styles/variables.scss" as *;
+
 .login-container {
   height: 100vh;
   width: 100vw;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f8fafc; // Light slate background
+  background-color: $slate-50;
   overflow: hidden;
 }
 
@@ -100,7 +102,7 @@ const handleLogin = async (formData: any) => {
   height: 600px;
   background: #ffffff;
   border-radius: 24px;
-  box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.1);
+  box-shadow: $shadow-2xl;
   overflow: hidden;
   transition: transform 0.3s ease;
 
@@ -114,7 +116,7 @@ const handleLogin = async (formData: any) => {
 // Left Panel: Atmospheric
 .brand-side {
   flex: 1;
-  background: linear-gradient(135deg, #312e81 0%, #4338ca 100%); // Deep Indigo
+  background: linear-gradient(135deg, $primary-800 0%, $primary-600 100%); // Royal Blue Gradient
   color: #ffffff;
   position: relative;
   display: flex;
@@ -134,13 +136,14 @@ const handleLogin = async (formData: any) => {
     .logo-circle {
       width: 64px;
       height: 64px;
-      background: rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
       border-radius: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
       margin-bottom: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
       
       .el-icon {
         font-size: 32px;
@@ -153,8 +156,8 @@ const handleLogin = async (formData: any) => {
       font-weight: 700;
       line-height: 1.3;
       margin: 0;
-      letter-spacing: 1px;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      letter-spacing: 0.5px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
   }
 
@@ -178,14 +181,14 @@ const handleLogin = async (formData: any) => {
   .bg-shape {
     position: absolute;
     border-radius: 50%;
-    filter: blur(60px);
-    opacity: 0.6;
+    filter: blur(80px);
+    opacity: 0.4;
   }
   
   .shape-1 {
     width: 300px;
     height: 300px;
-    background: #4f46e5;
+    background: lighten($primary-400, 10%);
     top: -50px;
     right: -50px;
   }
@@ -193,7 +196,7 @@ const handleLogin = async (formData: any) => {
   .shape-2 {
     width: 400px;
     height: 400px;
-    background: #6366f1;
+    background: darken($primary-800, 5%);
     bottom: -100px;
     left: -100px;
   }
@@ -214,13 +217,13 @@ const handleLogin = async (formData: any) => {
 
     h2 {
       font-size: 24px;
-      color: #1e293b;
+      color: $slate-800;
       margin: 0 0 12px 0;
       font-weight: 600;
     }
 
     p {
-      color: #64748b;
+      color: $slate-500;
       font-size: 14px;
       margin: 0;
     }
