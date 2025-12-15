@@ -21,7 +21,7 @@
               v-model="filterForm.title"
               placeholder="搜索项目名称"
               clearable
-              prefix-icon="Search"
+              :prefix-icon="Search"
               style="width: 200px"
               class="modern-input"
             />
@@ -237,7 +237,7 @@ const getStatusColor = (status: string) => {
     return 'bg-info'; // Draft or default
 };
 
-const handleView = (row: any) => {
+const handleView = (_row: any) => {
   ElMessage.info("查看项目详情功能待开发");
 };
 
