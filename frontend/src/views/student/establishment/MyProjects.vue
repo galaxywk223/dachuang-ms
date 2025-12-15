@@ -8,7 +8,7 @@
             v-model="filterForm.title"
             placeholder="搜索名称"
             clearable
-            :prefix-icon="Search"
+            :prefix-icon="SearchIcon"
             style="width: 200px"
           />
         </el-form-item>
@@ -36,7 +36,7 @@
         </el-form-item>
 
         <el-form-item>
-          <el-button type="primary" @click="handleSearch" :icon="Search">查询</el-button>
+          <el-button type="primary" @click="handleSearch" :icon="SearchIcon">查询</el-button>
           <el-button @click="handleReset" :icon="RefreshLeft">重置</el-button>
         </el-form-item>
       </el-form>
@@ -174,7 +174,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { Search, RefreshLeft, Plus } from "@element-plus/icons-vue";
+import { Search as SearchIcon, RefreshLeft, Plus } from "@element-plus/icons-vue";
 import { getMyProjects, deleteProject } from "@/api/project";
 import { useRouter } from "vue-router";
 import { useDictionary } from "@/composables/useDictionary";
@@ -308,7 +308,7 @@ const canWithdraw = (row: any) => {
     return row.status === 'SUBMITTED'; 
 };
 
-const handleWithdraw = (row: any) => {
+const handleWithdraw = (_row: any) => {
     ElMessage.info("撤回功能开发中");
 };
 
@@ -327,9 +327,7 @@ const handleDelete = async (row: any) => {
 <style scoped lang="scss">
 @use "@/styles/variables.scss" as *;
 
-.my-projects-page {
-  /* Aligned with Apply.vue spacing */
-}
+
 
 .filter-section {
   border: none;
