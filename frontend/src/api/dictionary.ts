@@ -73,4 +73,10 @@ export const DICT_CODES = {
   REVIEW_STATUS: "review_status",
   CLOSURE_RATING: "closure_rating",
   NOTIFICATION_TYPE: "notification_type",
+  // New codes
+  PROJECT_SOURCE: "project_source",
+  COLLEGE: "college",
+  MAJOR_CATEGORY: "major_category",
+  ADVISOR_TITLE: "advisor_title",
+  SPECIAL_PROJECT_TYPE: "special_project_type",
 } as const;

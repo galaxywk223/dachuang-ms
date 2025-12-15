@@ -86,8 +86,12 @@
                 placeholder="请选择"
                 style="width: 100%"
               >
-                <el-option label="是" :value="true" />
-                <el-option label="否" :value="false" />
+                <el-option
+                  v-for="item in specialTypeOptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
               </el-select>
               <el-tooltip
                 content="是否属于国家重点支持的领域"
@@ -105,9 +109,12 @@
                 placeholder="请选择"
                 style="width: 100%"
               >
-                <el-option label="计算机学院" value="CS" />
-                <el-option label="软件学院" value="SE" />
-                <!-- 暂时硬编码，后续可改为字典 -->
+                <el-option
+                  v-for="item in collegeOptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
               </el-select>
             </el-form-item>
           </el-col>
@@ -128,7 +135,19 @@
         <el-row :gutter="40">
           <el-col :span="8">
             <el-form-item label="项目所属专业代码" prop="major_code" required>
-              <el-input v-model="formData.major_code" placeholder="请选择" />
+              <el-select
+                 v-model="formData.major_code"
+                 placeholder="请选择"
+                 style="width: 100%"
+                 filterable
+              >
+                 <el-option
+                  v-for="item in majorOptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="8">
@@ -199,7 +218,18 @@
                 <el-input v-model="advisor.name" placeholder="指导教师姓名" />
               </el-col>
               <el-col :span="5">
-                <el-input v-model="advisor.title" placeholder="指导教师职称" />
+                <el-select 
+                  v-model="advisor.title" 
+                  placeholder="指导教师职称" 
+                  style="width: 100%"
+                >
+                   <el-option
+                    v-for="item in advisorTitleOptions"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
               </el-col>
               <el-col :span="5">
                 <el-input v-model="advisor.contact" placeholder="指导教师联系方式" />
@@ -357,7 +387,7 @@ const formData = reactive({
   source: "",
   level: "",
   category: "",
-  is_key_field: false,
+  is_key_field: "NORMAL", // Default to Normal instead of boolean false
   college: "",
   budget: 0,
   major_code: "",
@@ -388,10 +418,11 @@ const rules = {
 };
 
 // Dictionaries
-const sourceOptions = computed(() => getOptions("project_source") || [
-    { label: "学生自拟", value: "STUDENT_PROPOSED" }, // Fallback
-    { label: "教师选题", value: "TEACHER" }
-]);
+const sourceOptions = computed(() => getOptions(DICT_CODES.PROJECT_SOURCE));
+const collegeOptions = computed(() => getOptions(DICT_CODES.COLLEGE));
+const specialTypeOptions = computed(() => getOptions(DICT_CODES.SPECIAL_PROJECT_TYPE));
+const majorOptions = computed(() => getOptions(DICT_CODES.MAJOR_CATEGORY));
+const advisorTitleOptions = computed(() => getOptions(DICT_CODES.ADVISOR_TITLE));
 const levelOptions = computed(() => getOptions(DICT_CODES.PROJECT_LEVEL));
 const categoryOptions = computed(() => getOptions(DICT_CODES.PROJECT_CATEGORY));
 
@@ -453,7 +484,11 @@ onMounted(() => {
   loadDictionaries([
       DICT_CODES.PROJECT_LEVEL, 
       DICT_CODES.PROJECT_CATEGORY,
-      // "project_source" // Will fail until backend dictionary is created
+      DICT_CODES.PROJECT_SOURCE,
+      DICT_CODES.COLLEGE,
+      DICT_CODES.SPECIAL_PROJECT_TYPE,
+      DICT_CODES.MAJOR_CATEGORY,
+      DICT_CODES.ADVISOR_TITLE
   ]);
 });
 
