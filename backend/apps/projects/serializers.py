@@ -163,6 +163,9 @@ class ProjectListSerializer(serializers.ModelSerializer):
     leader_name = serializers.CharField(source="leader.real_name", read_only=True)
     status_display = serializers.CharField(source="get_status_display", read_only=True)
     level_display = serializers.CharField(source="get_level_display", read_only=True)
+    category_display = serializers.CharField(
+        source="get_category_display", read_only=True
+    )
 
     class Meta:
         model = Project
@@ -172,6 +175,8 @@ class ProjectListSerializer(serializers.ModelSerializer):
             "title",
             "level",
             "level_display",
+            "category",
+            "category_display",
             "leader",
             "leader_name",
             "status",

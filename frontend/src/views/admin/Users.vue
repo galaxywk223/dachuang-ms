@@ -164,6 +164,7 @@
 import { ref, reactive, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { Search, Plus } from "@element-plus/icons-vue";
+import { getUsers, createUser, updateUser, toggleUserStatus, resetUserPassword } from "@/api/user-admin";
 
 const loading = ref(false);
 const users = ref<any[]>([]);
@@ -203,53 +204,20 @@ const rules = {
 const fetchUsers = async () => {
   loading.value = true;
   try {
-    // TODO: 调用后端API
-    // const response = await getUsers({
-    //   page: currentPage.value,
-    //   page_size: pageSize.value,
-    //   ...filters,
-    // });
-
-    // 模拟数据
-    users.value = [
-      {
-        id: 1,
-        employee_id: "20210001",
-        username: "wangkai",
-        real_name: "王凯",
-        role: "STUDENT",
-        role_display: "学生",
-        college: "计算机学院",
-        phone: "13800138000",
-        email: "wangkai@example.com",
-        is_active: true,
-      },
-      {
-        id: 2,
-        employee_id: "T20210001",
-        username: "teacher01",
-        real_name: "李老师",
-        role: "LEVEL2_ADMIN",
-        role_display: "二级管理员",
-        college: "计算机学院",
-        phone: "13900139000",
-        email: "teacher01@example.com",
-        is_active: true,
-      },
-      {
-        id: 3,
-        employee_id: "A20210001",
-        username: "admin01",
-        real_name: "管理员",
-        role: "LEVEL1_ADMIN",
-        role_display: "一级管理员",
-        college: "教务处",
-        phone: "13700137000",
-        email: "admin01@example.com",
-        is_active: true,
-      },
-    ];
-    total.value = 3;
+    const params = {
+      page: currentPage.value,
+      page_size: pageSize.value,
+      search: filters.search,
+      role: filters.role,
+    };
+    const res: any = await getUsers(params);
+    if (res.data && res.data.results) {
+        users.value = res.data.results;
+        total.value = res.data.total;
+    } else {
+        users.value = [];
+        total.value = 0;
+    }
   } catch (error) {
     ElMessage.error("获取用户列表失败");
   } finally {
@@ -311,11 +279,11 @@ const handleToggleStatus = async (row: any) => {
       }
     );
 
-    // TODO: 调用API
+    await toggleUserStatus(row.id);
     ElMessage.success(`${row.is_active ? "禁用" : "启用"}成功`);
     fetchUsers();
-  } catch {
-    // 用户取消
+  } catch (e: any) {
+     if(e !== 'cancel') ElMessage.error("操作失败");
   }
 };
 
@@ -331,23 +299,29 @@ const handleResetPassword = async (row: any) => {
       }
     );
 
-    // TODO: 调用API
+    await resetUserPassword(row.id);
     ElMessage.success("密码重置成功，新密码为: 123456");
-  } catch {
-    // 用户取消
+  } catch (e: any) {
+     if(e !== 'cancel') ElMessage.error("操作失败");
   }
 };
 
 const handleSubmit = async () => {
   try {
     await formRef.value.validate();
+    
+    if (dialogType.value === "add") {
+        await createUser(form);
+        ElMessage.success("添加成功");
+    } else {
+        await updateUser(form.id, form);
+        ElMessage.success("更新成功");
+    }
 
-    // TODO: 调用API
-    ElMessage.success(dialogType.value === "add" ? "添加成功" : "更新成功");
     dialogVisible.value = false;
     fetchUsers();
   } catch {
-    // 验证失败
+    // 验证失败 or api fail
   }
 };
 

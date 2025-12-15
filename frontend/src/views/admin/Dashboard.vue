@@ -143,48 +143,64 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { Document, Check, Clock, User } from "@element-plus/icons-vue";
-import { getProjectStatistics } from "@/api/admin";
 
 
+// State
 const stats = ref({
   totalProjects: 0,
   approvedProjects: 0,
   pendingReview: 0,
   totalUsers: 0,
 });
+const pendingProjects = ref([]);
+const recentProjects = ref([]);
 
-const pendingProjects = ref([
-  // Mock data for display
-   { title: "基于Vue3的大创系统", type: "创新训练", status: "PENDING" },
-   { title: "智能校园助手", type: "创业实践", status: "PENDING" },
-   { title: "无人机物流调度算法", type: "创新训练", status: "PENDING" },
-]);
+import { getProjectStatistics, getReviewProjects, getAllProjects } from "@/api/admin";
+import { getUserStatistics } from "@/api/user-admin";
 
-const recentProjects = ref([
-  { title: "基于Vue3的大创系统", leader: "王凯", date: "2023-12-14" },
-  { title: "智能校园助手", leader: "李四", date: "2023-12-13" },
-]);
+// Fetch Data
+const fetchData = async () => {
+    try {
+        // 1. Stats
+        const statsRes: any = await getProjectStatistics();
+        const userStatsRes: any = await getUserStatistics();
+        if (statsRes.data) {
+            stats.value.totalProjects = statsRes.data.total_projects || 0;
+            stats.value.approvedProjects = statsRes.data.approved_projects || 0;
+            stats.value.pendingReview = statsRes.data.pending_review || 0;
+        }
+        if (userStatsRes.data) {
+            stats.value.totalUsers = userStatsRes.data.total_users || 0;
+        }
 
-// Actually fetch
-const fetchStatistics = async () => {
-  try {
-    const response: any = await getProjectStatistics();
-    if (response.code === 200 && response.data) {
-      stats.value = {
-        totalProjects: response.data.total || 120, // Fallback mock
-        approvedProjects: response.data.approved || 45,
-        pendingReview: response.data.pending || 3,
-        totalUsers: response.data.total_users || 86,
-      };
+        // 2. Pending Projects (Review)
+        const pendingRes: any = await getReviewProjects({ page: 1, page_size: 5 });
+        if (pendingRes.data && pendingRes.data.results) {
+             pendingProjects.value = pendingRes.data.results.map((p: any) => ({
+                 title: p.title,
+                 type: p.category_display || p.category,
+                 status: 'PENDING'
+             }));
+        }
+
+        // 3. Recent Projects (Manage)
+        // Backend sorts by -created_at by default
+        const recentRes: any = await getAllProjects({ page: 1, page_size: 5 });
+        if (recentRes.data && recentRes.data.results) {
+            recentProjects.value = recentRes.data.results.map((p: any) => ({
+                title: p.title,
+                leader: p.leader_name || "未知",
+                date: p.created_at ? p.created_at.split('T')[0] : ""
+            }));
+        }
+
+    } catch (e) {
+        console.error("Failed to load dashboard data", e);
     }
-  } catch (error) {
-    console.error("Fetch stats error:", error);
-    // Silent fail or mock
-  }
-};
+}
 
 onMounted(() => {
-  fetchStatistics();
+  fetchData();
 });
 </script>
 

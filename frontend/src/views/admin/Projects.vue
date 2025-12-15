@@ -185,6 +185,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { Search, Plus } from "@element-plus/icons-vue";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionary";
+import { getProjects, deleteProject } from "@/api/project";
 // import { getStatusType as getStatusTypeUtil } from "@/utils/status"; // Assuming this might exist, but I'll implement inline for now
 
 // Composables
@@ -233,69 +234,36 @@ const getStatusType = (status: string) => {
 const fetchProjects = async () => {
   loading.value = true;
   try {
-    // 模拟延迟
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    const params = {
+      page: currentPage.value,
+      size: pageSize.value, // Note: Backend might expect 'page_size' or 'size'. Standard DRF often uses 'page_size' if configured. 
+      // Checking local settings.py is good, but sending both or 'page_size' is safer if unsure. 
+      // Let's assume standard 'page_size' based on common practice, or check settings.
+      // Actually, based on typical custom setups, let's try 'page_size'.
+      page_size: pageSize.value, 
+      search: filters.search,
+      level: filters.level,
+      category: filters.category,
+      status: filters.status,
+    };
     
-    // 模拟数据
-    projects.value = [
-      {
-        id: 1,
-        project_no: "CX2024001",
-        title: "基于深度学习的医疗影像辅助诊断系统",
-        category_display: "创新训练",
-        level_display: "国家级",
-        leader_name: "林晓明",
-        status: "IN_PROGRESS",
-        status_display: "进行中",
-        created_at: "2024-10-15 10:30:00",
-      },
-      {
-        id: 2,
-        project_no: "CY2024002",
-        title: "校园绿色共享单车智能调度平台",
-        category_display: "创业训练",
-        level_display: "省级",
-        leader_name: "陈伟",
-        status: "SUBMITTED",
-        status_display: "待审核",
-        created_at: "2024-10-20 14:20:00",
-      },
-      {
-        id: 3,
-        project_no: "SJ2024003",
-        title: "乡村振兴视域下的农产品电商直播实践",
-        category_display: "创业实践",
-        level_display: "校级",
-        leader_name: "王芳",
-        status: "COMPLETED",
-        status_display: "已完成",
-        created_at: "2024-09-10 09:00:00",
-      },
-      {
-        id: 4,
-        project_no: "CX2024004",
-        title: "基于区块链的供应链金融信用评估模型",
-        category_display: "创新训练",
-        level_display: "省级",
-        leader_name: "张建国",
-        status: "LEVEL1_REJECTED",
-        status_display: "一级审核不通过",
-        created_at: "2024-11-05 11:15:00",
-      },
-      {
-        id: 5,
-        project_no: "CX2024005",
-        title: "面向老年人的智能家居语音交互系统",
-        category_display: "创新训练",
-        level_display: "校级",
-        leader_name: "刘洋",
-        status: "DRAFT",
-        status_display: "草稿",
-        created_at: "2024-12-01 09:45:00",
-      }
-    ];
-    total.value = 5;
+    const res: any = await getProjects(params);
+    // Support both standard DRF pagination ({ count, results }) and flat list if that was the case (but it's ModelViewSet)
+    if (res.results) {
+        projects.value = res.results;
+        total.value = res.count;
+    } else if (res.data && res.data.results) {
+        // sometimes axios wrapper structure
+        projects.value = res.data.results;
+        total.value = res.data.count;
+    } else {
+        // Fallback or flat list
+        projects.value = Array.isArray(res) ? res : [];
+        total.value = projects.value.length;
+    }
+
   } catch (error) {
+    console.error(error);
     ElMessage.error("获取项目列表失败");
   } finally {
     loading.value = false;
@@ -335,10 +303,13 @@ const handleDelete = async (row: any) => {
         type: "warning",
       }
     );
+    await deleteProject(row.id);
     ElMessage.success("删除成功");
     fetchProjects();
-  } catch {
-    // canceled
+  } catch (error) {
+    if (error !== 'cancel') {
+        ElMessage.error("删除失败");
+    }
   }
 };
 

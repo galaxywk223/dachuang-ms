@@ -14,6 +14,17 @@ export function createProjectApplication(data: any) {
 }
 
 /**
+ * 获取项目列表
+ */
+export function getProjects(params?: any) {
+  return request({
+    url: "/projects/",
+    method: "get",
+    params,
+  });
+}
+
+/**
  * 更新项目申请
  */
 export function updateProjectApplication(id: number, data: any) {
