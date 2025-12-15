@@ -7,7 +7,7 @@
         <p class="subtitle">管理所有大创项目的申报、审核与进度</p>
       </div>
       <div class="header-right">
-        <el-button type="primary" size="large" icon="Plus" class="create-btn">
+        <el-button type="primary" size="large" :icon="Plus" class="create-btn">
           申报项目
         </el-button>
       </div>
@@ -20,7 +20,7 @@
           <el-input
             v-model="filters.search"
             placeholder="搜索项目名称/编号"
-            prefix-icon="Search"
+            :prefix-icon="Search"
             clearable
             class="search-input"
           />
@@ -185,7 +185,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { Search, Plus } from "@element-plus/icons-vue";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionary";
-import { getStatusType as getStatusTypeUtil } from "@/utils/status"; // Assuming this might exist, but I'll implement inline for now
+// import { getStatusType as getStatusTypeUtil } from "@/utils/status"; // Assuming this might exist, but I'll implement inline for now
 
 // Composables
 const { loadDictionaries, getOptions } = useDictionary();
@@ -362,19 +362,19 @@ onMounted(() => {
   h2 {
     font-size: 24px;
     font-weight: 600;
-    color: $text-primary;
+    color: $color-text-primary;
     margin-bottom: 4px;
     letter-spacing: -0.5px;
   }
 
   .subtitle {
     font-size: 14px;
-    color: $text-secondary;
+    color: $color-text-regular;
     margin: 0;
   }
 
   .create-btn {
-    box-shadow: 0 4px 14px rgba($primary-color, 0.3);
+    box-shadow: 0 4px 14px rgba($primary-600, 0.3);
     transition: transform 0.2s;
     
     &:hover {
@@ -390,7 +390,7 @@ onMounted(() => {
 .filter-card {
   padding: 24px 24px 0 24px;
   margin-bottom: $spacing-lg;
-  border-left: 4px solid $primary-color;
+  border-left: 4px solid $primary-600;
 
   .search-input {
     width: 240px;
@@ -424,7 +424,7 @@ onMounted(() => {
 
   .project-title {
     font-weight: 500;
-    color: $text-primary;
+    color: $color-text-primary;
   }
 
   .rounded-tag {
@@ -439,7 +439,7 @@ onMounted(() => {
   }
   
   .text-secondary {
-    color: $text-secondary;
+    color: $color-text-regular;
   }
 
   .leader-info {
@@ -448,8 +448,8 @@ onMounted(() => {
     gap: 8px;
     
     .leader-avatar {
-      background-color: $border-base;
-      color: $text-regular;
+      background-color: $color-border;
+      color: $color-text-regular;
       font-size: 12px;
     }
   }
@@ -464,11 +464,11 @@ onMounted(() => {
       height: 8px;
       border-radius: 50%;
       
-      &.info { background-color: $info-color; }
-      &.primary { background-color: $primary-color; }
-      &.success { background-color: $success-color; }
-      &.warning { background-color: $warning-color; }
-      &.danger { background-color: $danger-color; }
+      &.info { background-color: $info; }
+      &.primary { background-color: $primary-600; }
+      &.success { background-color: $success; }
+      &.warning { background-color: $warning; }
+      &.danger { background-color: $danger; }
     }
     
     .status-text {
@@ -495,7 +495,7 @@ onMounted(() => {
 
   .pagination-footer {
     padding: 20px;
-    border-top: 1px solid $border-light;
+    border-top: 1px solid $color-border-light;
     justify-content: flex-end;
   }
 }
