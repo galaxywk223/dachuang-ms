@@ -69,12 +69,14 @@
     <el-container class="main-wrapper">
       <el-header class="app-header">
         <div class="header-left">
-          <!-- Hamburger Removed -->
-          
           <el-breadcrumb separator="/" class="breadcrumb">
             <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
             <template v-for="(matched, index) in breadcrumbs" :key="matched.path">
-               <el-breadcrumb-item v-if="matched.meta && matched.meta.title">
+               <!-- Make breadcrumb clickable if it has a redirect or component, and is not the last item -->
+               <el-breadcrumb-item 
+                  v-if="matched.meta && matched.meta.title"
+                  :to="{ path: matched.path }"
+               >
                   {{ matched.meta.title }}
                </el-breadcrumb-item>
             </template>
@@ -146,9 +148,6 @@ const userInitials = computed(() => userName.value?.[0] || 'S');
 
 // Generate breadcrumbs from matched routes
 const breadcrumbs = computed(() => {
-  // Filter out the root or layout route if it doesn't have a label we want, 
-  // or logic to map specific paths to names if meta.title isn't enough.
-  // Here we use route.matched
   return route.matched.filter(item => item.meta && item.meta.title && item.path !== '/');
 });
 
@@ -200,7 +199,7 @@ const handleCommand = async (command: string) => {
     padding: 0 20px;
     background: rgba(255, 255, 255, 0.05);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    cursor: pointer; /* Add pointer usage */
+    cursor: pointer;
     transition: background 0.3s;
 
     &:hover {
@@ -243,6 +242,7 @@ const handleCommand = async (command: string) => {
     border-right: none;
     padding-top: 16px;
 
+    /* Standard Menu Item Styles */
     :deep(.el-menu-item), :deep(.el-sub-menu__title) {
       height: 50px;
       margin: 4px 12px;
@@ -273,6 +273,28 @@ const handleCommand = async (command: string) => {
       }
     }
     
+    /* Collapsed State Overrides - Fix Messiness */
+    &.el-menu--collapse {
+      :deep(.el-menu-item), :deep(.el-sub-menu__title) {
+         margin: 4px 0 !important; /* Remove horizontal margins */
+         padding: 0 !important; /* Force center */
+         display: flex;
+         justify-content: center;
+         align-items: center;
+      }
+      
+      :deep(.el-menu-item.is-active), :deep(.el-sub-menu__title.is-active) {
+         background: transparent !important; /* Remove background block in collapsed to avoid boxy look */
+         
+         .el-icon { 
+            color: #fff;
+            filter: drop-shadow(0 0 4px rgba(99, 102, 241, 0.6)); /* Glow instead of bg */
+         }
+
+         &::before { display: none; } /* Hide border accent */
+      }
+    }
+
     :deep(.el-sub-menu .el-menu-item) {
         min-width: unset;
     }
@@ -298,11 +320,15 @@ const handleCommand = async (command: string) => {
     display: flex;
     align-items: center;
     gap: 20px;
-
-    /* Removed toggle-btn styles */
     
     .breadcrumb {
         font-size: 14px;
+        /* Make breadcrumbs clickable style */
+        :deep(.el-breadcrumb__inner.is-link) {
+           color: $slate-500;
+           font-weight: normal;
+           &:hover { color: $primary-600; }
+        }
     }
   }
 
