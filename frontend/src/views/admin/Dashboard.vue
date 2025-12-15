@@ -144,7 +144,7 @@
 import { ref, onMounted } from "vue";
 import { Document, Check, Clock, User } from "@element-plus/icons-vue";
 import { getProjectStatistics } from "@/api/admin";
-import { ElMessage } from "element-plus";
+
 
 const stats = ref({
   totalProjects: 0,
@@ -190,6 +190,7 @@ onMounted(() => {
 
 <style scoped lang="scss">
 @use "@/styles/variables.scss" as *;
+@use "sass:color";
 
 .admin-dashboard {
   max-width: 1400px;
@@ -244,9 +245,9 @@ onMounted(() => {
       box-shadow: $shadow-sm;
       
       &.bg-primary { background: linear-gradient(135deg, $primary-500, $primary-600); }
-      &.bg-success { background: linear-gradient(135deg, $success, darken($success, 5%)); }
-      &.bg-warning { background: linear-gradient(135deg, $warning, darken($warning, 5%)); }
-      &.bg-danger  { background: linear-gradient(135deg, $danger, darken($danger, 5%)); }
+      &.bg-success { background: linear-gradient(135deg, $success, color.adjust($success, $lightness: -5%)); }
+      &.bg-warning { background: linear-gradient(135deg, $warning, color.adjust($warning, $lightness: -5%)); }
+      &.bg-danger  { background: linear-gradient(135deg, $danger, color.adjust($danger, $lightness: -5%)); }
     }
 
     .stat-info {
