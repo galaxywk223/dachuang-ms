@@ -20,34 +20,27 @@ def create_project_application(request):
     创建项目申请（草稿或提交）
     """
     user = request.user
-    data = request.data
-    is_draft = data.get("is_draft", True)  # 默认保存为草稿
+    data = request.data.copy()  # Use copy to be mutable
+    is_draft = data.get("is_draft", True)
 
     try:
         with transaction.atomic():
-            # 创建项目基本信息
-            project_data = {
-                "title": data.get("title", ""),
-                "description": data.get("description", ""),
-                "category": data.get("category"),
-                "level": data.get("level"),
-                "is_key_field": data.get("is_key_field", False),
-                "college": data.get("college", ""),
-                "major_code": data.get("major_code", ""),
-                "self_funding": data.get("self_funding", 0),
-                "leader_student_id": data.get("leader_student_id", ""),
-                "leader_contact": data.get("leader_contact", ""),
-                "leader_email": data.get("leader_email", ""),
-                "category_description": data.get("category_description", ""),
-                "leader": user.id,
-                "status": Project.ProjectStatus.DRAFT
-                if is_draft
-                else Project.ProjectStatus.SUBMITTED,
-            }
+            # Override backend-controlled fields
+            data["leader"] = user.id
+            data["status"] = (
+                Project.ProjectStatus.DRAFT if is_draft else Project.ProjectStatus.SUBMITTED
+            )
+
+            # Ensure defaults for required fields if missing
+            if not data.get("level"):
+                data["level"] = Project.ProjectLevel.SCHOOL
+            if not data.get("category"):
+                data["category"] = Project.ProjectCategory.INNOVATION_TRAINING
 
             # 序列化并验证
-            serializer = ProjectSerializer(data=project_data)
+            serializer = ProjectSerializer(data=data)
             if not serializer.is_valid():
+                print("Serializer Errors:", serializer.errors)  # Debug logging
                 return Response(
                     {
                         "code": 400,
@@ -65,9 +58,9 @@ def create_project_application(request):
                 project.save()
 
             # 添加指导教师
-            advisors_data = data.get("advisors", [])
+            advisors_data = request.data.get("advisors", [])
             for idx, advisor_data in enumerate(advisors_data):
-                if advisor_data.get("name"):  # 只添加填写了姓名的指导教师
+                if advisor_data.get("name"):
                     ProjectAdvisor.objects.create(
                         project=project,
                         name=advisor_data.get("name", ""),
@@ -88,11 +81,12 @@ def create_project_application(request):
             )
 
             # 添加其他成员
-            members_data = data.get("members", [])
+            members_data = request.data.get("members", [])
             for member_data in members_data:
-                if member_data.get("student_id") and member_data.get("name"):
-                    # TODO: 根据学号查找用户，这里暂时跳过
-                    pass
+                # Basic implementation: just creating records if we had a way to link users
+                # Since we don't know if 'members' contains user IDs or just names
+                # For now, we skip or need logic validation
+                pass
 
             return Response(
                 {
@@ -104,6 +98,8 @@ def create_project_application(request):
             )
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return Response(
             {"code": 500, "message": f"操作失败: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -133,36 +129,20 @@ def update_project_application(request, pk):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    data = request.data
+    data = request.data.copy()
     is_draft = data.get("is_draft", True)
 
     try:
         with transaction.atomic():
-            # 更新项目基本信息
-            project_data = {
-                "title": data.get("title", project.title),
-                "description": data.get("description", project.description),
-                "category": data.get("category", project.category),
-                "level": data.get("level", project.level),
-                "is_key_field": data.get("is_key_field", project.is_key_field),
-                "college": data.get("college", project.college),
-                "major_code": data.get("major_code", project.major_code),
-                "self_funding": data.get("self_funding", project.self_funding),
-                "leader_student_id": data.get(
-                    "leader_student_id", project.leader_student_id
-                ),
-                "leader_contact": data.get("leader_contact", project.leader_contact),
-                "leader_email": data.get("leader_email", project.leader_email),
-                "category_description": data.get(
-                    "category_description", project.category_description
-                ),
-                "status": Project.ProjectStatus.DRAFT
-                if is_draft
-                else Project.ProjectStatus.SUBMITTED,
-            }
-
-            serializer = ProjectSerializer(project, data=project_data, partial=True)
+            # Verify and update fields
+            data["status"] = (
+                Project.ProjectStatus.DRAFT if is_draft else Project.ProjectStatus.SUBMITTED
+            )
+            
+            # Use partial update to respect existing fields if not provided
+            serializer = ProjectSerializer(project, data=data, partial=True)
             if not serializer.is_valid():
+                print("Update Serializer Errors:", serializer.errors)
                 return Response(
                     {
                         "code": 400,
@@ -180,7 +160,7 @@ def update_project_application(request, pk):
 
             # 更新指导教师（先删除旧的）
             project.advisors.all().delete()
-            advisors_data = data.get("advisors", [])
+            advisors_data = request.data.get("advisors", [])
             for idx, advisor_data in enumerate(advisors_data):
                 if advisor_data.get("name"):
                     ProjectAdvisor.objects.create(
@@ -203,6 +183,8 @@ def update_project_application(request, pk):
             )
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return Response(
             {"code": 500, "message": f"操作失败: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
