@@ -23,10 +23,7 @@
           active-text-color="#ffffff"
           class="sidebar-menu"
         >
-          <el-menu-item index="/admin/dashboard">
-            <el-icon><DataAnalysis /></el-icon>
-            <template #title>数据统计</template>
-          </el-menu-item>
+
 
           <el-sub-menu index="project-review">
             <template #title>
@@ -43,15 +40,7 @@
             <template #title>项目管理</template>
           </el-menu-item>
 
-          <el-menu-item index="/admin/users">
-            <el-icon><User /></el-icon>
-            <template #title>用户管理</template>
-          </el-menu-item>
 
-          <el-menu-item index="/admin/settings">
-            <el-icon><Setting /></el-icon>
-            <template #title>系统设置</template>
-          </el-menu-item>
         </el-menu>
       </el-scrollbar>
     </el-aside>
@@ -72,7 +61,7 @@
           </el-button>
           
           <el-breadcrumb separator="/" class="breadcrumb">
-            <el-breadcrumb-item :to="{ path: '/admin/dashboard' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item :to="{ path: '/admin/projects' }">首页</el-breadcrumb-item>
             <el-breadcrumb-item>{{ route.meta.title || '管理后台' }}</el-breadcrumb-item>
           </el-breadcrumb>
         </div>
@@ -117,7 +106,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import {
-  DataAnalysis, Document, Files, User, Setting,
+  Document, Files, 
   Expand, Fold, ArrowDown, SwitchButton
 } from '@element-plus/icons-vue';
 

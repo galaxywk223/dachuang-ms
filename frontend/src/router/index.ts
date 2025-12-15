@@ -28,14 +28,9 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: "",
-        redirect: "/admin/dashboard",
+        redirect: "/admin/projects",
       },
-      {
-        path: "dashboard",
-        name: "admin-dashboard",
-        component: () => import("@/views/admin/Dashboard.vue"),
-        meta: { title: "数据统计" },
-      },
+
       {
         path: "review/establishment",
         name: "admin-review-establishment",
@@ -55,18 +50,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/views/admin/Projects.vue"),
         meta: { title: "项目管理" },
       },
-      {
-        path: "users",
-        name: "admin-users",
-        component: () => import("@/views/admin/Users.vue"),
-        meta: { title: "用户管理" },
-      },
-      {
-        path: "settings",
-        name: "admin-settings",
-        component: () => import("@/views/admin/Settings.vue"),
-        meta: { title: "系统设置" },
-      },
+
     ],
   },
   // 学生路由
@@ -112,6 +96,12 @@ const routes: RouteRecordRaw[] = [
         redirect: "/closure/pending",
         meta: { title: "结题管理" },
         children: [
+          {
+            path: "apply",
+            name: "closure-apply",
+            component: () => import("@/views/student/closure/Apply.vue"),
+            meta: { title: "申请结题" },
+          },
           {
             path: "pending",
             name: "closure-pending",
@@ -165,7 +155,7 @@ router.beforeEach(async (to, _from, next) => {
     if (userRole === "student") {
       next({ path: "/establishment/apply" });
     } else if (userRole === "admin") {
-      next({ path: "/admin/dashboard" });
+      next({ path: "/admin/projects" });
     } else {
       next({ path: "/establishment/apply" });
     }
@@ -183,7 +173,7 @@ router.beforeEach(async (to, _from, next) => {
       next({ path: "/establishment/apply" });
     } else if (routeRole === "student" && userRole === "admin") {
       // 管理员访问学生页面
-      next({ path: "/admin/dashboard" });
+      next({ path: "/admin/projects" });
     } else {
       next();
     }
