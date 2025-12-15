@@ -61,7 +61,14 @@
             </el-col>
              <el-col :span="8">
                <el-form-item label="经费预算" prop="budget">
-                 <el-input-number v-model="formData.budget" :min="0" :step="100" class="w-full" controls-position="right" />
+                 <el-input-number 
+                   v-model="formData.budget" 
+                   :min="0" 
+                   class="w-full" 
+                   controls-position="right"
+                   disabled 
+                   placeholder="自动生成"
+                 />
                </el-form-item>
             </el-col>
           </el-row>
@@ -252,7 +259,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from "vue";
+import { ref, reactive, computed, onMounted, watch } from "vue";
 import { ElMessage, type FormInstance } from "element-plus";
 import { Download } from "@element-plus/icons-vue";
 import { useDictionary } from "@/composables/useDictionary";
@@ -269,8 +276,8 @@ const { loadDictionaries, getOptions } = useDictionary();
 const formRef = ref<FormInstance>();
 
 const currentUser = computed(() => ({
-  name: userStore.user?.real_name || "学生用户",
-  student_id: userStore.user?.username || "Unknown"
+  name: userStore.user?.real_name || userStore.user?.username || "学生用户",
+  student_id: userStore.user?.employee_id || userStore.user?.username || "Unknown"
 }));
 
 const formData = reactive({
@@ -290,6 +297,27 @@ const formData = reactive({
   advisors: [] as any[],
   members: [] as any[],
   attachment_file: null as File | null
+});
+
+// Watcher for Budget Automation
+watch(() => formData.level, (newVal) => {
+    switch (newVal) {
+        case 'SCHOOL':
+            formData.budget = 1000;
+            break;
+        case 'SCHOOL_KEY':
+            formData.budget = 3000;
+            break;
+        case 'PROVINCIAL':
+            formData.budget = 6000;
+            break;
+        case 'NATIONAL':
+            formData.budget = 10000;
+            break;
+        default:
+            formData.budget = 0;
+            break;
+    }
 });
 
 // Temp inputs
@@ -388,8 +416,7 @@ const processRequest = async (isDraft: boolean) => {
             is_draft: isDraft 
         };
 
-        const validLevels = ['NATIONAL', 'PROVINCIAL', 'SCHOOL'];
-        if (payload.level === 'SCHOOL_KEY') payload.level = 'SCHOOL';
+        const validLevels = ['NATIONAL', 'PROVINCIAL', 'SCHOOL', 'SCHOOL_KEY'];
         if (!validLevels.includes(payload.level)) payload.level = 'SCHOOL';
 
         const validCategories = ['INNOVATION_TRAINING', 'ENTREPRENEURSHIP_TRAINING', 'ENTREPRENEURSHIP_PRACTICE'];

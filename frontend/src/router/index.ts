@@ -183,7 +183,7 @@ const router = createRouter({
 });
 
 // 路由守卫
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const userStore = useUserStore();
   const userRole = localStorage.getItem('user_role'); // 获取用户角色
 
@@ -200,9 +200,14 @@ router.beforeEach((to, _from, next) => {
       next({ path: "/establishment/apply" });
     }
   } else if (userStore.isLoggedIn) {
+    // 如果已登录但没有用户信息，尝试获取用户信息
+    if (!userStore.user) {
+      await userStore.fetchProfile();
+    }
+
     // 角色权限检查
     const routeRole = to.meta.role as string | undefined;
-    
+
     if (routeRole === "admin" && userRole !== "admin") {
       // 非管理员访问管理员页面
       next({ path: "/establishment/apply" });
