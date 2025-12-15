@@ -479,18 +479,82 @@ const handleReset = () => formRef.value?.resetFields();
 
 // Load Data if Edit Mode
 const loadData = async (id: number) => {
+    loading.value = true;
     try {
         const res: any = await getProjectDetail(id);
-        if (res.code === 200 && res.data) {
-            Object.assign(formData, res.data);
-            // Handle lists safety
-            if (!formData.advisors || formData.advisors.length === 0) 
-                 formData.advisors = [{ job_number: "", name: "", title: "", contact: "", email: "" }];
-            if (!formData.members || formData.members.length === 0) 
+        console.log("DEBUG: Project Detail Response:", res);
+        
+        // Handle response structure (support both wrapped and unwrapped data)
+        const projectData = res.data || res;
+        
+        if (projectData && (projectData.id || res.code === 200)) {
+            const data = projectData.id ? projectData : projectData.data;
+            if (!data) throw new Error("No data found");
+
+            console.log("DEBUG: Mapping Data:", data);
+
+            // 1. Basic Fields Mapping
+            formData.id = data.id;
+            formData.title = data.title || "";
+            // Ensure we map back dict codes correctly
+            formData.source = data.source || ""; 
+            formData.level = data.level || "SCHOOL"; 
+            formData.category = data.category || "INNOVATION_TRAINING"; 
+            formData.college = data.college || "";
+            formData.major_code = data.major_code || "";
+            formData.budget = Number(data.budget || 0);
+            formData.leader_contact = data.leader_contact || "";
+            formData.leader_email = data.leader_email || "";
+            formData.description = data.description || "";
+            formData.expected_results = data.expected_results || "";
+            
+            // 2. Boolean Mapping
+            // If backend sends boolean, convert if needed, or keep boolean if using switch
+            // Front uses Select with 'KEY'/'NORMAL'
+            if (typeof data.is_key_field === 'boolean') {
+                 formData.is_key_field = data.is_key_field ? 'KEY' : 'NORMAL';
+            } else {
+                 formData.is_key_field = data.is_key_field || 'NORMAL';
+            }
+
+            // 3. Advisors Mapping
+            // Backend: advisors_info (list of objs)
+            if (Array.isArray(data.advisors_info) && data.advisors_info.length > 0) {
+                formData.advisors = data.advisors_info.map((adh: any) => ({
+                    job_number: "", // Backend doesn't store this in Advisor model?
+                    name: adh.name || "",
+                    title: adh.title || "",
+                    contact: adh.contact || "",
+                    email: adh.email || ""
+                }));
+            } else {
+                formData.advisors = [{ job_number: "", name: "", title: "", contact: "", email: "" }];
+            }
+
+            // 4. Members Mapping
+            // Backend: members_info (list of objs, includes Leader)
+            if (Array.isArray(data.members_info) && data.members_info.length > 0) {
+                 const otherMembers = data.members_info.filter((m: any) => m.role === 'MEMBER');
+                 if (otherMembers.length > 0) {
+                     formData.members = otherMembers.map((m: any) => ({
+                         student_id: m.student_id || "",
+                         name: m.user_name || m.name || ""
+                     }));
+                 } else {
+                     formData.members = [{ student_id: "", name: "" }];
+                 }
+            } else {
                  formData.members = [{ student_id: "", name: "" }];
+            }
+            ElMessage.success("项目数据加载成功");
+        } else {
+            console.warn("DEBUG: Invalid response code or no data", res);
         }
-    } catch(e) {
+    } catch(e: any) {
         ElMessage.error("加载项目详情失败");
+        console.error("DEBUG: Load Error", e);
+    } finally {
+        loading.value = false;
     }
 }
 
