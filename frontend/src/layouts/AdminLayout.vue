@@ -34,7 +34,7 @@
               <span>项目审核</span>
             </template>
             <el-menu-item index="/admin/review/establishment">立项审核</el-menu-item>
-            <el-menu-item index="/admin/review/midterm">中期审核</el-menu-item>
+
             <el-menu-item index="/admin/review/closure">结题审核</el-menu-item>
           </el-sub-menu>
 

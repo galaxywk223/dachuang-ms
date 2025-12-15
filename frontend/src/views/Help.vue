@@ -25,12 +25,7 @@
               <p>2. 查看项目状态列</p>
               <p>3. 点击项目可查看详细信息</p>
             </el-collapse-item>
-            <el-collapse-item title="如何进行中期检查？" name="3">
-              <p>1. 点击"中期管理"菜单</p>
-              <p>2. 选择需要检查的项目</p>
-              <p>3. 填写中期检查报告</p>
-              <p>4. 提交审核</p>
-            </el-collapse-item>
+
             <el-collapse-item title="如何申请结题？" name="4">
               <p>1. 进入"结题管理"页面</p>
               <p>2. 选择已完成的项目</p>

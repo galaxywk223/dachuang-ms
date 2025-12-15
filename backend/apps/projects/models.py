@@ -14,12 +14,6 @@ class Project(models.Model):
     class ProjectStatus(models.TextChoices):
         DRAFT = "DRAFT", "草稿"
         SUBMITTED = "SUBMITTED", "已提交"
-        LEVEL2_REVIEWING = "LEVEL2_REVIEWING", "二级审核中"
-        LEVEL2_APPROVED = "LEVEL2_APPROVED", "二级审核通过"
-        LEVEL2_REJECTED = "LEVEL2_REJECTED", "二级审核不通过"
-        LEVEL1_REVIEWING = "LEVEL1_REVIEWING", "一级审核中"
-        LEVEL1_APPROVED = "LEVEL1_APPROVED", "一级审核通过"
-        LEVEL1_REJECTED = "LEVEL1_REJECTED", "一级审核不通过"
         IN_PROGRESS = "IN_PROGRESS", "进行中"
         CLOSURE_DRAFT = "CLOSURE_DRAFT", "结题草稿"
         CLOSURE_SUBMITTED = "CLOSURE_SUBMITTED", "结题已提交"

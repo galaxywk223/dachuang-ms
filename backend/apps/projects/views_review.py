@@ -34,7 +34,6 @@ class ProjectReviewViewSet(viewsets.ViewSet):
         # 根据审核类型确定项目状态
         status_map = {
             "establishment": ["SUBMITTED"],
-            "midterm": ["MIDTERM_SUBMITTED"],
             "closure": ["CLOSURE_SUBMITTED"],
         }
 
@@ -88,9 +87,7 @@ class ProjectReviewViewSet(viewsets.ViewSet):
             if project.status == "SUBMITTED":
                 project.status = "APPROVED"
                 next_status = "IN_PROGRESS"
-            elif project.status == "MIDTERM_SUBMITTED":
-                project.status = "MIDTERM_APPROVED"
-                next_status = "IN_PROGRESS"
+
             elif project.status == "CLOSURE_SUBMITTED":
                 project.status = "CLOSURE_APPROVED"
                 next_status = "COMPLETED"
@@ -147,9 +144,7 @@ class ProjectReviewViewSet(viewsets.ViewSet):
             if project.status == "SUBMITTED":
                 project.status = "REJECTED"
                 review_type = "ESTABLISHMENT"
-            elif project.status == "MIDTERM_SUBMITTED":
-                project.status = "MIDTERM_REJECTED"
-                review_type = "MIDTERM"
+
             elif project.status == "CLOSURE_SUBMITTED":
                 project.status = "CLOSURE_REJECTED"
                 review_type = "CLOSURE"

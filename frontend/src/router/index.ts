@@ -42,12 +42,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/views/admin/review/Establishment.vue"),
         meta: { title: "立项审核" },
       },
-      {
-        path: "review/midterm",
-        name: "admin-review-midterm",
-        component: () => import("@/views/admin/review/Midterm.vue"),
-        meta: { title: "中期审核" },
-      },
+
       {
         path: "review/closure",
         name: "admin-review-closure",
@@ -110,32 +105,7 @@ const routes: RouteRecordRaw[] = [
           },
         ],
       },
-      {
-        path: "midterm",
-        name: "midterm",
-        redirect: "/midterm/submit",
-        meta: { title: "中期管理" },
-        children: [
-          {
-            path: "submit",
-            name: "midterm-submit",
-            component: () => import("@/views/student/midterm/Submit.vue"),
-            meta: { title: "提交中期检查" },
-          },
-          {
-            path: "my-checks",
-            name: "midterm-my-checks",
-            component: () => import("@/views/student/midterm/MyChecks.vue"),
-            meta: { title: "我的中期检查" },
-          },
-          {
-            path: "drafts",
-            name: "midterm-drafts",
-            component: () => import("@/views/student/midterm/Drafts.vue"),
-            meta: { title: "草稿箱" },
-          },
-        ],
-      },
+
       {
         path: "closure",
         name: "closure",

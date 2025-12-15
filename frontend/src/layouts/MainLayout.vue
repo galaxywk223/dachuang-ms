@@ -34,16 +34,7 @@
             <el-menu-item index="/establishment/drafts">草稿箱</el-menu-item>
           </el-sub-menu>
 
-          <!-- 中期管理 -->
-          <el-sub-menu index="midterm">
-            <template #title>
-              <el-icon><Document /></el-icon>
-              <span>中期管理</span>
-            </template>
-            <el-menu-item index="/midterm/submit">提交中期检查</el-menu-item>
-            <el-menu-item index="/midterm/my-checks">我的中期检查</el-menu-item>
-            <el-menu-item index="/midterm/drafts">草稿箱</el-menu-item>
-          </el-sub-menu>
+
 
           <!-- 结题管理 -->
           <el-sub-menu index="closure">
@@ -130,7 +121,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user';
 import { ElMessageBox } from 'element-plus';
 import {
-  School, DocumentAdd, DocumentChecked, Document, 
+  School, DocumentAdd, DocumentChecked, 
   QuestionFilled, Bell, ArrowDown, 
   User, SwitchButton
 } from '@element-plus/icons-vue';
