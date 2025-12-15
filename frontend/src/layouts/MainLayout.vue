@@ -2,7 +2,7 @@
   <el-container class="layout-container">
     <!-- Sidebar -->
     <el-aside :width="isCollapse ? '64px' : '260px'" class="app-sidebar">
-      <div class="logo-area" :class="{ 'collapsed': isCollapse }">
+      <div class="logo-area" :class="{ 'collapsed': isCollapse }" @click="toggleSidebar">
         <div class="logo-icon">
           <el-icon><School /></el-icon>
         </div>
@@ -69,20 +69,15 @@
     <el-container class="main-wrapper">
       <el-header class="app-header">
         <div class="header-left">
-          <el-button
-            type="text"
-            class="toggle-btn"
-            @click="toggleSidebar"
-          >
-            <el-icon :size="20">
-              <Expand v-if="isCollapse" />
-              <Fold v-else />
-            </el-icon>
-          </el-button>
+          <!-- Hamburger Removed -->
           
           <el-breadcrumb separator="/" class="breadcrumb">
-            <el-breadcrumb-item>首页</el-breadcrumb-item>
-            <el-breadcrumb-item>{{ route.meta.title || '控制台' }}</el-breadcrumb-item>
+            <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+            <template v-for="(matched, index) in breadcrumbs" :key="matched.path">
+               <el-breadcrumb-item v-if="matched.meta && matched.meta.title">
+                  {{ matched.meta.title }}
+               </el-breadcrumb-item>
+            </template>
           </el-breadcrumb>
         </div>
 
@@ -134,7 +129,7 @@ import { useUserStore } from '@/stores/user';
 import { ElMessageBox } from 'element-plus';
 import {
   School, DocumentAdd, DocumentChecked, Document, 
-  QuestionFilled, Expand, Fold, Bell, ArrowDown, 
+  QuestionFilled, Bell, ArrowDown, 
   User, SwitchButton
 } from '@element-plus/icons-vue';
 
@@ -148,6 +143,14 @@ const hasUnread = ref(true); // Demo state
 const activeMenu = computed(() => route.path);
 const userName = computed(() => userStore.user?.real_name || '学生用户');
 const userInitials = computed(() => userName.value?.[0] || 'S');
+
+// Generate breadcrumbs from matched routes
+const breadcrumbs = computed(() => {
+  // Filter out the root or layout route if it doesn't have a label we want, 
+  // or logic to map specific paths to names if meta.title isn't enough.
+  // Here we use route.matched
+  return route.matched.filter(item => item.meta && item.meta.title && item.path !== '/');
+});
 
 const toggleSidebar = () => {
   isCollapse.value = !isCollapse.value;
@@ -197,6 +200,12 @@ const handleCommand = async (command: string) => {
     padding: 0 20px;
     background: rgba(255, 255, 255, 0.05);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer; /* Add pointer usage */
+    transition: background 0.3s;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
     
     .logo-icon {
       width: 36px;
@@ -290,12 +299,7 @@ const handleCommand = async (command: string) => {
     align-items: center;
     gap: 20px;
 
-    .toggle-btn {
-      color: $slate-500;
-      transition: color 0.2s;
-      
-      &:hover { color: $primary-600; }
-    }
+    /* Removed toggle-btn styles */
     
     .breadcrumb {
         font-size: 14px;

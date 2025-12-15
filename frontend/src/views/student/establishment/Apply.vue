@@ -1,255 +1,252 @@
 <template>
-  <div class="apply-page-wrapper">
-    <div class="apply-main-container">
-      <!-- Main Single Card -->
-      <div class="apply-card">
-        <!-- Header Section -->
-        <div class="form-header">
-          <div class="header-main">
-            <h1 class="page-title">项目申报</h1>
-            <div class="header-meta">
-              <span class="meta-item">负责人: {{ currentUser.name }}</span>
-              <span class="meta-divider">|</span>
-              <el-tag type="success" size="small" effect="plain" round>填写中</el-tag>
-            </div>
+  <div class="page-container">
+    <!-- Main Content Card with Integrated Header -->
+    <el-card class="main-card" :body-style="{ padding: '24px' }">
+      <template #header>
+        <div class="card-header-flex">
+          <div class="header-title">基本信息填报</div>
+          <div class="header-actions">
+            <el-button @click="handleReset">重置</el-button>
+            <el-button type="info" plain @click="saveAsDraft">保存草稿</el-button>
+            <el-button type="primary" @click="submitForm">提交申请</el-button>
           </div>
-          <p class="header-desc">
-            请基于事实准确填写以下申报信息。带 * 的条目为必填项。
-          </p>
+        </div>
+      </template>
+
+      <el-form
+        ref="formRef"
+        :model="formData"
+        :rules="rules"
+        label-position="right"
+        label-width="120px"
+        status-icon
+        size="default"
+      >
+        <!-- 1. 基本信息 -->
+        <div class="form-section">
+          <h3 class="section-title">基本信息</h3>
+          <el-row :gutter="24">
+            <el-col :span="8">
+              <el-form-item label="项目来源" prop="source">
+                <el-select v-model="formData.source" placeholder="请选择" class="w-full">
+                  <el-option v-for="item in sourceOptions" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="项目级别" prop="level">
+                <el-select v-model="formData.level" placeholder="请选择" class="w-full">
+                  <el-option v-for="item in levelOptions" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="项目类别" prop="category">
+                <el-select v-model="formData.category" placeholder="请选择" class="w-full">
+                  <el-option v-for="item in categoryOptions" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="重点领域" prop="is_key_field">
+                <el-select v-model="formData.is_key_field" placeholder="请选择" class="w-full">
+                  <el-option v-for="item in specialTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+               <el-form-item label="项目名称" prop="title">
+                 <el-input v-model="formData.title" placeholder="请输入项目全称" />
+               </el-form-item>
+            </el-col>
+             <el-col :span="8">
+               <el-form-item label="经费预算" prop="budget">
+                 <el-input-number v-model="formData.budget" :min="0" :step="100" class="w-full" controls-position="right" />
+               </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="24">
+            <el-col :span="8">
+              <el-form-item label="所属学院" prop="college">
+                <el-select v-model="formData.college" placeholder="请选择" class="w-full">
+                  <el-option v-for="item in collegeOptions" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="所属专业" prop="major_code">
+                <el-select v-model="formData.major_code" placeholder="请选择" class="w-full" filterable>
+                  <el-option v-for="item in majorOptions" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+          </el-row>
         </div>
 
-        <el-divider class="header-divider" />
+        <!-- 2. 团队信息 -->
+        <div class="form-section">
+          <h3 class="section-title">团队负责人信息</h3>
+          <el-row :gutter="24">
+            <el-col :span="8">
+              <el-form-item label="负责人姓名">
+                <el-input v-model="currentUser.name" disabled class="is-disabled-soft" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="负责人学号">
+                <el-input v-model="currentUser.student_id" disabled class="is-disabled-soft" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+               <!-- Empty for alignment -->
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="联系电话" prop="leader_contact">
+                <el-input v-model="formData.leader_contact" placeholder="手机号" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="电子邮箱" prop="leader_email">
+                <el-input v-model="formData.leader_email" placeholder="邮箱" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </div>
 
-        <!-- Form Section -->
-        <el-form
-          ref="formRef"
-          :model="formData"
-          :rules="rules"
-          label-position="top"
-          class="clean-form"
-          status-icon
-          hide-required-asterisk
-          size="large"
-        >
+        <!-- 3. 指导教师 (Dynamic Table) -->
+        <div class="form-section">
+          <h3 class="section-title">指导教师信息</h3>
+          <div class="dynamic-input-row">
+            <el-row :gutter="12">
+               <el-col :span="5">
+                 <el-input v-model="newAdvisor.job_number" placeholder="工号" size="default" />
+               </el-col>
+               <el-col :span="5">
+                 <el-input v-model="newAdvisor.name" placeholder="姓名" size="default" />
+               </el-col>
+               <el-col :span="5">
+                 <el-select v-model="newAdvisor.title" placeholder="职称" size="default">
+                    <el-option v-for="item in advisorTitleOptions" :key="item.value" :label="item.label" :value="item.value" />
+                 </el-select>
+               </el-col>
+               <el-col :span="5">
+                 <el-input v-model="newAdvisor.contact" placeholder="电话" size="default" />
+               </el-col>
+               <el-col :span="4">
+                 <el-button type="primary" plain size="default" @click="handleAddNewAdvisor">添加教师</el-button>
+               </el-col>
+            </el-row>
+          </div>
           
-          <!-- 1. Basic Information -->
-          <div class="form-section">
-            <h3 class="section-title">基本信息</h3>
-            <el-row :gutter="40">
-              <el-col :span="8">
-                <el-form-item label="项目来源" prop="source">
-                  <el-select v-model="formData.source" placeholder="请选择" class="w-full">
-                    <el-option v-for="item in sourceOptions" :key="item.value" :label="item.label" :value="item.value" />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="8">
-                <el-form-item label="项目级别" prop="level">
-                  <el-select v-model="formData.level" placeholder="请选择" class="w-full">
-                    <el-option v-for="item in levelOptions" :key="item.value" :label="item.label" :value="item.value" />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="8">
-                <el-form-item label="项目类别" prop="category">
-                  <el-select v-model="formData.category" placeholder="请选择" class="w-full">
-                    <el-option v-for="item in categoryOptions" :key="item.value" :label="item.label" :value="item.value" />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="40">
-              <el-col :span="12">
-                 <el-form-item prop="is_key_field" label="重点领域项目">
-                    <el-select v-model="formData.is_key_field" placeholder="请选择" class="w-full">
-                      <el-option v-for="item in specialTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
-                    </el-select>
-                 </el-form-item>
-              </el-col>
-               <el-col :span="12">
-                <!-- Placeholder for symmetry or next field -->
-              </el-col>
+          <el-table :data="formData.advisors" style="width: 100%; margin-top: 12px;" border size="small">
+             <el-table-column prop="job_number" label="工号" width="140" />
+             <el-table-column prop="name" label="姓名" width="140" />
+             <el-table-column prop="title" label="职称" width="140">
+                <template #default="scope">
+                   {{ getLabel(advisorTitleOptions, scope.row.title) }}
+                </template>
+             </el-table-column>
+             <el-table-column prop="contact" label="电话" />
+             <el-table-column label="操作" width="80" align="center">
+                <template #default="scope">
+                   <el-button link type="danger" size="small" @click="removeAdvisor(scope.$index)">删除</el-button>
+                </template>
+             </el-table-column>
+             <template #empty>
+                <div class="empty-text">暂无指导教师，请在上方添加</div>
+             </template>
+          </el-table>
+        </div>
+
+        <!-- 4. 项目成员 (Dynamic Table) -->
+        <div class="form-section">
+          <h3 class="section-title">项目成员信息</h3>
+           <div class="dynamic-input-row">
+            <el-row :gutter="12">
+               <el-col :span="8">
+                 <el-input v-model="newMember.student_id" placeholder="成员学号" size="default" />
+               </el-col>
+               <el-col :span="8">
+                 <el-input v-model="newMember.name" placeholder="成员姓名" size="default" />
+               </el-col>
+               <el-col :span="8">
+                 <el-button type="primary" plain size="default" @click="handleAddNewMember">添加成员</el-button>
+               </el-col>
             </el-row>
           </div>
 
-          <!-- 2. Project Details -->
-          <div class="form-section">
-            <h3 class="section-title">项目详情</h3>
-             <el-form-item label="项目名称" prop="title">
-                <el-input v-model="formData.title" placeholder="请输入准确的项目全称" />
-             </el-form-item>
-             
-             <el-row :gutter="40">
-               <el-col :span="8">
-                 <el-form-item label="所属学院" prop="college">
-                    <el-select v-model="formData.college" placeholder="请选择" class="w-full">
-                       <el-option v-for="item in collegeOptions" :key="item.value" :label="item.label" :value="item.value" />
-                    </el-select>
-                 </el-form-item>
-               </el-col>
-               <el-col :span="8">
-                 <el-form-item label="所属专业" prop="major_code">
-                    <el-select v-model="formData.major_code" placeholder="请选择" class="w-full" filterable>
-                       <el-option v-for="item in majorOptions" :key="item.value" :label="item.label" :value="item.value" />
-                    </el-select>
-                 </el-form-item>
-               </el-col>
-               <el-col :span="8">
-                  <el-form-item label="经费预算 (元)" prop="budget">
-                    <el-input-number v-model="formData.budget" :min="0" :step="100" class="w-full" controls-position="right" />
-                  </el-form-item>
-               </el-col>
-             </el-row>
-          </div>
+          <el-table :data="formData.members" style="width: 100%; margin-top: 12px;" border size="small">
+             <el-table-column prop="student_id" label="学号" width="180" />
+             <el-table-column prop="name" label="姓名" />
+             <el-table-column label="操作" width="80" align="center">
+                <template #default="scope">
+                   <el-button link type="danger" size="small" @click="removeMember(scope.$index)">删除</el-button>
+                </template>
+             </el-table-column>
+             <template #empty>
+                <div class="empty-text">暂无成员，请在上方添加</div>
+             </template>
+          </el-table>
+        </div>
 
-          <!-- 3. Team Construction -->
-          <div class="form-section">
-            <h3 class="section-title">团队组建</h3>
-            <!-- Leader Info -->
-            <div class="subsection-label">负责人信息</div>
-            <el-row :gutter="40">
-              <el-col :span="6">
-                <el-form-item label="姓名">
-                  <el-input v-model="currentUser.name" disabled class="is-readonly" />
+        <!-- 5. 申报内容 -->
+        <div class="form-section">
+          <h3 class="section-title">申报内容</h3>
+          <el-row>
+             <el-col :span="24">
+                <el-form-item label="预期成果" prop="expected_results">
+                   <el-input 
+                     v-model="formData.expected_results" 
+                     type="textarea" 
+                     :rows="3" 
+                     maxlength="200"
+                     show-word-limit
+                     placeholder="请列出具体成果形式，如：发表论文1篇、软件著作权1项等"
+                   />
                 </el-form-item>
-              </el-col>
-              <el-col :span="6">
-                <el-form-item label="学号">
-                  <el-input v-model="currentUser.student_id" disabled class="is-readonly" />
+             </el-col>
+             <el-col :span="24">
+                <el-form-item label="项目简介" prop="description">
+                   <el-input 
+                     v-model="formData.description" 
+                     type="textarea" 
+                     :rows="6" 
+                     maxlength="500"
+                     show-word-limit
+                     placeholder="请简要介绍项目背景、创新点及研究内容"
+                   />
                 </el-form-item>
-              </el-col>
-              <el-col :span="6">
-                <el-form-item label="联系电话" prop="leader_contact">
-                  <el-input v-model="formData.leader_contact" placeholder="填写手机号" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="6">
-                <el-form-item label="电子邮箱" prop="leader_email">
-                  <el-input v-model="formData.leader_email" placeholder="填写邮箱" />
-                </el-form-item>
-              </el-col>
-            </el-row>
+             </el-col>
+          </el-row>
+        </div>
 
-            <!-- Advisors -->
-            <div class="dynamic-section">
-              <div class="flex items-center justify-between mb-2">
-                 <div class="subsection-label mb-0">指导教师</div>
+        <!-- 6. 附件 -->
+        <div class="form-section no-border">
+           <h3 class="section-title">附件上传</h3>
+           <el-form-item label="申请书" prop="attachment_file">
+              <el-upload
+                action="#"
+                :auto-upload="false"
+                :on-change="handleFileChange"
+                :file-list="fileList"
+                :limit="1"
+                class="upload-inline"
+              >
+                 <el-button type="primary" plain>点击上传PDF</el-button>
+                 <template #tip>
+                    <div class="el-upload__tip">只能上传pdf文件，且不超过2MB</div>
+                 </template>
+              </el-upload>
+              <div class="mt-2 text-sm text-gray-500">
+                  <a href="#" class="link-download">
+                     <el-icon><Download /></el-icon> 下载申请书模板
+                  </a>
               </div>
-              
-              <div v-for="(advisor, index) in formData.advisors" :key="'adv'+index" class="grid-row-group">
-                <el-row :gutter="20">
-                   <el-col :span="5">
-                     <el-input v-model="advisor.job_number" placeholder="工号" />
-                   </el-col>
-                   <el-col :span="5">
-                     <el-input v-model="advisor.name" placeholder="姓名" />
-                   </el-col>
-                   <el-col :span="5">
-                     <el-select v-model="advisor.title" placeholder="职称">
-                        <el-option v-for="item in advisorTitleOptions" :key="item.value" :label="item.label" :value="item.value" />
-                     </el-select>
-                   </el-col>
-                    <el-col :span="5">
-                     <el-input v-model="advisor.contact" placeholder="电话" />
-                   </el-col>
-                   <el-col :span="4" class="row-actions">
-                      <el-button type="primary" link @click="addAdvisor" v-if="index === formData.advisors.length - 1">添加</el-button>
-                      <el-button type="danger" link @click="removeAdvisor(index)" v-if="formData.advisors.length > 1">删除</el-button>
-                   </el-col>
-                </el-row>
-              </div>
-            </div>
+           </el-form-item>
+        </div>
 
-            <!-- Members -->
-            <div class="dynamic-section mt-6">
-               <div class="subsection-label">项目成员</div>
-               <div v-for="(member, index) in formData.members" :key="'mem'+index" class="grid-row-group">
-                 <el-row :gutter="20">
-                   <el-col :span="10">
-                     <el-input v-model="member.student_id" placeholder="成员学号" />
-                   </el-col>
-                   <el-col :span="10">
-                     <el-input v-model="member.name" placeholder="成员姓名" />
-                   </el-col>
-                   <el-col :span="4" class="row-actions">
-                      <el-button type="primary" link @click="addMember" v-if="index === formData.members.length - 1">添加</el-button>
-                      <el-button type="danger" link @click="removeMember(index)" v-if="formData.members.length > 1">删除</el-button>
-                   </el-col>
-                 </el-row>
-               </div>
-            </div>
-          </div>
-
-          <!-- 4. Declaration Content -->
-          <div class="form-section">
-            <h3 class="section-title">申报内容</h3>
-            <el-form-item label="预期成果" prop="expected_results">
-               <el-input 
-                 v-model="formData.expected_results" 
-                 type="textarea" 
-                 :rows="3" 
-                 placeholder="请简述项目的预期成果，如调研报告、发表论文等"
-                 maxlength="200"
-                 show-word-limit
-               />
-            </el-form-item>
-            <el-form-item label="项目简介" prop="description">
-               <el-input 
-                 v-model="formData.description" 
-                 type="textarea" 
-                 :rows="6" 
-                 placeholder="请简要介绍项目背景、研究内容及意义..."
-                 maxlength="500"
-                 show-word-limit
-               />
-            </el-form-item>
-          </div>
-
-          <!-- 5. Attachments -->
-          <div class="form-section no-border">
-             <h3 class="section-title">附件上传</h3>
-             <div class="attachment-area">
-                <el-form-item prop="attachment_file">
-                  <el-upload
-                    action="#"
-                    :auto-upload="false"
-                    :on-change="handleFileChange"
-                    :file-list="fileList"
-                    drag
-                    class="upload-demo"
-                  >
-                    <div class="upload-content">
-                        <el-icon class="upload-icon"><UploadFilled /></el-icon>
-                        <div class="upload-text">
-                           <strong>点击或拖拽文件到这里上传</strong>
-                           <p>支持 PDF 格式，文件大小不超过 2MB</p>
-                        </div>
-                    </div>
-                  </el-upload>
-                </el-form-item>
-                <div class="mt-4">
-                  <el-button link type="primary" :icon="Download">下载《大创项目申请书模板》</el-button>
-                </div>
-             </div>
-          </div>
-
-        </el-form>
-      </div>
-    </div>
-
-    <!-- Sticky Footer -->
-    <div class="sticky-footer">
-       <div class="footer-content">
-          <div class="footer-left">
-             <!-- Placeholder for draft status or validation hints -->
-          </div>
-          <div class="footer-actions">
-             <el-button @click="handleReset" link class="secondary-link">重置</el-button>
-             <el-button type="info" plain @click="saveAsDraft" class="btn-draft">保存草稿</el-button>
-             <el-button type="primary" @click="submitForm" class="btn-submit">提交申请</el-button>
-          </div>
-       </div>
-    </div>
+      </el-form>
+    </el-card>
 
   </div>
 </template>
@@ -257,14 +254,14 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from "vue";
 import { ElMessage, type FormInstance } from "element-plus";
-import { UploadFilled, Download } from "@element-plus/icons-vue";
+import { Download } from "@element-plus/icons-vue";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionary";
 import { useUserStore } from "@/stores/user";
 import { createProjectApplication, updateProjectApplication, getProjectDetail } from "@/api/project";
 import { useRouter, useRoute } from "vue-router";
 
-// --- Logic Reuse (Identical to original mainly) ---
+// --- Logic Reuse ---
 const userStore = useUserStore();
 const router = useRouter();
 const route = useRoute();
@@ -290,10 +287,14 @@ const formData = reactive({
   title: "",
   expected_results: "",
   description: "",
-  advisors: [{ job_number: "", name: "", title: "", contact: "", email: "" }],
-  members: [{ student_id: "", name: "" }],
+  advisors: [] as any[],
+  members: [] as any[],
   attachment_file: null as File | null
 });
+
+// Temp inputs
+const newAdvisor = reactive({ job_number: "", name: "", title: "", contact: "", email: "" });
+const newMember = reactive({ student_id: "", name: "" });
 
 const fileList = ref([]);
 const loading = ref(false);
@@ -316,20 +317,52 @@ const advisorTitleOptions = computed(() => getOptions(DICT_CODES.ADVISOR_TITLE))
 const levelOptions = computed(() => getOptions(DICT_CODES.PROJECT_LEVEL));
 const categoryOptions = computed(() => getOptions(DICT_CODES.PROJECT_CATEGORY));
 
-const addAdvisor = () => formData.advisors.push({ job_number: "", name: "", title: "", contact: "", email: "" });
+const getLabel = (options: any[], value: string) => {
+    const found = options.find(opt => opt.value === value);
+    return found ? found.label : value;
+};
+
+// Dynamic Actions
+const handleAddNewAdvisor = () => {
+    if(!newAdvisor.name) {
+       ElMessage.warning("请至少填写姓名");
+       return;
+    }
+    formData.advisors.push({ ...newAdvisor });
+    // Reset
+    newAdvisor.job_number = "";
+    newAdvisor.name = "";
+    newAdvisor.title = "";
+    newAdvisor.contact = "";
+};
+
+const handleAddNewMember = () => {
+    if(!newMember.student_id || !newMember.name) {
+       ElMessage.warning("请填写学号和姓名");
+       return;
+    }
+    formData.members.push({ ...newMember });
+    // Reset
+    newMember.student_id = "";
+    newMember.name = "";
+};
+
 const removeAdvisor = (i: number) => formData.advisors.splice(i, 1);
-const addMember = () => formData.members.push({ student_id: "", name: "" });
 const removeMember = (i: number) => formData.members.splice(i, 1);
 
 const handleFileChange = (file: any) => {
   formData.attachment_file = file.raw;
 };
 
-// Common submit handler
+// Submit Logic
 const handleSaveOrSubmit = async (isDraft: boolean) => {
     if (!formRef.value) return;
 
     if (!isDraft) {
+        if(formData.advisors.length === 0) {
+             console.warn("No advisors added, user might have forgotten to click add");
+             // Optional: check if newAdvisor has data and prompt?
+        }
         await formRef.value.validate(async (valid) => {
             if (!valid) {
                  ElMessage.error("请完善必填信息");
@@ -417,7 +450,6 @@ const submitForm = () => handleSaveOrSubmit(false);
 const saveAsDraft = () => handleSaveOrSubmit(true);
 const handleReset = () => formRef.value?.resetFields();
 
-// Load Data if Edit Mode
 const loadData = async (id: number) => {
     loading.value = true;
     try {
@@ -455,8 +487,6 @@ const loadData = async (id: number) => {
                     contact: adh.contact || "",
                     email: adh.email || ""
                 }));
-            } else {
-                formData.advisors = [{ job_number: "", name: "", title: "", contact: "", email: "" }];
             }
 
             if (Array.isArray(data.members_info) && data.members_info.length > 0) {
@@ -466,13 +496,9 @@ const loadData = async (id: number) => {
                          student_id: m.student_id || "",
                          name: m.user_name || m.name || ""
                      }));
-                 } else {
-                     formData.members = [{ student_id: "", name: "" }];
                  }
-            } else {
-                 formData.members = [{ student_id: "", name: "" }];
             }
-            ElMessage.success("项目数据加载成功");
+            ElMessage.success("数据加载成功");
         }
     } catch(e: any) {
         ElMessage.error("加载详情失败");
@@ -497,228 +523,95 @@ onMounted(() => {
 <style scoped lang="scss">
 @use "@/styles/variables.scss" as *;
 
-.apply-page-wrapper {
-  background-color: $slate-50; /* Very light cool gray */
-  min-height: 100vh;
-  padding-bottom: 80px; /* Space for sticky footer */
+.page-container {
+  /* Inherits bg from MainLayout, but ensure standard gray */
+  background-color: #f0f2f5; 
+  min-height: 100%;
 }
 
-.apply-main-container {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 32px 20px;
+.main-card {
+  border: none;
+  border-radius: 4px; /* Standard Admin Radius */
+  box-shadow: 0 1px 4px rgba(0,21,41,0.08) !important;
+  background: #fff;
+  margin-top: 24px; /* Separation from breadcrumb */
 }
 
-.apply-card {
-  background: $color-bg-card;
-  border-radius: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02); /* Very subtle diffusion */
-  padding: 48px; /* Generous padding */
-}
-
-.form-header {
-  margin-bottom: 24px;
-}
-
-.header-main {
+/* Card Header Flex Layout */
+.card-header-flex {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 12px;
 }
 
-.page-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: $slate-800;
-  margin: 0;
-  letter-spacing: -0.5px;
+.header-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
 }
 
-.header-meta {
+.header-actions {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  background: $slate-100;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 13px;
-  color: $slate-500;
-}
-
-.meta-divider {
-  color: $slate-300;
-  font-size: 12px;
-}
-
-.header-desc {
-  font-size: 14px;
-  color: $slate-400;
-  margin: 0;
-}
-
-.header-divider {
-  margin: 32px 0 40px 0;
-  border-color: $slate-100;
+  gap: 12px;
 }
 
 .form-section {
-  margin-bottom: 48px;
-  border-bottom: 1px dashed $slate-100;
-  padding-bottom: 40px;
-
-  &:last-child, &.no-border {
-    border-bottom: none;
+  margin-bottom: 32px;
+  
+  &:last-child {
     margin-bottom: 0;
-    padding-bottom: 0;
   }
 }
 
 .section-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
-  color: $slate-900;
+  color: #1f2937;
   margin: 0 0 24px 0;
-  display: flex;
-  align-items: center;
-  
-  /* Decorative accent */
-  &::before {
-     content: '';
-     display: block;
-     width: 4px;
-     height: 18px;
-     background: $primary-500;
-     margin-right: 12px;
-     border-radius: 2px;
-  }
+  padding-left: 10px;
+  border-left: 3px solid $primary-600;
+  line-height: 1.2;
 }
 
-.subsection-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: $slate-500; /* Slate 500 */
-  margin-bottom: 16px;
-}
-
-/* Grid & Form Fixes */
+/* Form Density & Alignment */
 .w-full { width: 100%; }
 
-.el-row {
-  margin-bottom: 8px; /* Slight gutter between rows */
+.el-form-item {
+  margin-bottom: 24px; /* Balanced spacing */
 }
 
-:deep(.el-form-item__label) {
-  font-weight: 500;
-  color: $slate-600;
-  padding-bottom: 8px;
-  line-height: 1.3;
-}
-
-.is-readonly :deep(.el-input__wrapper) {
-   background-color: $slate-50;
-   box-shadow: none !important;
-   border: 1px solid $slate-200;
-}
-
-/* Dynamic Sections */
-.grid-row-group {
-  margin-bottom: 12px;
-  
-  :deep(.el-input__wrapper), :deep(.el-select__wrapper) {
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* Slight elevation for inputs */
-  }
-}
-
-.row-actions {
-  display: flex;
-  align-items: center;
-}
-
-/* Attachment Area */
-.attachment-area {
-  background: $slate-50;
-  border-radius: 12px;
-  border: 1px dashed $slate-300;
-  padding: 32px;
-  text-align: center;
-  transition: all 0.3s;
-
-  &:hover {
-    border-color: $primary-400;
-    background: #f0f9ff;
-  }
-}
-
-.upload-demo {
-  :deep(.el-upload-dragger) {
-    border: none;
-    background: transparent;
-    padding: 0;
-    height: auto;
-    
-    &:hover { border: none; background: transparent; }
-  }
-}
-
-.upload-icon {
-  font-size: 40px;
-  color: $slate-400;
+/* Dynamic Area */
+.dynamic-input-row {
+  background: #fafafa;
+  padding: 16px;
+  border-radius: 4px;
+  border: 1px dashed #d9d9d9;
   margin-bottom: 12px;
 }
 
-.upload-text strong {
-  color: #475569;
-  font-size: 15px;
-}
-
-.upload-text p {
-  color: $slate-400;
+.empty-text {
+  color: #909399;
   font-size: 13px;
-  margin-top: 4px;
+  text-align: center;
+  padding: 8px 0;
 }
 
-/* Sticky Footer */
-.sticky-footer {
-  position: fixed;
-  bottom: 0;
-  left: 0; /* Adjust if sidebar pushes this */
-  right: 0;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  border-top: 1px solid $slate-200;
-  z-index: 100;
-  padding: 16px 0;
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.02);
-}
-
-.footer-content {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 0 20px;
-  display: flex;
-  justify-content: flex-end; /* Align right */
+.link-download {
+  color: $primary-600;
+  display: inline-flex;
   align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  
+  &:hover { text-decoration: underline; }
 }
 
-.footer-actions {
-  display: flex;
-  gap: 16px;
-  align-items: center;
+/* Overrides for specific admin feel */
+:deep(.el-input__wrapper), :deep(.el-select__wrapper) {
+  border-radius: 2px; /* Sharper edges for enterprise feel */
 }
 
-.secondary-link {
-  color: $slate-500;
-  &:hover { color: #334155; }
-}
-
-.btn-draft {
-  min-width: 100px;
-}
-
-.btn-submit {
-  min-width: 120px;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); /* Premium shadow */
+:deep(.el-input__inner) {
+  font-size: 14px;
 }
 </style>
