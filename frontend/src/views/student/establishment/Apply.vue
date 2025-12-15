@@ -1,312 +1,279 @@
 <template>
-  <div class="apply-page">
-    <el-card class="page-hero" shadow="hover">
-      <div class="hero-text">
-        <p class="eyebrow">项目申报</p>
-        <h1>申请项目</h1>
-        <p class="subtitle">
-          请填写下方的分段式表单以完成申报。所有必填项 (*) 均需准确填写。
-        </p>
-      </div>
-      <div class="hero-meta">
-        <div class="meta-block">
-          <span class="meta-label">负责人</span>
-          <div class="meta-value">{{ currentUser.name }}</div>
-          <div class="meta-sub">学号 {{ currentUser.student_id }}</div>
-        </div>
-        <div class="meta-block soft">
-          <span class="meta-label">状态</span>
-          <div class="meta-sub">
-            <el-tag type="info" effect="dark" round>填写中</el-tag>
+  <div class="apply-page-wrapper">
+    <div class="apply-main-container">
+      <!-- Main Single Card -->
+      <div class="apply-card">
+        <!-- Header Section -->
+        <div class="form-header">
+          <div class="header-main">
+            <h1 class="page-title">项目申报</h1>
+            <div class="header-meta">
+              <span class="meta-item">负责人: {{ currentUser.name }}</span>
+              <span class="meta-divider">|</span>
+              <el-tag type="success" size="small" effect="plain" round>填写中</el-tag>
+            </div>
           </div>
+          <p class="header-desc">
+            请基于事实准确填写以下申报信息。带 * 的条目为必填项。
+          </p>
         </div>
-      </div>
-    </el-card>
 
-    <el-form
-      ref="formRef"
-      :model="formData"
-      :rules="rules"
-      label-position="top"
-      class="stacked-form"
-      status-icon
-      hide-required-asterisk
-    >
-      <!-- 1. Basic Info -->
-      <div class="form-section">
-        <div class="section-header">
-          <div class="icon-wrapper"><el-icon><InfoFilled /></el-icon></div>
-          <div class="header-text">
-            <h3>基本信息</h3>
-            <p>选择项目来源、级别与重点领域归属</p>
-          </div>
-        </div>
-        <el-card class="section-card" shadow="never">
-          <el-row :gutter="24">
-            <el-col :span="12">
-              <el-form-item label="项目来源" prop="source">
-                <el-select v-model="formData.source" placeholder="请选择来源" class="full-width" size="large">
-                  <el-option v-for="item in sourceOptions" :key="item.value" :label="item.label" :value="item.value" />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="项目级别" prop="level">
-                <el-select v-model="formData.level" placeholder="请选择级别" class="full-width" size="large">
-                  <el-option v-for="item in levelOptions" :key="item.value" :label="item.label" :value="item.value" />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="项目类别" prop="category">
-                <el-select v-model="formData.category" placeholder="请选择类别" class="full-width" size="large">
-                  <el-option v-for="item in categoryOptions" :key="item.value" :label="item.label" :value="item.value" />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item prop="is_key_field">
-                <template #label>
-                  <span class="flex items-center gap-1">
-                    重点领域项目
-                    <el-tooltip content="是否属于国家重点支持的领域" placement="top">
-                      <el-icon class="text-gray-400 cursor-pointer"><QuestionFilled /></el-icon>
-                    </el-tooltip>
-                  </span>
-                </template>
-                <el-select v-model="formData.is_key_field" placeholder="请选择" class="full-width" size="large">
-                  <el-option v-for="item in specialTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
-                </el-select>
-              </el-form-item>
-            </el-col>
-          </el-row>
-        </el-card>
-      </div>
+        <el-divider class="header-divider" />
 
-      <!-- 2. Project Details -->
-      <div class="form-section">
-        <div class="section-header">
-          <div class="icon-wrapper"><el-icon><Document /></el-icon></div>
-          <div class="header-text">
-            <h3>项目详情</h3>
-            <p>填写项目名称、归属学院与经费预算</p>
-          </div>
-        </div>
-        <el-card class="section-card" shadow="never">
-          <el-form-item label="项目名称" prop="title">
-            <el-input v-model="formData.title" placeholder="请输入项目名称" size="large" />
-          </el-form-item>
-          <el-row :gutter="24">
-            <el-col :span="12">
-              <el-form-item label="所属学院" prop="college">
-                <el-select v-model="formData.college" placeholder="请选择学院" class="full-width" size="large">
-                   <el-option v-for="item in collegeOptions" :key="item.value" :label="item.label" :value="item.value" />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="所属专业" prop="major_code">
-                <el-select v-model="formData.major_code" placeholder="请选择专业" class="full-width" filterable size="large">
-                   <el-option v-for="item in majorOptions" :key="item.value" :label="item.label" :value="item.value" />
-                </el-select>
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-form-item label="经费预算 (元)" prop="budget">
-            <el-input-number v-model="formData.budget" :min="0" :step="100" class="full-width" size="large" controls-position="right" />
-          </el-form-item>
-        </el-card>
-      </div>
-
-      <!-- 3. Team Info -->
-      <div class="form-section">
-        <div class="section-header">
-           <div class="icon-wrapper"><el-icon><UserFilled /></el-icon></div>
-           <div class="header-text">
-             <h3>团队组建</h3>
-             <p>负责人信息、指导教师与成员列表</p>
-           </div>
-        </div>
-        <el-card class="section-card" shadow="never">
-          <el-row :gutter="24">
-            <el-col :span="12">
-              <el-form-item label="负责人姓名">
-                <el-input v-model="currentUser.name" disabled size="large" class="is-disabled-soft" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="负责人学号">
-                <el-input v-model="currentUser.student_id" disabled size="large" class="is-disabled-soft" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="联系电话" prop="leader_contact">
-                <el-input v-model="formData.leader_contact" placeholder="请输入手机号" size="large" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="电子邮箱" prop="leader_email">
-                <el-input v-model="formData.leader_email" placeholder="请输入邮箱" size="large" />
-              </el-form-item>
-            </el-col>
-          </el-row>
-
-          <el-divider content-position="left">指导教师</el-divider>
+        <!-- Form Section -->
+        <el-form
+          ref="formRef"
+          :model="formData"
+          :rules="rules"
+          label-position="top"
+          class="clean-form"
+          status-icon
+          hide-required-asterisk
+          size="large"
+        >
           
-          <div v-for="(advisor, index) in formData.advisors" :key="index" class="dynamic-group">
-            <el-row :gutter="16">
-              <el-col :span="5">
-                <el-input v-model="advisor.job_number" placeholder="工号" size="default" />
+          <!-- 1. Basic Information -->
+          <div class="form-section">
+            <h3 class="section-title">基本信息</h3>
+            <el-row :gutter="40">
+              <el-col :span="8">
+                <el-form-item label="项目来源" prop="source">
+                  <el-select v-model="formData.source" placeholder="请选择" class="w-full">
+                    <el-option v-for="item in sourceOptions" :key="item.value" :label="item.label" :value="item.value" />
+                  </el-select>
+                </el-form-item>
               </el-col>
-              <el-col :span="5">
-                <el-input v-model="advisor.name" placeholder="姓名" size="default" />
+              <el-col :span="8">
+                <el-form-item label="项目级别" prop="level">
+                  <el-select v-model="formData.level" placeholder="请选择" class="w-full">
+                    <el-option v-for="item in levelOptions" :key="item.value" :label="item.label" :value="item.value" />
+                  </el-select>
+                </el-form-item>
               </el-col>
-              <el-col :span="5">
-                <el-select v-model="advisor.title" placeholder="职称" size="default">
-                   <el-option v-for="item in advisorTitleOptions" :key="item.value" :label="item.label" :value="item.value" />
-                </el-select>
+              <el-col :span="8">
+                <el-form-item label="项目类别" prop="category">
+                  <el-select v-model="formData.category" placeholder="请选择" class="w-full">
+                    <el-option v-for="item in categoryOptions" :key="item.value" :label="item.label" :value="item.value" />
+                  </el-select>
+                </el-form-item>
               </el-col>
-              <el-col :span="5">
-                <el-input v-model="advisor.contact" placeholder="电话" size="default" />
+            </el-row>
+            <el-row :gutter="40">
+              <el-col :span="12">
+                 <el-form-item prop="is_key_field" label="重点领域项目">
+                    <el-select v-model="formData.is_key_field" placeholder="请选择" class="w-full">
+                      <el-option v-for="item in specialTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
+                    </el-select>
+                 </el-form-item>
               </el-col>
-              <el-col :span="4" class="flex items-center">
-                 <el-button type="danger" link v-if="formData.advisors.length > 1" @click="removeAdvisor(index)">删除</el-button>
-                 <el-button type="primary" link v-if="index === formData.advisors.length - 1" @click="addAdvisor">添加</el-button>
+               <el-col :span="12">
+                <!-- Placeholder for symmetry or next field -->
               </el-col>
             </el-row>
           </div>
 
-          <el-divider content-position="left">项目成员</el-divider>
-          
-          <div v-for="(member, index) in formData.members" :key="'m'+index" class="dynamic-group">
-            <el-row :gutter="16">
-              <el-col :span="10">
-                <el-input v-model="member.student_id" placeholder="成员学号" size="default" />
+          <!-- 2. Project Details -->
+          <div class="form-section">
+            <h3 class="section-title">项目详情</h3>
+             <el-form-item label="项目名称" prop="title">
+                <el-input v-model="formData.title" placeholder="请输入准确的项目全称" />
+             </el-form-item>
+             
+             <el-row :gutter="40">
+               <el-col :span="8">
+                 <el-form-item label="所属学院" prop="college">
+                    <el-select v-model="formData.college" placeholder="请选择" class="w-full">
+                       <el-option v-for="item in collegeOptions" :key="item.value" :label="item.label" :value="item.value" />
+                    </el-select>
+                 </el-form-item>
+               </el-col>
+               <el-col :span="8">
+                 <el-form-item label="所属专业" prop="major_code">
+                    <el-select v-model="formData.major_code" placeholder="请选择" class="w-full" filterable>
+                       <el-option v-for="item in majorOptions" :key="item.value" :label="item.label" :value="item.value" />
+                    </el-select>
+                 </el-form-item>
+               </el-col>
+               <el-col :span="8">
+                  <el-form-item label="经费预算 (元)" prop="budget">
+                    <el-input-number v-model="formData.budget" :min="0" :step="100" class="w-full" controls-position="right" />
+                  </el-form-item>
+               </el-col>
+             </el-row>
+          </div>
+
+          <!-- 3. Team Construction -->
+          <div class="form-section">
+            <h3 class="section-title">团队组建</h3>
+            <!-- Leader Info -->
+            <div class="subsection-label">负责人信息</div>
+            <el-row :gutter="40">
+              <el-col :span="6">
+                <el-form-item label="姓名">
+                  <el-input v-model="currentUser.name" disabled class="is-readonly" />
+                </el-form-item>
               </el-col>
-              <el-col :span="10">
-                <el-input v-model="member.name" placeholder="成员姓名" size="default" />
+              <el-col :span="6">
+                <el-form-item label="学号">
+                  <el-input v-model="currentUser.student_id" disabled class="is-readonly" />
+                </el-form-item>
               </el-col>
-              <el-col :span="4" class="flex items-center">
-                 <el-button type="danger" link v-if="formData.members.length > 1" @click="removeMember(index)">删除</el-button>
-                 <el-button type="primary" link v-if="index === formData.members.length - 1" @click="addMember">添加</el-button>
+              <el-col :span="6">
+                <el-form-item label="联系电话" prop="leader_contact">
+                  <el-input v-model="formData.leader_contact" placeholder="填写手机号" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="6">
+                <el-form-item label="电子邮箱" prop="leader_email">
+                  <el-input v-model="formData.leader_email" placeholder="填写邮箱" />
+                </el-form-item>
               </el-col>
             </el-row>
-          </div>
-        </el-card>
-      </div>
 
-       <!-- 4. Content -->
-      <div class="form-section">
-        <div class="section-header">
-           <div class="icon-wrapper"><el-icon><EditPen /></el-icon></div>
-           <div class="header-text">
-             <h3>申报内容</h3>
-             <p>简述项目简介与预期成果</p>
-           </div>
-        </div>
-        <el-card class="section-card" shadow="never">
-           <el-form-item label="立项预期成果" prop="expected_results">
-             <el-input 
-               v-model="formData.expected_results" 
-               type="textarea" 
-               :rows="3" 
-               placeholder="调研报告/发表文章/申请专利/参加竞赛/实物/软件" 
-               maxlength="200"
-               show-word-limit
-             />
-           </el-form-item>
-           <el-form-item label="项目简介 (200字内)" prop="description">
-             <el-input 
-               v-model="formData.description" 
-               type="textarea" 
-               :rows="5" 
-               placeholder="请输入项目简介..." 
-               maxlength="200"
-               show-word-limit
-             />
-           </el-form-item>
-        </el-card>
-      </div>
-
-       <!-- 5. Attachment -->
-      <div class="form-section">
-        <div class="section-header">
-           <div class="icon-wrapper"><el-icon><UploadFilled /></el-icon></div>
-           <div class="header-text">
-             <h3>附件上传</h3>
-             <p>下载模板并上传申请书</p>
-           </div>
-        </div>
-        <el-card class="section-card" shadow="never">
-          <div class="flex items-center gap-4 mb-4">
-             <el-button type="success" plain :icon="Download">下载申请书模板</el-button>
-             <span class="text-xs text-gray-500">学科竞赛类只需上传获奖证书或立项文件</span>
-          </div>
-          <el-form-item prop="attachment_file">
-            <el-upload
-              action="#"
-              :auto-upload="false"
-              :on-change="handleFileChange"
-              :file-list="fileList"
-              drag
-              class="w-full"
-            >
-              <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-              <div class="el-upload__text">
-                拖拽文件到此处或 <em>点击上传</em>
+            <!-- Advisors -->
+            <div class="dynamic-section">
+              <div class="flex items-center justify-between mb-2">
+                 <div class="subsection-label mb-0">指导教师</div>
               </div>
-              <template #tip>
-                <div class="el-upload__tip">
-                  支持 PDF 格式，大小不超过 2MB
-                </div>
-              </template>
-            </el-upload>
-          </el-form-item>
-        </el-card>
-      </div>
-    </el-form>
+              
+              <div v-for="(advisor, index) in formData.advisors" :key="'adv'+index" class="grid-row-group">
+                <el-row :gutter="20">
+                   <el-col :span="5">
+                     <el-input v-model="advisor.job_number" placeholder="工号" />
+                   </el-col>
+                   <el-col :span="5">
+                     <el-input v-model="advisor.name" placeholder="姓名" />
+                   </el-col>
+                   <el-col :span="5">
+                     <el-select v-model="advisor.title" placeholder="职称">
+                        <el-option v-for="item in advisorTitleOptions" :key="item.value" :label="item.label" :value="item.value" />
+                     </el-select>
+                   </el-col>
+                    <el-col :span="5">
+                     <el-input v-model="advisor.contact" placeholder="电话" />
+                   </el-col>
+                   <el-col :span="4" class="row-actions">
+                      <el-button type="primary" link @click="addAdvisor" v-if="index === formData.advisors.length - 1">添加</el-button>
+                      <el-button type="danger" link @click="removeAdvisor(index)" v-if="formData.advisors.length > 1">删除</el-button>
+                   </el-col>
+                </el-row>
+              </div>
+            </div>
 
-    <!-- Floating Action Bar -->
-    <div class="action-bar">
-      <div class="action-container">
-         <div class="status-hint">
-           <div class="pulse-dot"></div>
-           <span>自动保存草稿中...</span>
-         </div>
-         <div class="button-group">
-            <el-button @click="handleReset">重置</el-button>
-            <el-button type="success" plain @click="saveAsDraft">保存草稿</el-button>
-            <el-button type="primary" @click="submitForm">提交申请</el-button>
-         </div>
+            <!-- Members -->
+            <div class="dynamic-section mt-6">
+               <div class="subsection-label">项目成员</div>
+               <div v-for="(member, index) in formData.members" :key="'mem'+index" class="grid-row-group">
+                 <el-row :gutter="20">
+                   <el-col :span="10">
+                     <el-input v-model="member.student_id" placeholder="成员学号" />
+                   </el-col>
+                   <el-col :span="10">
+                     <el-input v-model="member.name" placeholder="成员姓名" />
+                   </el-col>
+                   <el-col :span="4" class="row-actions">
+                      <el-button type="primary" link @click="addMember" v-if="index === formData.members.length - 1">添加</el-button>
+                      <el-button type="danger" link @click="removeMember(index)" v-if="formData.members.length > 1">删除</el-button>
+                   </el-col>
+                 </el-row>
+               </div>
+            </div>
+          </div>
+
+          <!-- 4. Declaration Content -->
+          <div class="form-section">
+            <h3 class="section-title">申报内容</h3>
+            <el-form-item label="预期成果" prop="expected_results">
+               <el-input 
+                 v-model="formData.expected_results" 
+                 type="textarea" 
+                 :rows="3" 
+                 placeholder="请简述项目的预期成果，如调研报告、发表论文等"
+                 maxlength="200"
+                 show-word-limit
+               />
+            </el-form-item>
+            <el-form-item label="项目简介" prop="description">
+               <el-input 
+                 v-model="formData.description" 
+                 type="textarea" 
+                 :rows="6" 
+                 placeholder="请简要介绍项目背景、研究内容及意义..."
+                 maxlength="500"
+                 show-word-limit
+               />
+            </el-form-item>
+          </div>
+
+          <!-- 5. Attachments -->
+          <div class="form-section no-border">
+             <h3 class="section-title">附件上传</h3>
+             <div class="attachment-area">
+                <el-form-item prop="attachment_file">
+                  <el-upload
+                    action="#"
+                    :auto-upload="false"
+                    :on-change="handleFileChange"
+                    :file-list="fileList"
+                    drag
+                    class="upload-demo"
+                  >
+                    <div class="upload-content">
+                        <el-icon class="upload-icon"><UploadFilled /></el-icon>
+                        <div class="upload-text">
+                           <strong>点击或拖拽文件到这里上传</strong>
+                           <p>支持 PDF 格式，文件大小不超过 2MB</p>
+                        </div>
+                    </div>
+                  </el-upload>
+                </el-form-item>
+                <div class="mt-4">
+                  <el-button link type="primary" :icon="Download">下载《大创项目申请书模板》</el-button>
+                </div>
+             </div>
+          </div>
+
+        </el-form>
       </div>
     </div>
+
+    <!-- Sticky Footer -->
+    <div class="sticky-footer">
+       <div class="footer-content">
+          <div class="footer-left">
+             <!-- Placeholder for draft status or validation hints -->
+          </div>
+          <div class="footer-actions">
+             <el-button @click="handleReset" link class="secondary-link">重置</el-button>
+             <el-button type="info" plain @click="saveAsDraft" class="btn-draft">保存草稿</el-button>
+             <el-button type="primary" @click="submitForm" class="btn-submit">提交申请</el-button>
+          </div>
+       </div>
+    </div>
+
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from "vue";
 import { ElMessage, type FormInstance } from "element-plus";
-import {
-  QuestionFilled, UploadFilled, Download, InfoFilled, UserFilled, Document, EditPen
-} from "@element-plus/icons-vue";
+import { UploadFilled, Download } from "@element-plus/icons-vue";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionary";
 import { useUserStore } from "@/stores/user";
+import { createProjectApplication, updateProjectApplication, getProjectDetail } from "@/api/project";
+import { useRouter, useRoute } from "vue-router";
 
+// --- Logic Reuse (Identical to original mainly) ---
 const userStore = useUserStore();
 const router = useRouter();
 const route = useRoute();
 const { loadDictionaries, getOptions } = useDictionary();
 const formRef = ref<FormInstance>();
 
-// Import API
-import { createProjectApplication, updateProjectApplication, getProjectDetail } from "@/api/project";
-import { useRouter, useRoute } from "vue-router";
-
-// Mock User
 const currentUser = computed(() => ({
   name: userStore.user?.real_name || "学生用户",
-  student_id: userStore.user?.username || "20230001"
+  student_id: userStore.user?.username || "Unknown"
 }));
 
 const formData = reactive({
@@ -362,8 +329,6 @@ const handleFileChange = (file: any) => {
 const handleSaveOrSubmit = async (isDraft: boolean) => {
     if (!formRef.value) return;
 
-    // For draft, we skip full validation or validate loosely if needed
-    // For submission, we need full validation
     if (!isDraft) {
         await formRef.value.validate(async (valid) => {
             if (!valid) {
@@ -373,15 +338,11 @@ const handleSaveOrSubmit = async (isDraft: boolean) => {
             await processRequest(false);
         });
     } else {
-        // Safe to save draft even if incomplete? 
-        // Usually yes, but let's at least check title for existence if backend requires it.
-        // Assuming backend handles partial data for drafts if valid=false on fields.
         await processRequest(true);
     }
 };
 
 const processRequest = async (isDraft: boolean) => {
-    // Backend requires Title even for drafts
     if (!formData.title && isDraft) {
         ElMessage.warning("请填写项目名称（草稿必填）");
         return;
@@ -389,47 +350,28 @@ const processRequest = async (isDraft: boolean) => {
 
     loading.value = true;
     try {
-        // Validation & Sanitization
         const payload: any = { 
             ...formData, 
             is_draft: isDraft 
         };
 
-        // 1. Fix Level (Map mismatched dict values)
-        // If frontend dict returns 'SCHOOL_KEY', map to 'SCHOOL'
-        // If 'SCHOOL', keep it.
         const validLevels = ['NATIONAL', 'PROVINCIAL', 'SCHOOL'];
         if (payload.level === 'SCHOOL_KEY') payload.level = 'SCHOOL';
         if (!validLevels.includes(payload.level)) payload.level = 'SCHOOL';
 
-        // 2. Fix Category
-        // Map 'ENTREPRENEURSHIP' -> 'ENTREPRENEURSHIP_PRACTICE' (or Training, assumption)
         const validCategories = ['INNOVATION_TRAINING', 'ENTREPRENEURSHIP_TRAINING', 'ENTREPRENEURSHIP_PRACTICE'];
         if (payload.category === 'ENTREPRENEURSHIP') payload.category = 'ENTREPRENEURSHIP_PRACTICE';
         if (!validCategories.includes(payload.category)) payload.category = 'INNOVATION_TRAINING';
         
-        // 3. Fix Boolean Fields
         const keyFieldVal = payload.is_key_field;
         payload.is_key_field = (keyFieldVal === true || keyFieldVal === 'TRUE' || keyFieldVal === 'YES' || keyFieldVal === 'KEY');
 
-        // 4. Fix File (Avoid "Not a file" error)
-        // If we are sending JSON, we cannot include the raw File object or a string.
-        // We must usually omit it or send null.
-        // Since backend uses FileField, it expects file data. JSON cannot carry it.
-        // We will remove it from the payload to avoid the validation error.
-        // File upload needs to be handled via FormData or a separate upload request.
-        // For now, removing it allows the form to save.
         delete payload.attachment_file; 
         
-        // 5. Fix Email (Must be valid or empty)
         if (!payload.leader_email || !/^\S+@\S+\.\S+$/.test(payload.leader_email)) {
-            // If invalid, and if draft, maybe set to empty string if model allows?
-            // Model says: blank=True. So empty string is fine.
-            // If submitted, it might be required? Model blank=True usually implies it's optional at DB level.
             payload.leader_email = "";
         }
         
-        // Ensure numbers
         payload.budget = Number(payload.budget) || 0;
         payload.self_funding = Number(payload.self_funding) || 0;
 
@@ -454,9 +396,7 @@ const processRequest = async (isDraft: boolean) => {
                 }
             }
         } else {
-            console.error("API Error Response:", response);
             let errorMsg = response.message || "操作失败";
-            // Pretty print errors
             if (response.errors) {
                  const details = Object.entries(response.errors)
                     .map(([k, v]) => `${k}: ${v}`)
@@ -482,21 +422,14 @@ const loadData = async (id: number) => {
     loading.value = true;
     try {
         const res: any = await getProjectDetail(id);
-        console.log("DEBUG: Project Detail Response:", res);
-        
-        // Handle response structure (support both wrapped and unwrapped data)
         const projectData = res.data || res;
         
         if (projectData && (projectData.id || res.code === 200)) {
             const data = projectData.id ? projectData : projectData.data;
             if (!data) throw new Error("No data found");
 
-            console.log("DEBUG: Mapping Data:", data);
-
-            // 1. Basic Fields Mapping
             formData.id = data.id;
             formData.title = data.title || "";
-            // Ensure we map back dict codes correctly
             formData.source = data.source || ""; 
             formData.level = data.level || "SCHOOL"; 
             formData.category = data.category || "INNOVATION_TRAINING"; 
@@ -508,20 +441,15 @@ const loadData = async (id: number) => {
             formData.description = data.description || "";
             formData.expected_results = data.expected_results || "";
             
-            // 2. Boolean Mapping
-            // If backend sends boolean, convert if needed, or keep boolean if using switch
-            // Front uses Select with 'KEY'/'NORMAL'
             if (typeof data.is_key_field === 'boolean') {
                  formData.is_key_field = data.is_key_field ? 'KEY' : 'NORMAL';
             } else {
                  formData.is_key_field = data.is_key_field || 'NORMAL';
             }
 
-            // 3. Advisors Mapping
-            // Backend: advisors_info (list of objs)
             if (Array.isArray(data.advisors_info) && data.advisors_info.length > 0) {
                 formData.advisors = data.advisors_info.map((adh: any) => ({
-                    job_number: "", // Backend doesn't store this in Advisor model?
+                    job_number: "", 
                     name: adh.name || "",
                     title: adh.title || "",
                     contact: adh.contact || "",
@@ -531,8 +459,6 @@ const loadData = async (id: number) => {
                 formData.advisors = [{ job_number: "", name: "", title: "", contact: "", email: "" }];
             }
 
-            // 4. Members Mapping
-            // Backend: members_info (list of objs, includes Leader)
             if (Array.isArray(data.members_info) && data.members_info.length > 0) {
                  const otherMembers = data.members_info.filter((m: any) => m.role === 'MEMBER');
                  if (otherMembers.length > 0) {
@@ -547,12 +473,9 @@ const loadData = async (id: number) => {
                  formData.members = [{ student_id: "", name: "" }];
             }
             ElMessage.success("项目数据加载成功");
-        } else {
-            console.warn("DEBUG: Invalid response code or no data", res);
         }
     } catch(e: any) {
-        ElMessage.error("加载项目详情失败");
-        console.error("DEBUG: Load Error", e);
+        ElMessage.error("加载详情失败");
     } finally {
         loading.value = false;
     }
@@ -564,7 +487,6 @@ onMounted(() => {
     DICT_CODES.COLLEGE, DICT_CODES.SPECIAL_PROJECT_TYPE, DICT_CODES.MAJOR_CATEGORY,
     DICT_CODES.ADVISOR_TITLE
   ]);
-  
   const id = route.query.id;
   if (id) {
       loadData(Number(id));
@@ -575,194 +497,228 @@ onMounted(() => {
 <style scoped lang="scss">
 @use "@/styles/variables.scss" as *;
 
-.apply-page {
-  max-width: 960px;
+.apply-page-wrapper {
+  background-color: $slate-50; /* Very light cool gray */
+  min-height: 100vh;
+  padding-bottom: 80px; /* Space for sticky footer */
+}
+
+.apply-main-container {
+  max-width: 1000px;
   margin: 0 auto;
-  padding-bottom: 100px; // Space for action bar
+  padding: 32px 20px;
 }
 
-.page-hero {
-  border: none;
-  background: linear-gradient(135deg, white 0%, $primary-50 100%);
-  border-radius: $radius-lg;
-  margin-bottom: 32px;
-  
-  :deep(.el-card__body) {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 32px;
-  }
-  
-  .eyebrow {
-    color: $primary-600;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    font-size: $font-size-xs;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-  
-  h1 {
-    font-size: $font-size-3xl;
-    color: $slate-900;
-    margin-bottom: 12px;
-    letter-spacing: -0.5px;
-  }
-  
-  .subtitle {
-    color: $slate-500;
-    max-width: 500px;
-  }
+.apply-card {
+  background: $color-bg-card;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02); /* Very subtle diffusion */
+  padding: 48px; /* Generous padding */
 }
 
-.hero-meta {
+.form-header {
+  margin-bottom: 24px;
+}
+
+.header-main {
   display: flex;
-  gap: 24px;
-  
-  .meta-block {
-    background: white;
-    padding: 16px 24px;
-    border-radius: $radius-md;
-    box-shadow: $shadow-sm;
-    min-width: 140px;
-    
-    &.soft {
-      background: rgba(255,255,255,0.6);
-      box-shadow: none;
-      border: 1px solid $slate-200;
-    }
-  }
-  
-  .meta-label {
-    font-size: $font-size-xs;
-    color: $slate-400;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-    display: block;
-  }
-  
-  .meta-value {
-    font-size: $font-size-lg;
-    font-weight: 600;
-    color: $slate-800;
-  }
-  
-  .meta-sub {
-    font-size: $font-size-xs;
-    color: $slate-500;
-  }
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
 }
 
-.form-section {
-  margin-bottom: 40px;
-  
-  .section-header {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 16px;
-    
-    .icon-wrapper {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      background: $primary-50;
-      color: $primary-600;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-    }
-    
-    .header-text h3 {
-      font-size: $font-size-lg;
-      font-weight: 600;
-      color: $slate-900;
-      margin-bottom: 4px;
-    }
-    
-    .header-text p {
-      color: $slate-500;
-      font-size: $font-size-sm;
-    }
-  }
-  
-  .section-card {
-    border-radius: $radius-lg;
-    border: 1px solid $slate-200;
-    
-    :deep(.el-card__body) {
-      padding: 32px;
-    }
-  }
+.page-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: $slate-800;
+  margin: 0;
+  letter-spacing: -0.5px;
 }
 
-.full-width {
-  width: 100%;
-}
-
-.w-full {
-  width: 100%;
-}
-
-.action-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
-  border-top: 1px solid $slate-200;
-  padding: 16px 0;
-  z-index: 100;
-  
-  .action-container {
-    max-width: 960px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 24px;
-  }
-}
-
-.status-hint {
+.header-meta {
   display: flex;
   align-items: center;
   gap: 8px;
+  background: $slate-100;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
   color: $slate-500;
-  font-size: $font-size-sm;
-  
-  .pulse-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: $success;
-    box-shadow: 0 0 0 0 rgba($success, 0.7);
-    animation: pulse 2s infinite;
+}
+
+.meta-divider {
+  color: $slate-300;
+  font-size: 12px;
+}
+
+.header-desc {
+  font-size: 14px;
+  color: $slate-400;
+  margin: 0;
+}
+
+.header-divider {
+  margin: 32px 0 40px 0;
+  border-color: $slate-100;
+}
+
+.form-section {
+  margin-bottom: 48px;
+  border-bottom: 1px dashed $slate-100;
+  padding-bottom: 40px;
+
+  &:last-child, &.no-border {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
   }
 }
 
-@keyframes pulse {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba($success, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba($success, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba($success, 0); }
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: $slate-900;
+  margin: 0 0 24px 0;
+  display: flex;
+  align-items: center;
+  
+  /* Decorative accent */
+  &::before {
+     content: '';
+     display: block;
+     width: 4px;
+     height: 18px;
+     background: $primary-500;
+     margin-right: 12px;
+     border-radius: 2px;
+  }
 }
 
-.is-disabled-soft :deep(.el-input__wrapper) {
-  background-color: $slate-50;
-  box-shadow: none !important;
-  border: 1px solid transparent;
+.subsection-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: $slate-500; /* Slate 500 */
+  margin-bottom: 16px;
 }
 
-.dynamic-group {
+/* Grid & Form Fixes */
+.w-full { width: 100%; }
+
+.el-row {
+  margin-bottom: 8px; /* Slight gutter between rows */
+}
+
+:deep(.el-form-item__label) {
+  font-weight: 500;
+  color: $slate-600;
+  padding-bottom: 8px;
+  line-height: 1.3;
+}
+
+.is-readonly :deep(.el-input__wrapper) {
+   background-color: $slate-50;
+   box-shadow: none !important;
+   border: 1px solid $slate-200;
+}
+
+/* Dynamic Sections */
+.grid-row-group {
   margin-bottom: 12px;
-  padding: 12px;
-  background: $slate-50;
-  border-radius: $radius-md;
+  
+  :deep(.el-input__wrapper), :deep(.el-select__wrapper) {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* Slight elevation for inputs */
+  }
 }
 
-.text-gray-400 { color: $slate-400; }
-.text-gray-500 { color: $slate-500; }
-.text-xs { font-size: $font-size-xs; }
+.row-actions {
+  display: flex;
+  align-items: center;
+}
+
+/* Attachment Area */
+.attachment-area {
+  background: $slate-50;
+  border-radius: 12px;
+  border: 1px dashed $slate-300;
+  padding: 32px;
+  text-align: center;
+  transition: all 0.3s;
+
+  &:hover {
+    border-color: $primary-400;
+    background: #f0f9ff;
+  }
+}
+
+.upload-demo {
+  :deep(.el-upload-dragger) {
+    border: none;
+    background: transparent;
+    padding: 0;
+    height: auto;
+    
+    &:hover { border: none; background: transparent; }
+  }
+}
+
+.upload-icon {
+  font-size: 40px;
+  color: $slate-400;
+  margin-bottom: 12px;
+}
+
+.upload-text strong {
+  color: #475569;
+  font-size: 15px;
+}
+
+.upload-text p {
+  color: $slate-400;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+/* Sticky Footer */
+.sticky-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0; /* Adjust if sidebar pushes this */
+  right: 0;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid $slate-200;
+  z-index: 100;
+  padding: 16px 0;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.02);
+}
+
+.footer-content {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: flex-end; /* Align right */
+  align-items: center;
+}
+
+.footer-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.secondary-link {
+  color: $slate-500;
+  &:hover { color: #334155; }
+}
+
+.btn-draft {
+  min-width: 100px;
+}
+
+.btn-submit {
+  min-width: 120px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); /* Premium shadow */
+}
 </style>
