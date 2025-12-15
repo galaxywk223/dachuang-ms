@@ -45,6 +45,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: "结题审核" },
       },
       {
+        path: "review/achievements",
+        name: "admin-review-achievements",
+        component: () => import("@/views/admin/review/Achievements.vue"),
+        meta: { title: "结题成果查看" },
+      },
+      {
         path: "projects",
         name: "admin-projects",
         component: () => import("@/views/admin/Projects.vue"),

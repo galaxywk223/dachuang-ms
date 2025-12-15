@@ -25,20 +25,25 @@
         >
 
 
-          <el-sub-menu index="project-review">
+          <!-- 立项管理 -->
+          <el-sub-menu index="establishment">
             <template #title>
-              <el-icon><Document /></el-icon>
-              <span>项目审核</span>
+              <el-icon><DocumentAdd /></el-icon>
+              <span>立项管理</span>
             </template>
             <el-menu-item index="/admin/review/establishment">立项审核</el-menu-item>
-
-            <el-menu-item index="/admin/review/closure">结题审核</el-menu-item>
+            <el-menu-item index="/admin/projects">查看项目</el-menu-item>
           </el-sub-menu>
 
-          <el-menu-item index="/admin/projects">
-            <el-icon><Files /></el-icon>
-            <template #title>项目管理</template>
-          </el-menu-item>
+          <!-- 结题管理 -->
+          <el-sub-menu index="closure">
+            <template #title>
+              <el-icon><DocumentChecked /></el-icon>
+              <span>结题管理</span>
+            </template>
+            <el-menu-item index="/admin/review/closure">结题项目审核</el-menu-item>
+            <el-menu-item index="/admin/review/achievements">结题成果查看</el-menu-item>
+          </el-sub-menu>
 
 
         </el-menu>
@@ -106,7 +111,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import {
-  Document, Files, 
+  DocumentAdd, DocumentChecked,
   Expand, Fold, ArrowDown, SwitchButton
 } from '@element-plus/icons-vue';
 
@@ -117,7 +122,7 @@ const userStore = useUserStore();
 const isCollapse = ref(false);
 
 const activeMenu = computed(() => route.path);
-const userName = computed(() => userStore.user?.real_name || '管理员');
+const userName = computed(() => userStore.user?.real_name || '二级管理员');
 const userInitials = computed(() => userName.value?.[0] || 'A');
 
 const toggleSidebar = () => {
@@ -152,7 +157,7 @@ const handleCommand = async (command: string) => {
 }
 
 .app-sidebar {
-  background: linear-gradient(135deg, #312e81 0%, #4338ca 100%); // Deep Indigo
+  background: linear-gradient(135deg, #312e81 0%, #4338ca 100%); // Deep Indigo (Matches Student)
   transition: width $transition-base;
   border-right: none;
   display: flex;
@@ -234,7 +239,7 @@ const handleCommand = async (command: string) => {
              transform: translateY(-50%);
              width: 4px;
              height: 20px;
-             background: #ec4899; // Pink accent for Admin? Or keep Indigo? Let's use Pink for Admin distinction
+             background: #6366f1; // Indigo accent (Matches Student)
              border-radius: 0 4px 4px 0;
         }
       }
@@ -305,11 +310,11 @@ const handleCommand = async (command: string) => {
       }
 
       .avatar-gradient {
-        background: linear-gradient(135deg, #ec4899, #f472b6); // Admin Pink
+        background: linear-gradient(135deg, #6366f1, #818cf8); // Indigo (Matches Student)
         font-weight: 700;
         color: white;
         border: 2px solid white;
-        box-shadow: 0 2px 6px rgba(236, 72, 153, 0.3);
+        box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
       }
     }
   }
