@@ -320,9 +320,7 @@ onMounted(() => {
 @use "@/styles/variables.scss" as *;
 
 .review-page {
-    padding: 24px;
-    max-width: 1600px;
-    margin: 0 auto;
+    /* Inherit layout */
 }
 
 .filter-section {

@@ -335,9 +335,7 @@ onMounted(() => {
 @use "@/styles/variables.scss" as *;
 
 .projects-page {
-    padding: 24px;
-    max-width: 1600px;
-    margin: 0 auto;
+    /* Inherit layout */
 }
 
 .filter-section {
