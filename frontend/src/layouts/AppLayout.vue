@@ -4,9 +4,7 @@
     <el-aside :width="isCollapse ? '64px' : '260px'" class="app-sidebar">
       <div class="logo-area" :class="{ 'collapsed': isCollapse }" @click="toggleSidebar">
         <div class="logo-icon">
-          <el-icon v-if="userRole === 'level1_admin'"><Management /></el-icon>
-          <el-icon v-else-if="userRole === 'level2_admin'"><DataAnalysis /></el-icon>
-          <el-icon v-else><School /></el-icon>
+             <img src="@/assets/ahut_logo.jpg" alt="Logo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />
         </div>
         <transition name="fade">
           <span v-show="!isCollapse" class="app-title">{{ appTitle }}</span>

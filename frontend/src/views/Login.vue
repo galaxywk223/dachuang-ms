@@ -6,7 +6,7 @@
         <div class="brand-content">
           <div class="logo-area">
             <div class="logo-circle">
-              <el-icon><School /></el-icon>
+              <img src="@/assets/ahut_logo.jpg" alt="AHUT Logo" class="brand-logo-img" />
             </div>
             <h1 class="app-title">安徽工业大学<br>大创项目管理系统</h1>
           </div>
@@ -139,16 +139,19 @@ const handleLogin = async (formData: any) => {
       height: 64px;
       background: rgba(255, 255, 255, 0.15);
       backdrop-filter: blur(12px);
-      border-radius: 16px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       margin-bottom: 24px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: 4px solid rgba(255, 255, 255, 0.2); // Thicker border for avatar look
+      overflow: hidden; // Ensure image stays inside
       
-      .el-icon {
-        font-size: 32px;
-        color: #ffffff;
+      .brand-logo-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        // border-radius: 50%; // Handled by parent overflow
       }
     }
 
