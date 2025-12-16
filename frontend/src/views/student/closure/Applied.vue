@@ -1,9 +1,6 @@
 <template>
   <div class="applied-page">
-    <div class="page-header">
-      <h2>已申请结题项目</h2>
-      <p>查看和管理已提交结题申请的项目</p>
-    </div>
+
 
     <div class="page-content">
       <!-- 表格区域 -->

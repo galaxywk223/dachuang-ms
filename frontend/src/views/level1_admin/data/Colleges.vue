@@ -1,11 +1,5 @@
 <template>
   <div class="page-container">
-    <div class="page-header">
-      <div class="title-area">
-        <h1>学院信息维护</h1>
-        <p class="subtitle">管理全校学院及部门基础数据</p>
-      </div>
-    </div>
 
     <el-card class="content-card" shadow="never">
        <el-empty description="此模块正在开发中..." />

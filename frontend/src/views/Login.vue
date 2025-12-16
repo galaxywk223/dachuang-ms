@@ -71,7 +71,7 @@ const handleLogin = async (formData: any) => {
       // Redirect based on role
       switch (formData.role) {
         case 'level1_admin':
-          router.push('/level1-admin/dashboard');
+          router.push('/level1-admin/users/students');
           break;
         case 'level2_admin':
           router.push('/admin/projects');

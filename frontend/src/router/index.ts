@@ -28,13 +28,7 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: "",
-        redirect: "/level1-admin/dashboard",
-      },
-      {
-        path: "dashboard",
-        name: "level1-dashboard",
-        component: () => import("@/views/level1_admin/Dashboard.vue"),
-        meta: { title: "控制台" },
+        redirect: "/level1-admin/users/students",
       },
       {
         path: "users/students",
@@ -197,7 +191,7 @@ router.beforeEach(async (to, _from, next) => {
     if (userRole === "student") {
       next({ path: "/establishment/apply" });
     } else if (userRole === "level1_admin") {
-      next({ path: "/level1-admin/dashboard" });
+      next({ path: "/level1-admin/users/students" });
     } else if (userRole === "level2_admin" || userRole === "admin") {
       next({ path: "/admin/projects" });
     } else {

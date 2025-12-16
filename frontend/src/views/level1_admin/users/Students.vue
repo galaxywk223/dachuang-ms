@@ -1,166 +1,42 @@
 <template>
-  <div class="page-container">
-    <div class="page-header">
-      <div class="title-area">
-        <h1>学生管理</h1>
-        <p class="subtitle">管理全校学生账号信息</p>
+  <div>
+    <div class="page-container">
+      <div class="page-header">
+        <div>
+          <h1>学生管理</h1>
+          <p class="subtitle">管理系统内所有学生账号</p>
+        </div>
+        <div class="header-actions">
+          <el-button type="primary" @click="openCreateDialog">
+            <el-icon><Plus /></el-icon>添加学生
+          </el-button>
+          <el-button>
+              <el-icon><Upload /></el-icon>批量导入
+          </el-button>
+        </div>
       </div>
-      <div class="action-area">
-        <el-button type="primary" @click="openCreateDialog">
-          <el-icon><Plus /></el-icon>添加学生
-        </el-button>
-        <el-button type="success" disabled>
-          <el-icon><Upload /></el-icon>批量导入
-        </el-button>
-      </div>
-    </div>
 
-    <!-- Filter Bar -->
-    <el-card class="filter-card" shadow="never">
-      <el-form :inline="true" :model="filters" class="filter-form">
-        <el-form-item label="搜索">
-          <el-input 
-            v-model="filters.search" 
-            placeholder="姓名 / 学号" 
-            clearable
-            @keyup.enter="handleSearch"
-          >
-             <template #prefix><el-icon><Search /></el-icon></template>
-          </el-input>
-        </el-form-item>
-        
-        <el-form-item label="学院">
-          <el-select
-            v-model="filters.college"
-            placeholder="选择学院"
-            clearable
-            filterable
-            style="width: 180px"
-          >
-            <el-option
-              v-for="item in collegeOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
-        </el-form-item>
-
-        <el-form-item>
-          <el-button type="primary" @click="handleSearch">查询</el-button>
-          <el-button @click="resetFilters">重置</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
-
-    <!-- Table -->
-    <el-card class="table-card" shadow="never">
-      <el-table
-        v-loading="loading"
-        :data="tableData"
-        style="width: 100%"
-        stripe
-      >
-        <el-table-column prop="employee_id" label="学号" width="120" sortable />
-        <el-table-column prop="real_name" label="姓名" width="120" />
-        <el-table-column prop="college" label="学院" width="180" />
-        <el-table-column prop="major" label="专业" width="180" />
-        <el-table-column prop="class_name" label="班级" width="140" />
-        <el-table-column label="状态" width="100">
-           <template #default="scope">
-              <el-tag :type="scope.row.is_active ? 'success' : 'danger'" size="small">
-                 {{ scope.row.is_active ? '正常' : '禁用' }}
-              </el-tag>
-           </template>
-        </el-table-column>
-        <el-table-column label="操作" fixed="right" min-width="150">
-          <template #default="scope">
-            <el-button link type="primary" size="small" @click="handleView(scope.row)">查看</el-button>
-            <el-button link type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
-            <el-button 
-                link 
-                type="danger" 
-                size="small" 
-                @click="handleToggleStatus(scope.row)"
-            >
-                {{ scope.row.is_active ? '禁用' : '激活' }}
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <!-- Pagination -->
-      <div class="pagination-container">
-        <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="total"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
-      </div>
-    </el-card>
-  </div>
-
-  <el-dialog
-    v-model="addDialogVisible"
-    title="添加学生"
-    width="720px"
-    :close-on-click-modal="false"
-    @closed="resetStudentForm"
-  >
-    <el-form
-      ref="studentFormRef"
-      :model="studentForm"
-      :rules="formRules"
-      label-width="90px"
-      class="student-form"
-    >
-      <el-row :gutter="16">
-        <el-col :span="12">
-          <el-form-item label="学号" prop="employee_id">
-            <el-input v-model="studentForm.employee_id" placeholder="请输入学号" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="姓名" prop="real_name">
-            <el-input v-model="studentForm.real_name" placeholder="请输入姓名" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="密码" prop="password">
-            <el-input
-              v-model="studentForm.password"
-              placeholder="默认 123456"
-              show-password
-            />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="手机号" prop="phone">
-            <el-input
-              v-model="studentForm.phone"
-              placeholder="可选，11位数字"
-              maxlength="11"
-            />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="邮箱" prop="email">
-            <el-input v-model="studentForm.email" placeholder="可选，学校邮箱" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="学院" prop="college">
-            <el-select
-              v-model="studentForm.college"
-              placeholder="选择学院"
-              filterable
+      <!-- Filter Bar -->
+      <el-card class="filter-card" shadow="never">
+        <el-form :inline="true" :model="filters" class="filter-form">
+          <el-form-item label="搜索">
+            <el-input 
+              v-model="filters.search" 
+              placeholder="姓名 / 学号" 
               clearable
-              allow-create
-              default-first-option
+              @keyup.enter="handleSearch"
+            >
+               <template #prefix><el-icon><Search /></el-icon></template>
+            </el-input>
+          </el-form-item>
+          
+          <el-form-item label="学院">
+            <el-select
+              v-model="filters.college"
+              placeholder="选择学院"
+              clearable
+              filterable
+              style="width: 180px"
             >
               <el-option
                 v-for="item in collegeOptions"
@@ -170,45 +46,171 @@
               />
             </el-select>
           </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="专业" prop="major">
-            <el-input v-model="studentForm.major" placeholder="请输入专业" />
+
+          <el-form-item>
+            <el-button type="primary" @click="handleSearch">查询</el-button>
+            <el-button @click="resetFilters">重置</el-button>
           </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="年级" prop="grade">
-            <el-input v-model="studentForm.grade" placeholder="如 2022" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="班级" prop="class_name">
-            <el-input v-model="studentForm.class_name" placeholder="如 计科2201" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="部门" prop="department">
-            <el-input
-              v-model="studentForm.department"
-              placeholder="可填写学院下属系"
-            />
-          </el-form-item>
-        </el-col>
-      </el-row>
-    </el-form>
-    <template #footer>
-      <span class="dialog-footer">
-        <el-button @click="addDialogVisible = false">取消</el-button>
-        <el-button
-          type="primary"
-          :loading="submitLoading"
-          @click="handleCreateStudent"
+        </el-form>
+      </el-card>
+
+      <!-- Table -->
+      <el-card class="table-card" shadow="never">
+        <el-table
+          v-loading="loading"
+          :data="tableData"
+          style="width: 100%"
+          stripe
         >
-          确认添加
-        </el-button>
-      </span>
-    </template>
-  </el-dialog>
+          <el-table-column prop="employee_id" label="学号" width="120" sortable />
+          <el-table-column prop="real_name" label="姓名" width="120" />
+          <el-table-column prop="college" label="学院" width="180" />
+          <el-table-column prop="major" label="专业" width="180" />
+          <el-table-column prop="class_name" label="班级" width="140" />
+          <el-table-column label="状态" width="100">
+             <template #default="scope">
+                <el-tag :type="scope.row.is_active ? 'success' : 'danger'" size="small">
+                   {{ scope.row.is_active ? '正常' : '禁用' }}
+                </el-tag>
+             </template>
+          </el-table-column>
+          <el-table-column label="操作" fixed="right" min-width="150">
+            <template #default="scope">
+              <el-button link type="primary" size="small" @click="handleView(scope.row)">查看</el-button>
+              <el-button link type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
+              <el-button 
+                  link 
+                  type="danger" 
+                  size="small" 
+                  @click="handleToggleStatus(scope.row)"
+              >
+                  {{ scope.row.is_active ? '禁用' : '激活' }}
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <!-- Pagination -->
+        <div class="pagination-container">
+          <el-pagination
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :page-sizes="[10, 20, 50, 100]"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="total"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+          />
+        </div>
+      </el-card>
+    </div>
+
+    <el-dialog
+      v-model="addDialogVisible"
+      title="添加学生"
+      width="720px"
+      :close-on-click-modal="false"
+      @closed="resetStudentForm"
+    >
+      <el-form
+        ref="studentFormRef"
+        :model="studentForm"
+        :rules="formRules"
+        label-width="90px"
+        class="student-form"
+      >
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="学号" prop="employee_id">
+              <el-input v-model="studentForm.employee_id" placeholder="请输入学号" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="姓名" prop="real_name">
+              <el-input v-model="studentForm.real_name" placeholder="请输入姓名" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="密码" prop="password">
+              <el-input
+                v-model="studentForm.password"
+                placeholder="默认 123456"
+                show-password
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="手机号" prop="phone">
+              <el-input
+                v-model="studentForm.phone"
+                placeholder="可选，11位数字"
+                maxlength="11"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="邮箱" prop="email">
+              <el-input v-model="studentForm.email" placeholder="可选，学校邮箱" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="学院" prop="college">
+              <el-select
+                v-model="studentForm.college"
+                placeholder="选择学院"
+                filterable
+                clearable
+                allow-create
+                default-first-option
+              >
+                <el-option
+                  v-for="item in collegeOptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="专业" prop="major">
+              <el-input v-model="studentForm.major" placeholder="请输入专业" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="年级" prop="grade">
+              <el-input v-model="studentForm.grade" placeholder="如 2022" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="班级" prop="class_name">
+              <el-input v-model="studentForm.class_name" placeholder="如 计科2201" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="部门" prop="department">
+              <el-input
+                v-model="studentForm.department"
+                placeholder="可填写学院下属系"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="addDialogVisible = false">取消</el-button>
+          <el-button
+            type="primary"
+            :loading="submitLoading"
+            @click="handleCreateStudent"
+          >
+            确认添加
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
+  </div>
 </template>
 
 <script setup lang="ts">

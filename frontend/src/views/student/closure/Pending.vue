@@ -1,9 +1,6 @@
 <template>
   <div class="pending-page">
-    <div class="page-header">
-      <h2>待结题项目</h2>
-      <p>查看可以申请结题的项目列表</p>
-    </div>
+
 
     <div class="page-content">
       <!-- 表格区域 -->

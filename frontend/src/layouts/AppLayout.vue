@@ -171,7 +171,8 @@ import {
   School, DocumentAdd, DocumentChecked, 
   QuestionFilled, Bell, ArrowDown, 
   SwitchButton, Management,
-  DataAnalysis, Odometer, UserFilled,
+
+  DataAnalysis, UserFilled,
   DataLine, Expand, Fold, Lock
 } from '@element-plus/icons-vue';
 import { reactive } from 'vue';
@@ -207,7 +208,7 @@ const appTitle = computed(() => {
 
 const homePath = computed(() => {
     switch(userRole.value) {
-        case 'level1_admin': return '/level1-admin/dashboard'; // Assuming dashboard exists or redirect
+        case 'level1_admin': return '/level1-admin/users/students';
         case 'level2_admin': return '/admin/projects';
         default: return '/';
     }
@@ -272,11 +273,6 @@ const currentMenus = computed(() => {
             ];
         case 'level1_admin':
              return [
-                {
-                    index: '/level1-admin/dashboard',
-                    title: '控制台',
-                    icon: Odometer
-                },
                 {
                     index: 'users',
                     title: '用户维护',

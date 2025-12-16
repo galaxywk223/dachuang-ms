@@ -1,9 +1,6 @@
 <template>
   <div class="closure-drafts-page">
-    <div class="page-header">
-      <h2>草稿箱</h2>
-      <p>管理未提交的结题申请草稿</p>
-    </div>
+
 
     <div class="page-content">
       <!-- 表格区域 -->

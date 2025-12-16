@@ -1,9 +1,5 @@
 <template>
   <div class="help-page">
-    <div class="page-header">
-      <h2>使用帮助</h2>
-      <p>查看系统使用指南和常见问题</p>
-    </div>
     <div class="page-content">
       <el-card class="help-card">
         <template #header>

@@ -1,9 +1,6 @@
 <template>
   <div class="achievements-page">
-    <div class="page-header">
-      <h2>结题成果查看</h2>
-      <p>查看已结题项目的成果展示</p>
-    </div>
+
 
     <!-- Filter/Search -->
     <el-card class="search-card">
