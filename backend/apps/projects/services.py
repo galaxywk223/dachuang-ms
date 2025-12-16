@@ -127,7 +127,7 @@ class ProjectService:
         """
         获取学院的项目
         """
-        return Project.objects.filter(college=college)
+        return Project.objects.filter(leader__college=college)
 
     @staticmethod
     @transaction.atomic

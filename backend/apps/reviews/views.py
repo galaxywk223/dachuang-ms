@@ -39,7 +39,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
         # 二级管理员只能看到本学院的审核记录
         elif user.is_level2_admin:
             queryset = queryset.filter(
-                project__college=user.college, review_level=Review.ReviewLevel.LEVEL2
+                project__leader__college=user.college,
+                review_level=Review.ReviewLevel.LEVEL2,
             )
         # 一级管理员可以看到所有一级审核记录
         elif user.is_level1_admin:
@@ -111,7 +112,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         if user.is_level2_admin:
             # 二级管理员获取本学院待审核的项目
             queryset = Review.objects.filter(
-                project__college=user.college,
+                project__leader__college=user.college,
                 review_level=Review.ReviewLevel.LEVEL2,
                 status=Review.ReviewStatus.PENDING,
             )
@@ -143,7 +144,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
         """
         if review.review_level == Review.ReviewLevel.LEVEL2:
             # 二级审核：必须是二级管理员且是同一学院
-            return user.is_level2_admin and user.college == review.project.college
+            project_college = (
+                review.project.leader.college if review.project and review.project.leader else None
+            )
+            return user.is_level2_admin and user.college == project_college
         elif review.review_level == Review.ReviewLevel.LEVEL1:
             # 一级审核：必须是一级管理员
             return user.is_level1_admin
@@ -169,7 +173,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
             )
 
         try:
-            project = Project.objects.get(id=project_id, college=user.college)
+            project = Project.objects.get(id=project_id, leader__college=user.college)
 
             # 检查项目状态
             if project.status != Project.ProjectStatus.LEVEL2_APPROVED:

@@ -198,6 +198,7 @@ class ProjectListSerializer(serializers.ModelSerializer):
     """
 
     leader_name = serializers.CharField(source="leader.real_name", read_only=True)
+    college = serializers.CharField(source="leader.college", read_only=True)
     status_display = serializers.CharField(source="get_status_display", read_only=True)
     level_display = serializers.CharField(source="get_level_display", read_only=True)
     category_display = serializers.CharField(
@@ -275,7 +276,7 @@ class ProjectAchievementSerializer(serializers.ModelSerializer):
     project_title = serializers.CharField(source="project.title", read_only=True)
     project_no = serializers.CharField(source="project.project_no", read_only=True)
     leader_name = serializers.CharField(source="project.leader.real_name", read_only=True)
-    college = serializers.CharField(source="project.college", read_only=True)
+    college = serializers.CharField(source="project.leader.college", read_only=True)
 
     class Meta:
         model = ProjectAchievement

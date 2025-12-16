@@ -33,7 +33,7 @@ class ProjectManagementViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(
                 Q(title__icontains=search)
                 | Q(project_no__icontains=search)
-                | Q(leader_name__icontains=search)
+                | Q(leader__real_name__icontains=search)
             )
 
         # 按级别筛选
@@ -180,7 +180,7 @@ class ProjectManagementViewSet(viewsets.ModelViewSet):
                 "category": p.category.label if p.category else "",
                 "status": p.get_status_display(),
                 "leader": p.leader.real_name if p.leader else "",
-                "college": p.college,
+                "college": p.leader.college if p.leader else "",
                 "created_at": p.created_at,
             })
 
@@ -292,7 +292,7 @@ class AchievementManagementViewSet(viewsets.ModelViewSet):
         # Filter by college
         college = self.request.query_params.get("college", "")
         if college:
-             queryset = queryset.filter(project__college=college)
+             queryset = queryset.filter(project__leader__college=college)
 
         return queryset
 
@@ -344,7 +344,7 @@ class AchievementManagementViewSet(viewsets.ModelViewSet):
                 "project_no": ach.project.project_no,
                 "project_title": ach.project.title,
                 "leader": ach.project.leader.real_name if ach.project.leader else "",
-                "college": ach.project.college,
+                "college": ach.project.leader.college if ach.project.leader else "",
                 "type": ach.achievement_type.label if ach.achievement_type else "",
                 "title": ach.title,
                 "description": ach.description,

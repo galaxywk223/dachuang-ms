@@ -174,7 +174,7 @@ class ReviewService:
         """
         if admin_user.is_level2_admin:
             return Review.objects.filter(
-                project__college=admin_user.college,
+                project__leader__college=admin_user.college,
                 review_level=Review.ReviewLevel.LEVEL2,
                 status=Review.ReviewStatus.PENDING,
             )

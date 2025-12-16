@@ -34,7 +34,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = [IsAuthenticated]
-    filterset_fields = ["status", "level", "college", "leader"]
+    filterset_fields = ["status", "level", "leader__college", "leader"]
     search_fields = ["project_no", "title", "advisor"]
     ordering_fields = ["created_at", "updated_at", "submitted_at"]
 
@@ -57,7 +57,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(Q(leader=user) | Q(members=user)).distinct()
         # 二级管理员只能看到自己学院的项目
         elif user.is_level2_admin:
-            queryset = queryset.filter(college=user.college)
+            queryset = queryset.filter(leader__college=user.college)
 
         return queryset
 
@@ -379,7 +379,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         user = request.user
 
         # 检查权限
-        if not user.is_level2_admin or project.college != user.college:
+        if not user.is_level2_admin or project.leader.college != user.college:
             return Response(
                 {"code": 403, "message": "无权限修改此项目排名"},
                 status=status.HTTP_403_FORBIDDEN,
@@ -410,7 +410,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             )
 
         # 获取本学院的项目
-        projects = Project.objects.filter(college=user.college)
+        projects = Project.objects.filter(leader__college=user.college)
 
         # 应用筛选条件
         status_filter = request.query_params.get("status")
@@ -499,7 +499,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             )
 
         # 获取本学院的项目
-        projects = Project.objects.filter(college=user.college)
+        projects = Project.objects.filter(leader__college=user.college)
 
         # 应用筛选条件
         status_filter = request.query_params.get("status")
@@ -596,6 +596,6 @@ class ProjectAchievementViewSet(viewsets.ModelViewSet):
             ).distinct()
         # 二级管理员只能看到本学院项目的成果
         elif user.is_level2_admin:
-            queryset = queryset.filter(project__college=user.college)
+            queryset = queryset.filter(project__leader__college=user.college)
 
         return queryset
