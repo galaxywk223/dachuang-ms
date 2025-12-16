@@ -6,6 +6,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from ..serializers import LoginSerializer
@@ -60,7 +61,7 @@ class AuthController(viewsets.GenericViewSet):
         """
         return Response({"message": "登出成功"}, status=status.HTTP_200_OK)
 
-    @action(methods=["get"], detail=False)
+    @action(methods=["get"], detail=False, permission_classes=[IsAuthenticated])
     def profile(self, request):
         """
         获取用户信息
@@ -68,7 +69,7 @@ class AuthController(viewsets.GenericViewSet):
         user_data = self.user_business.get_user_profile(request.user)
         return Response(user_data, status=status.HTTP_200_OK)
 
-    @action(methods=["put"], detail=False)
+    @action(methods=["put"], detail=False, permission_classes=[IsAuthenticated])
     def update_profile(self, request):
         """
         更新用户信息
@@ -78,7 +79,7 @@ class AuthController(viewsets.GenericViewSet):
         )
         return Response(updated_user, status=status.HTTP_200_OK)
 
-    @action(methods=["put"], detail=False)
+    @action(methods=["put"], detail=False, permission_classes=[IsAuthenticated])
     def change_password(self, request):
         """
         修改密码
