@@ -63,9 +63,18 @@ export function useDictionary() {
      * 批量加载指定的字典类型
      * @param codes 字典类型编码列表
      */
-    const loadDictionaries = async (codes: string[]) => {
+    const loadDictionaries = async (codes: Array<string | null | undefined>) => {
+        const cleanedCodes = Array.from(new Set(codes))
+            .filter((code): code is string => typeof code === "string")
+            .map((code) => code.trim())
+            .filter(Boolean);
+
+        if (cleanedCodes.length === 0) return;
+
         // 过滤出尚未缓存的编码
-        const missingCodes = codes.filter((code) => !dictionaryCache.value[code]);
+        const missingCodes = cleanedCodes.filter(
+            (code) => !dictionaryCache.value[code]
+        );
 
         if (missingCodes.length === 0) return;
 

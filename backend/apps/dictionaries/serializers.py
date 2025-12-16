@@ -71,9 +71,24 @@ class DictionaryBatchSerializer(serializers.Serializer):
     """
 
     codes = serializers.ListField(
-        child=serializers.CharField(max_length=50),
+        child=serializers.CharField(max_length=50, allow_null=True, allow_blank=False),
+        required=False,
+        default=list,
         help_text="字典类型编码列表",
     )
+
+    def validate_codes(self, codes):
+        cleaned = []
+        seen = set()
+        for code in codes or []:
+            if not isinstance(code, str):
+                continue
+            code = code.strip()
+            if not code or code in seen:
+                continue
+            seen.add(code)
+            cleaned.append(code)
+        return cleaned
 
 
 class DictionaryItemSimpleSerializer(serializers.ModelSerializer):

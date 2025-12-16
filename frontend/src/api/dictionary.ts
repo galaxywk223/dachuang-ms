@@ -80,4 +80,7 @@ export const DICT_CODES = {
   TITLE: "title",
   KEY_FIELD_CODE: "key_field_code",
   PROJECT_TYPE: "project_type",
+  // Backward-compatible aliases (avoid null codes in batch requests)
+  SPECIAL_PROJECT_TYPE: "project_type",
+  ADVISOR_TITLE: "title",
 } as const;

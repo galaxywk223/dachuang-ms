@@ -22,16 +22,25 @@
               v-for="type in dictionaryTypes"
               :key="type.code"
               @click="currentType = type"
-              class="relative px-4 py-4 cursor-pointer hover:bg-gray-50"
-              :class="{ 'bg-blue-50': currentType?.code === type.code }"
+              class="relative px-4 py-3 cursor-pointer transition-colors duration-150 ease-in-out hover:bg-gray-50 group"
+              :class="{ 'bg-indigo-50 border-l-4 border-indigo-600': currentType?.code === type.code, 'border-l-4 border-transparent': currentType?.code !== type.code }"
             >
-              <div class="flex justify-between space-x-3">
-                <div class="flex-1 min-w-0">
-                  <span class="absolute inset-0" aria-hidden="true" />
-                  <p class="text-sm font-medium text-gray-900 truncate">
+              <div class="flex items-center justify-between space-x-3">
+                <div class="flex items-center space-x-3 min-w-0">
+                  <div 
+                    class="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-md"
+                    :class="currentType?.code === type.code ? 'bg-indigo-100' : 'bg-gray-100 group-hover:bg-gray-200'"
+                  >
+                    <BookOpenIcon 
+                      class="w-5 h-5" 
+                      style="width: 20px; height: 20px;"
+                      :class="currentType?.code === type.code ? 'text-indigo-600' : 'text-gray-500'"
+                      aria-hidden="true" 
+                    />
+                  </div>
+                  <p class="text-sm font-medium truncate" :class="currentType?.code === type.code ? 'text-indigo-900' : 'text-gray-700'">
                     {{ type.name }}
                   </p>
-                  <p class="text-sm text-gray-500 truncate">{{ type.code }}</p>
                 </div>
               </div>
             </li>
@@ -322,7 +331,7 @@ import {
   TransitionChild,
   TransitionRoot,
 } from '@headlessui/vue'
-import { PlusIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon, BookOpenIcon } from '@heroicons/vue/24/outline'
 import request from '@/utils/request'
 
 interface DictionaryType {
