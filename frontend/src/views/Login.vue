@@ -84,6 +84,7 @@ const handleLogin = async (formData: any) => {
 </script>
 
 <style scoped lang="scss">
+@use "sass:color";
 @use "@/styles/variables.scss" as *;
 
 .login-container {
@@ -188,7 +189,7 @@ const handleLogin = async (formData: any) => {
   .shape-1 {
     width: 300px;
     height: 300px;
-    background: lighten($primary-400, 10%);
+    background: color.adjust($primary-400, $lightness: 10%);
     top: -50px;
     right: -50px;
   }
@@ -196,7 +197,7 @@ const handleLogin = async (formData: any) => {
   .shape-2 {
     width: 400px;
     height: 400px;
-    background: darken($primary-800, 5%);
+    background: color.adjust($primary-800, $lightness: -5%);
     bottom: -100px;
     left: -100px;
   }
