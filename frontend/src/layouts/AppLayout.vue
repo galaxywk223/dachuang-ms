@@ -173,7 +173,7 @@ import {
   SwitchButton, Management,
 
   DataAnalysis, UserFilled,
-  DataLine, Expand, Fold, Lock
+  DataLine, Expand, Fold, Lock, Setting
 } from '@element-plus/icons-vue';
 import { reactive } from 'vue';
 
@@ -283,11 +283,11 @@ const currentMenus = computed(() => {
                     ]
                 },
                 {
-                    index: 'data',
-                    title: '数据维护',
-                    icon: DataLine,
+                    index: 'settings',
+                    title: '系统配置',
+                    icon: Setting,
                     children: [
-                         { index: '/level1-admin/data/colleges', title: '学院信息' },
+                         { index: '/level1-admin/settings/dictionaries', title: '字典管理' },
                     ]
                 }
              ];

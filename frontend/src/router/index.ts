@@ -48,6 +48,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/views/level1_admin/data/Colleges.vue"),
         meta: { title: "学院信息维护" },
       },
+      {
+        path: "settings/dictionaries",
+        name: "level1-settings-dictionaries",
+        component: () => import("@/views/level1_admin/settings/SystemDictionaries.vue"),
+        meta: { title: "系统字典管理" },
+      },
     ],
   },
   // 二级管理员路由 (院级) - Maintained at /admin for backward compatibility but role updated

@@ -17,6 +17,7 @@ from .serializers import (
     DictionaryItemSimpleSerializer,
     DictionaryBatchSerializer,
 )
+from apps.users.permissions import IsLevel1Admin
 
 
 class DictionaryTypeViewSet(viewsets.ModelViewSet):
@@ -31,6 +32,14 @@ class DictionaryTypeViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ["is_system", "is_active"]
     search_fields = ["code", "name"]
+
+    def get_permissions(self):
+        """
+        GET请求只需认证，修改操作需要一级管理员权限
+        """
+        if self.action in ["list", "retrieve", "by_code", "batch", "all_dictionaries"]:
+            return [IsAuthenticated()]
+        return [IsLevel1Admin()]
 
     def get_serializer_class(self):
         if self.action == "retrieve":
@@ -135,6 +144,14 @@ class DictionaryItemViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ["dict_type", "is_active"]
     search_fields = ["value", "label"]
+
+    def get_permissions(self):
+        """
+        GET请求只需认证，修改操作需要一级管理员权限
+        """
+        if self.action in ["list", "retrieve"]:
+            return [IsAuthenticated()]
+        return [IsLevel1Admin()]
 
     def get_queryset(self):
         queryset = super().get_queryset()
