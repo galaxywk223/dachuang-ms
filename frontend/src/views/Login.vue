@@ -68,10 +68,19 @@ const handleLogin = async (formData: any) => {
         message: `欢迎回来，${userStore.user?.real_name || '用户'}`,
         duration: 2000,
       });
-      // Route based on role is handled in store or we do it here?
-      // Previous code suggested router push to / or specific.
-      // Let's go to root / which likely redirects based on role guards
-      router.push("/");
+      // Redirect based on role
+      switch (formData.role) {
+        case 'level1_admin':
+          router.push('/level1-admin/dashboard');
+          break;
+        case 'level2_admin':
+          router.push('/admin/projects');
+          break;
+        case 'student':
+        default:
+          router.push('/');
+          break;
+      }
     } else {
       ElMessage.error("登录失败，请检查用户名或密码");
     }
