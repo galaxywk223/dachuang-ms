@@ -14,6 +14,7 @@ from apps.reviews.models import Review
 from apps.reviews.services import ReviewService
 from .serializers import ProjectSerializer, ProjectAdvisorSerializer
 from apps.dictionaries.models import DictionaryItem
+import json
 
 
 def _to_bool(val, default=True):
@@ -49,12 +50,18 @@ def create_project_application(request):
             # Note: We assume DictionaryItems for defaults exist. In a real app, handle DoesNotExist.
             if not data.get("level"):
                 try:
-                    data["level"] = DictionaryItem.objects.get(dict_type__code="PROJECT_LEVEL", value="SCHOOL").id
+                    default_level = DictionaryItem.objects.get(
+                        dict_type__code="PROJECT_LEVEL", value="SCHOOL"
+                    )
+                    data["level"] = default_level.value
                 except DictionaryItem.DoesNotExist:
                     pass # Let serializer validation fail or handle error
             if not data.get("category"):
                  try:
-                    data["category"] = DictionaryItem.objects.get(dict_type__code="PROJECT_CATEGORY", value="INNOVATION_TRAINING").id
+                    default_category = DictionaryItem.objects.get(
+                        dict_type__code="PROJECT_CATEGORY", value="INNOVATION_TRAINING"
+                    )
+                    data["category"] = default_category.value
                  except DictionaryItem.DoesNotExist:
                     pass
 
@@ -87,7 +94,6 @@ def create_project_application(request):
                     ReviewService.create_level2_review(project)
 
             # 添加指导教师
-            import json
             advisors_data = request.data.get("advisors", [])
             if isinstance(advisors_data, str):
                 try:
@@ -128,12 +134,24 @@ def create_project_application(request):
                     members_data = json.loads(members_data)
                 except json.JSONDecodeError:
                      members_data = []
-                     
+
             for member_data in members_data:
-                # Basic implementation: just creating records if we had a way to link users
-                # Since we don't know if 'members' contains user IDs or just names
-                # For now, we skip or need logic validation
-                pass
+                user_id = (
+                    member_data.get("user")
+                    or member_data.get("user_id")
+                    or member_data.get("id")
+                )
+                if not user_id or str(user_id) == str(user.id):
+                    continue  # Skip invalid entries or duplicate leader
+
+                ProjectMember.objects.get_or_create(
+                    project=project,
+                    user_id=user_id,
+                    defaults={
+                        "role": ProjectMember.MemberRole.MEMBER,
+                        "contribution": member_data.get("contribution", ""),
+                    },
+                )
 
             return Response(
                 {
@@ -215,7 +233,6 @@ def update_project_application(request, pk):
 
             # 更新指导教师（先删除旧的）
             project.advisors.all().delete()
-            import json
             advisors_data = request.data.get("advisors", [])
             if isinstance(advisors_data, str):
                 try:
@@ -241,6 +258,36 @@ def update_project_application(request, pk):
                         user_id=user_id,
                         order=idx,
                      )
+
+            # 更新项目成员（保留负责人，重建其余成员）
+            ProjectMember.objects.filter(project=project).exclude(
+                role=ProjectMember.MemberRole.LEADER
+            ).delete()
+
+            members_data = request.data.get("members", [])
+            if isinstance(members_data, str):
+                try:
+                    members_data = json.loads(members_data)
+                except json.JSONDecodeError:
+                    members_data = []
+
+            for member_data in members_data:
+                user_id = (
+                    member_data.get("user")
+                    or member_data.get("user_id")
+                    or member_data.get("id")
+                )
+                if not user_id or str(user_id) == str(user.id):
+                    continue  # Skip invalid entries or duplicate leader
+
+                ProjectMember.objects.get_or_create(
+                    project=project,
+                    user_id=user_id,
+                    defaults={
+                        "role": ProjectMember.MemberRole.MEMBER,
+                        "contribution": member_data.get("contribution", ""),
+                    },
+                )
 
             return Response(
                 {

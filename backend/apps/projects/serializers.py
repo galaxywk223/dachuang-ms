@@ -10,6 +10,7 @@ from .models import (
     ProjectProgress,
     ProjectAchievement,
 )
+from apps.dictionaries.models import DictionaryItem
 
 
 class ProjectAdvisorSerializer(serializers.ModelSerializer):
@@ -99,6 +100,26 @@ class ProjectSerializer(serializers.ModelSerializer):
     category_display = serializers.CharField(
         source="category.label", read_only=True
     )
+    college = serializers.CharField(source="leader.college", read_only=True)
+    # 接收前端传入的字典项 value（字符串代码），自动转换为 DictionaryItem
+    level = serializers.SlugRelatedField(
+        slug_field="value",
+        queryset=DictionaryItem.objects.all(),
+        required=False,
+        allow_null=True,
+    )
+    category = serializers.SlugRelatedField(
+        slug_field="value",
+        queryset=DictionaryItem.objects.all(),
+        required=False,
+        allow_null=True,
+    )
+    source = serializers.SlugRelatedField(
+        slug_field="value",
+        queryset=DictionaryItem.objects.all(),
+        required=False,
+        allow_null=True,
+    )
     achievements_count = serializers.SerializerMethodField()
     is_key_field = KeyFieldBoolean(required=False)
 
@@ -116,6 +137,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             "source",
             "leader",
             "leader_name",
+            "college",
             "members_info",
             "advisors_info",
             "is_key_field",
