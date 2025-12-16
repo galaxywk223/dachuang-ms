@@ -9,7 +9,7 @@ declare module "vue-router" {
   interface RouteMeta {
     title?: string;
     requiresAuth?: boolean;
-    role?: "admin" | "student";
+    role?: "admin" | "student" | "level1_admin" | "level2_admin";
   }
 }
 
@@ -20,11 +20,47 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/Login.vue"),
     meta: { requiresAuth: false },
   },
-  // 管理员路由
+  // 一级管理员路由 (校级)
+  {
+    path: "/level1-admin",
+    component: () => import("@/layouts/Level1AdminLayout.vue"),
+    meta: { requiresAuth: true, role: "level1_admin" },
+    children: [
+      {
+        path: "",
+        redirect: "/level1-admin/dashboard",
+      },
+      {
+        path: "dashboard",
+        name: "level1-dashboard",
+        component: () => import("@/views/level1_admin/Dashboard.vue"),
+        meta: { title: "控制台" },
+      },
+      {
+        path: "users/students",
+        name: "level1-users-students",
+        component: () => import("@/views/level1_admin/users/Students.vue"),
+        meta: { title: "学生管理" },
+      },
+      {
+        path: "users/admins",
+        name: "level1-users-admins",
+        component: () => import("@/views/level1_admin/users/Admins.vue"),
+        meta: { title: "二级管理员管理" },
+      },
+      {
+        path: "data/colleges",
+        name: "level1-data-colleges",
+        component: () => import("@/views/level1_admin/data/Colleges.vue"),
+        meta: { title: "学院信息维护" },
+      },
+    ],
+  },
+  // 二级管理员路由 (院级) - Maintained at /admin for backward compatibility but role updated
   {
     path: "/admin",
     component: () => import("@/layouts/AdminLayout.vue"),
-    meta: { requiresAuth: true, role: "admin" },
+    meta: { requiresAuth: true, role: "level2_admin" },
     children: [
       {
         path: "",
@@ -160,10 +196,12 @@ router.beforeEach(async (to, _from, next) => {
     // 已登录则根据角色跳转
     if (userRole === "student") {
       next({ path: "/establishment/apply" });
-    } else if (userRole === "admin") {
+    } else if (userRole === "level1_admin") {
+      next({ path: "/level1-admin/dashboard" });
+    } else if (userRole === "level2_admin" || userRole === "admin") {
       next({ path: "/admin/projects" });
     } else {
-      next({ path: "/establishment/apply" });
+      next({ path: "/establishment/apply" }); // Default fallback
     }
   } else if (userStore.isLoggedIn) {
     // 如果已登录但没有用户信息，尝试获取用户信息
@@ -174,12 +212,19 @@ router.beforeEach(async (to, _from, next) => {
     // 角色权限检查
     const routeRole = to.meta.role as string | undefined;
 
-    if (routeRole === "admin" && userRole !== "admin") {
-      // 非管理员访问管理员页面
-      next({ path: "/establishment/apply" });
-    } else if (routeRole === "student" && userRole === "admin") {
-      // 管理员访问学生页面
-      next({ path: "/admin/projects" });
+    // Strict role check
+    if (routeRole && routeRole !== userRole) {
+      // Allow legacy match for admin/level2_admin if strictness causes issues, but for now strict:
+      if (routeRole === 'level1_admin' && userRole !== 'level1_admin') {
+        next({ name: 'login' }); // or forbidden page 
+      } else if ((routeRole === 'level2_admin' || routeRole === 'admin') &&
+        (userRole !== 'level2_admin' && userRole !== 'admin')) {
+        next({ name: 'login' });
+      } else if (routeRole === 'student' && userRole !== 'student') {
+        next({ name: 'login' });
+      } else {
+        next();
+      }
     } else {
       next();
     }

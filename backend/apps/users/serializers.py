@@ -77,6 +77,10 @@ class LoginSerializer(serializers.Serializer):
         # 验证角色匹配
         if role == "student" and user.role != "STUDENT":
             raise serializers.ValidationError(self.error_messages["role_mismatch"])
+        elif role == "level1_admin" and user.role != "LEVEL1_ADMIN":
+            raise serializers.ValidationError(self.error_messages["role_mismatch"])
+        elif role == "level2_admin" and user.role != "LEVEL2_ADMIN":
+            raise serializers.ValidationError(self.error_messages["role_mismatch"])
         elif role == "admin" and user.role not in ["LEVEL1_ADMIN", "LEVEL2_ADMIN"]:
             raise serializers.ValidationError(self.error_messages["role_mismatch"])
 

@@ -57,7 +57,8 @@
             <el-icon class="input-icon"><Avatar /></el-icon>
           </template>
           <el-option label="学生" value="student" />
-          <el-option label="管理员" value="admin" />
+          <el-option label="二级管理员" value="level2_admin" />
+          <el-option label="一级管理员" value="level1_admin" />
         </el-select>
       </el-form-item>
     </div>

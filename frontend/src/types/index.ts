@@ -1,9 +1,11 @@
 // 用户角色类型
 export enum UserRole {
   STUDENT = "student",
+  LEVEL1_ADMIN = "level1_admin", // 一级管理员（校级）
+  LEVEL2_ADMIN = "level2_admin", // 二级管理员（院级）
   TEACHER = "teacher",
   EXPERT = "expert",
-  ADMIN = "admin",
+  ADMIN = "admin", // Legacy/Generic admin
 }
 
 // 用户信息
