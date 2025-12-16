@@ -75,7 +75,6 @@
         </div>
 
         <div class="header-right">
-          <!-- TODO: Notifications -->
           <el-button circle text class="icon-btn">
             <el-badge is-dot class="badge-dot" :hidden="!hasUnread">
               <el-icon :size="20"><Bell /></el-icon>
@@ -131,7 +130,7 @@ const router = useRouter();
 const userStore = useUserStore();
 
 const isCollapse = ref(false);
-const hasUnread = ref(true); // Demo state
+const hasUnread = ref(false); 
 
 const activeMenu = computed(() => route.path);
 const userName = computed(() => userStore.user?.real_name || '学生用户');
