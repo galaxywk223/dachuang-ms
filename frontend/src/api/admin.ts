@@ -88,3 +88,52 @@ export function getProjectStatistics() {
     method: "get",
   });
 }
+
+// 成果管理相关接口
+
+/**
+ * 获取成果列表
+ */
+export function getAchievements(params: any) {
+  return request({
+    url: "/projects/admin/achievements/",
+    method: "get",
+    params,
+  });
+}
+
+/**
+ * 导出成果数据
+ */
+export function exportAchievements(params: any) {
+  return request({
+    url: "/projects/admin/achievements/export/",
+    method: "get",
+    params,
+    responseType: "blob",
+  });
+}
+
+/**
+ * 批量导出项目数据
+ */
+export function exportProjects(params?: any) {
+  return request({
+    url: "/projects/admin/manage/export/",
+    method: "get",
+    params,
+    responseType: "blob",
+  });
+}
+
+/**
+ * 批量下载附件
+ */
+export function batchDownloadAttachments(params?: any) {
+  return request({
+    url: "/projects/admin/manage/batch-download/",
+    method: "get",
+    params,
+    responseType: "blob",
+  });
+}

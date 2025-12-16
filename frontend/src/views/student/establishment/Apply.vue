@@ -431,29 +431,54 @@ const processRequest = async (isDraft: boolean) => {
 
     loading.value = true;
     try {
-        const payload: any = { 
-            ...formData, 
-            is_draft: isDraft 
-        };
-
+        const payload = new FormData();
+        
+        // 1. Basic Fields Mapping
+        const basicFields = { ...formData };
+        
+        // Handle Logic before appending
         const validLevels = ['NATIONAL', 'PROVINCIAL', 'SCHOOL', 'SCHOOL_KEY'];
-        if (!validLevels.includes(payload.level)) payload.level = 'SCHOOL';
+        if (!validLevels.includes(basicFields.level)) basicFields.level = 'SCHOOL';
 
         const validCategories = ['INNOVATION_TRAINING', 'ENTREPRENEURSHIP_TRAINING', 'ENTREPRENEURSHIP_PRACTICE'];
-        if (payload.category === 'ENTREPRENEURSHIP') payload.category = 'ENTREPRENEURSHIP_PRACTICE';
-        if (!validCategories.includes(payload.category)) payload.category = 'INNOVATION_TRAINING';
+        if (basicFields.category === 'ENTREPRENEURSHIP') basicFields.category = 'ENTREPRENEURSHIP_PRACTICE';
+        if (!validCategories.includes(basicFields.category)) basicFields.category = 'INNOVATION_TRAINING';
         
-        const keyFieldVal = payload.is_key_field;
-        payload.is_key_field = (keyFieldVal === true || keyFieldVal === 'TRUE' || keyFieldVal === 'YES' || keyFieldVal === 'KEY');
-
-        delete payload.attachment_file; 
+        const keyFieldVal = basicFields.is_key_field;
+        basicFields.is_key_field = (keyFieldVal === true || keyFieldVal === 'TRUE' || keyFieldVal === 'YES' || keyFieldVal === 'KEY') ? 'KEY' : 'NORMAL'; // Backend expects boolean or specific value? Serializer expects boolean likely (is_key_field).
+        // Check Serializer Line 92: "is_key_field"
+        // Let's assume it handles boolean or string "true". 
+        // Based on Step 222 line 133: is_draft = data.get("is_draft", True).
+        // Let's stick to string "true"/"false" for boolean fields in FormData to be safe or whatever backend expects.
+        // Actually Serializer defaults might work.
+        // Let's pass it as string "true" if Key.
         
-        if (!payload.leader_email || !/^\S+@\S+\.\S+$/.test(payload.leader_email)) {
-            payload.leader_email = "";
+        if (!basicFields.leader_email || !/^\S+@\S+\.\S+$/.test(basicFields.leader_email)) {
+            basicFields.leader_email = "";
         }
         
-        payload.budget = Number(payload.budget) || 0;
-        payload.self_funding = Number(payload.self_funding) || 0;
+        basicFields.budget = Number(basicFields.budget) || 0;
+        // basicFields.self_funding = Number(basicFields.self_funding) || 0; // self_funding not in formData definition but in payload logic previously
+
+        payload.append('is_draft', String(isDraft));
+
+        // Append fields loop
+        Object.keys(basicFields).forEach(key => {
+            if (key === 'attachment_file') {
+                if (basicFields.attachment_file) {
+                    payload.append('proposal_file', basicFields.attachment_file);
+                }
+            } else if (key === 'advisors' || key === 'members') {
+                payload.append(key, JSON.stringify(basicFields[key]));
+            } else if (key === 'id') {
+                // Skip ID in body
+            } else {
+                 const val = (basicFields as any)[key];
+                 if (val !== null && val !== undefined) {
+                     payload.append(key, String(val));
+                 }
+            }
+        });
 
         let response: any;
         if (formData.id) {

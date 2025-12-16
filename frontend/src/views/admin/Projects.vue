@@ -61,6 +61,8 @@
            <el-tag type="info" size="small" effect="plain" round class="count-tag">共 {{ total }} 项</el-tag>
         </div>
         <div class="actions">
+           <el-button type="success" plain :icon="Download" @click="handleBatchExport"> 导出数据 </el-button>
+           <el-button type="warning" plain :icon="Download" @click="handleBatchDownload"> 下载附件 </el-button>
            <el-button type="primary" :icon="Plus" @click="handleCreate"> 申报项目 </el-button>
         </div>
       </div>
@@ -71,7 +73,9 @@
         style="width: 100%"
         :header-cell-style="{ background: '#f8fafc', color: '#475569', fontWeight: '600', height: '48px' }"
         :cell-style="{ color: '#334155', height: '48px' }"
+        @selection-change="handleSelectionChange"
       >
+        <el-table-column type="selection" width="55" align="center" />
         <el-table-column type="index" label="序号" width="60" align="center" />
         
         <el-table-column prop="project_no" label="项目编号" width="130" show-overflow-tooltip>
@@ -139,15 +143,17 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { Search, Plus, RefreshLeft } from "@element-plus/icons-vue";
+import { Search, Plus, RefreshLeft, Download } from "@element-plus/icons-vue";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionary";
 import { getProjects, deleteProject } from "@/api/project";
+import { exportProjects, batchDownloadAttachments } from "@/api/admin";
 
 const { loadDictionaries, getOptions } = useDictionary();
 
 const loading = ref(false);
 const projects = ref<any[]>([]);
+const selectedRows = ref<any[]>([]);
 const currentPage = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
@@ -236,6 +242,70 @@ const handleDelete = async (row: any) => {
   } catch (error) {
     if (error !== 'cancel') ElMessage.error("删除失败");
   }
+};
+
+const handleSelectionChange = (val: any[]) => {
+  selectedRows.value = val;
+};
+
+const handleBatchExport = async () => {
+    try {
+        ElMessage.info("正在生成导出文件，请稍候...");
+        const params: any = {};
+        
+        if (selectedRows.value.length > 0) {
+             params.ids = selectedRows.value.map(row => row.id).join(',');
+        } else {
+             params.search = filters.search;
+             params.level = filters.level;
+             params.category = filters.category;
+             params.status = filters.status;
+        }
+
+        const res: any = await exportProjects(params);
+        downloadFile(res, "项目数据.xlsx");
+        ElMessage.success("导出成功");
+    } catch (error) {
+        ElMessage.error("导出失败");
+    }
+};
+
+const handleBatchDownload = async () => {
+    try {
+        ElMessage.info("正在打包附件，请稍候...");
+        const params: any = {};
+        
+        if (selectedRows.value.length > 0) {
+             params.ids = selectedRows.value.map(row => row.id).join(',');
+        } else {
+             params.search = filters.search;
+             params.level = filters.level;
+             params.category = filters.category;
+             params.status = filters.status;
+        }
+
+        const res: any = await batchDownloadAttachments(params);
+        if (res.type === 'application/json') {
+             const text = await res.text();
+             const json = JSON.parse(text);
+             ElMessage.error(json.message || "下载失败");
+             return;
+        }
+        downloadFile(res, "项目附件.zip");
+        ElMessage.success("下载成功");
+    } catch (error) {
+        ElMessage.error("下载失败，可能没有可下载的附件");
+    }
+};
+
+const downloadFile = (blob: Blob, filename: string) => {
+    const url = window.URL.createObjectURL(new Blob([blob]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 };
 
 const getLevelType = (level: string) => {

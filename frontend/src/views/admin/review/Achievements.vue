@@ -11,18 +11,16 @@
         <el-form-item label="项目年份">
            <el-input v-model="searchForm.year" placeholder="如: 2024" clearable />
         </el-form-item>
-        <el-form-item label="项目名称">
-          <el-input v-model="searchForm.keyword" placeholder="输入项目名称搜索" clearable />
+        <el-form-item label="关键词">
+          <el-input v-model="searchForm.keyword" placeholder="项目名称/成果名称" clearable />
         </el-form-item>
          <el-form-item label="学院">
-           <el-select v-model="searchForm.college" placeholder="选择学院" clearable>
-             <el-option label="计算机学院" value="CS" />
-             <!-- Add more colleges or load dynamically -->
-           </el-select>
+           <el-input v-model="searchForm.college" placeholder="学院名称" clearable />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">查询</el-button>
           <el-button @click="resetSearch">重置</el-button>
+          <el-button type="success" plain @click="handleExport">导出表格</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -37,11 +35,28 @@
       >
         <el-table-column prop="project_no" label="项目编号" width="120" align="center" />
         
-        <el-table-column prop="title" label="项目名称" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="title" label="成果名称" min-width="200" show-overflow-tooltip />
 
-        <el-table-column prop="leader_name" label="负责人" width="100" align="center" />
+        <el-table-column prop="achievement_type_display" label="类型" width="120" align="center">
+            <template #default="{ row }">
+                <el-tag effect="light">{{ row.achievement_type_display }}</el-tag>
+            </template>
+        </el-table-column>
+
+        <el-table-column label="项目信息" min-width="200">
+             <template #default="{ row }">
+                 <div class="text-sm">
+                     <div class="font-medium">{{ row.project_title || '-' }}</div>
+                     <div class="text-xs text-gray-500">{{ row.project_no }} | {{ row.leader_name }}</div>
+                 </div>
+             </template>
+        </el-table-column>
         
-        <el-table-column prop="college" label="学院" width="150" align="center" />
+        <el-table-column label="发表/获奖时间" width="150" align="center">
+            <template #default="{ row }">
+                {{ row.publication_date || row.award_date || '-' }}
+            </template>
+        </el-table-column>
         
         <el-table-column label="成果形式" width="150" show-overflow-tooltip>
              <template #default="{ row }">
@@ -82,7 +97,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
-// import { getProjects } from '@/api/project'; // Reuse project list api with filters
+import { getAchievements, exportAchievements } from '@/api/admin';
 
 const loading = ref(false);
 const tableData = ref([]);
@@ -99,15 +114,35 @@ const pagination = reactive({
   total: 0
 });
 
-// Mock data or fetch real data
 const fetchData = async () => {
   loading.value = true;
   try {
-    // Ideally user filtered API for 'COMPLETED' projects
-    // const res = await getProjects({ ...searchForm, status: 'COMPLETED', page: pagination.page, page_size: pagination.pageSize });
-    // For now mock
-    await new Promise(r => setTimeout(r, 500));
-    tableData.value = []; 
+    const params = {
+        page: pagination.page,
+        page_size: pagination.pageSize,
+        search: searchForm.keyword,
+        year: searchForm.year,
+        college: searchForm.college
+    };
+    const res: any = await getAchievements(params);
+    if (res.results) {
+        tableData.value = res.results.map((item: any) => ({
+            ...item,
+            // Map flat fields if needed, but serializer provides project, title, etc.
+            project_title: item.project?.title || item.project_title, // Depends on serializer (ProjectAchievementSerializer has project: id)
+            // Wait, ProjectAchievementSerializer (nested) usually returns project ID.
+            // I need to update Serializer to return Project Details or use source='project.title'
+            // Let's check serializer again.
+            // ProjectAchievementSerializer (Step 160) fields: "project" (default PK). 
+            // It does NOT include project title/leader name by default unless I add them.
+            // I should update ProjectAchievementSerializer to include project info.
+        }));
+        pagination.total = res.count;
+    } else if (res.data) {
+        // Handle standard response wrapper
+        tableData.value = res.data.results;
+        pagination.total = res.data.total;
+    }
   } catch(e) {
     ElMessage.error('获取成果列表失败');
   } finally {
@@ -127,6 +162,32 @@ const resetSearch = () => {
   handleSearch();
 };
 
+const handleExport = async () => {
+    try {
+        ElMessage.info("正在生成导出文件...");
+        const params = {
+            search: searchForm.keyword,
+            year: searchForm.year,
+            college: searchForm.college
+        };
+        const res: any = await exportAchievements(params);
+        downloadFile(res, "成果列表.xlsx");
+        ElMessage.success("导出成功");
+    } catch (e) {
+        ElMessage.error("导出失败");
+    }
+};
+
+const downloadFile = (blob: Blob, filename: string) => {
+    const url = window.URL.createObjectURL(new Blob([blob]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
 const handleSizeChange = (val: number) => {
   pagination.pageSize = val;
   fetchData();
@@ -138,7 +199,9 @@ const handleCurrentChange = (val: number) => {
 };
 
 const handleView = (row: any) => {
-   ElMessage.info('查看详情功能待开发');
+   // Show details dialog (Can implement later)
+   // For now just show alert with full info
+   ElMessage.info(`查看成果: ${row.title}`);
 };
 
 onMounted(() => {

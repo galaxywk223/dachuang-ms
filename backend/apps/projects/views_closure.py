@@ -205,8 +205,21 @@ def create_closure_application(request, pk):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    import json
     data = request.data
-    is_draft = data.get("is_draft", True)  # 默认保存为草稿
+    is_draft = data.get("is_draft")
+    if isinstance(is_draft, str):
+        is_draft = is_draft.lower() == 'true'
+    
+    # Handle achievements list (might be JSON string in multipart)
+    achievements_data = []
+    if 'achievements_json' in data:
+        try:
+            achievements_data = json.loads(data['achievements_json'])
+        except json.JSONDecodeError:
+            pass
+    else:
+        achievements_data = data.get("achievements", [])
 
     try:
         with transaction.atomic():
@@ -225,25 +238,34 @@ def create_closure_application(request, pk):
                 project.research_content = data.get("research_content")
             if data.get("expected_results"):
                 project.expected_results = data.get("expected_results")
+            
+            # Handle Files
+            if 'final_report' in request.FILES:
+                project.final_report = request.FILES['final_report']
+            if 'achievement_file' in request.FILES:
+                project.achievement_file = request.FILES['achievement_file']
 
             project.save()
 
             # 保存成果信息
-            achievements_data = data.get("achievements", [])
             # 先删除旧的成果记录（如果是更新）
             if not is_draft:
                 project.achievements.all().delete()
+            else:
+                 # Verify strategy for draft: replace all or update?
+                 # Simple strategy: replace all for now to avoid syncing issues
+                 project.achievements.all().delete()
 
-            for achievement_data in achievements_data:
+            for index, achievement_data in enumerate(achievements_data):
                 if achievement_data.get("title"):  # 只保存填写了标题的成果
-                    ProjectAchievement.objects.create(
+                    ach = ProjectAchievement.objects.create(
                         project=project,
                         achievement_type=achievement_data.get("achievement_type"),
                         title=achievement_data.get("title", ""),
                         description=achievement_data.get("description", ""),
                         authors=achievement_data.get("authors", ""),
                         journal=achievement_data.get("journal", ""),
-                        publication_date=achievement_data.get("publication_date"),
+                        publication_date=achievement_data.get("publication_date") or None,
                         doi=achievement_data.get("doi", ""),
                         patent_no=achievement_data.get("patent_no", ""),
                         patent_type=achievement_data.get("patent_type", ""),
@@ -252,8 +274,15 @@ def create_closure_application(request, pk):
                         copyright_owner=achievement_data.get("copyright_owner", ""),
                         competition_name=achievement_data.get("competition_name", ""),
                         award_level=achievement_data.get("award_level", ""),
-                        award_date=achievement_data.get("award_date"),
+                        award_date=achievement_data.get("award_date") or None,
                     )
+                    
+                    # Handle achievement attachment
+                    # Expect key "achievement_{index}" in FILES
+                    file_key = f'achievement_{index}'
+                    if file_key in request.FILES:
+                        ach.attachment = request.FILES[file_key]
+                        ach.save()
 
             return Response(
                 {
@@ -294,8 +323,21 @@ def update_closure_application(request, pk):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    import json
     data = request.data
-    is_draft = data.get("is_draft", True)
+    is_draft = data.get("is_draft")
+    if isinstance(is_draft, str):
+        is_draft = is_draft.lower() == 'true'
+
+    # Handle achievements list
+    achievements_data = []
+    if 'achievements_json' in data:
+        try:
+            achievements_data = json.loads(data['achievements_json'])
+        except json.JSONDecodeError:
+            pass
+    else:
+        achievements_data = data.get("achievements", [])
 
     try:
         with transaction.atomic():
@@ -314,22 +356,28 @@ def update_closure_application(request, pk):
                 project.research_content = data.get("research_content")
             if data.get("expected_results"):
                 project.expected_results = data.get("expected_results")
+            
+            # Handle Files
+            if 'final_report' in request.FILES:
+                project.final_report = request.FILES['final_report']
+            if 'achievement_file' in request.FILES:
+                project.achievement_file = request.FILES['achievement_file']
 
             project.save()
 
             # 更新成果信息（先删除旧的）
             project.achievements.all().delete()
-            achievements_data = data.get("achievements", [])
-            for achievement_data in achievements_data:
+            
+            for index, achievement_data in enumerate(achievements_data):
                 if achievement_data.get("title"):
-                    ProjectAchievement.objects.create(
+                    ach = ProjectAchievement.objects.create(
                         project=project,
                         achievement_type=achievement_data.get("achievement_type"),
                         title=achievement_data.get("title", ""),
                         description=achievement_data.get("description", ""),
                         authors=achievement_data.get("authors", ""),
                         journal=achievement_data.get("journal", ""),
-                        publication_date=achievement_data.get("publication_date"),
+                        publication_date=achievement_data.get("publication_date") or None,
                         doi=achievement_data.get("doi", ""),
                         patent_no=achievement_data.get("patent_no", ""),
                         patent_type=achievement_data.get("patent_type", ""),
@@ -338,8 +386,14 @@ def update_closure_application(request, pk):
                         copyright_owner=achievement_data.get("copyright_owner", ""),
                         competition_name=achievement_data.get("competition_name", ""),
                         award_level=achievement_data.get("award_level", ""),
-                        award_date=achievement_data.get("award_date"),
+                        award_date=achievement_data.get("award_date") or None,
                     )
+                    
+                    # Handle achievement attachment
+                    file_key = f'achievement_{index}'
+                    if file_key in request.FILES:
+                        ach.attachment = request.FILES[file_key]
+                        ach.save()
 
             return Response(
                 {

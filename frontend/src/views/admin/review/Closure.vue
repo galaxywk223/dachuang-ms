@@ -29,6 +29,9 @@
            <span class="title">结题审核列表</span>
            <el-tag type="info" size="small" effect="plain" round class="count-tag">共 {{ total }} 项</el-tag>
         </div>
+        <div class="actions">
+            <el-button type="warning" plain :icon="Download" @click="handleBatchDownload"> 下载附件 </el-button>
+        </div>
       </div>
 
       <el-table 
@@ -37,7 +40,9 @@
         style="width: 100%"
         :header-cell-style="{ background: '#f8fafc', color: '#475569', fontWeight: '600', height: '48px' }"
         :cell-style="{ color: '#334155', height: '48px' }"
+        @selection-change="handleSelectionChange"
       >
+        <el-table-column type="selection" width="55" align="center" />
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column prop="project_no" label="项目编号" width="130" show-overflow-tooltip align="center" />
         <el-table-column prop="title" label="项目名称" min-width="220" show-overflow-tooltip>
@@ -130,8 +135,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { ElMessage } from "element-plus";
-import { Search, RefreshLeft } from "@element-plus/icons-vue";
-import { getReviewProjects, approveProject, rejectProject } from "@/api/admin";
+import { Search, RefreshLeft, Download } from "@element-plus/icons-vue";
+import { getReviewProjects, approveProject, rejectProject, batchDownloadAttachments } from "@/api/admin";
 
 const loading = ref(false);
 const projects = ref<any[]>([]);
@@ -139,6 +144,7 @@ const searchQuery = ref("");
 const currentPage = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
+const selectedRows = ref<any[]>([]);
 
 const reviewDialogVisible = ref(false);
 const reviewType = ref<"approve" | "reject">("approve");
@@ -225,6 +231,66 @@ const confirmReview = async () => {
   } catch (error) {
     ElMessage.error("操作失败");
   }
+};
+
+const handleSelectionChange = (val: any[]) => {
+  selectedRows.value = val;
+};
+
+const handleBatchDownload = async () => {
+    try {
+        ElMessage.info("正在打包附件，请稍候...");
+        const params: any = {};
+        
+        if (selectedRows.value.length > 0) {
+             params.ids = selectedRows.value.map(row => row.id).join(',');
+        } else {
+             // For review page, we implicitly filter by 'type=closure' and current search
+             params.search = searchQuery.value;
+             params.status = "CLOSURE_SUBMITTED"; // Or however getReviewProjects filters
+             // Wait, getReviewProjects uses type='closure'. 
+             // batchDownloadAttachments expects project filters.
+             // Admin Review List logic filters for closure statuses.
+             // We should probably rely on IDs selection for safety in Review page, OR replicate filters.
+             // Replicating filters:
+             // The Review API finds projects with status__in=[CLOSURE_xxx].
+             // The batch download API uses Project filters (status=?). 
+             // If we want to download ALL pending review projects, we need to pass a list of statuses.
+             // But managing views doesn't easily support "list of statuses" via single 'status' param unless backend supports it.
+             // Backend 'status' filter: `queryset.filter(status=project_status)`. Single status.
+             // So downloading ALL without selection is tricky here unless we add 'type=closure' to export API.
+             // I'll stick to: If selection, download selection. If no selection, warn user to select?
+             // Or better, just support IDs for now to avoid complexity.
+             // User manual says "Download Attachments". Usually implies selected.
+        }
+
+        if (!params.ids) {
+            ElMessage.warning("请先勾选要下载的项目");
+            return;
+        }
+
+        const res: any = await batchDownloadAttachments(params);
+        if (res.type === 'application/json') {
+             const text = await res.text();
+             const json = JSON.parse(text);
+             ElMessage.error(json.message || "下载失败");
+             return;
+        }
+        downloadFile(res, "结题审核附件.zip");
+        ElMessage.success("下载成功");
+    } catch (error) {
+        ElMessage.error("下载失败");
+    }
+};
+
+const downloadFile = (blob: Blob, filename: string) => {
+    const url = window.URL.createObjectURL(new Blob([blob]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 };
 
 const getLevelType = (level: string) => {

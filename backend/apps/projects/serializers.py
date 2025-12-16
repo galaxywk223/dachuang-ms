@@ -235,12 +235,20 @@ class ProjectAchievementSerializer(serializers.ModelSerializer):
     achievement_type_display = serializers.CharField(
         source="get_achievement_type_display", read_only=True
     )
+    project_title = serializers.CharField(source="project.title", read_only=True)
+    project_no = serializers.CharField(source="project.project_no", read_only=True)
+    leader_name = serializers.CharField(source="project.leader.real_name", read_only=True)
+    college = serializers.CharField(source="project.college", read_only=True)
 
     class Meta:
         model = ProjectAchievement
         fields = [
             "id",
             "project",
+            "project_title",
+            "project_no",
+            "leader_name",
+            "college",
             "achievement_type",
             "achievement_type_display",
             "title",

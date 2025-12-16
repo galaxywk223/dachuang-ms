@@ -58,7 +58,14 @@ def create_project_application(request):
                 project.save()
 
             # 添加指导教师
+            import json
             advisors_data = request.data.get("advisors", [])
+            if isinstance(advisors_data, str):
+                try:
+                    advisors_data = json.loads(advisors_data)
+                except json.JSONDecodeError:
+                    advisors_data = []
+
             for idx, advisor_data in enumerate(advisors_data):
                 if advisor_data.get("name"):
                     ProjectAdvisor.objects.create(
@@ -82,6 +89,12 @@ def create_project_application(request):
 
             # 添加其他成员
             members_data = request.data.get("members", [])
+            if isinstance(members_data, str):
+                try:
+                    members_data = json.loads(members_data)
+                except json.JSONDecodeError:
+                     members_data = []
+                     
             for member_data in members_data:
                 # Basic implementation: just creating records if we had a way to link users
                 # Since we don't know if 'members' contains user IDs or just names
@@ -160,7 +173,14 @@ def update_project_application(request, pk):
 
             # 更新指导教师（先删除旧的）
             project.advisors.all().delete()
+            import json
             advisors_data = request.data.get("advisors", [])
+            if isinstance(advisors_data, str):
+                try:
+                    advisors_data = json.loads(advisors_data)
+                except json.JSONDecodeError:
+                    advisors_data = []
+            
             for idx, advisor_data in enumerate(advisors_data):
                 if advisor_data.get("name"):
                     ProjectAdvisor.objects.create(

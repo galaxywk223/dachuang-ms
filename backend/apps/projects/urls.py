@@ -21,14 +21,14 @@ from .views_closure import (
     get_project_achievements,
 )
 from .views_review import ProjectReviewViewSet
-from .views_management import ProjectManagementViewSet
+from .views_management import ProjectManagementViewSet, AchievementManagementViewSet
 
 router = DefaultRouter()
 router.register(r"", ProjectViewSet, basename="project")
 router.register(r"progress", ProjectProgressViewSet, basename="progress")
-router.register(r"achievements", ProjectAchievementViewSet, basename="achievement")
 router.register(r"admin/review", ProjectReviewViewSet, basename="admin-review")
-router.register(r"admin/manage", ProjectManagementViewSet, basename="admin-manage")
+# router.register(r"admin/achievements", AchievementManagementViewSet, basename="admin-achievements")
+router.register(r"achievements", ProjectAchievementViewSet, basename="achievement")
 
 urlpatterns = [
     # 立项管理
@@ -71,5 +71,15 @@ urlpatterns = [
         "closure/<int:pk>/achievements/",
         get_project_achievements,
         name="project-achievements",
+    ),
+    path(
+        "admin/achievements/",
+        AchievementManagementViewSet.as_view({"get": "list"}),
+        name="admin-achievements-list",
+    ),
+    path(
+        "admin/achievements/export/",
+        AchievementManagementViewSet.as_view({"get": "export_data"}),
+        name="admin-achievements-export",
     ),
 ] + router.urls
