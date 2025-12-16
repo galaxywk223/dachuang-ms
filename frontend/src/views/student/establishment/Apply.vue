@@ -306,7 +306,7 @@ const formData = reactive({
   source: "",
   level: "",
   category: "",
-  is_key_field: "NORMAL",
+  is_key_field: "",
   college: "",
   budget: 0,
   major_code: "",

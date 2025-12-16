@@ -2,7 +2,7 @@
   <el-container class="layout-container">
     <!-- Sidebar -->
     <el-aside :width="isCollapse ? '64px' : '260px'" class="app-sidebar">
-      <div class="logo-area" :class="{ 'collapsed': isCollapse }">
+      <div class="logo-area" :class="{ 'collapsed': isCollapse }" @click="toggleSidebar">
         <div class="logo-icon admin-logo">
           <el-icon><DataAnalysis /></el-icon>
         </div>
@@ -54,20 +54,16 @@
     <el-container class="main-wrapper">
       <el-header class="app-header">
         <div class="header-left">
-          <el-button
-            type="text"
-            class="toggle-btn"
-            @click="toggleSidebar"
-          >
-            <el-icon :size="20">
-              <Expand v-if="isCollapse" />
-              <Fold v-else />
-            </el-icon>
-          </el-button>
-          
           <el-breadcrumb separator="/" class="breadcrumb">
             <el-breadcrumb-item :to="{ path: '/admin/projects' }">首页</el-breadcrumb-item>
-            <el-breadcrumb-item>{{ route.meta.title || '管理后台' }}</el-breadcrumb-item>
+            <template v-for="(matched, index) in breadcrumbs" :key="matched.path">
+               <el-breadcrumb-item
+                  v-if="matched.meta && matched.meta.title"
+                  :to="{ path: matched.path }"
+               >
+                  {{ matched.meta.title }}
+               </el-breadcrumb-item>
+            </template>
           </el-breadcrumb>
         </div>
 
@@ -112,7 +108,7 @@ import { useUserStore } from '@/stores/user';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import {
   DocumentAdd, DocumentChecked,
-  Expand, Fold, ArrowDown, SwitchButton
+  ArrowDown, SwitchButton
 } from '@element-plus/icons-vue';
 
 const route = useRoute();
@@ -124,6 +120,11 @@ const isCollapse = ref(false);
 const activeMenu = computed(() => route.path);
 const userName = computed(() => userStore.user?.real_name || '二级管理员');
 const userInitials = computed(() => userName.value?.[0] || 'A');
+
+// Generate breadcrumbs from matched routes
+const breadcrumbs = computed(() => {
+  return route.matched.filter(item => item.meta && item.meta.title && item.path !== '/' && item.path !== '/admin');
+});
 
 const toggleSidebar = () => {
   isCollapse.value = !isCollapse.value;
@@ -173,6 +174,12 @@ const handleCommand = async (command: string) => {
     padding: 0 20px;
     background: rgba(255, 255, 255, 0.05);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: background 0.3s;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
     
     .logo-icon {
       width: 36px;
@@ -248,6 +255,28 @@ const handleCommand = async (command: string) => {
     :deep(.el-sub-menu .el-menu-item) {
         min-width: unset;
     }
+
+    /* Collapsed State Overrides */
+    &.el-menu--collapse {
+      :deep(.el-menu-item), :deep(.el-sub-menu__title) {
+         margin: 4px 0 !important;
+         padding: 0 !important;
+         display: flex;
+         justify-content: center;
+         align-items: center;
+      }
+      
+      :deep(.el-menu-item.is-active), :deep(.el-sub-menu__title.is-active) {
+         background: transparent !important;
+         
+         .el-icon { 
+            color: #fff;
+            filter: drop-shadow(0 0 4px rgba(99, 102, 241, 0.6));
+         }
+
+         &::before { display: none; }
+      }
+    }
   }
 }
 
@@ -280,6 +309,11 @@ const handleCommand = async (command: string) => {
     
     .breadcrumb {
         font-size: 14px;
+        :deep(.el-breadcrumb__inner.is-link) {
+           color: $slate-500;
+           font-weight: normal;
+           &:hover { color: $primary-600; }
+        }
     }
   }
 
