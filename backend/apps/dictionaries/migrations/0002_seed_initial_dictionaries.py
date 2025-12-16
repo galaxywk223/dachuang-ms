@@ -13,7 +13,7 @@ def seed_dictionaries(apps, schema_editor):
         ('project_type', '项目类型', 'Types of projects'),
         ('college', '学院', 'University colleges/schools'),
         ('title', '职称', 'Academic titles e.g. Professor, Lecturer'),
-        ('project_major_code', '项目所属专业类代码', '4-digit major codes'),
+        ('project_major_code', '专业大类', '4-digit major codes'),
         ('project_source', '项目来源', 'Source of the project'),
     ]
     

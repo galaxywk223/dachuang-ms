@@ -60,15 +60,10 @@
                 :header-cell-style="{ background: '#f8fafc', color: '#475569', fontWeight: '600' }"
               >
                 <el-table-column prop="label" label="显示名称" min-width="150" />
-                <el-table-column prop="value" label="值" min-width="120" />
-                <el-table-column prop="sort_order" label="排序" width="80" align="center" />
-                <el-table-column label="状态" width="100" align="center">
-                  <template #default="{ row }">
-                     <el-tag :type="row.is_active ? 'success' : 'danger'" size="small">
-                        {{ row.is_active ? '启用' : '禁用' }}
-                     </el-tag>
-                  </template>
-                </el-table-column>
+                <!-- User requested to only show Name and Delete -->
+                <!-- <el-table-column prop="value" label="值" min-width="120" /> -->
+                <!-- <el-table-column prop="sort_order" label="排序" width="80" align="center" /> -->
+                
                 <el-table-column label="操作" width="100" align="center" fixed="right">
                   <template #default="{ row }">
                     <el-button link type="danger" size="small" @click="deleteItem(row)">删除</el-button>
@@ -98,18 +93,14 @@
       @closed="resetForm"
     >
       <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-        <el-form-item label="显示名称" prop="label">
-          <el-input v-model="form.label" placeholder="例如：计算机学院" />
+        <el-form-item label="名称" prop="label">
+          <el-input v-model="form.label" placeholder="请输入名称" />
         </el-form-item>
-        <el-form-item label="值" prop="value">
-          <el-input v-model="form.value" placeholder="例如：CS (唯一标识)" />
-        </el-form-item>
-        <el-form-item label="排序" prop="sort_order">
-          <el-input-number v-model="form.sort_order" :min="0" :max="999" controls-position="right" />
-        </el-form-item>
-        <el-form-item label="说明" prop="description">
-          <el-input v-model="form.description" type="textarea" placeholder="备注说明" />
-        </el-form-item>
+        <!-- Value is hidden and defaults to label -->
+        
+        <!-- Sort Order is auto-calculated -->
+        
+        <!-- Description is removed as requested -->
       </el-form>
       <template #footer>
         <span class="dialog-footer">
@@ -160,9 +151,7 @@ const form = reactive({
 })
 
 const rules: FormRules = {
-  label: [{ required: true, message: '请输入显示名称', trigger: 'blur' }],
-  value: [{ required: true, message: '请输入值', trigger: 'blur' }],
-  sort_order: [{ required: true, message: '请输入排序', trigger: 'blur' }],
+  label: [{ required: true, message: '请输入名称', trigger: 'blur' }],
 }
 
 onMounted(async () => {
@@ -207,6 +196,9 @@ const fetchItems = async (typeCode: string) => {
        ?? (response as any)?.results 
        ?? (response as any)?.data 
        ?? response;
+    // Auto-sort by sort_order if backend doesn't, though backend likely does. 
+    // If user wants automatic sorting, we often just rely on backend creation order or explicit sort logic there.
+    // For now, simple display.
     items.value = Array.isArray(list) ? list : []
   } catch (error) {
     console.error('Failed to fetch items:', error)
@@ -228,7 +220,7 @@ const resetForm = () => {
   form.label = ''
   form.value = ''
   form.description = ''
-  form.sort_order = 0
+  form.sort_order = 0 // Keeping internal state for type safety, but not used in UI
   formRef.value?.clearValidate()
 }
 
@@ -239,16 +231,25 @@ const submitForm = async () => {
     if (valid) {
       submitting.value = true
       try {
+        // Calculate a simple auto-sort order (append to end)
+        // Or just let backend use default 0. 
+        // Logic: if we want "automatic", usually means "append". 
+        // We'll set sort_order to items.length + 1 to put it at the end visually if backend sorts by it.
+        const nextOrder = items.value.length + 1;
+
         await request.post('/dictionaries/items/', {
           dict_type: currentType.value!.id,
-          ...form,
+          label: form.label,
+          value: form.label, // Value = Name
+          description: '',   // Empty description
+          sort_order: nextOrder,
           is_active: true,
         })
         ElMessage.success('添加成功')
         dialogVisible.value = false
         await fetchItems(currentType.value!.code)
       } catch (error) {
-        ElMessage.error('添加失败，可能是值已存在')
+        ElMessage.error('添加失败，可能该名称已存在')
       } finally {
         submitting.value = false
       }
