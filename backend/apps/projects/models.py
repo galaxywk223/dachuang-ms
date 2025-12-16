@@ -4,6 +4,7 @@
 
 from django.db import models
 from django.conf import settings
+from apps.dictionaries.models import DictionaryItem
 
 
 class Project(models.Model):
@@ -26,16 +27,7 @@ class Project(models.Model):
         COMPLETED = "COMPLETED", "已完成"
         CLOSED = "CLOSED", "已结题"
 
-    class ProjectLevel(models.TextChoices):
-        NATIONAL = "NATIONAL", "国家级"
-        PROVINCIAL = "PROVINCIAL", "省级"
-        SCHOOL = "SCHOOL", "校级"
-        SCHOOL_KEY = "SCHOOL_KEY", "校级重点"
-
-    class ProjectCategory(models.TextChoices):
-        INNOVATION_TRAINING = "INNOVATION_TRAINING", "创新训练项目"
-        ENTREPRENEURSHIP_TRAINING = "ENTREPRENEURSHIP_TRAINING", "创业训练项目"
-        ENTREPRENEURSHIP_PRACTICE = "ENTREPRENEURSHIP_PRACTICE", "创业实践项目"
+    # Removed local TextChoices for Level and Category as they are now DictionaryItems
 
     # 基本信息
     project_no = models.CharField(
@@ -43,23 +35,29 @@ class Project(models.Model):
     )
     title = models.CharField(max_length=200, verbose_name="项目名称")
     description = models.TextField(verbose_name="项目简介", blank=True)
-    level = models.CharField(
-        max_length=20,
-        choices=ProjectLevel.choices,
-        default=ProjectLevel.SCHOOL,
+    level = models.ForeignKey(
+        DictionaryItem,
+        on_delete=models.PROTECT,
+        related_name="projects_level",
         verbose_name="项目级别",
-    )
-    category = models.CharField(
-        max_length=50,
-        choices=ProjectCategory.choices,
-        verbose_name="项目类别",
-        default="INNOVATION_TRAINING",
-    )
-    source = models.CharField(
-        max_length=50,
-        verbose_name="项目来源",
+        null=True,
         blank=True,
-        default="",
+    )
+    category = models.ForeignKey(
+        DictionaryItem,
+        on_delete=models.PROTECT,
+        related_name="projects_category",
+        verbose_name="项目类别",
+        null=True,
+        blank=True,
+    )
+    source = models.ForeignKey(
+        DictionaryItem,
+        on_delete=models.PROTECT,
+        related_name="projects_source",
+        verbose_name="项目来源",
+        null=True,
+        blank=True,
     )
 
     # 项目负责人信息
@@ -69,15 +67,8 @@ class Project(models.Model):
         related_name="led_projects",
         verbose_name="项目负责人",
     )
-    leader_student_id = models.CharField(
-        max_length=20, verbose_name="项目负责人学号", blank=True, default=""
-    )
-    leader_contact = models.CharField(
-        max_length=50, verbose_name="负责人联系方式", blank=True, default=""
-    )
-    leader_email = models.EmailField(
-        verbose_name="负责人联系邮箱", blank=True, default=""
-    )
+    # 移除 redundant fields: leader_student_id, leader_contact, leader_email
+    # 这些信息应直接从 leader (User) 对象获取
 
     # 项目成员
     members = models.ManyToManyField(
@@ -89,12 +80,8 @@ class Project(models.Model):
 
     # 项目详情
     is_key_field = models.BooleanField(default=False, verbose_name="重点领域项目")
-    college = models.CharField(
-        max_length=100, verbose_name="学院", blank=True, default=""
-    )
-    major_code = models.CharField(
-        max_length=50, verbose_name="项目所属专业代码", blank=True, default=""
-    )
+    # 移除 redundant fields: college, major_code
+    # 这些信息应直接从 leader 或 members 获取
     self_funding = models.DecimalField(
         max_digits=10, decimal_places=2, default=0, verbose_name="项目自筹（元）"
     )
@@ -117,18 +104,18 @@ class Project(models.Model):
 
     # 申报材料
     proposal_file = models.FileField(
-        upload_to="proposals/", blank=True, null=True, verbose_name="申报书"
+        upload_to="proposals/", blank=True, null=True, verbose_name="申报书", max_length=255
     )
     attachment_file = models.FileField(
-        upload_to="attachments/", blank=True, null=True, verbose_name="上传文件"
+        upload_to="attachments/", blank=True, null=True, verbose_name="上传文件", max_length=255
     )
 
     # 结题材料
     final_report = models.FileField(
-        upload_to="final_reports/", blank=True, null=True, verbose_name="结题报告"
+        upload_to="final_reports/", blank=True, null=True, verbose_name="结题报告", max_length=255
     )
     achievement_file = models.FileField(
-        upload_to="achievements/", blank=True, null=True, verbose_name="成果材料"
+        upload_to="achievements/", blank=True, null=True, verbose_name="成果材料", max_length=255
     )
 
     # 状态信息
@@ -158,7 +145,7 @@ class Project(models.Model):
         indexes = [
             models.Index(fields=["project_no"]),
             models.Index(fields=["status"]),
-            models.Index(fields=["college"]),
+
         ]
 
     def __str__(self):
@@ -173,15 +160,12 @@ class ProjectAdvisor(models.Model):
     project = models.ForeignKey(
         Project, on_delete=models.CASCADE, related_name="advisors", verbose_name="项目"
     )
-    name = models.CharField(max_length=50, verbose_name="指导教师姓名")
-    title = models.CharField(max_length=50, verbose_name="指导教师职称")
-    department = models.CharField(
-        max_length=100, verbose_name="指导教师单位", blank=True
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="advised_projects",
+        verbose_name="指导教师",
     )
-    contact = models.CharField(
-        max_length=50, verbose_name="指导教师联系方式", blank=True
-    )
-    email = models.EmailField(verbose_name="指导教师邮箱", blank=True)
     order = models.IntegerField(default=0, verbose_name="排序")
 
     class Meta:
@@ -191,7 +175,7 @@ class ProjectAdvisor(models.Model):
         ordering = ["order"]
 
     def __str__(self):
-        return f"{self.project.title} - {self.name}"
+        return f"{self.project.title} - {self.user.real_name}"
 
 
 class ProjectMember(models.Model):
@@ -213,8 +197,9 @@ class ProjectMember(models.Model):
         default=MemberRole.MEMBER,
         verbose_name="角色",
     )
-    student_id = models.CharField(max_length=20, verbose_name="学号", blank=True)
-    department = models.CharField(max_length=100, verbose_name="成员姓名", blank=True)
+    # 移除 redundant fields: student_id, department
+    # student_id = models.CharField(max_length=20, verbose_name="学号", blank=True)
+    # department = models.CharField(max_length=100, verbose_name="成员姓名", blank=True)
     join_date = models.DateField(auto_now_add=True, verbose_name="加入日期")
     contribution = models.TextField(blank=True, verbose_name="贡献说明")
 
@@ -242,7 +227,7 @@ class ProjectProgress(models.Model):
     title = models.CharField(max_length=200, verbose_name="进度标题")
     content = models.TextField(verbose_name="进度内容")
     attachment = models.FileField(
-        upload_to="progress/", blank=True, null=True, verbose_name="附件"
+        upload_to="progress/", blank=True, null=True, verbose_name="附件", max_length=255
     )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, verbose_name="创建人"
@@ -265,12 +250,7 @@ class ProjectAchievement(models.Model):
     支持多种类型的成果：论文、专利、软著、竞赛奖项等
     """
 
-    class AchievementType(models.TextChoices):
-        PAPER = "PAPER", "论文"
-        PATENT = "PATENT", "专利"
-        SOFTWARE_COPYRIGHT = "SOFTWARE_COPYRIGHT", "软件著作权"
-        COMPETITION_AWARD = "COMPETITION_AWARD", "竞赛奖项"
-        OTHER = "OTHER", "其他"
+    # Removed local TextChoices for AchievementType as it is now DictionaryItems
 
     project = models.ForeignKey(
         Project,
@@ -278,10 +258,11 @@ class ProjectAchievement(models.Model):
         related_name="achievements",
         verbose_name="项目",
     )
-    achievement_type = models.CharField(
-        max_length=30,
-        choices=AchievementType.choices,
+    achievement_type = models.ForeignKey(
+        DictionaryItem,
+        on_delete=models.PROTECT,
         verbose_name="成果类型",
+        related_name="project_achievements",
     )
     title = models.CharField(max_length=200, verbose_name="成果名称")
     description = models.TextField(verbose_name="成果描述")
@@ -312,7 +293,7 @@ class ProjectAchievement(models.Model):
 
     # 附件
     attachment = models.FileField(
-        upload_to="achievements/", blank=True, null=True, verbose_name="成果附件"
+        upload_to="achievements/", blank=True, null=True, verbose_name="成果附件", max_length=255
     )
 
     # 时间戳

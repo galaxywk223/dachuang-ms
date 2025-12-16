@@ -17,12 +17,30 @@ class ProjectAdvisorSerializer(serializers.ModelSerializer):
     项目指导教师序列化器
     """
 
+    user_name = serializers.CharField(source="user.real_name", read_only=True)
+    # Assuming User model has these fields or we pull them from User profile
+    # The User model has: real_name, phone, email, college, department, title?
+    # Checking User model: real_name, phone, email, college, department are there.
+    # Title is not in User model shown earlier? 
+    # Let's check User model again if needed. User model has: role, employee_id, real_name, phone, email, major, grade, class_name, college, department.
+    # It does NOT have 'title' (职称). 
+    # If 'title' is deleted from Advisor and not in User, where does it come from?
+    # The user said: "delete name, title, department, contact, email".
+    # And "Since Advisor is also a User".
+    # If User doesn't have 'title', maybe we just omit it or assuming User *should* have it?
+    # Or maybe 'title' is not needed anymore?
+    # I will map available fields: real_name, department, email, phone (contact).
+    
+    department = serializers.CharField(source="user.department", read_only=True)
+    contact = serializers.CharField(source="user.phone", read_only=True)
+    email = serializers.CharField(source="user.email", read_only=True)
+    
     class Meta:
         model = ProjectAdvisor
         fields = [
             "id",
-            "name",
-            "title",
+            "user",
+            "user_name",
             "department",
             "contact",
             "email",
@@ -43,8 +61,8 @@ class ProjectMemberSerializer(serializers.ModelSerializer):
             "id",
             "user",
             "user_name",
-            "student_id",
-            "department",
+            "user",
+            "user_name",
             "role",
             "join_date",
             "contribution",
@@ -77,9 +95,9 @@ class ProjectSerializer(serializers.ModelSerializer):
         source="advisors", many=True, read_only=True
     )
     status_display = serializers.CharField(source="get_status_display", read_only=True)
-    level_display = serializers.CharField(source="get_level_display", read_only=True)
+    level_display = serializers.CharField(source="level.label", read_only=True)
     category_display = serializers.CharField(
-        source="get_category_display", read_only=True
+        source="category.label", read_only=True
     )
     achievements_count = serializers.SerializerMethodField()
     is_key_field = KeyFieldBoolean(required=False)
@@ -98,14 +116,10 @@ class ProjectSerializer(serializers.ModelSerializer):
             "source",
             "leader",
             "leader_name",
-            "leader_student_id",
-            "leader_contact",
-            "leader_email",
             "members_info",
             "advisors_info",
             "is_key_field",
-            "college",
-            "major_code",
+            "is_key_field",
             "self_funding",
             "category_description",
             "start_date",
@@ -162,7 +176,8 @@ class ProjectSerializer(serializers.ModelSerializer):
         """
         兼容前端的 SCHOOL_KEY 选项
         """
-        if value == "SCHOOL_KEY":
+        # value is a DictionaryItem object
+        if value and value.value == "SCHOOL_KEY":
             return value
         return value
 
@@ -255,7 +270,7 @@ class ProjectAchievementSerializer(serializers.ModelSerializer):
     """
 
     achievement_type_display = serializers.CharField(
-        source="get_achievement_type_display", read_only=True
+        source="achievement_type.label", read_only=True
     )
     project_title = serializers.CharField(source="project.title", read_only=True)
     project_no = serializers.CharField(source="project.project_no", read_only=True)
@@ -298,20 +313,25 @@ class ProjectAchievementSerializer(serializers.ModelSerializer):
         根据成果类型验证必填字段
         """
         achievement_type = attrs.get("achievement_type")
+        # achievement_type is a DictionaryItem object
+        if not achievement_type:
+            return attrs
+        
+        type_value = achievement_type.value
 
-        if achievement_type == ProjectAchievement.AchievementType.PAPER:
+        if type_value == "PAPER":
             if not attrs.get("authors") or not attrs.get("journal"):
                 raise serializers.ValidationError("论文成果需要填写作者和期刊信息")
 
-        elif achievement_type == ProjectAchievement.AchievementType.PATENT:
+        elif type_value == "PATENT":
             if not attrs.get("applicant"):
                 raise serializers.ValidationError("专利成果需要填写申请人")
 
-        elif achievement_type == ProjectAchievement.AchievementType.SOFTWARE_COPYRIGHT:
+        elif type_value == "SOFTWARE_COPYRIGHT":
             if not attrs.get("copyright_owner"):
                 raise serializers.ValidationError("软著成果需要填写著作权人")
 
-        elif achievement_type == ProjectAchievement.AchievementType.COMPETITION_AWARD:
+        elif type_value == "COMPETITION_AWARD":
             if not attrs.get("competition_name") or not attrs.get("award_level"):
                 raise serializers.ValidationError("竞赛成果需要填写竞赛名称和获奖等级")
 

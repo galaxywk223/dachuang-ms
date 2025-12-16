@@ -13,6 +13,7 @@ from .models import Project, ProjectAchievement
 from .serializers import ProjectSerializer, ProjectAchievementSerializer
 from apps.reviews.models import Review
 from apps.reviews.services import ReviewService
+from apps.dictionaries.models import DictionaryItem
 
 
 @api_view(["GET"])
@@ -260,9 +261,18 @@ def create_closure_application(request, pk):
 
             for index, achievement_data in enumerate(achievements_data):
                 if achievement_data.get("title"):  # 只保存填写了标题的成果
+                    ach_type_val = achievement_data.get("achievement_type")
+                    ach_type_obj = None
+                    if ach_type_val:
+                         # Try to resolve if string
+                         if isinstance(ach_type_val, str) and not ach_type_val.isdigit():
+                             ach_type_obj = DictionaryItem.objects.filter(value=ach_type_val).first()
+                         elif isinstance(ach_type_val, int) or (isinstance(ach_type_val, str) and ach_type_val.isdigit()):
+                             ach_type_obj = DictionaryItem.objects.filter(id=int(ach_type_val)).first()
+                    
                     ach = ProjectAchievement.objects.create(
                         project=project,
-                        achievement_type=achievement_data.get("achievement_type"),
+                        achievement_type=ach_type_obj,
                         title=achievement_data.get("title", ""),
                         description=achievement_data.get("description", ""),
                         authors=achievement_data.get("authors", ""),
@@ -387,9 +397,18 @@ def update_closure_application(request, pk):
             
             for index, achievement_data in enumerate(achievements_data):
                 if achievement_data.get("title"):
+                    ach_type_val = achievement_data.get("achievement_type")
+                    ach_type_obj = None
+                    if ach_type_val:
+                         # Try to resolve if string
+                         if isinstance(ach_type_val, str) and not ach_type_val.isdigit():
+                             ach_type_obj = DictionaryItem.objects.filter(value=ach_type_val).first()
+                         elif isinstance(ach_type_val, int) or (isinstance(ach_type_val, str) and ach_type_val.isdigit()):
+                             ach_type_obj = DictionaryItem.objects.filter(id=int(ach_type_val)).first()
+
                     ach = ProjectAchievement.objects.create(
                         project=project,
-                        achievement_type=achievement_data.get("achievement_type"),
+                        achievement_type=ach_type_obj,
                         title=achievement_data.get("title", ""),
                         description=achievement_data.get("description", ""),
                         authors=achievement_data.get("authors", ""),

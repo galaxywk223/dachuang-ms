@@ -13,6 +13,7 @@ from .models import Project, ProjectAdvisor, ProjectMember
 from apps.reviews.models import Review
 from apps.reviews.services import ReviewService
 from .serializers import ProjectSerializer, ProjectAdvisorSerializer
+from apps.dictionaries.models import DictionaryItem
 
 
 def _to_bool(val, default=True):
@@ -45,10 +46,17 @@ def create_project_application(request):
             )
 
             # Ensure defaults for required fields if missing
+            # Note: We assume DictionaryItems for defaults exist. In a real app, handle DoesNotExist.
             if not data.get("level"):
-                data["level"] = Project.ProjectLevel.SCHOOL
+                try:
+                    data["level"] = DictionaryItem.objects.get(dict_type__code="PROJECT_LEVEL", value="SCHOOL").id
+                except DictionaryItem.DoesNotExist:
+                    pass # Let serializer validation fail or handle error
             if not data.get("category"):
-                data["category"] = Project.ProjectCategory.INNOVATION_TRAINING
+                 try:
+                    data["category"] = DictionaryItem.objects.get(dict_type__code="PROJECT_CATEGORY", value="INNOVATION_TRAINING").id
+                 except DictionaryItem.DoesNotExist:
+                    pass
 
             # 序列化并验证
             serializer = ProjectSerializer(data=data)
@@ -88,24 +96,29 @@ def create_project_application(request):
                     advisors_data = []
 
             for idx, advisor_data in enumerate(advisors_data):
-                if advisor_data.get("name"):
-                    ProjectAdvisor.objects.create(
+                # Try to get user_id directly or by employee_id/name
+                user_id = advisor_data.get("user") or advisor_data.get("user_id") or advisor_data.get("id")
+                
+                # If no ID, but name is provided, try to find user by real_name (Risky but helpful for transition)
+                if not user_id and advisor_data.get("name"):
+                    from django.contrib.auth import get_user_model
+                    User = get_user_model()
+                    potential_user = User.objects.filter(real_name=advisor_data.get("name")).first()
+                    if potential_user:
+                        user_id = potential_user.id
+                        
+                if user_id:
+                     ProjectAdvisor.objects.create(
                         project=project,
-                        name=advisor_data.get("name", ""),
-                        title=advisor_data.get("title", ""),
-                        department=advisor_data.get("department", ""),
-                        contact=advisor_data.get("contact", ""),
-                        email=advisor_data.get("email", ""),
+                        user_id=user_id,
                         order=idx,
-                    )
+                     )
 
             # 添加项目负责人为成员
             ProjectMember.objects.create(
                 project=project,
                 user=user,
                 role=ProjectMember.MemberRole.LEADER,
-                student_id=data.get("leader_student_id", ""),
-                department=user.real_name,
             )
 
             # 添加其他成员
@@ -211,16 +224,23 @@ def update_project_application(request, pk):
                     advisors_data = []
             
             for idx, advisor_data in enumerate(advisors_data):
-                if advisor_data.get("name"):
-                    ProjectAdvisor.objects.create(
+                # Try to get user_id directly or by employee_id/name
+                user_id = advisor_data.get("user") or advisor_data.get("user_id") or advisor_data.get("id")
+                
+                # If no ID, but name is provided, try to find user by real_name (Risky but helpful for transition)
+                if not user_id and advisor_data.get("name"):
+                    from django.contrib.auth import get_user_model
+                    User = get_user_model()
+                    potential_user = User.objects.filter(real_name=advisor_data.get("name")).first()
+                    if potential_user:
+                        user_id = potential_user.id
+
+                if user_id:
+                     ProjectAdvisor.objects.create(
                         project=project,
-                        name=advisor_data.get("name", ""),
-                        title=advisor_data.get("title", ""),
-                        department=advisor_data.get("department", ""),
-                        contact=advisor_data.get("contact", ""),
-                        email=advisor_data.get("email", ""),
+                        user_id=user_id,
                         order=idx,
-                    )
+                     )
 
             return Response(
                 {
