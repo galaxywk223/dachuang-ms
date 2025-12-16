@@ -93,7 +93,9 @@ const handleLogin = async (formData: any) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: $slate-50;
+  // background-color: $slate-50;
+  background: url("@/assets/background.png") no-repeat center center;
+  background-size: cover;
   overflow: hidden;
 }
 
