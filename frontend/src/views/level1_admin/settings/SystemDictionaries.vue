@@ -60,12 +60,12 @@
                 :header-cell-style="{ background: '#f8fafc', color: '#475569', fontWeight: '600' }"
               >
                 <el-table-column prop="label" label="显示名称" min-width="150" />
-                <!-- User requested to only show Name and Delete -->
-                <!-- <el-table-column prop="value" label="值" min-width="120" /> -->
+                <el-table-column prop="value" label="代码/值" min-width="120" />
                 <!-- <el-table-column prop="sort_order" label="排序" width="80" align="center" /> -->
                 
-                <el-table-column label="操作" width="100" align="center" fixed="right">
+                <el-table-column label="操作" width="160" align="center" fixed="right">
                   <template #default="{ row }">
+                    <el-button link type="primary" size="small" @click="editItem(row)">编辑</el-button>
                     <el-button link type="danger" size="small" @click="deleteItem(row)">删除</el-button>
                   </template>
                 </el-table-column>
@@ -83,10 +83,10 @@
       </el-row>
     </div>
 
-    <!-- Add Item Dialog -->
+    <!-- Add/Edit Item Dialog -->
     <el-dialog
       v-model="dialogVisible"
-      :title="`添加 ${currentType?.name || ''} 条目`"
+      :title="isEditMode ? '编辑条目' : `添加 ${currentType?.name || ''} 条目`"
       width="500px"
       align-center
       destroy-on-close
@@ -96,8 +96,9 @@
         <el-form-item label="名称" prop="label">
           <el-input v-model="form.label" placeholder="请输入名称" />
         </el-form-item>
-        <!-- Value is hidden and defaults to label -->
-        
+        <el-form-item label="代码/值" prop="value">
+          <el-input v-model="form.value" placeholder="请输入代码或值" />
+        </el-form-item>
         <!-- Sort Order is auto-calculated -->
         
         <!-- Description is removed as requested -->
@@ -141,6 +142,8 @@ const items = ref<DictionaryItem[]>([])
 const loading = ref(false)
 const dialogVisible = ref(false)
 const submitting = ref(false)
+const isEditMode = ref(false)
+const editingId = ref<number | null>(null)
 const formRef = ref<FormInstance>()
 
 const form = reactive({
@@ -152,6 +155,7 @@ const form = reactive({
 
 const rules: FormRules = {
   label: [{ required: true, message: '请输入名称', trigger: 'blur' }],
+  value: [{ required: true, message: '请输入代码/值', trigger: 'blur' }],
 }
 
 onMounted(async () => {
@@ -169,7 +173,6 @@ watch(currentType, async (newType) => {
 const fetchTypes = async () => {
   try {
     const response = await request.get('/dictionaries/types/')
-    // Handle various response structures
     const list = (response as any)?.data?.results 
        ?? (response as any)?.results 
        ?? (response as any)?.data 
@@ -213,14 +216,31 @@ const handleTypeSelect = (type: DictionaryType) => {
 }
 
 const openAddDialog = () => {
+  isEditMode.value = false
+  editingId.value = null
+  resetFormState()
   dialogVisible.value = true
 }
 
-const resetForm = () => {
+const editItem = (item: DictionaryItem) => {
+  isEditMode.value = true
+  editingId.value = item.id
+  form.label = item.label
+  form.value = item.value
+  form.description = item.description || ''
+  form.sort_order = item.sort_order
+  dialogVisible.value = true
+}
+
+const resetFormState = () => {
   form.label = ''
   form.value = ''
   form.description = ''
-  form.sort_order = 0 // Keeping internal state for type safety, but not used in UI
+  form.sort_order = 0
+}
+
+const resetForm = () => {
+  resetFormState()
   formRef.value?.clearValidate()
 }
 
@@ -231,25 +251,31 @@ const submitForm = async () => {
     if (valid) {
       submitting.value = true
       try {
-        // Calculate a simple auto-sort order (append to end)
-        // Or just let backend use default 0. 
-        // Logic: if we want "automatic", usually means "append". 
-        // We'll set sort_order to items.length + 1 to put it at the end visually if backend sorts by it.
-        const nextOrder = items.value.length + 1;
-
-        await request.post('/dictionaries/items/', {
-          dict_type: currentType.value!.id,
-          label: form.label,
-          value: form.label, // Value = Name
-          description: '',   // Empty description
-          sort_order: nextOrder,
-          is_active: true,
-        })
-        ElMessage.success('添加成功')
+        if (isEditMode.value && editingId.value) {
+          // Update
+          await request.patch(`/dictionaries/items/${editingId.value}/`, {
+            label: form.label,
+            value: form.value,
+          })
+          ElMessage.success('修改成功')
+        } else {
+          // Create
+           const nextOrder = items.value.length + 1;
+           await request.post('/dictionaries/items/', {
+            dict_type: currentType.value!.id,
+            label: form.label,
+            value: form.value,
+            description: '',
+            sort_order: nextOrder,
+            is_active: true,
+          })
+          ElMessage.success('添加成功')
+        }
+        
         dialogVisible.value = false
         await fetchItems(currentType.value!.code)
       } catch (error) {
-        ElMessage.error('添加失败，可能该名称已存在')
+        ElMessage.error(isEditMode.value ? '修改失败' : '添加失败，可能该值已存在')
       } finally {
         submitting.value = false
       }
