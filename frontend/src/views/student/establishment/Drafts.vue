@@ -97,11 +97,11 @@
              </template>
           </el-table-column>
 
-          <el-table-column prop="is_key_field" label="重点领域" width="100" align="center">
-             <template #default="{ row }">
-                <el-tag v-if="row.is_key_field" type="success" size="small" effect="light">是</el-tag>
-                <span v-else class="text-gray-400">否</span>
-             </template>
+          <el-table-column prop="is_key_field" label="重点领域项目" width="140" align="center">
+            <template #default="{ row }">
+              <el-tag v-if="row.is_key_field" type="success" size="small" effect="light">重点领域项目</el-tag>
+              <el-tag v-else type="info" size="small" effect="plain">一般项目</el-tag>
+            </template>
           </el-table-column>
 
           <el-table-column prop="budget" label="经费" width="100" align="right">
@@ -152,7 +152,6 @@ const { loadDictionaries, getOptions } = useDictionary();
 // Dict Options
 const levelOptions = computed(() => getOptions(DICT_CODES.PROJECT_LEVEL));
 const categoryOptions = computed(() => getOptions(DICT_CODES.PROJECT_CATEGORY));
-const collegeOptions = computed(() => getOptions(DICT_CODES.COLLEGE));
 
 const filterForm = reactive({
   title: "",
@@ -266,14 +265,6 @@ const handleDelete = async (row: any) => {
 
 <style scoped lang="scss">
 @use "@/styles/variables.scss" as *;
-
-.drafts-page {
-  /* Inherit layout */
-}
-
-.page-container {
-    /* No padding, let parent handle or specific padding if needed */
-}
 
 .filter-container {
   background: white;

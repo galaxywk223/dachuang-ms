@@ -60,7 +60,7 @@
                 :header-cell-style="{ background: '#f8fafc', color: '#475569', fontWeight: '600' }"
               >
                 <el-table-column prop="label" label="显示名称" min-width="150" />
-                <el-table-column prop="value" label="代码/值" min-width="120" />
+                <el-table-column v-if="showCode" prop="value" label="代码" min-width="120" />
                 <!-- <el-table-column prop="sort_order" label="排序" width="80" align="center" /> -->
                 
                 <el-table-column label="操作" width="160" align="center" fixed="right">
@@ -96,12 +96,9 @@
         <el-form-item label="名称" prop="label">
           <el-input v-model="form.label" placeholder="请输入名称" />
         </el-form-item>
-        <el-form-item label="代码/值" prop="value">
-          <el-input v-model="form.value" placeholder="请输入代码或值" />
+        <el-form-item v-if="showCode" label="代码" prop="value">
+          <el-input v-model="form.value" placeholder="请输入代码" />
         </el-form-item>
-        <!-- Sort Order is auto-calculated -->
-        
-        <!-- Description is removed as requested -->
       </el-form>
       <template #footer>
         <span class="dialog-footer">
@@ -114,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch } from 'vue'
+import { ref, reactive, onMounted, watch, computed } from 'vue'
 import { Plus, Collection, ArrowRight } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import request from '@/utils/request'
@@ -146,6 +143,15 @@ const isEditMode = ref(false)
 const editingId = ref<number | null>(null)
 const formRef = ref<FormInstance>()
 
+// Types that require explicit Code input
+const CODE_BASED_TYPES = ['major_category', 'key_field_code']
+
+// Computed property to check if current type needs Code field
+const showCode = computed(() => {
+  if (!currentType.value) return false
+  return CODE_BASED_TYPES.includes(currentType.value.code)
+})
+
 const form = reactive({
   label: '',
   value: '',
@@ -153,10 +159,19 @@ const form = reactive({
   sort_order: 0,
 })
 
-const rules: FormRules = {
-  label: [{ required: true, message: '请输入名称', trigger: 'blur' }],
-  value: [{ required: true, message: '请输入代码/值', trigger: 'blur' }],
-}
+// Dynamic rules based on showCode
+const rules = computed<FormRules>(() => {
+  const baseRules: FormRules = {
+    label: [{ required: true, message: '请输入名称', trigger: 'blur' }],
+  }
+  
+  if (showCode.value) {
+    baseRules.value = [{ required: true, message: '请输入代码', trigger: 'blur' }]
+  }
+  
+  return baseRules
+})
+
 
 onMounted(async () => {
   await fetchTypes()
@@ -199,9 +214,7 @@ const fetchItems = async (typeCode: string) => {
        ?? (response as any)?.results 
        ?? (response as any)?.data 
        ?? response;
-    // Auto-sort by sort_order if backend doesn't, though backend likely does. 
-    // If user wants automatic sorting, we often just rely on backend creation order or explicit sort logic there.
-    // For now, simple display.
+    // Auto-sort by sort_order if backend doesn't sorting logic.
     items.value = Array.isArray(list) ? list : []
   } catch (error) {
     console.error('Failed to fetch items:', error)
@@ -251,11 +264,14 @@ const submitForm = async () => {
     if (valid) {
       submitting.value = true
       try {
+        // Determine value: if showCode is true, use form.value; otherwise use form.label
+        const finalValue = showCode.value ? form.value : form.label
+
         if (isEditMode.value && editingId.value) {
           // Update
           await request.patch(`/dictionaries/items/${editingId.value}/`, {
             label: form.label,
-            value: form.value,
+            value: finalValue,
           })
           ElMessage.success('修改成功')
         } else {
@@ -264,7 +280,7 @@ const submitForm = async () => {
            await request.post('/dictionaries/items/', {
             dict_type: currentType.value!.id,
             label: form.label,
-            value: form.value,
+            value: finalValue,
             description: '',
             sort_order: nextOrder,
             is_active: true,
@@ -413,6 +429,7 @@ const deleteItem = async (item: DictionaryItem) => {
       .type-desc {
         color: $slate-500;
         font-size: 13px;
+        margin-top: 4px;
       }
     }
   }

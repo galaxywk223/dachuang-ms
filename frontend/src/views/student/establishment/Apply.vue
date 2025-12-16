@@ -285,7 +285,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from "vue";
 import { ElMessage, type FormInstance } from "element-plus";
-import { Download, Upload } from "@element-plus/icons-vue";
+import { Download } from "@element-plus/icons-vue";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionary";
 import { useUserStore } from "@/stores/user";
@@ -304,12 +304,44 @@ const currentUser = computed(() => ({
   student_id: userStore.user?.employee_id || userStore.user?.username || "Unknown"
 }));
 
-const formData = reactive({
-  id: null as number | null,
+interface AdvisorInfo {
+  job_number: string;
+  name: string;
+  title: string;
+  contact: string;
+  email?: string;
+}
+
+interface MemberInfo {
+  student_id: string;
+  name: string;
+}
+
+interface FormDataState {
+  id: number | null;
+  source: string;
+  level: string;
+  category: string;
+  is_key_field: boolean | string;
+  college: string;
+  budget: number;
+  major_code: string;
+  leader_contact: string;
+  leader_email: string;
+  title: string;
+  expected_results: string;
+  description: string;
+  advisors: AdvisorInfo[];
+  members: MemberInfo[];
+  attachment_file: File | null;
+}
+
+const formData = reactive<FormDataState>({
+  id: null,
   source: "",
   level: "",
   category: "",
-  is_key_field: "",
+  is_key_field: false,
   college: "",
   budget: 0,
   major_code: "",
@@ -318,9 +350,9 @@ const formData = reactive({
   title: "",
   expected_results: "",
   description: "",
-  advisors: [] as any[],
-  members: [] as any[],
-  attachment_file: null as File | null
+  advisors: [],
+  members: [],
+  attachment_file: null
 });
 
 // Watcher for Budget Automation
@@ -363,7 +395,11 @@ const rules = {
 // Dicts
 const sourceOptions = computed(() => getOptions(DICT_CODES.PROJECT_SOURCE));
 const collegeOptions = computed(() => getOptions(DICT_CODES.COLLEGE));
-const specialTypeOptions = computed(() => getOptions(DICT_CODES.SPECIAL_PROJECT_TYPE));
+// Hardcoded options for Key Field Project logic
+const specialTypeOptions = [
+  { label: '重点领域项目', value: true },
+  { label: '一般项目', value: false }
+];
 const majorOptions = computed(() => getOptions(DICT_CODES.MAJOR_CATEGORY));
 const advisorTitleOptions = computed(() => getOptions(DICT_CODES.ADVISOR_TITLE));
 const levelOptions = computed(() => getOptions(DICT_CODES.PROJECT_LEVEL));
@@ -548,11 +584,10 @@ const loadData = async (id: number) => {
             formData.description = data.description || "";
             formData.expected_results = data.expected_results || "";
             
-            if (typeof data.is_key_field === 'boolean') {
-                 formData.is_key_field = data.is_key_field ? 'KEY' : 'NORMAL';
-            } else {
-                 formData.is_key_field = data.is_key_field || 'NORMAL';
-            }
+            formData.expected_results = data.expected_results || "";
+            
+            // Handle Boolean Key Field
+            formData.is_key_field = !!data.is_key_field;
 
             if (Array.isArray(data.advisors_info) && data.advisors_info.length > 0) {
                 formData.advisors = data.advisors_info.map((adh: any) => ({
@@ -597,10 +632,6 @@ onMounted(() => {
 
 <style scoped lang="scss">
 @use "@/styles/variables.scss" as *;
-
-.apply-page {
-    /* Inherit layout */
-}
 
 .form-container {
   background: white;

@@ -96,11 +96,11 @@
              </template>
           </el-table-column>
 
-          <el-table-column prop="is_key_field" label="重点领域" width="100" align="center">
-             <template #default="{ row }">
-                <el-tag v-if="row.is_key_field" type="success" size="small" effect="light">是</el-tag>
-                <span v-else class="text-gray-400">否</span>
-             </template>
+          <el-table-column prop="is_key_field" label="重点领域项目" width="140" align="center">
+            <template #default="{ row }">
+              <el-tag v-if="row.is_key_field" type="success" size="small" effect="light">重点领域项目</el-tag>
+              <el-tag v-else type="info" size="small" effect="plain">一般项目</el-tag>
+            </template>
           </el-table-column>
 
           <el-table-column label="负责人" width="100" align="center">
