@@ -88,9 +88,7 @@
             </div>
             <template #dropdown>
                 <el-dropdown-menu class="custom-dropdown">
-                <el-dropdown-item command="profile" v-if="userRole === 'student'">
-                  <el-icon><User /></el-icon>个人中心
-                </el-dropdown-item>
+
                 <el-dropdown-item command="changepw">
                   <el-icon><Lock /></el-icon>修改密码
                 </el-dropdown-item>
@@ -172,7 +170,7 @@ import { ElMessageBox, ElMessage } from 'element-plus';
 import {
   School, DocumentAdd, DocumentChecked, 
   QuestionFilled, Bell, ArrowDown, 
-  User, SwitchButton, Management,
+  SwitchButton, Management,
   DataAnalysis, Odometer, UserFilled,
   DataLine, Expand, Fold, Lock
 } from '@element-plus/icons-vue';
@@ -186,7 +184,7 @@ const isCollapse = ref(false);
 const hasUnread = ref(false); 
 
 // User Info
-const userRole = computed(() => userStore.user?.role || localStorage.getItem('user_role') || 'student');
+const userRole = computed(() => String(userStore.user?.role || localStorage.getItem('user_role') || 'student').toLowerCase());
 const userName = computed(() => userStore.user?.real_name || (userRole.value === 'student' ? '学生用户' : '管理员'));
 const userInitials = computed(() => userName.value?.[0] || 'U');
 
@@ -320,8 +318,6 @@ const handleCommand = async (command: string) => {
     } catch {
       // cancel
     }
-  } else if (command === 'profile') {
-      // Student profile navigation
   } else if (command === 'changepw') {
       passwordDialogVisible.value = true;
   }

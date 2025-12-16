@@ -253,23 +253,26 @@
               <span class="section-title">附件上传</span>
           </div>
            <el-form-item label="申请书" prop="attachment_file">
-              <el-upload
-                action="#"
-                :auto-upload="false"
-                :on-change="handleFileChange"
-                :file-list="fileList"
-                :limit="1"
-                class="upload-inline"
-              >
-                 <el-button type="primary" plain>点击上传PDF</el-button>
-                 <template #tip>
-                    <div class="el-upload__tip">只能上传pdf文件，且不超过2MB</div>
-                 </template>
-              </el-upload>
-              <div class="mt-2 text-sm text-gray-500" style="margin-left: 16px;">
-                  <a href="#" class="link-download">
-                     <el-icon><Download /></el-icon> 下载申请书模板
-                  </a>
+              <div class="upload-wrapper">
+                  <el-upload
+                    action="#"
+                    :auto-upload="false"
+                    :on-change="handleFileChange"
+                    :file-list="fileList"
+                    :limit="1"
+                    class="upload-inline"
+                  >
+                     <el-button type="primary" plain icon="Upload">点击上传PDF</el-button>
+                     <template #tip>
+                        <div class="upload-tip">只能上传pdf文件，且不超过2MB</div>
+                     </template>
+                  </el-upload>
+                  
+                  <div class="download-trigger">
+                      <a href="#" class="link-download">
+                         <el-icon><Download /></el-icon> 下载申请书模板
+                      </a>
+                  </div>
               </div>
            </el-form-item>
         </div>
@@ -282,7 +285,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from "vue";
 import { ElMessage, type FormInstance } from "element-plus";
-import { Download } from "@element-plus/icons-vue";
+import { Download, Upload } from "@element-plus/icons-vue";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionary";
 import { useUserStore } from "@/stores/user";
@@ -694,7 +697,32 @@ onMounted(() => {
   gap: 4px;
   text-decoration: none;
   font-weight: 500;
+  font-size: 14px;
   
   &:hover { text-decoration: underline; }
 }
+
+.upload-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+}
+
+.upload-inline {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.upload-tip {
+    font-size: 12px;
+    color: $slate-400;
+    margin-top: 8px;
+    line-height: 1.4;
+}
+
+.download-trigger {
+    padding-top: 6px; // Slightly offset to align with button text baseline roughly if needed, or keeping top aligned
+}
+
 </style>

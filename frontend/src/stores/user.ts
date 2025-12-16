@@ -18,7 +18,9 @@ export const useUserStore = defineStore("user", () => {
       const response = await login(employeeId, password, role);
       if (response.code === 200) {
         token.value = response.data.access_token;
-        user.value = response.data.user;
+        const userData = response.data.user;
+        if (userData?.role) (userData as any).role = userData.role.toLowerCase();
+        user.value = userData;
         localStorage.setItem("token", response.data.access_token);
         localStorage.setItem("refresh_token", response.data.refresh_token);
         localStorage.setItem("user_role", role);
@@ -46,7 +48,9 @@ export const useUserStore = defineStore("user", () => {
     try {
       const response = await getProfile();
       if (response.code === 200) {
-        user.value = response.data;
+        const userData = response.data;
+        if (userData?.role) (userData as any).role = userData.role.toLowerCase();
+        user.value = userData;
       }
     } catch (error) {
       console.error("Fetch profile error:", error);

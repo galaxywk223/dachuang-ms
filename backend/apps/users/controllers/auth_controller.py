@@ -85,13 +85,17 @@ class AuthController(viewsets.GenericViewSet):
         修改密码
         """
         result = self.user_business.change_password(
-            request.user,
-            request.data.get("old_password"),
-            request.data.get("new_password"),
+            user=request.user,
+            old_password=request.data.get("old_password"),
+            new_password=request.data.get("new_password"),
+            confirm_password=request.data.get("confirm_password"),
         )
 
         if result["success"]:
-            return Response({"message": "密码修改成功"}, status=status.HTTP_200_OK)
+            return Response(
+                {"code": 200, "message": "密码修改成功", "data": None},
+                status=status.HTTP_200_OK,
+            )
         else:
             return Response(
                 {"error": result["error"]}, status=status.HTTP_400_BAD_REQUEST

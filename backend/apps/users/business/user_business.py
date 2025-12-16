@@ -47,7 +47,7 @@ class UserBusiness:
         serializer = UserSerializer(updated_user)
         return serializer.data
 
-    def change_password(self, user, old_password, new_password):
+    def change_password(self, user, old_password, new_password, confirm_password):
         """
         修改用户密码
 
@@ -55,17 +55,26 @@ class UserBusiness:
             user: 用户对象
             old_password: 旧密码
             new_password: 新密码
+            confirm_password: 确认密码
 
         Returns:
             dict: 操作结果
         """
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"Changing password for user: {user.username}")
+
         # 验证旧密码
         if not check_password(old_password, user.password):
             return {"success": False, "error": "原密码错误"}
 
         # 验证新密码格式
         serializer = ChangePasswordSerializer(
-            data={"old_password": old_password, "new_password": new_password}
+            data={
+                "old_password": old_password,
+                "new_password": new_password,
+                "confirm_password": confirm_password,
+            }
         )
 
         if not serializer.is_valid():
