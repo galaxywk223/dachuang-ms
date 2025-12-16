@@ -1,337 +1,130 @@
 <template>
-  <div class="space-y-6">
-    <!-- Page Header -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">系统字典管理</h1>
-        <p class="mt-1 text-sm text-gray-500">
-          管理系统基础配置数据，如项目级别、类别、学院等。
-        </p>
-      </div>
+  <div class="dictionary-page">
+    <div class="page-header-wrapper">
+       <div class="title-bar">
+          <span class="title">系统字典管理</span>
+       </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-4">
-      <!-- Dictionary Types List -->
-      <div class="lg:col-span-1">
-        <div class="overflow-hidden bg-white shadow sm:rounded-lg">
-          <div class="px-4 py-5 border-b border-gray-200 sm:px-6">
-            <h3 class="text-lg font-medium leading-6 text-gray-900">字典类型</h3>
-          </div>
-          <ul role="list" class="divide-y divide-gray-200">
-            <li
-              v-for="type in dictionaryTypes"
-              :key="type.code"
-              @click="currentType = type"
-              class="relative px-4 py-3 cursor-pointer transition-colors duration-150 ease-in-out hover:bg-gray-50 group"
-              :class="{ 'bg-indigo-50 border-l-4 border-indigo-600': currentType?.code === type.code, 'border-l-4 border-transparent': currentType?.code !== type.code }"
-            >
-              <div class="flex items-center justify-between space-x-3">
-                <div class="flex items-center space-x-3 min-w-0">
-                  <div 
-                    class="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-md"
-                    :class="currentType?.code === type.code ? 'bg-indigo-100' : 'bg-gray-100 group-hover:bg-gray-200'"
-                  >
-                    <BookOpenIcon 
-                      class="w-5 h-5" 
-                      style="width: 20px; height: 20px;"
-                      :class="currentType?.code === type.code ? 'text-indigo-600' : 'text-gray-500'"
-                      aria-hidden="true" 
-                    />
-                  </div>
-                  <p class="text-sm font-medium truncate" :class="currentType?.code === type.code ? 'text-indigo-900' : 'text-gray-700'">
-                    {{ type.name }}
-                  </p>
+    <div class="content-container">
+      <el-row :gutter="20">
+        <!-- Dictionary Types List -->
+        <el-col :span="6">
+          <el-card class="types-card" shadow="never" :body-style="{ padding: '0' }">
+            <template #header>
+              <div class="card-header">
+                <span>字典类型</span>
+              </div>
+            </template>
+            <div class="types-list">
+              <div
+                v-for="type in dictionaryTypes"
+                :key="type.code"
+                class="type-item"
+                :class="{ active: currentType?.code === type.code }"
+                @click="handleTypeSelect(type)"
+              >
+                <el-icon class="icon"><Collection /></el-icon>
+                <span class="type-name">{{ type.name }}</span>
+                <el-icon class="arrow"><ArrowRight /></el-icon>
+              </div>
+            </div>
+          </el-card>
+        </el-col>
+
+        <!-- Dictionary Items Management -->
+        <el-col :span="18">
+          <el-card class="items-card" shadow="never">
+            <template #header>
+              <div class="items-header">
+                <div class="left-panel">
+                  <span class="type-title">{{ currentType?.name || '请选择左侧字典类型' }}</span>
+                  <span class="type-desc" v-if="currentType">{{ currentType.description }}</span>
+                </div>
+                <div class="right-panel" v-if="currentType">
+                   <el-button type="primary" @click="openAddDialog">
+                     <el-icon><Plus /></el-icon> 添加条目
+                   </el-button>
                 </div>
               </div>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Dictionary Items Management -->
-      <div class="lg:col-span-3">
-        <div class="bg-white shadow sm:rounded-lg">
-          <div v-if="currentType" class="px-4 py-5 sm:p-6">
-            <div class="flex items-center justify-between mb-4">
-              <div>
-                <h3 class="text-lg font-medium leading-6 text-gray-900">
-                  {{ currentType.name }}
-                </h3>
-                <p class="mt-1 text-sm text-gray-500">
-                  {{ currentType.description }}
-                </p>
-              </div>
-              <button
-                type="button"
-                @click="openAddDialog"
-                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                <PlusIcon class="w-5 h-5 mr-2 -ml-1" aria-hidden="true" />
-                添加条目
-              </button>
-            </div>
+            </template>
 
             <!-- Items Table -->
-            <div class="flex flex-col">
-              <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-                <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-                  <div
-                    class="overflow-hidden border-b border-gray-200 shadow sm:rounded-lg"
-                  >
-                    <table class="min-w-full divide-y divide-gray-200">
-                      <thead class="bg-gray-50">
-                        <tr>
-                          <th
-                            scope="col"
-                            class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase"
-                          >
-                            显示名称
-                          </th>
-                          <th
-                            scope="col"
-                            class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase"
-                          >
-                            值
-                          </th>
-                          <th
-                            scope="col"
-                            class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase"
-                          >
-                            排序
-                          </th>
-                          <th
-                            scope="col"
-                            class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase"
-                          >
-                            状态
-                          </th>
-                          <th scope="col" class="relative px-6 py-3">
-                            <span class="sr-only">操作</span>
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody class="bg-white divide-y divide-gray-200">
-                        <tr v-if="loading" class="animate-pulse">
-                          <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
-                            加载中...
-                          </td>
-                        </tr>
-                        <tr v-else-if="items.length === 0">
-                          <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
-                            暂无数据
-                          </td>
-                        </tr>
-                        <tr v-for="item in items" :key="item.id">
-                          <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">
-                              {{ item.label }}
-                            </div>
-                          </td>
-                          <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-500">
-                              {{ item.value }}
-                            </div>
-                          </td>
-                          <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-500">
-                              {{ item.sort_order }}
-                            </div>
-                          </td>
-                          <td class="px-6 py-4 whitespace-nowrap">
-                            <span
-                              class="inline-flex px-2 text-xs font-semibold leading-5 text-green-800 bg-green-100 rounded-full"
-                              :class="{
-                                'bg-green-100 text-green-800': item.is_active,
-                                'bg-red-100 text-red-800': !item.is_active,
-                              }"
-                            >
-                              {{ item.is_active ? '启用' : '禁用' }}
-                            </span>
-                          </td>
-                          <td
-                            class="px-6 py-4 text-sm font-medium text-right whitespace-nowrap"
-                          >
-                            <button
-                              @click="deleteItem(item)"
-                              class="text-red-600 hover:text-red-900"
-                            >
-                              删除
-                            </button>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+            <div v-if="currentType">
+              <el-table
+                v-loading="loading"
+                :data="items"
+                style="width: 100%"
+                stripe
+                border
+                :header-cell-style="{ background: '#f8fafc', color: '#475569', fontWeight: '600' }"
+              >
+                <el-table-column prop="label" label="显示名称" min-width="150" />
+                <el-table-column prop="value" label="值" min-width="120" />
+                <el-table-column prop="sort_order" label="排序" width="80" align="center" />
+                <el-table-column label="状态" width="100" align="center">
+                  <template #default="{ row }">
+                     <el-tag :type="row.is_active ? 'success' : 'danger'" size="small">
+                        {{ row.is_active ? '启用' : '禁用' }}
+                     </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="100" align="center" fixed="right">
+                  <template #default="{ row }">
+                    <el-button link type="danger" size="small" @click="deleteItem(row)">删除</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+              
+              <div class="empty-tip" v-if="!loading && items.length === 0">
+                暂无数据
               </div>
             </div>
-          </div>
-          <div v-else class="flex items-center justify-center h-64 text-gray-500">
-            请选择左侧的字典类型进行管理
-          </div>
-        </div>
-      </div>
+            <div v-else class="empty-selection">
+              <el-empty description="请选择左侧的字典类型进行管理" />
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
     </div>
 
-    <!-- Add Item Modal -->
-    <TransitionRoot as="template" :show="shouldOpenDialog">
-      <Dialog as="div" class="fixed inset-0 z-10 overflow-y-auto" @close="shouldOpenDialog = false">
-        <div
-          class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0"
-        >
-          <TransitionChild
-            as="template"
-            enter="ease-out duration-300"
-            enter-from="opacity-0"
-            enter-to="opacity-100"
-            leave="ease-in duration-200"
-            leave-from="opacity-100"
-            leave-to="opacity-0"
-          >
-            <DialogOverlay
-              class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
-            />
-          </TransitionChild>
-
-          <span
-            class="hidden sm:inline-block sm:align-middle sm:h-screen"
-            aria-hidden="true"
-            >&#8203;</span
-          >
-          <TransitionChild
-            as="template"
-            enter="ease-out duration-300"
-            enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-            enter-to="opacity-100 translate-y-0 sm:scale-100"
-            leave="ease-in duration-200"
-            leave-from="opacity-100 translate-y-0 sm:scale-100"
-            leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-          >
-            <div
-              class="relative inline-block px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6"
-            >
-              <div>
-                <div
-                  class="flex items-center justify-center w-12 h-12 mx-auto bg-indigo-100 rounded-full"
-                >
-                  <PlusIcon class="w-6 h-6 text-indigo-600" aria-hidden="true" />
-                </div>
-                <div class="mt-3 text-center sm:mt-5">
-                  <DialogTitle
-                    as="h3"
-                    class="text-lg font-medium leading-6 text-gray-900"
-                  >
-                    添加{{ currentType?.name }}
-                  </DialogTitle>
-                  <div class="mt-2">
-                    <form @submit.prevent="submitForm" class="space-y-4">
-                      <div>
-                        <label
-                          for="label"
-                          class="block text-sm font-medium text-left text-gray-700"
-                          >显示名称</label
-                        >
-                        <div class="mt-1">
-                          <input
-                            type="text"
-                            name="label"
-                            id="label"
-                            v-model="form.label"
-                            required
-                            class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                            placeholder="例如：计算机学院"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label
-                          for="value"
-                          class="block text-sm font-medium text-left text-gray-700"
-                          >值 (唯一标识)</label
-                        >
-                        <div class="mt-1">
-                          <input
-                            type="text"
-                            name="value"
-                            id="value"
-                            v-model="form.value"
-                            required
-                            class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                            placeholder="例如：CS"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                         <label
-                           for="description"
-                           class="block text-sm font-medium text-left text-gray-700"
-                           >说明 (可选)</label
-                         >
-                         <div class="mt-1">
-                           <input
-                             type="text"
-                             name="description"
-                             id="description"
-                             v-model="form.description"
-                             class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                             placeholder="备注说明"
-                           />
-                         </div>
-                       </div>
-                      <div>
-                        <label
-                          for="sort_order"
-                          class="block text-sm font-medium text-left text-gray-700"
-                          >排序</label
-                        >
-                        <div class="mt-1">
-                          <input
-                            type="number"
-                            name="sort_order"
-                            id="sort_order"
-                            v-model="form.sort_order"
-                            class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                          />
-                        </div>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              </div>
-              <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-                <button
-                  type="button"
-                  class="inline-flex justify-center w-full px-4 py-2 text-base font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:col-start-2 sm:text-sm"
-                  @click="submitForm"
-                >
-                  确定
-                </button>
-                <button
-                  type="button"
-                  class="inline-flex justify-center w-full px-4 py-2 mt-3 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:col-start-1 sm:text-sm"
-                  @click="shouldOpenDialog = false"
-                >
-                  取消
-                </button>
-              </div>
-            </div>
-          </TransitionChild>
-        </div>
-      </Dialog>
-    </TransitionRoot>
+    <!-- Add Item Dialog -->
+    <el-dialog
+      v-model="dialogVisible"
+      :title="`添加 ${currentType?.name || ''} 条目`"
+      width="500px"
+      align-center
+      destroy-on-close
+      @closed="resetForm"
+    >
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
+        <el-form-item label="显示名称" prop="label">
+          <el-input v-model="form.label" placeholder="例如：计算机学院" />
+        </el-form-item>
+        <el-form-item label="值" prop="value">
+          <el-input v-model="form.value" placeholder="例如：CS (唯一标识)" />
+        </el-form-item>
+        <el-form-item label="排序" prop="sort_order">
+          <el-input-number v-model="form.sort_order" :min="0" :max="999" controls-position="right" />
+        </el-form-item>
+        <el-form-item label="说明" prop="description">
+          <el-input v-model="form.description" type="textarea" placeholder="备注说明" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" :loading="submitting" @click="submitForm">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import {
-  Dialog,
-  DialogOverlay,
-  DialogTitle,
-  TransitionChild,
-  TransitionRoot,
-} from '@headlessui/vue'
-import { PlusIcon, BookOpenIcon } from '@heroicons/vue/24/outline'
+import { ref, reactive, onMounted, watch } from 'vue'
+import { Plus, Collection, ArrowRight } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import request from '@/utils/request'
 
 interface DictionaryType {
@@ -355,21 +148,27 @@ const dictionaryTypes = ref<DictionaryType[]>([])
 const currentType = ref<DictionaryType | null>(null)
 const items = ref<DictionaryItem[]>([])
 const loading = ref(false)
-const shouldOpenDialog = ref(false)
+const dialogVisible = ref(false)
+const submitting = ref(false)
+const formRef = ref<FormInstance>()
 
-const form = ref({
+const form = reactive({
   label: '',
   value: '',
   description: '',
   sort_order: 0,
 })
 
-// 初始化
+const rules: FormRules = {
+  label: [{ required: true, message: '请输入显示名称', trigger: 'blur' }],
+  value: [{ required: true, message: '请输入值', trigger: 'blur' }],
+  sort_order: [{ required: true, message: '请输入排序', trigger: 'blur' }],
+}
+
 onMounted(async () => {
   await fetchTypes()
 })
 
-// 监听当前类型变化，加载对应的条目
 watch(currentType, async (newType) => {
   if (newType) {
     await fetchItems(newType.code)
@@ -381,18 +180,20 @@ watch(currentType, async (newType) => {
 const fetchTypes = async () => {
   try {
     const response = await request.get('/dictionaries/types/')
-    const list =
-      (response as any)?.data?.results ??
-      (response as any)?.data ??
-      (response as any)?.results ??
-      response
+    // Handle various response structures
+    const list = (response as any)?.data?.results 
+       ?? (response as any)?.results 
+       ?? (response as any)?.data 
+       ?? response;
+       
     dictionaryTypes.value = Array.isArray(list) ? list : []
-    // 默认选中第一个
+    
     if (dictionaryTypes.value.length > 0) {
       currentType.value = dictionaryTypes.value[0]
     }
   } catch (error) {
     console.error('Failed to fetch dictionary types:', error)
+    ElMessage.error('获取字典类型失败')
   }
 }
 
@@ -402,57 +203,204 @@ const fetchItems = async (typeCode: string) => {
     const response = await request.get('/dictionaries/items/', {
       params: { dict_type_code: typeCode },
     })
-    const list =
-      (response as any)?.data?.results ??
-      (response as any)?.data ??
-      (response as any)?.results ??
-      response
+    const list = (response as any)?.data?.results 
+       ?? (response as any)?.results 
+       ?? (response as any)?.data 
+       ?? response;
     items.value = Array.isArray(list) ? list : []
   } catch (error) {
     console.error('Failed to fetch items:', error)
+    ElMessage.error('获取字典数据失败')
   } finally {
     loading.value = false
   }
 }
 
+const handleTypeSelect = (type: DictionaryType) => {
+  currentType.value = type
+}
+
 const openAddDialog = () => {
-  form.value = {
-    label: '',
-    value: '',
-    description: '',
-    sort_order: 0,
-  }
-  shouldOpenDialog.value = true
+  dialogVisible.value = true
+}
+
+const resetForm = () => {
+  form.label = ''
+  form.value = ''
+  form.description = ''
+  form.sort_order = 0
+  formRef.value?.clearValidate()
 }
 
 const submitForm = async () => {
-  if (!currentType.value) return
-
-  try {
-    await request.post('/dictionaries/items/', {
-      dict_type: currentType.value.id,
-      ...form.value,
-      is_active: true,
-    })
-    shouldOpenDialog.value = false
-    await fetchItems(currentType.value.code)
-  } catch (error) {
-    console.error('Failed to create item:', error)
-    // 这里可以添加错误提示
-  }
+  if (!formRef.value || !currentType.value) return
+  
+  await formRef.value.validate(async (valid) => {
+    if (valid) {
+      submitting.value = true
+      try {
+        await request.post('/dictionaries/items/', {
+          dict_type: currentType.value!.id,
+          ...form,
+          is_active: true,
+        })
+        ElMessage.success('添加成功')
+        dialogVisible.value = false
+        await fetchItems(currentType.value!.code)
+      } catch (error) {
+        ElMessage.error('添加失败，可能是值已存在')
+      } finally {
+        submitting.value = false
+      }
+    }
+  })
 }
 
 const deleteItem = async (item: DictionaryItem) => {
-  if (!confirm(`确认要删除 "${item.label}" 吗？`)) return
-
   try {
+    await ElMessageBox.confirm(`确认要删除 "${item.label}" 吗？此操作不可恢复。`, '警告', {
+      confirmButtonText: '确定删除',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+    
     await request.delete(`/dictionaries/items/${item.id}/`)
+    ElMessage.success('删除成功')
     if (currentType.value) {
       await fetchItems(currentType.value.code)
     }
   } catch (error) {
-    console.error('Failed to delete item:', error)
-    alert('删除失败，可能该条目正在被使用。')
+    if (error !== 'cancel') {
+        ElMessage.error('删除失败，可能该条目正在被使用')
+    }
   }
 }
 </script>
+
+<style scoped lang="scss">
+@use "@/styles/variables.scss" as *;
+
+.dictionary-page {
+  /* Inherit layout margins */
+}
+
+.page-header-wrapper {
+  background: white;
+  padding: 16px 24px;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+  border: 1px solid $color-border-light;
+  margin-bottom: 20px;
+  
+  .title-bar {
+      display: flex;
+      align-items: center;
+      
+      .title {
+          font-size: 18px;
+          font-weight: 600;
+          color: $slate-800;
+          position: relative;
+          padding-left: 14px;
+          
+          &::before {
+              content: '';
+              position: absolute;
+              left: 0;
+              top: 50%;
+              transform: translateY(-50%);
+              width: 4px;
+              height: 18px;
+              background: $primary-600;
+              border-radius: 2px;
+          }
+      }
+  }
+}
+
+.types-card {
+  min-height: 600px;
+  border-radius: $radius-lg;
+  
+  .card-header {
+    font-weight: 600;
+    font-size: 16px;
+    color: $slate-800;
+  }
+  
+  .types-list {
+    .type-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 20px;
+      cursor: pointer;
+      border-bottom: 1px solid $slate-50;
+      transition: all 0.2s;
+      
+      &:hover {
+        background-color: $slate-50;
+        color: $primary-600;
+      }
+      
+      &.active {
+        background-color: #ecf5ff; // Element Plus primary light
+        color: $primary-600;
+        border-right: 3px solid $primary-600;
+      }
+      
+      .icon {
+        margin-right: 12px;
+        font-size: 16px;
+      }
+      
+      .type-name {
+        flex: 1;
+        font-size: 14px;
+      }
+      
+      .arrow {
+        font-size: 14px;
+        color: $slate-400;
+      }
+    }
+  }
+}
+
+.items-card {
+  min-height: 600px;
+  border-radius: $radius-lg;
+
+  .items-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    .left-panel {
+      .type-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: $slate-800;
+        margin-right: 12px;
+      }
+      
+      .type-desc {
+        color: $slate-500;
+        font-size: 13px;
+      }
+    }
+  }
+}
+
+.empty-tip {
+  padding: 40px;
+  text-align: center;
+  color: $slate-400;
+}
+
+.empty-selection {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 500px;
+}
+</style>

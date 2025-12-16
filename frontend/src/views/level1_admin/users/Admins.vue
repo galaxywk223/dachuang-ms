@@ -2,13 +2,7 @@
 <template>
   <div>
     <div class="page-container">
-      <div class="page-header">
-        <div class="action-area">
-          <el-button type="primary" @click="openCreateDialog">
-            <el-icon><Plus /></el-icon>添加管理员
-          </el-button>
-        </div>
-      </div>
+      <!-- Filter Bar -->
 
       <!-- Filter Bar -->
       <el-card class="filter-card" shadow="never">
@@ -50,6 +44,18 @@
 
       <!-- Table -->
       <el-card class="table-card" shadow="never">
+        <div class="table-header">
+          <div class="title-bar">
+            <span class="title">二级管理员管理</span>
+             <el-tag type="info" size="small" effect="plain" round class="count-tag">共 {{ total }} 项</el-tag>
+          </div>
+          <div class="actions">
+            <el-button type="primary" @click="openCreateDialog">
+              <el-icon><Plus /></el-icon>添加管理员
+            </el-button>
+          </div>
+        </div>
+
         <el-table
           v-loading="loading"
           :data="tableData"
@@ -374,22 +380,41 @@ onMounted(() => {
 }
 
 .page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-
-  h1 {
-    font-size: 24px;
-    font-weight: 600;
-    color: $slate-800;
-    margin: 0 0 8px 0;
-  }
+  display: none;
 }
 
-.subtitle {
-  color: $slate-500;
-  margin: 0;
+.table-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid $slate-100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .title-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      
+      .title {
+          font-size: 16px;
+          font-weight: 600;
+          color: $slate-800;
+          position: relative;
+          padding-left: 14px;
+          
+          &::before {
+              content: '';
+              position: absolute;
+              left: 0;
+              top: 50%;
+              transform: translateY(-50%);
+              width: 4px;
+              height: 16px;
+              background: $primary-600;
+              border-radius: 2px;
+          }
+      }
+  }
 }
 
 .filter-card {

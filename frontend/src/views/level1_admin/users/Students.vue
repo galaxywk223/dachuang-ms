@@ -1,21 +1,6 @@
 <template>
   <div>
     <div class="page-container">
-      <div class="page-header">
-        <div>
-          <h1>学生管理</h1>
-          <p class="subtitle">管理系统内所有学生账号</p>
-        </div>
-        <div class="header-actions">
-          <el-button type="primary" @click="openCreateDialog">
-            <el-icon><Plus /></el-icon>添加学生
-          </el-button>
-          <el-button>
-              <el-icon><Upload /></el-icon>批量导入
-          </el-button>
-        </div>
-      </div>
-
       <!-- Filter Bar -->
       <el-card class="filter-card" shadow="never">
         <el-form :inline="true" :model="filters" class="filter-form">
@@ -54,8 +39,22 @@
         </el-form>
       </el-card>
 
-      <!-- Table -->
       <el-card class="table-card" shadow="never">
+        <div class="table-header">
+          <div class="title-bar">
+            <span class="title">学生管理</span>
+            <el-tag type="info" size="small" effect="plain" round class="count-tag">共 {{ total }} 项</el-tag>
+          </div>
+          <div class="actions">
+            <el-button type="primary" @click="openCreateDialog">
+              <el-icon><Plus /></el-icon>添加学生
+            </el-button>
+            <el-button>
+                <el-icon><Upload /></el-icon>批量导入
+            </el-button>
+          </div>
+        </div>
+
         <el-table
           v-loading="loading"
           :data="tableData"
@@ -413,22 +412,46 @@ onMounted(() => {
 }
 
 .page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-
-  h1 {
-    font-size: 24px;
-    font-weight: 600;
-    color: $slate-800;
-    margin: 0 0 8px 0;
-  }
+  display: none;
 }
 
-.subtitle {
-  color: $slate-500;
-  margin: 0;
+.table-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid $slate-100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .title-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      
+      .title {
+          font-size: 16px;
+          font-weight: 600;
+          color: $slate-800;
+          position: relative;
+          padding-left: 14px;
+          
+          &::before {
+              content: '';
+              position: absolute;
+              left: 0;
+              top: 50%;
+              transform: translateY(-50%);
+              width: 4px;
+              height: 16px;
+              background: $primary-600;
+              border-radius: 2px;
+          }
+      }
+  }
+
+  .actions {
+    display: flex;
+    gap: 12px;
+  }
 }
 
 .filter-card {
