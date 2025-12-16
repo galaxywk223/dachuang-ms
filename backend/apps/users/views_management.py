@@ -10,7 +10,7 @@ from django.db.models import Q
 from django.contrib.auth.hashers import make_password
 
 from .models import User
-from .serializers import UserSerializer
+from .serializers import UserSerializer, UserCreateSerializer
 
 
 class UserManagementViewSet(viewsets.ModelViewSet):
@@ -21,6 +21,12 @@ class UserManagementViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        """Use the create serializer when creating users so we can set passwords and defaults."""
+        if self.action == "create":
+            return UserCreateSerializer
+        return self.serializer_class
 
     def get_queryset(self):
         """
@@ -36,6 +42,10 @@ class UserManagementViewSet(viewsets.ModelViewSet):
                 | Q(employee_id__icontains=search)
                 | Q(real_name__icontains=search)
             )
+
+        college = self.request.query_params.get("college", "")
+        if college:
+            queryset = queryset.filter(college=college)
 
         # 按角色筛选
         role = self.request.query_params.get("role", "")
@@ -67,7 +77,8 @@ class UserManagementViewSet(viewsets.ModelViewSet):
                 "message": "获取成功",
                 "data": {
                     "results": serializer.data,
-                    "total": total,
+                    "count": total,
+                    "total": total,  # 向后兼容
                     "page": page,
                     "page_size": page_size,
                 },
@@ -78,21 +89,31 @@ class UserManagementViewSet(viewsets.ModelViewSet):
         """
         创建用户
         """
+        if not (
+            request.user.is_superuser
+            or request.user.role == User.UserRole.LEVEL1_ADMIN
+        ):
+            return Response(
+                {"code": 403, "message": "只有一级管理员可以创建学生"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         data = request.data.copy()
+        data.setdefault("role", User.UserRole.STUDENT)
 
         # 设置默认密码
         if "password" not in data or not data["password"]:
             data["password"] = "123456"
 
-        # 对密码进行加密
-        data["password"] = make_password(data["password"])
-
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
 
+        # 返回完整用户信息
+        output_data = UserSerializer(serializer.instance).data
+
         return Response(
-            {"code": 200, "message": "创建成功", "data": serializer.data},
+            {"code": 200, "message": "创建成功", "data": output_data},
             status=status.HTTP_201_CREATED,
         )
 
@@ -104,17 +125,15 @@ class UserManagementViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
 
         data = request.data.copy()
-
-        # 如果包含密码，进行加密
-        if "password" in data and data["password"]:
-            data["password"] = make_password(data["password"])
-        else:
-            # 不更新密码，移除password字段
-            data.pop("password", None)
+        password = data.pop("password", None)
 
         serializer = self.get_serializer(instance, data=data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
+
+        if password:
+            instance.set_password(password)
+            instance.save(update_fields=["password"])
 
         return Response({"code": 200, "message": "更新成功", "data": serializer.data})
 

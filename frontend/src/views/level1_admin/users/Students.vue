@@ -6,7 +6,7 @@
         <p class="subtitle">管理全校学生账号信息</p>
       </div>
       <div class="action-area">
-        <el-button type="primary" disabled>
+        <el-button type="primary" @click="openCreateDialog">
           <el-icon><Plus /></el-icon>添加学生
         </el-button>
         <el-button type="success" disabled>
@@ -94,19 +94,143 @@
       </div>
     </el-card>
   </div>
+
+  <el-dialog
+    v-model="addDialogVisible"
+    title="添加学生"
+    width="720px"
+    :close-on-click-modal="false"
+    @closed="resetStudentForm"
+  >
+    <el-form
+      ref="studentFormRef"
+      :model="studentForm"
+      :rules="formRules"
+      label-width="90px"
+      class="student-form"
+    >
+      <el-row :gutter="16">
+        <el-col :span="12">
+          <el-form-item label="学号" prop="employee_id">
+            <el-input v-model="studentForm.employee_id" placeholder="请输入学号" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="姓名" prop="real_name">
+            <el-input v-model="studentForm.real_name" placeholder="请输入姓名" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="密码" prop="password">
+            <el-input
+              v-model="studentForm.password"
+              placeholder="默认 123456"
+              show-password
+            />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="手机号" prop="phone">
+            <el-input
+              v-model="studentForm.phone"
+              placeholder="可选，11位数字"
+              maxlength="11"
+            />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="邮箱" prop="email">
+            <el-input v-model="studentForm.email" placeholder="可选，学校邮箱" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="学院" prop="college">
+            <el-input v-model="studentForm.college" placeholder="请输入学院" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="专业" prop="major">
+            <el-input v-model="studentForm.major" placeholder="请输入专业" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="年级" prop="grade">
+            <el-input v-model="studentForm.grade" placeholder="如 2022" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="班级" prop="class_name">
+            <el-input v-model="studentForm.class_name" placeholder="如 计科2201" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="部门" prop="department">
+            <el-input
+              v-model="studentForm.department"
+              placeholder="可填写学院下属系"
+            />
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="addDialogVisible = false">取消</el-button>
+        <el-button
+          type="primary"
+          :loading="submitLoading"
+          @click="handleCreateStudent"
+        >
+          确认添加
+        </el-button>
+      </span>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { Search, Plus, Upload } from '@element-plus/icons-vue';
-import { getUsers, toggleUserStatus } from '@/api/user-admin';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { getUsers, toggleUserStatus, createUser } from '@/api/user-admin';
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus';
 
 const loading = ref(false);
 const tableData = ref([]);
 const total = ref(0);
 const currentPage = ref(1);
 const pageSize = ref(10);
+const addDialogVisible = ref(false);
+const submitLoading = ref(false);
+const studentFormRef = ref<FormInstance>();
+const studentForm = reactive({
+  employee_id: '',
+  real_name: '',
+  password: '123456',
+  phone: '',
+  email: '',
+  college: '',
+  major: '',
+  grade: '',
+  class_name: '',
+  department: ''
+});
+
+const formRules: FormRules = {
+  employee_id: [
+    { required: true, message: '请输入学号', trigger: 'blur' },
+    { min: 4, max: 20, message: '长度应在 4-20 个字符内', trigger: 'blur' }
+  ],
+  real_name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, message: '密码至少 6 位', trigger: 'blur' }
+  ],
+  phone: [
+    { pattern: /^\d{11}$/, message: '手机号需为 11 位数字', trigger: 'blur' }
+  ],
+  email: [{ type: 'email', message: '邮箱格式不正确', trigger: 'blur' }],
+  college: [{ required: true, message: '请输入学院', trigger: 'blur' }]
+};
 
 const filters = reactive({
   search: '',
@@ -127,9 +251,16 @@ const loadData = async () => {
     if (!params.college) delete params.college;
 
     const res = await getUsers(params);
-    if (res.code === 200) {
-      tableData.value = res.data.results;
-      total.value = res.data.count;
+    if (res.code === 200 && res.data) {
+      tableData.value = res.data.results || [];
+      const resultCount = res.data.count ?? res.data.total ?? tableData.value.length;
+      total.value = Number.isFinite(resultCount) ? resultCount : 0;
+    } else if (res.results) {
+      tableData.value = res.results;
+      total.value = res.count || res.results.length;
+    } else {
+      tableData.value = Array.isArray(res) ? res : [];
+      total.value = tableData.value.length;
     }
   } catch (error) {
     console.error(error);
@@ -175,17 +306,58 @@ const handleToggleStatus = async (row: any) => {
          type: 'warning'
      });
      
-     // Mock API or Real API
-     // The imported toggleUserStatus function url is /auth/admin/users/${id}/toggle-status/
-     // Check if backed supports it.
-     
-     // Assuming success for demo if api fails or not implemented fully
-     ElMessage.success(`${action}成功 (演示)`);
-     // await toggleUserStatus(row.id);
-     // loadData();
+     const res = await toggleUserStatus(row.id);
+     if (res.code === 200) {
+        ElMessage.success(`${action}成功`);
+        loadData();
+     }
    } catch {
        // cancel
    }
+};
+
+const resetStudentForm = () => {
+  Object.assign(studentForm, {
+    employee_id: '',
+    real_name: '',
+    password: '123456',
+    phone: '',
+    email: '',
+    college: '',
+    major: '',
+    grade: '',
+    class_name: '',
+    department: ''
+  });
+  studentFormRef.value?.clearValidate();
+};
+
+const openCreateDialog = () => {
+  resetStudentForm();
+  addDialogVisible.value = true;
+};
+
+const handleCreateStudent = async () => {
+  if (!studentFormRef.value) return;
+  const valid = await studentFormRef.value.validate().catch(() => false);
+  if (!valid) return;
+
+  submitLoading.value = true;
+  try {
+    const payload = { ...studentForm, role: 'STUDENT' };
+    const res = await createUser(payload);
+    if (res.code === 200) {
+      ElMessage.success('学生添加成功，默认密码为 123456');
+      addDialogVisible.value = false;
+      resetStudentForm();
+      loadData();
+    }
+  } catch (error) {
+    console.error(error);
+    ElMessage.error('添加学生失败');
+  } finally {
+    submitLoading.value = false;
+  }
 };
 
 onMounted(() => {
@@ -236,5 +408,15 @@ onMounted(() => {
     padding: 16px;
     display: flex;
     justify-content: flex-end;
+}
+
+.student-form {
+  margin-top: 4px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 </style>
