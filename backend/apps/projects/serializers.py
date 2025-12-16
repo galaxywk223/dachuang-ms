@@ -56,6 +56,19 @@ class ProjectSerializer(serializers.ModelSerializer):
     项目序列化器
     """
 
+    class KeyFieldBoolean(serializers.BooleanField):
+        """
+        兼容前端字符串 KEY/NORMAL/TRUE/FALSE 等
+        """
+
+        TRUE_VALUES = {"true", "t", "1", "yes", "y", "on", "key"}
+        FALSE_VALUES = {"false", "f", "0", "no", "n", "off", "normal"}
+
+        def to_internal_value(self, data):
+            if isinstance(data, str):
+                data = data.strip().lower()
+            return super().to_internal_value(data)
+
     leader_name = serializers.CharField(source="leader.real_name", read_only=True)
     members_info = ProjectMemberSerializer(
         source="projectmember_set", many=True, read_only=True
@@ -69,6 +82,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         source="get_category_display", read_only=True
     )
     achievements_count = serializers.SerializerMethodField()
+    is_key_field = KeyFieldBoolean(required=False)
 
     class Meta:
         model = Project
@@ -142,6 +156,14 @@ class ProjectSerializer(serializers.ModelSerializer):
             if value.size > 20 * 1024 * 1024:
                 raise serializers.ValidationError("申报书文件大小不能超过20MB")
 
+        return value
+
+    def validate_level(self, value):
+        """
+        兼容前端的 SCHOOL_KEY 选项
+        """
+        if value == "SCHOOL_KEY":
+            return value
         return value
 
     def create(self, validated_data):

@@ -30,6 +30,7 @@ class Project(models.Model):
         NATIONAL = "NATIONAL", "国家级"
         PROVINCIAL = "PROVINCIAL", "省级"
         SCHOOL = "SCHOOL", "校级"
+        SCHOOL_KEY = "SCHOOL_KEY", "校级重点"
 
     class ProjectCategory(models.TextChoices):
         INNOVATION_TRAINING = "INNOVATION_TRAINING", "创新训练项目"

@@ -10,7 +10,20 @@ from django.db import transaction
 from django.utils import timezone
 
 from .models import Project, ProjectAdvisor, ProjectMember
+from apps.reviews.models import Review
+from apps.reviews.services import ReviewService
 from .serializers import ProjectSerializer, ProjectAdvisorSerializer
+
+
+def _to_bool(val, default=True):
+    """
+    将字符串/布尔转换为布尔，兼容 'true'/'false'/'0'/'1'
+    """
+    if isinstance(val, bool):
+        return val
+    if isinstance(val, str):
+        return val.strip().lower() not in {"false", "0", "no", "n", "off"}
+    return default
 
 
 @api_view(["POST"])
@@ -21,7 +34,7 @@ def create_project_application(request):
     """
     user = request.user
     data = request.data.copy()  # Use copy to be mutable
-    is_draft = data.get("is_draft", True)
+    is_draft = _to_bool(data.get("is_draft", True))
 
     try:
         with transaction.atomic():
@@ -56,6 +69,14 @@ def create_project_application(request):
             if not is_draft:
                 project.submitted_at = timezone.now()
                 project.save()
+                # 创建二级申报审核记录（避免重复）
+                if not Review.objects.filter(
+                    project=project,
+                    review_type=Review.ReviewType.APPLICATION,
+                    review_level=Review.ReviewLevel.LEVEL2,
+                    status=Review.ReviewStatus.PENDING,
+                ).exists():
+                    ReviewService.create_level2_review(project)
 
             # 添加指导教师
             import json
@@ -143,7 +164,7 @@ def update_project_application(request, pk):
         )
 
     data = request.data.copy()
-    is_draft = data.get("is_draft", True)
+    is_draft = _to_bool(data.get("is_draft", True))
 
     try:
         with transaction.atomic():
@@ -170,6 +191,14 @@ def update_project_application(request, pk):
             if not is_draft:
                 project.submitted_at = timezone.now()
                 project.save()
+                # 创建二级申报审核记录（避免重复）
+                if not Review.objects.filter(
+                    project=project,
+                    review_type=Review.ReviewType.APPLICATION,
+                    review_level=Review.ReviewLevel.LEVEL2,
+                    status=Review.ReviewStatus.PENDING,
+                ).exists():
+                    ReviewService.create_level2_review(project)
 
             # 更新指导教师（先删除旧的）
             project.advisors.all().delete()

@@ -11,6 +11,8 @@ from django.utils import timezone
 
 from .models import Project, ProjectAchievement
 from .serializers import ProjectSerializer, ProjectAchievementSerializer
+from apps.reviews.models import Review
+from apps.reviews.services import ReviewService
 
 
 @api_view(["GET"])
@@ -284,6 +286,21 @@ def create_closure_application(request, pk):
                         ach.attachment = request.FILES[file_key]
                         ach.save()
 
+            # 非草稿时创建/确保二级结题审核记录
+            if not is_draft:
+                existing_review = Review.objects.filter(
+                    project=project,
+                    review_type=Review.ReviewType.CLOSURE,
+                    review_level=Review.ReviewLevel.LEVEL2,
+                    status=Review.ReviewStatus.PENDING,
+                ).first()
+                if not existing_review:
+                    ReviewService.create_closure_level2_review(project)
+                else:
+                    # 确保项目状态与待审核状态一致
+                    project.status = Project.ProjectStatus.CLOSURE_LEVEL2_REVIEWING
+                    project.save()
+
             return Response(
                 {
                     "code": 200,
@@ -394,6 +411,20 @@ def update_closure_application(request, pk):
                     if file_key in request.FILES:
                         ach.attachment = request.FILES[file_key]
                         ach.save()
+
+            # 非草稿时创建/确保二级结题审核记录
+            if not is_draft:
+                existing_review = Review.objects.filter(
+                    project=project,
+                    review_type=Review.ReviewType.CLOSURE,
+                    review_level=Review.ReviewLevel.LEVEL2,
+                    status=Review.ReviewStatus.PENDING,
+                ).first()
+                if not existing_review:
+                    ReviewService.create_closure_level2_review(project)
+                else:
+                    project.status = Project.ProjectStatus.CLOSURE_LEVEL2_REVIEWING
+                    project.save()
 
             return Response(
                 {
