@@ -23,7 +23,7 @@ const routes: RouteRecordRaw[] = [
   // 一级管理员路由 (校级)
   {
     path: "/level1-admin",
-    component: () => import("@/layouts/Level1AdminLayout.vue"),
+    component: () => import("@/layouts/AppLayout.vue"),
     meta: { requiresAuth: true, role: "level1_admin" },
     children: [
       {
@@ -59,7 +59,7 @@ const routes: RouteRecordRaw[] = [
   // 二级管理员路由 (院级) - Maintained at /admin for backward compatibility but role updated
   {
     path: "/admin",
-    component: () => import("@/layouts/AdminLayout.vue"),
+    component: () => import("@/layouts/AppLayout.vue"),
     meta: { requiresAuth: true, role: "level2_admin" },
     children: [
       {
@@ -98,7 +98,7 @@ const routes: RouteRecordRaw[] = [
   // 学生路由
   {
     path: "/",
-    component: () => import("@/layouts/MainLayout.vue"),
+    component: () => import("@/layouts/AppLayout.vue"),
     meta: { requiresAuth: true, role: "student" },
     children: [
       {
