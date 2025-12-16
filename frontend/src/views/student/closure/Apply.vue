@@ -423,8 +423,7 @@ onMounted(() => {
 @use "@/styles/variables.scss" as *;
 
 .page-container {
-  background-color: #f0f2f5;
-  min-height: 100%;
+  /* Inherit layout */
 }
 
 .main-card {
@@ -432,7 +431,7 @@ onMounted(() => {
   border-radius: 4px;
   box-shadow: 0 1px 4px rgba(0,21,41,0.08) !important;
   background: #fff;
-  margin-top: 24px;
+  /* margin-top removed */
 }
 
 .card-header-flex {

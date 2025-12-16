@@ -4,6 +4,13 @@
 
     <div class="page-content">
       <!-- 表格区域 -->
+      <div class="status-tabs-wrapper">
+           <div class="table-header-title">
+              <span class="title-text">草稿箱</span>
+              <el-tag type="info" size="small" effect="plain" round class="count-tag">{{ pagination.total }}</el-tag>
+           </div>
+      </div>
+
       <el-table
         v-loading="loading"
         :data="tableData"
@@ -302,6 +309,8 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
+@use "@/styles/variables.scss" as *;
+
 .closure-drafts-page {
   .page-header {
     background: #ffffff;
@@ -352,5 +361,45 @@ onMounted(() => {
       justify-content: flex-end;
     }
   }
+}
+
+.status-tabs-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid $slate-100;
+  margin-bottom: 16px;
+}
+
+.table-header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  
+  .title-text {
+      font-size: 16px;
+      font-weight: 600;
+      color: $slate-800;
+      position: relative;
+      padding-left: 14px;
+      
+      &::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 4px;
+          height: 16px;
+          background: $primary-600;
+          border-radius: 2px;
+      }
+  }
+}
+
+.count-tag {
+    font-weight: normal;
+    color: $slate-500;
 }
 </style>
