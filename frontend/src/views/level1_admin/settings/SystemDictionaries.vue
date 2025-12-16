@@ -253,6 +253,23 @@
                         </div>
                       </div>
                       <div>
+                         <label
+                           for="description"
+                           class="block text-sm font-medium text-left text-gray-700"
+                           >说明 (可选)</label
+                         >
+                         <div class="mt-1">
+                           <input
+                             type="text"
+                             name="description"
+                             id="description"
+                             v-model="form.description"
+                             class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                             placeholder="备注说明"
+                           />
+                         </div>
+                       </div>
+                      <div>
                         <label
                           for="sort_order"
                           class="block text-sm font-medium text-left text-gray-700"
@@ -320,6 +337,7 @@ interface DictionaryItem {
   dict_type: number
   label: string
   value: string
+  description?: string
   sort_order: number
   is_active: boolean
 }
@@ -333,6 +351,7 @@ const shouldOpenDialog = ref(false)
 const form = ref({
   label: '',
   value: '',
+  description: '',
   sort_order: 0,
 })
 
@@ -353,7 +372,12 @@ watch(currentType, async (newType) => {
 const fetchTypes = async () => {
   try {
     const response = await request.get('/dictionaries/types/')
-    dictionaryTypes.value = response.data
+    const list =
+      (response as any)?.data?.results ??
+      (response as any)?.data ??
+      (response as any)?.results ??
+      response
+    dictionaryTypes.value = Array.isArray(list) ? list : []
     // 默认选中第一个
     if (dictionaryTypes.value.length > 0) {
       currentType.value = dictionaryTypes.value[0]
@@ -369,7 +393,12 @@ const fetchItems = async (typeCode: string) => {
     const response = await request.get('/dictionaries/items/', {
       params: { dict_type_code: typeCode },
     })
-    items.value = response.data
+    const list =
+      (response as any)?.data?.results ??
+      (response as any)?.data ??
+      (response as any)?.results ??
+      response
+    items.value = Array.isArray(list) ? list : []
   } catch (error) {
     console.error('Failed to fetch items:', error)
   } finally {
@@ -381,6 +410,7 @@ const openAddDialog = () => {
   form.value = {
     label: '',
     value: '',
+    description: '',
     sort_order: 0,
   }
   shouldOpenDialog.value = true

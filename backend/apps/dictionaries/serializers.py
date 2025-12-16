@@ -15,6 +15,7 @@ class DictionaryItemSerializer(serializers.ModelSerializer):
         model = DictionaryItem
         fields = [
             "id",
+            "dict_type",
             "value",
             "label",
             "sort_order",

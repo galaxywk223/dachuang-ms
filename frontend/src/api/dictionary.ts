@@ -76,7 +76,8 @@ export const DICT_CODES = {
   // New codes
   PROJECT_SOURCE: "project_source",
   COLLEGE: "college",
-  MAJOR_CATEGORY: "major_category",
-  ADVISOR_TITLE: "advisor_title",
-  SPECIAL_PROJECT_TYPE: "special_project_type",
+  MAJOR_CATEGORY: "project_major_code",
+  TITLE: "title",
+  KEY_FIELD_CODE: "key_field_code",
+  PROJECT_TYPE: "project_type",
 } as const;

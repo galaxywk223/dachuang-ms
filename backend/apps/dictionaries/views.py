@@ -29,6 +29,7 @@ class DictionaryTypeViewSet(viewsets.ModelViewSet):
     queryset = DictionaryType.objects.filter(is_active=True)
     serializer_class = DictionaryTypeSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = None
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ["is_system", "is_active"]
     search_fields = ["code", "name"]
@@ -141,6 +142,7 @@ class DictionaryItemViewSet(viewsets.ModelViewSet):
     queryset = DictionaryItem.objects.select_related("dict_type")
     serializer_class = DictionaryItemSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = None
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ["dict_type", "is_active"]
     search_fields = ["value", "label"]
