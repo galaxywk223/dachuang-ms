@@ -30,10 +30,19 @@
         </el-form-item>
         
         <el-form-item label="学院">
-          <el-select v-model="filters.college" placeholder="选择学院" clearable style="width: 180px">
-            <el-option label="计算机学院" value="计算机学院" />
-            <el-option label="电气学院" value="电气学院" />
-            <!-- Fetch from dictionary API ideally -->
+          <el-select
+            v-model="filters.college"
+            placeholder="选择学院"
+            clearable
+            filterable
+            style="width: 180px"
+          >
+            <el-option
+              v-for="item in collegeOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
           </el-select>
         </el-form-item>
 
@@ -145,7 +154,21 @@
         </el-col>
         <el-col :span="12">
           <el-form-item label="学院" prop="college">
-            <el-input v-model="studentForm.college" placeholder="请输入学院" />
+            <el-select
+              v-model="studentForm.college"
+              placeholder="选择学院"
+              filterable
+              clearable
+              allow-create
+              default-first-option
+            >
+              <el-option
+                v-for="item in collegeOptions"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -189,10 +212,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, computed } from 'vue';
 import { Search, Plus, Upload } from '@element-plus/icons-vue';
 import { getUsers, toggleUserStatus, createUser } from '@/api/user-admin';
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus';
+import { useDictionary } from '@/composables/useDictionary';
+import { DICT_CODES } from '@/api/dictionary';
 
 const loading = ref(false);
 const tableData = ref([]);
@@ -202,6 +227,7 @@ const pageSize = ref(10);
 const addDialogVisible = ref(false);
 const submitLoading = ref(false);
 const studentFormRef = ref<FormInstance>();
+const { loadDictionaries, getOptions } = useDictionary();
 const studentForm = reactive({
   employee_id: '',
   real_name: '',
@@ -215,6 +241,8 @@ const studentForm = reactive({
   department: ''
 });
 
+const collegeOptions = computed(() => getOptions(DICT_CODES.COLLEGE));
+
 const formRules: FormRules = {
   employee_id: [
     { required: true, message: '请输入学号', trigger: 'blur' },
@@ -226,7 +254,16 @@ const formRules: FormRules = {
     { min: 6, message: '密码至少 6 位', trigger: 'blur' }
   ],
   phone: [
-    { pattern: /^\d{11}$/, message: '手机号需为 11 位数字', trigger: 'blur' }
+    {
+      validator: (_rule, value, callback) => {
+        if (!value) return callback();
+        if (!/^\d{11}$/.test(value)) {
+          return callback(new Error('手机号需为 11 位数字'));
+        }
+        return callback();
+      },
+      trigger: 'blur'
+    }
   ],
   email: [{ type: 'email', message: '邮箱格式不正确', trigger: 'blur' }],
   college: [{ required: true, message: '请输入学院', trigger: 'blur' }]
@@ -361,6 +398,7 @@ const handleCreateStudent = async () => {
 };
 
 onMounted(() => {
+    loadDictionaries([DICT_CODES.COLLEGE]);
     loadData();
 });
 </script>
