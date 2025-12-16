@@ -5,7 +5,7 @@ import request from "@/utils/request";
 /**
  * 获取用户列表
  */
-export function getUsers(params: any) {
+export function getUsers(params: any): Promise<any> {
   return request({
     url: "/auth/admin/users/",
     method: "get",
@@ -16,7 +16,7 @@ export function getUsers(params: any) {
 /**
  * 创建用户
  */
-export function createUser(data: any) {
+export function createUser(data: any): Promise<any> {
   return request({
     url: "/auth/admin/users/",
     method: "post",
@@ -27,7 +27,7 @@ export function createUser(data: any) {
 /**
  * 获取用户详情
  */
-export function getUserDetail(id: number) {
+export function getUserDetail(id: number): Promise<any> {
   return request({
     url: `/auth/admin/users/${id}/`,
     method: "get",
@@ -37,7 +37,7 @@ export function getUserDetail(id: number) {
 /**
  * 更新用户信息
  */
-export function updateUser(id: number, data: any) {
+export function updateUser(id: number, data: any): Promise<any> {
   return request({
     url: `/auth/admin/users/${id}/`,
     method: "put",
@@ -48,7 +48,7 @@ export function updateUser(id: number, data: any) {
 /**
  * 删除用户
  */
-export function deleteUser(id: number) {
+export function deleteUser(id: number): Promise<any> {
   return request({
     url: `/auth/admin/users/${id}/`,
     method: "delete",
@@ -58,7 +58,7 @@ export function deleteUser(id: number) {
 /**
  * 启用/禁用用户
  */
-export function toggleUserStatus(id: number) {
+export function toggleUserStatus(id: number): Promise<any> {
   return request({
     url: `/auth/admin/users/${id}/toggle-status/`,
     method: "post",
@@ -68,7 +68,7 @@ export function toggleUserStatus(id: number) {
 /**
  * 重置用户密码
  */
-export function resetUserPassword(id: number) {
+export function resetUserPassword(id: number): Promise<any> {
   return request({
     url: `/auth/admin/users/${id}/reset-password/`,
     method: "post",
@@ -78,7 +78,7 @@ export function resetUserPassword(id: number) {
 /**
  * 获取用户统计数据
  */
-export function getUserStatistics() {
+export function getUserStatistics(): Promise<any> {
   return request({
     url: "/auth/admin/users/statistics/",
     method: "get",

@@ -221,7 +221,7 @@ import { useDictionary } from '@/composables/useDictionary';
 import { DICT_CODES } from '@/api/dictionary';
 
 const loading = ref(false);
-const tableData = ref([]);
+const tableData = ref<any[]>([]);
 const total = ref(0);
 const currentPage = ref(1);
 const pageSize = ref(10);
@@ -279,14 +279,13 @@ const filters = reactive({
 const loadData = async () => {
   loading.value = true;
   try {
-    const params = {
+    const params: Record<string, string | number> = {
       page: currentPage.value,
       page_size: pageSize.value,
-      ...filters
+      role: filters.role
     };
-    // Clean empty params
-    if (!params.search) delete params.search;
-    if (!params.college) delete params.college;
+    if (filters.search) params.search = filters.search;
+    if (filters.college) params.college = filters.college;
 
     const res = await getUsers(params);
     if (res.code === 200 && res.data) {

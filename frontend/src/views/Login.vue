@@ -47,7 +47,6 @@ import { useRouter } from "vue-router";
 import { useUserStore } from "@/stores/user";
 import { ElMessage } from "element-plus";
 import LoginForm from "@/components/forms/LoginForm.vue";
-import { School } from "@element-plus/icons-vue";
 
 const loading = ref(false);
 const router = useRouter();

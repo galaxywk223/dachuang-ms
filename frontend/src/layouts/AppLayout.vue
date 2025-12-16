@@ -168,12 +168,12 @@ import { useRoute, useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user';
 import { ElMessageBox, ElMessage } from 'element-plus';
 import {
-  School, DocumentAdd, DocumentChecked, 
+  DocumentAdd, DocumentChecked, 
   QuestionFilled, Bell, ArrowDown, 
-  SwitchButton, Management,
+  SwitchButton,
 
-  DataAnalysis, UserFilled,
-  DataLine, Expand, Fold, Lock, Setting
+  UserFilled,
+  Expand, Fold, Lock, Setting
 } from '@element-plus/icons-vue';
 import { reactive } from 'vue';
 
@@ -342,7 +342,7 @@ const passwordRules = {
     confirmPassword: [
         { required: true, message: '请确认新密码', trigger: 'blur' },
         { 
-            validator: (rule: any, value: string, callback: any) => {
+            validator: (_rule: any, value: string, callback: any) => {
                 if (value !== passwordForm.newPassword) {
                     callback(new Error('两次输入密码不一致'));
                 } else {

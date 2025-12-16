@@ -1,4 +1,4 @@
-import { ref, computed, readonly } from "vue";
+import { ref, readonly } from "vue";
 import {
     getAllDictionaries,
     getDictionariesBatch,

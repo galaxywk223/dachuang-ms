@@ -139,7 +139,7 @@
                 <el-table-column type="index" label="序号" width="60" align="center" />
                 <el-table-column prop="achievement_type" label="类型" width="100">
                     <template #default="{ row }">
-                        <el-tag size="small">{{ getDictLabel(DICT_CODES.ACHIEVEMENT_TYPE, row.achievement_type) }}</el-tag>
+                        <el-tag size="small">{{ getLabel(DICT_CODES.ACHIEVEMENT_TYPE, row.achievement_type) }}</el-tag>
                     </template>
                 </el-table-column>
                 <el-table-column prop="title" label="成果名称" show-overflow-tooltip />
@@ -172,7 +172,7 @@
         destroy-on-close
         append-to-body
       >
-        <el-form :model="achievementForm" label-width="100px" ref="achievementFormRef">
+        <el-form :model="achievementForm" label-width="100px">
             <el-form-item label="成果类型" required>
                 <el-select v-model="achievementForm.achievement_type" placeholder="请选择类型" style="width: 100%">
                     <el-option v-for="item in achievementTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
@@ -264,7 +264,7 @@ const route = useRoute();
 const router = useRouter();
 const formRef = ref<FormInstance>();
 const loading = ref(false);
-const { loadDictionaries, getOptions, getDictLabel } = useDictionary();
+const { loadDictionaries, getOptions, getLabel } = useDictionary();
 
 const projectId = route.query.projectId as string;
 
@@ -292,7 +292,6 @@ const achievementFileList = ref<any[]>([]);
 const achievements = ref<any[]>([]);
 const dialogVisible = ref(false);
 const dialogIndex = ref(-1);
-const achievementFormRef = ref<FormInstance>();
 const dialogFileList = ref<any[]>([]);
 
 const achievementForm = reactive({

@@ -201,7 +201,7 @@ import { useDictionary } from '@/composables/useDictionary';
 import { DICT_CODES } from '@/api/dictionary';
 
 const loading = ref(false);
-const tableData = ref([]);
+const tableData = ref<any[]>([]);
 const total = ref(0);
 const currentPage = ref(1);
 const pageSize = ref(10);
@@ -261,8 +261,8 @@ const loadData = async () => {
       ...filters
     };
     // Clean empty params
-    if (!params.search) delete params.search;
-    if (!params.college) delete params.college;
+    if (!params.search) delete (params as any).search;
+    if (!params.college) delete (params as any).college;
 
     const res = await getUsers(params);
     if (res.code === 200 && res.data) {

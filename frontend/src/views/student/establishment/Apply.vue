@@ -323,8 +323,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from "vue";
-import { ElMessage, type FormInstance } from "element-plus";
-import { Download, Search, Plus, Upload } from "@element-plus/icons-vue";
+import { ElMessage, type FormInstance, type UploadUserFile } from "element-plus";
+import { Download, Search, Upload } from "@element-plus/icons-vue";
 import { getUsers } from "@/api/user-admin";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionary";
@@ -339,6 +339,7 @@ const route = useRoute();
 const { loadDictionaries, getOptions } = useDictionary();
 const formRef = ref<FormInstance>();
 const loading = ref(false);
+const fileList = ref<UploadUserFile[]>([]);
 
 const currentUser = computed(() => ({
   name: userStore.user?.real_name || userStore.user?.username || "学生用户",
@@ -359,6 +360,13 @@ interface AdvisorInfo {
 interface MemberInfo {
   student_id: string;
   name: string;
+}
+
+interface CascaderOption {
+  value: string;
+  label: string;
+  disabled?: boolean;
+  children?: CascaderOption[];
 }
 
 interface FormDataState {
@@ -448,11 +456,6 @@ const rules = {
 // Dicts
 const sourceOptions = computed(() => getOptions(DICT_CODES.PROJECT_SOURCE));
 const collegeOptions = computed(() => getOptions(DICT_CODES.COLLEGE));
-// Hardcoded options for Key Field Project logic
-const specialTypeOptions = [
-  { label: '重点领域项目', value: true },
-  { label: '一般项目', value: false }
-];
 const majorOptions = computed(() => getOptions(DICT_CODES.MAJOR_CATEGORY));
 const advisorTitleOptions = computed(() => getOptions(DICT_CODES.ADVISOR_TITLE));
 const levelOptions = computed(() => getOptions(DICT_CODES.PROJECT_LEVEL));
@@ -460,7 +463,7 @@ const keyFieldOptions = computed(() => getOptions(DICT_CODES.KEY_FIELD_CODE));
 const categoryOptions = computed(() => getOptions(DICT_CODES.PROJECT_CATEGORY));
 
 const keyFieldCascaderOptions = computed(() => {
-  let keyChildren = keyFieldOptions.value.map(opt => ({
+  let keyChildren: CascaderOption[] = keyFieldOptions.value.map(opt => ({
     value: opt.value,
     label: opt.label
   }));
@@ -484,7 +487,7 @@ const keyFieldCascaderOptions = computed(() => {
       label: '重点领域项目',
       children: keyChildren
     }
-  ];
+  ] as CascaderOption[];
 });
 
 const keyFieldCascaderValue = computed({

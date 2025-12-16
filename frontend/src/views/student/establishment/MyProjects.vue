@@ -171,7 +171,6 @@ const { loadDictionaries, getOptions } = useDictionary();
 // Dict Options
 const levelOptions = computed(() => getOptions(DICT_CODES.PROJECT_LEVEL));
 const categoryOptions = computed(() => getOptions(DICT_CODES.PROJECT_CATEGORY));
-const collegeOptions = computed(() => getOptions(DICT_CODES.COLLEGE));
 // Add status mapping if needed, or hardcode common statuses
 const statusMap: Record<string, string> = {
     'DRAFT': '草稿',
@@ -311,14 +310,6 @@ const handleDelete = async (row: any) => {
 
 <style scoped lang="scss">
 @use "@/styles/variables.scss" as *;
-
-.my-projects-page {
-  /* Inherit layout */
-}
-
-.page-container {
-    /* No padding, let parent handle or specific padding if needed */
-}
 
 .filter-container {
   background: white;
