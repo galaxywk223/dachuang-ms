@@ -17,6 +17,7 @@ class User(AbstractUser):
         STUDENT = "STUDENT", "学生"
         LEVEL2_ADMIN = "LEVEL2_ADMIN", "二级管理员"
         LEVEL1_ADMIN = "LEVEL1_ADMIN", "一级管理员"
+        TEACHER = "TEACHER", "指导教师"
 
     # 基本信息
     role = models.CharField(
@@ -48,6 +49,7 @@ class User(AbstractUser):
     # 管理员专属字段
     college = models.CharField(max_length=100, blank=True, verbose_name="所属学院")
     department = models.CharField(max_length=100, blank=True, verbose_name="所属部门")
+    title = models.CharField(max_length=50, blank=True, verbose_name="职称")
 
     # 扩展字段
     avatar = models.ImageField(

@@ -279,6 +279,7 @@ const currentMenus = computed(() => {
                     icon: UserFilled,
                     children: [
                         { index: '/level1-admin/users/students', title: '学生管理' },
+                        { index: '/level1-admin/users/teachers', title: '指导教师管理' },
                         { index: '/level1-admin/users/admins', title: '二级管理员' },
                     ]
                 },

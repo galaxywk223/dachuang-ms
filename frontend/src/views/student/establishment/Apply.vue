@@ -53,9 +53,14 @@
             </el-col>
             <el-col :span="8">
               <el-form-item label="重点领域" prop="is_key_field">
-                <el-select v-model="formData.is_key_field" placeholder="请选择" class="w-full">
-                  <el-option v-for="item in specialTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
-                </el-select>
+                 <el-cascader
+                    v-model="keyFieldCascaderValue"
+                    :options="keyFieldCascaderOptions"
+                    placeholder="请选择"
+                    class="w-full"
+                    style="width: 100%"
+                    :props="{ expandTrigger: 'hover' }"
+                 />
               </el-form-item>
             </el-col>
             <el-col :span="8">
@@ -131,22 +136,36 @@
           </div>
           <div class="dynamic-input-row">
             <el-row :gutter="12">
-               <el-col :span="5">
-                 <el-input v-model="newAdvisor.job_number" placeholder="工号" />
-               </el-col>
-               <el-col :span="5">
-                 <el-input v-model="newAdvisor.name" placeholder="姓名" />
-               </el-col>
-               <el-col :span="5">
-                 <el-select v-model="newAdvisor.title" placeholder="职称">
-                    <el-option v-for="item in advisorTitleOptions" :key="item.value" :label="item.label" :value="item.value" />
+               <el-col :span="3">
+                 <el-select v-model="newAdvisor.order" placeholder="次序" style="width: 100%">
+                   <el-option label="第一指导老师" :value="1" />
+                   <el-option label="第二指导老师" :value="2" />
                  </el-select>
                </el-col>
                <el-col :span="5">
-                 <el-input v-model="newAdvisor.contact" placeholder="电话" />
+                 <el-input 
+                    v-model="newAdvisor.job_number" 
+                    placeholder="工号 (回车查询)" 
+                    @blur="handleSearchNewAdvisor"
+                    @keyup.enter="handleSearchNewAdvisor"
+                 >
+                    <template #append>
+                        <el-button :icon="Search" @click="handleSearchNewAdvisor" />
+                    </template>
+                 </el-input>
                </el-col>
                <el-col :span="4">
-                 <el-button type="primary" plain @click="handleAddNewAdvisor" style="width: 100%">添加教师</el-button>
+                 <el-input v-model="newAdvisor.name" placeholder="姓名" disabled />
+               </el-col>
+               <el-col :span="4">
+                  <!-- Display Title Label if possible, or just code -->
+                 <el-input v-model="newAdvisor.title" placeholder="职称" disabled />
+               </el-col>
+               <el-col :span="6">
+                 <el-input v-model="newAdvisor.email" placeholder="邮箱" />
+               </el-col>
+               <el-col :span="2">
+                 <el-button type="primary" plain @click="handleAddNewAdvisor" style="width: 100%">添加</el-button>
                </el-col>
             </el-row>
           </div>
@@ -157,14 +176,22 @@
             border
             :header-cell-style="{ background: '#f8fafc', color: '#475569' }"
           >
-             <el-table-column prop="job_number" label="工号" width="140" />
-             <el-table-column prop="name" label="姓名" width="140" />
-             <el-table-column prop="title" label="职称" width="140">
+             <el-table-column label="次序" width="120">
+               <template #default="scope">
+                 <el-tag :type="scope.row.order === 1 ? 'primary' : 'success'" effect="plain">
+                   {{ scope.row.order === 1 ? '第一指导老师' : '第二指导老师' }}
+                 </el-tag>
+               </template>
+             </el-table-column>
+             <el-table-column prop="job_number" label="工号" width="120" />
+             <el-table-column prop="name" label="姓名" width="100" />
+             <el-table-column prop="title" label="职称" width="100">
                 <template #default="scope">
                    {{ getLabel(advisorTitleOptions, scope.row.title) }}
                 </template>
              </el-table-column>
              <el-table-column prop="contact" label="电话" />
+             <el-table-column prop="email" label="邮箱" />
              <el-table-column label="操作" width="80" align="center">
                 <template #default="scope">
                    <el-button link type="danger" size="small" @click="removeAdvisor(scope.$index)">删除</el-button>
@@ -253,27 +280,39 @@
               <span class="section-title">附件上传</span>
           </div>
            <el-form-item label="申请书" prop="attachment_file">
-              <div class="upload-wrapper">
-                  <el-upload
-                    action="#"
-                    :auto-upload="false"
-                    :on-change="handleFileChange"
-                    :file-list="fileList"
-                    :limit="1"
-                    class="upload-inline"
-                  >
-                     <el-button type="primary" plain icon="Upload">点击上传PDF</el-button>
-                     <template #tip>
-                        <div class="upload-tip">只能上传pdf文件，且不超过2MB</div>
-                     </template>
-                  </el-upload>
-                  
-                  <div class="download-trigger">
-                      <a href="#" class="link-download">
-                         <el-icon><Download /></el-icon> 下载申请书模板
-                      </a>
-                  </div>
-              </div>
+                <div class="attachment-container">
+                    <div class="actions-row">
+                        <el-upload
+                            action="#" 
+                            :auto-upload="false"
+                            :on-change="handleFileChange"
+                            :limit="1"
+                            v-model:file-list="fileList"
+                            accept=".pdf"
+                            class="upload-demo"
+                        >
+                            <el-button type="primary" plain>
+                                <el-icon class="mr-1"><Upload /></el-icon> 上传申请书 (PDF)
+                            </el-button>
+                        </el-upload>
+                        
+                        <div class="download-section">
+                            <el-button 
+                                v-if="currentTemplateUrl" 
+                                link 
+                                type="primary" 
+                                @click="handleDownloadTemplate"
+                            >
+                                <el-icon class="mr-1"><Download /></el-icon> 下载申请书模板
+                            </el-button>
+                            <el-tag v-else type="info" size="small" effect="plain">
+                                暂无申请书模板
+                            </el-tag>
+                        </div>
+                    </div>
+                    
+                    <div class="form-tip">只能上传pdf文件，且不超过2MB</div>
+                </div>
            </el-form-item>
         </div>
 
@@ -285,7 +324,8 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from "vue";
 import { ElMessage, type FormInstance } from "element-plus";
-import { Download } from "@element-plus/icons-vue";
+import { Download, Search, Plus, Upload } from "@element-plus/icons-vue";
+import { getUsers } from "@/api/user-admin";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionary";
 import { useUserStore } from "@/stores/user";
@@ -298,6 +338,7 @@ const router = useRouter();
 const route = useRoute();
 const { loadDictionaries, getOptions } = useDictionary();
 const formRef = ref<FormInstance>();
+const loading = ref(false);
 
 const currentUser = computed(() => ({
   name: userStore.user?.real_name || userStore.user?.username || "学生用户",
@@ -305,11 +346,14 @@ const currentUser = computed(() => ({
 }));
 
 interface AdvisorInfo {
+  user_id?: number | null;
   job_number: string;
   name: string;
   title: string;
   contact: string;
-  email?: string;
+  email: string;
+  order: number;
+  college?: string;
 }
 
 interface MemberInfo {
@@ -323,6 +367,7 @@ interface FormDataState {
   level: string;
   category: string;
   is_key_field: boolean | string;
+  key_field_code: string;
   college: string;
   budget: number;
   major_code: string;
@@ -342,6 +387,7 @@ const formData = reactive<FormDataState>({
   level: "",
   category: "",
   is_key_field: false,
+  key_field_code: "",
   college: "",
   budget: 0,
   major_code: "",
@@ -357,31 +403,38 @@ const formData = reactive<FormDataState>({
 
 // Watcher for Budget Automation
 watch(() => formData.level, (newVal) => {
-    switch (newVal) {
-        case 'SCHOOL':
-            formData.budget = 1000;
-            break;
-        case 'SCHOOL_KEY':
-            formData.budget = 3000;
-            break;
-        case 'PROVINCIAL':
-            formData.budget = 6000;
-            break;
-        case 'NATIONAL':
-            formData.budget = 10000;
-            break;
-        default:
-            formData.budget = 0;
-            break;
+    if (!newVal) {
+        formData.budget = 0;
+        return;
+    }
+    const selectedOption = levelOptions.value.find((opt: any) => opt.value === newVal);
+    if (selectedOption && selectedOption.extra_data && selectedOption.extra_data.budget) {
+        formData.budget = Number(selectedOption.extra_data.budget);
+    } else {
+        // Fallback or keep 0 if no config found
+        formData.budget = 0;
     }
 });
 
 // Temp inputs
-const newAdvisor = reactive({ job_number: "", name: "", title: "", contact: "", email: "" });
+const newAdvisor = reactive({ user_id: null as number | null, job_number: "", name: "", title: "", contact: "", email: "", order: 1 });
 const newMember = reactive({ student_id: "", name: "" });
 
-const fileList = ref([]);
-const loading = ref(false);
+const currentTemplateUrl = computed(() => {
+    // console.log("Computing Template URL. Category:", formData.category);
+    if (!formData.category) return null;
+    const option = categoryOptions.value.find((opt: any) => opt.value === formData.category);
+    // console.log("Refreshed Option:", option);
+    return option?.template_file || null;
+});
+
+const handleDownloadTemplate = () => {
+    if (currentTemplateUrl.value) {
+        window.open(currentTemplateUrl.value, '_blank');
+    } else {
+        ElMessage.info("该类别暂无申请书模板");
+    }
+};
 
 const rules = {
   source: [{ required: true, message: "必选项", trigger: "change" }],
@@ -403,7 +456,57 @@ const specialTypeOptions = [
 const majorOptions = computed(() => getOptions(DICT_CODES.MAJOR_CATEGORY));
 const advisorTitleOptions = computed(() => getOptions(DICT_CODES.ADVISOR_TITLE));
 const levelOptions = computed(() => getOptions(DICT_CODES.PROJECT_LEVEL));
+const keyFieldOptions = computed(() => getOptions(DICT_CODES.KEY_FIELD_CODE));
 const categoryOptions = computed(() => getOptions(DICT_CODES.PROJECT_CATEGORY));
+
+const keyFieldCascaderOptions = computed(() => {
+  let keyChildren = keyFieldOptions.value.map(opt => ({
+    value: opt.value,
+    label: opt.label
+  }));
+
+  // Fix: If no children, add a disabled placeholder so the submenu still appears
+  if (keyChildren.length === 0) {
+      keyChildren = [{
+          value: '',
+          label: '暂无数据 (请在后台添加)',
+          disabled: true
+      }];
+  }
+  
+  return [
+    {
+      value: 'GENERAL',
+      label: '一般项目'
+    },
+    {
+      value: 'KEY',
+      label: '重点领域项目',
+      children: keyChildren
+    }
+  ];
+});
+
+const keyFieldCascaderValue = computed({
+  get: () => {
+    if (!formData.is_key_field) return ['GENERAL'];
+    // If it's a key field project but no code selected yet, return just ['KEY'] (although cascader usually wants full path)
+    return formData.key_field_code ? ['KEY', formData.key_field_code] : ['KEY'];
+  },
+  set: (val: string[]) => {
+    if (!val || val.length === 0) return;
+    if (val[0] === 'GENERAL') {
+      formData.is_key_field = false;
+      formData.key_field_code = ''; 
+    } else if (val[0] === 'KEY') {
+      formData.is_key_field = true;
+      // If user selected a child, it will be in val[1]
+      if (val.length > 1) {
+        formData.key_field_code = val[1];
+      }
+    }
+  }
+});
 
 const getLabel = (options: any[], value: string) => {
     const found = options.find(opt => opt.value === value);
@@ -411,17 +514,44 @@ const getLabel = (options: any[], value: string) => {
 };
 
 // Dynamic Actions
-const handleAddNewAdvisor = () => {
-    if(!newAdvisor.name) {
-       ElMessage.warning("请至少填写姓名");
-       return;
+const handleSearchNewAdvisor = async () => {
+    if (!newAdvisor.job_number) {
+        ElMessage.warning("请输入工号");
+        return;
     }
-    formData.advisors.push({ ...newAdvisor });
-    // Reset
-    newAdvisor.job_number = "";
-    newAdvisor.name = "";
+    
+    try {
+        const res = await getUsers({ employee_id: newAdvisor.job_number, role: 'TEACHER', page_size: 1 });
+        const users = res.data?.results || [];
+        if (users.length > 0) {
+            const user = users[0];
+            // Ensure compatibility with AdvisorInfo interface
+            // AdvisorInfo has: user_id, job_number, name, title, contact, email, order, college
+            newAdvisor.user_id = user.id;
+            newAdvisor.name = user.real_name;
+            newAdvisor.title = user.title || ""; 
+            newAdvisor.contact = user.phone;
+            newAdvisor.email = user.email;
+            
+            ElMessage.success(`已找到教师: ${user.real_name}`);
+        } else {
+            ElMessage.error("未找到该工号的教师，请核对或联系管理员添加");
+            newAdvisor.user_id = null;
+            newAdvisor.name = "";
+            newAdvisor.title = "";
+            newAdvisor.contact = "";
+            newAdvisor.email = "";
+        }
+    } catch (error) {
+        console.error("Search failed", error);
+        ElMessage.error("查询失败");
+    }
+};
+
+const handleAddNewAdvisor = () => {
     newAdvisor.title = "";
     newAdvisor.contact = "";
+    newAdvisor.email = "";
 };
 
 const handleAddNewMember = () => {
@@ -445,6 +575,20 @@ const handleFileChange = (file: any) => {
 // Submit Logic
 const handleSaveOrSubmit = async (isDraft: boolean) => {
     if (!formRef.value) return;
+
+    // Advisor Validation (only for submit, draft can be partial)
+    if (!isDraft) {
+        if (formData.advisors.length === 0) {
+            ElMessage.warning("请至少添加一名指导老师");
+            return;
+        }
+        // Ensure First Advisor exists
+        const hasFirst = formData.advisors.some(a => a.order === 1);
+        if (!hasFirst) {
+            ElMessage.warning("请添加第一指导老师");
+            return;
+        }
+    }
 
     if (!isDraft) {
         if(formData.advisors.length === 0) {
@@ -590,12 +734,13 @@ const loadData = async (id: number) => {
             formData.is_key_field = !!data.is_key_field;
 
             if (Array.isArray(data.advisors_info) && data.advisors_info.length > 0) {
-                formData.advisors = data.advisors_info.map((adh: any) => ({
-                    job_number: "", 
+                formData.advisors = data.advisors_info.map((adh: any, index: number) => ({
+                    job_number: adh.job_number || "", 
                     name: adh.name || "",
                     title: adh.title || "",
                     contact: adh.contact || "",
-                    email: adh.email || ""
+                    email: adh.email || "",
+                    order: adh.order || (index + 1)
                 }));
             }
 
@@ -743,6 +888,31 @@ onMounted(() => {
     align-items: flex-start;
 }
 
+.upl.form-tip {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+}
+
+.attachment-container {
+    display: flex;
+    flex-direction: column;
+    
+    .actions-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+        
+        .upload-demo {
+            margin-right: 16px;
+        }
+        
+        .download-section {
+            display: flex;
+            align-items: center;
+        }
+    }
+}
 .upload-tip {
     font-size: 12px;
     color: $slate-400;

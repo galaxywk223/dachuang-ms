@@ -27,6 +27,7 @@ class UserSerializer(serializers.ModelSerializer):
             "class_name",
             "college",
             "department",
+            "title",
             "avatar",
             "is_active",
             "created_at",
@@ -81,6 +82,13 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError(self.error_messages["role_mismatch"])
         elif role == "level2_admin" and user.role != "LEVEL2_ADMIN":
             raise serializers.ValidationError(self.error_messages["role_mismatch"])
+        # Allow TEACHER login if we want them to log in, but user didn't request a Portal for Teachers.
+        # But for admin management we need validation.
+        # The prompt says "Level 1 Admin adds Teacher Management".
+        # It doesn't explicitly say Teachers log in. But usually they do.
+        # I'll add TEACHER to allowed roles if role == 'teacher' provided?
+        # Current logic is strict on role mismatch.
+        # I will leave Login validation as is unless requested.
         elif role == "admin" and user.role not in ["LEVEL1_ADMIN", "LEVEL2_ADMIN"]:
             raise serializers.ValidationError(self.error_messages["role_mismatch"])
 
@@ -126,6 +134,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
             "class_name",
             "college",
             "department",
+            "title",
         ]
 
     def create(self, validated_data):

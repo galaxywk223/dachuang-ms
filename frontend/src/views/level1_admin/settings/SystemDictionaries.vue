@@ -61,6 +61,11 @@
               >
                 <el-table-column prop="label" label="显示名称" min-width="150" />
                 <el-table-column v-if="showCode" prop="value" label="代码" min-width="120" />
+                <el-table-column v-if="currentType?.code === 'project_level'" label="预算(元)" min-width="100">
+                    <template #default="{ row }">
+                        {{ (row.extra_data && row.extra_data.budget) ? row.extra_data.budget : '-' }}
+                    </template>
+                </el-table-column>
                 <!-- <el-table-column prop="sort_order" label="排序" width="80" align="center" /> -->
                 
                 <el-table-column label="操作" width="160" align="center" fixed="right">
@@ -99,6 +104,27 @@
         <el-form-item v-if="showCode" label="代码" prop="value">
           <el-input v-model="form.value" placeholder="请输入代码" />
         </el-form-item>
+        <el-form-item v-if="showBudget" label="经费预算" prop="budget">
+           <el-input-number v-model="form.budget" :min="0" :step="100" controls-position="right" style="width: 100%" />
+        </el-form-item>
+        <el-form-item v-if="showTemplate" label="申请书模板">
+           <el-upload
+              ref="uploadRef"
+              action="#"
+              :auto-upload="false"
+              :on-change="handleFileChange"
+              :on-remove="handleRemoveFile"
+              :file-list="fileList"
+              :limit="1"
+           >
+              <template #trigger>
+                 <el-button type="primary" plain>选择文件</el-button>
+              </template>
+              <template #tip>
+                 <div class="el-upload__tip">只能上传 PDF/Word 文件，且不超过 5MB</div>
+              </template>
+           </el-upload>
+        </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
@@ -112,9 +138,15 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, watch, computed } from 'vue'
-import { Plus, Collection, ArrowRight } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import { Plus, Collection, ArrowRight, Upload, Document } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadFile } from 'element-plus'
 import request from '@/utils/request'
+import { 
+    DICT_CODES, 
+    createDictionaryItem, 
+    updateDictionaryItem, 
+    deleteDictionaryItem 
+} from '@/api/dictionary'
 
 interface DictionaryType {
   id: number
@@ -131,6 +163,8 @@ interface DictionaryItem {
   description?: string
   sort_order: number
   is_active: boolean
+  extra_data?: any
+  template_file?: string | null // URL
 }
 
 const dictionaryTypes = ref<DictionaryType[]>([])
@@ -142,6 +176,10 @@ const submitting = ref(false)
 const isEditMode = ref(false)
 const editingId = ref<number | null>(null)
 const formRef = ref<FormInstance>()
+const uploadRef = ref()
+
+const selectedFile = ref<File | null>(null)
+const fileList = ref<any[]>([])
 
 // Types that require explicit Code input
 const CODE_BASED_TYPES = ['major_category', 'key_field_code']
@@ -152,11 +190,15 @@ const showCode = computed(() => {
   return CODE_BASED_TYPES.includes(currentType.value.code)
 })
 
+const showBudget = computed(() => currentType.value?.code === 'project_level')
+const showTemplate = computed(() => currentType.value?.code === DICT_CODES.PROJECT_CATEGORY)
+
 const form = reactive({
   label: '',
   value: '',
   description: '',
   sort_order: 0,
+  budget: 0,
 })
 
 // Dynamic rules based on showCode
@@ -242,6 +284,21 @@ const editItem = (item: DictionaryItem) => {
   form.value = item.value
   form.description = item.description || ''
   form.sort_order = item.sort_order
+  
+  // Load budget from extra_data if available
+  if (item.extra_data && typeof item.extra_data === 'object') {
+      form.budget = (item.extra_data as any).budget || 0
+  } else {
+      form.budget = 0
+  }
+
+  // Handle file list for display
+  fileList.value = []
+  if (item.template_file) {
+      const fileName = item.template_file.split('/').pop() || 'template.pdf';
+      fileList.value = [{ name: fileName, url: item.template_file }];
+  }
+  
   dialogVisible.value = true
 }
 
@@ -250,11 +307,22 @@ const resetFormState = () => {
   form.value = ''
   form.description = ''
   form.sort_order = 0
+  form.budget = 0
+  selectedFile.value = null
+  fileList.value = []
 }
 
 const resetForm = () => {
   resetFormState()
   formRef.value?.clearValidate()
+}
+
+const handleFileChange = (file: UploadFile) => {
+    selectedFile.value = file.raw || null;
+}
+
+const handleRemoveFile = () => {
+    selectedFile.value = null;
 }
 
 const submitForm = async () => {
@@ -264,34 +332,60 @@ const submitForm = async () => {
     if (valid) {
       submitting.value = true
       try {
-        // Determine value: if showCode is true, use form.value; otherwise use form.label
         const finalValue = showCode.value ? form.value : form.label
 
+        // Prepare extra_data
+        let extraData: any = {}
+        if (showBudget.value) {
+            extraData.budget = Number(form.budget) || 0
+        }
+
+        // Prepare Payload
+        // If file is selected, use FormData
+        let payload: any;
+        const isFormData = !!selectedFile.value || (isEditMode.value && selectedFile.value !== undefined); // Simple check: if file is picked, we must use FormData.
+
+        if (selectedFile.value) {
+            payload = new FormData();
+            payload.append('label', form.label);
+            payload.append('value', finalValue);
+            payload.append('sort_order', String(isEditMode.value && editingId.value ? form.sort_order : items.value.length + 1));
+            payload.append('extra_data', JSON.stringify(extraData));
+            payload.append('dict_type', String(currentType.value!.id));
+            payload.append('description', form.description || '');
+            payload.append('is_active', 'true');
+            if (selectedFile.value) {
+                payload.append('template_file', selectedFile.value);
+            }
+        } else {
+            // JSON fallback if no file change? 
+            // Actually, for consistency, let's use JSON if no file is new, 
+            // but updateDictionaryItem handles FormData check.
+            // If we are editing and didn't change file, we don't send template_file field.
+            payload = {
+                label: form.label,
+                value: finalValue,
+                sort_order: isEditMode.value && editingId.value ? form.sort_order : items.value.length + 1,
+                extra_data: extraData,
+                dict_type: currentType.value!.id,
+                description: form.description || '',
+                is_active: true
+            }
+        }
+
         if (isEditMode.value && editingId.value) {
-          // Update
-          await request.patch(`/dictionaries/items/${editingId.value}/`, {
-            label: form.label,
-            value: finalValue,
-          })
+          await updateDictionaryItem(editingId.value, payload);
           ElMessage.success('修改成功')
         } else {
-          // Create
-           const nextOrder = items.value.length + 1;
-           await request.post('/dictionaries/items/', {
-            dict_type: currentType.value!.id,
-            label: form.label,
-            value: finalValue,
-            description: '',
-            sort_order: nextOrder,
-            is_active: true,
-          })
+          await createDictionaryItem(payload);
           ElMessage.success('添加成功')
         }
         
         dialogVisible.value = false
         await fetchItems(currentType.value!.code)
       } catch (error) {
-        ElMessage.error(isEditMode.value ? '修改失败' : '添加失败，可能该值已存在')
+        console.error(error);
+        ElMessage.error(isEditMode.value ? '修改失败' : '添加失败')
       } finally {
         submitting.value = false
       }
@@ -307,7 +401,7 @@ const deleteItem = async (item: DictionaryItem) => {
       type: 'warning',
     })
     
-    await request.delete(`/dictionaries/items/${item.id}/`)
+    await deleteDictionaryItem(item.id);
     ElMessage.success('删除成功')
     if (currentType.value) {
       await fetchItems(currentType.value.code)

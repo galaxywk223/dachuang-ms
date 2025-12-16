@@ -6,6 +6,8 @@ import request from "@/utils/request";
 export interface DictionaryItem {
   value: string;
   label: string;
+  extra_data?: any;
+  template_file?: string;
 }
 
 /**
@@ -59,13 +61,51 @@ export function getAllDictionaries(): Promise<DictionaryBatchResponse> {
 }
 
 /**
+ * 创建字典项
+ */
+export function createDictionaryItem(data: any) {
+  return request({
+    url: "/dictionaries/items/",
+    method: "post",
+    data,
+    headers: {
+      'Content-Type': data instanceof FormData ? 'multipart/form-data' : 'application/json'
+    }
+  });
+}
+
+/**
+ * 更新字典项
+ */
+export function updateDictionaryItem(id: number, data: any) {
+  return request({
+    url: `/dictionaries/items/${id}/`,
+    method: "patch", // Use PATCH for partial updates
+    data,
+    headers: {
+      'Content-Type': data instanceof FormData ? 'multipart/form-data' : 'application/json'
+    }
+  });
+}
+
+/**
+ * 删除字典项
+ */
+export function deleteDictionaryItem(id: number) {
+  return request({
+    url: `/dictionaries/items/${id}/`,
+    method: "delete",
+  });
+}
+
+/**
  * 常用字典编码常量
  */
 export const DICT_CODES = {
   USER_ROLE: "user_role",
   PROJECT_STATUS: "project_status",
   PROJECT_LEVEL: "project_level",
-  PROJECT_CATEGORY: "project_category",
+  PROJECT_CATEGORY: "project_type", // Merged
   MEMBER_ROLE: "member_role",
   ACHIEVEMENT_TYPE: "achievement_type",
   REVIEW_TYPE: "review_type",
@@ -76,11 +116,11 @@ export const DICT_CODES = {
   // New codes
   PROJECT_SOURCE: "project_source",
   COLLEGE: "college",
-  MAJOR_CATEGORY: "project_major_code",
+  MAJOR_CATEGORY: "major_category", // Corrected
   TITLE: "title",
   KEY_FIELD_CODE: "key_field_code",
   PROJECT_TYPE: "project_type",
   // Backward-compatible aliases (avoid null codes in batch requests)
-  SPECIAL_PROJECT_TYPE: "project_type",
+  SPECIAL_PROJECT_TYPE: "project_type", // Not used anymore but kept safe
   ADVISOR_TITLE: "title",
 } as const;

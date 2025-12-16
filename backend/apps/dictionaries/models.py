@@ -55,6 +55,13 @@ class DictionaryItem(models.Model):
     description = models.CharField(
         max_length=255, blank=True, default="", verbose_name="说明"
     )
+    template_file = models.FileField(
+        upload_to="dictionary_templates/",
+        blank=True,
+        null=True,
+        verbose_name="模板文件",
+        help_text="关联的模板文件（如申请书模板）",
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
 

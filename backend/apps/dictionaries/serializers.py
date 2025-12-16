@@ -22,6 +22,7 @@ class DictionaryItemSerializer(serializers.ModelSerializer):
             "is_active",
             "extra_data",
             "description",
+            "template_file",
         ]
         read_only_fields = ["id"]
 
@@ -99,4 +100,4 @@ class DictionaryItemSimpleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DictionaryItem
-        fields = ["value", "label"]
+        fields = ["value", "label", "extra_data"]

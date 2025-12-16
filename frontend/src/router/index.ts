@@ -43,6 +43,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: "二级管理员管理" },
       },
       {
+        path: "users/teachers",
+        name: "level1-users-teachers",
+        component: () => import("@/views/level1_admin/users/TeacherManagement.vue"),
+        meta: { title: "指导教师管理" },
+      },
+      {
         path: "data/colleges",
         name: "level1-data-colleges",
         component: () => import("@/views/level1_admin/data/Colleges.vue"),
