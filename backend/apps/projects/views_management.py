@@ -298,14 +298,75 @@ class AchievementManagementViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-             serializer = self.get_serializer(page, many=True)
-             return self.get_paginated_response(serializer.data)
 
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        # 已有的成果数据
+        achievements_data = list(self.get_serializer(queryset, many=True).data)
+
+        # 补充：将已申请结题但尚无成果记录的项目也展示出来
+        closure_statuses = [
+            Project.ProjectStatus.CLOSURE_SUBMITTED,
+            Project.ProjectStatus.CLOSURE_LEVEL2_REVIEWING,
+            Project.ProjectStatus.CLOSURE_LEVEL2_APPROVED,
+            Project.ProjectStatus.CLOSURE_LEVEL2_REJECTED,
+            Project.ProjectStatus.CLOSURE_LEVEL1_REVIEWING,
+            Project.ProjectStatus.CLOSURE_LEVEL1_APPROVED,
+            Project.ProjectStatus.CLOSURE_LEVEL1_REJECTED,
+            Project.ProjectStatus.CLOSED,
+        ]
+
+        projects_qs = Project.objects.filter(status__in=closure_statuses)
+
+        # 同步查询参数过滤
+        search = request.query_params.get("search", "")
+        if search:
+            projects_qs = projects_qs.filter(
+                Q(title__icontains=search) | Q(project_no__icontains=search)
+            )
+        year = request.query_params.get("year", "")
+        if year and year.isdigit():
+            projects_qs = projects_qs.filter(created_at__year=int(year))
+        college = request.query_params.get("college", "")
+        if college:
+            projects_qs = projects_qs.filter(leader__college=college)
+
+        # 去除已有成果的项目，避免重复
+        project_ids_with_achievements = queryset.values_list("project_id", flat=True)
+        projects_qs = projects_qs.exclude(id__in=project_ids_with_achievements)
+
+        fallback_items = []
+        for p in projects_qs.select_related("leader"):
+            fallback_items.append(
+                {
+                    "id": f"project-{p.id}",
+                    "project": p.id,
+                    "project_no": p.project_no,
+                    "project_title": p.title,
+                    "leader": p.leader.id if p.leader else None,
+                    "leader_name": p.leader.real_name if p.leader else "",
+                    "college": p.leader.college if p.leader else "",
+                    "achievement_type": None,
+                    "achievement_type_display": "结题申请",
+                    "title": p.title,
+                    "description": p.description or "",
+                    "publication_date": None,
+                    "award_date": None,
+                    "created_at": p.closure_applied_at or p.updated_at,
+                    "updated_at": p.updated_at,
+                }
+            )
+
+        combined = achievements_data + fallback_items
+        combined_sorted = sorted(
+            combined,
+            key=lambda x: x.get("created_at") or x.get("updated_at") or "",
+            reverse=True,
+        )
+
+        page = self.paginate_queryset(combined_sorted)
+        if page is not None:
+            return self.get_paginated_response(page)
+
+        return Response(combined_sorted)
 
     @action(methods=["get"], detail=False, url_path="export")
     def export_data(self, request):

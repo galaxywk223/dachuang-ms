@@ -14,6 +14,8 @@ from apps.reviews.models import Review
 from apps.reviews.services import ReviewService
 from .serializers import ProjectSerializer, ProjectAdvisorSerializer
 from apps.dictionaries.models import DictionaryItem
+from django.contrib.auth import get_user_model
+from django.utils import timezone
 import json
 
 
@@ -26,6 +28,52 @@ def _to_bool(val, default=True):
     if isinstance(val, str):
         return val.strip().lower() not in {"false", "0", "no", "n", "off"}
     return default
+
+
+def _get_or_create_user_by_identity(employee_id=None, name=None, role=None, phone=None, email=None, department=None):
+    """
+    依据工号/学号或姓名查找/创建用户，用于草稿保存需要回显指导教师/成员。
+    避免缺少用户导致草稿无法回显。
+    """
+    User = get_user_model()
+    user = None
+    if employee_id:
+        user = User.objects.filter(employee_id=employee_id).first()
+    if not user and name:
+        user = User.objects.filter(real_name=name).first()
+
+    if user:
+        updated_fields = []
+        if phone and user.phone != phone:
+            user.phone = phone
+            updated_fields.append("phone")
+        if email and user.email != email:
+            user.email = email
+            updated_fields.append("email")
+        if department and user.department != department:
+            user.department = department
+            updated_fields.append("department")
+        if updated_fields:
+            user.save(update_fields=updated_fields)
+        return user.id
+
+    # Create placeholder user
+    username = employee_id or f"temp_{int(timezone.now().timestamp())}"
+    employee_id_val = employee_id or username
+    real_name = name or employee_id_val
+    role_val = role or User.UserRole.STUDENT
+    user = User(
+        username=username,
+        employee_id=employee_id_val,
+        real_name=real_name,
+        role=role_val,
+        phone=phone or "",
+        email=email or "",
+        department=department or "",
+    )
+    user.set_unusable_password()
+    user.save()
+    return user.id
 
 
 @api_view(["POST"])
@@ -45,6 +93,20 @@ def create_project_application(request):
             data["status"] = (
                 Project.ProjectStatus.DRAFT if is_draft else Project.ProjectStatus.SUBMITTED
             )
+
+            # Sync leader contact info to User profile for draft echo
+            leader_updates = []
+            if data.get("leader_contact"):
+                user.phone = data.get("leader_contact")
+                leader_updates.append("phone")
+            if data.get("leader_email"):
+                user.email = data.get("leader_email")
+                leader_updates.append("email")
+            if data.get("major_code"):
+                user.major = data.get("major_code")
+                leader_updates.append("major")
+            if leader_updates:
+                user.save(update_fields=leader_updates)
 
             # Ensure defaults for required fields if missing
             # Note: We assume DictionaryItems for defaults exist. In a real app, handle DoesNotExist.
@@ -104,15 +166,22 @@ def create_project_application(request):
             for idx, advisor_data in enumerate(advisors_data):
                 # Try to get user_id directly or by employee_id/name
                 user_id = advisor_data.get("user") or advisor_data.get("user_id") or advisor_data.get("id")
+                job_number = advisor_data.get("job_number") or advisor_data.get("employee_id")
+                name = advisor_data.get("name")
+                contact = advisor_data.get("contact")
+                email = advisor_data.get("email")
+                title = advisor_data.get("title")
                 
-                # If no ID, but name is provided, try to find user by real_name (Risky but helpful for transition)
-                if not user_id and advisor_data.get("name"):
-                    from django.contrib.auth import get_user_model
-                    User = get_user_model()
-                    potential_user = User.objects.filter(real_name=advisor_data.get("name")).first()
-                    if potential_user:
-                        user_id = potential_user.id
-                        
+                if not user_id:
+                    user_id = _get_or_create_user_by_identity(
+                        employee_id=job_number,
+                        name=name,
+                        role=None,
+                        phone=contact,
+                        email=email,
+                        department=title,
+                    )
+
                 if user_id:
                      ProjectAdvisor.objects.create(
                         project=project,
@@ -141,6 +210,15 @@ def create_project_application(request):
                     or member_data.get("user_id")
                     or member_data.get("id")
                 )
+                student_id = member_data.get("student_id")
+                name = member_data.get("name")
+                if not user_id:
+                    user_id = _get_or_create_user_by_identity(
+                        employee_id=student_id,
+                        name=name,
+                        role=None,
+                    )
+
                 if not user_id or str(user_id) == str(user.id):
                     continue  # Skip invalid entries or duplicate leader
 
@@ -203,6 +281,20 @@ def update_project_application(request, pk):
             data["status"] = (
                 Project.ProjectStatus.DRAFT if is_draft else Project.ProjectStatus.SUBMITTED
             )
+
+            # Sync leader contact info to User profile for draft echo
+            leader_updates = []
+            if data.get("leader_contact"):
+                user.phone = data.get("leader_contact")
+                leader_updates.append("phone")
+            if data.get("leader_email"):
+                user.email = data.get("leader_email")
+                leader_updates.append("email")
+            if data.get("major_code"):
+                user.major = data.get("major_code")
+                leader_updates.append("major")
+            if leader_updates:
+                user.save(update_fields=leader_updates)
             
             # Use partial update to respect existing fields if not provided
             serializer = ProjectSerializer(project, data=data, partial=True)
@@ -243,14 +335,21 @@ def update_project_application(request, pk):
             for idx, advisor_data in enumerate(advisors_data):
                 # Try to get user_id directly or by employee_id/name
                 user_id = advisor_data.get("user") or advisor_data.get("user_id") or advisor_data.get("id")
+                job_number = advisor_data.get("job_number") or advisor_data.get("employee_id")
+                name = advisor_data.get("name")
+                contact = advisor_data.get("contact")
+                email = advisor_data.get("email")
+                title = advisor_data.get("title")
                 
-                # If no ID, but name is provided, try to find user by real_name (Risky but helpful for transition)
-                if not user_id and advisor_data.get("name"):
-                    from django.contrib.auth import get_user_model
-                    User = get_user_model()
-                    potential_user = User.objects.filter(real_name=advisor_data.get("name")).first()
-                    if potential_user:
-                        user_id = potential_user.id
+                if not user_id:
+                    user_id = _get_or_create_user_by_identity(
+                        employee_id=job_number,
+                        name=name,
+                        role=None,
+                        phone=contact,
+                        email=email,
+                        department=title,
+                    )
 
                 if user_id:
                      ProjectAdvisor.objects.create(
@@ -277,6 +376,15 @@ def update_project_application(request, pk):
                     or member_data.get("user_id")
                     or member_data.get("id")
                 )
+                student_id = member_data.get("student_id")
+                name = member_data.get("name")
+                if not user_id:
+                    user_id = _get_or_create_user_by_identity(
+                        employee_id=student_id,
+                        name=name,
+                        role=None,
+                    )
+
                 if not user_id or str(user_id) == str(user.id):
                     continue  # Skip invalid entries or duplicate leader
 
@@ -363,6 +471,45 @@ def get_my_projects(request):
         },
         status=status.HTTP_200_OK,
     )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def withdraw_project_application(request, pk):
+    """
+    撤回项目申报（仅负责人、仅限已提交状态）
+    """
+    user = request.user
+
+    try:
+        project = Project.objects.get(pk=pk, leader=user)
+    except Project.DoesNotExist:
+        return Response(
+            {"code": 404, "message": "项目不存在或无权限访问"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    if project.status != Project.ProjectStatus.SUBMITTED:
+        return Response(
+            {"code": 400, "message": "当前状态不允许撤回"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    from apps.reviews.models import Review
+
+    with transaction.atomic():
+        # 删除未处理的申报审核记录
+        Review.objects.filter(
+            project=project,
+            review_type=Review.ReviewType.APPLICATION,
+            status=Review.ReviewStatus.PENDING,
+        ).delete()
+
+        project.status = Project.ProjectStatus.DRAFT
+        project.submitted_at = None
+        project.save(update_fields=["status", "submitted_at", "updated_at"])
+
+    return Response({"code": 200, "message": "撤回成功"})
 
 
 @api_view(["GET"])

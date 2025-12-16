@@ -99,7 +99,14 @@ def get_applied_closure_projects(request):
         Project.ProjectStatus.CLOSED,
     ]
 
-    projects = Project.objects.filter(leader=user, status__in=closure_statuses)
+    if user.is_level2_admin:
+        projects = Project.objects.filter(
+            leader__college=user.college, status__in=closure_statuses
+        )
+    elif user.is_level1_admin:
+        projects = Project.objects.filter(status__in=closure_statuses)
+    else:
+        projects = Project.objects.filter(leader=user, status__in=closure_statuses)
 
     # 应用筛选
     if title:

@@ -48,10 +48,6 @@ class ProjectService:
         # 查询用户参与的进行中的项目
         active_statuses = [
             Project.ProjectStatus.SUBMITTED,
-            Project.ProjectStatus.LEVEL2_REVIEWING,
-            Project.ProjectStatus.LEVEL2_APPROVED,
-            Project.ProjectStatus.LEVEL1_REVIEWING,
-            Project.ProjectStatus.LEVEL1_APPROVED,
             Project.ProjectStatus.IN_PROGRESS,
             Project.ProjectStatus.CLOSURE_DRAFT,
             Project.ProjectStatus.CLOSURE_SUBMITTED,

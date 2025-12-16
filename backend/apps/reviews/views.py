@@ -175,8 +175,15 @@ class ReviewViewSet(viewsets.ModelViewSet):
         try:
             project = Project.objects.get(id=project_id, leader__college=user.college)
 
-            # 检查项目状态
-            if project.status != Project.ProjectStatus.LEVEL2_APPROVED:
+            # 检查二级审核是否已通过
+            from .models import Review
+            level2_passed = Review.objects.filter(
+                project=project,
+                review_type=Review.ReviewType.APPLICATION,
+                review_level=Review.ReviewLevel.LEVEL2,
+                status=Review.ReviewStatus.APPROVED,
+            ).exists()
+            if not level2_passed:
                 return Response(
                     {"code": 400, "message": "项目必须先通过二级审核"},
                     status=status.HTTP_400_BAD_REQUEST,
@@ -186,8 +193,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
             review = ReviewService.create_level1_review(project)
 
             # 更新项目状态
-            project.status = Project.ProjectStatus.LEVEL1_REVIEWING
-            project.save()
+            project.status = Project.ProjectStatus.SUBMITTED
+            project.save(update_fields=["status"])
 
             return Response(
                 {

@@ -8,6 +8,7 @@ from .views import ProjectViewSet, ProjectProgressViewSet, ProjectAchievementVie
 from .views_application import (
     create_project_application,
     update_project_application,
+    withdraw_project_application,
     get_my_projects,
     get_my_drafts,
 )
@@ -37,6 +38,11 @@ urlpatterns = [
         "application/<int:pk>/update/",
         update_project_application,
         name="update-application",
+    ),
+    path(
+        "application/<int:pk>/withdraw/",
+        withdraw_project_application,
+        name="withdraw-application",
     ),
     path("my-projects/", get_my_projects, name="my-projects"),
     path("my-drafts/", get_my_drafts, name="my-drafts"),

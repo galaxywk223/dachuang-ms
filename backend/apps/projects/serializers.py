@@ -18,6 +18,8 @@ class ProjectAdvisorSerializer(serializers.ModelSerializer):
     项目指导教师序列化器
     """
 
+    job_number = serializers.CharField(source="user.employee_id", read_only=True)
+    name = serializers.CharField(source="user.real_name", read_only=True)
     user_name = serializers.CharField(source="user.real_name", read_only=True)
     # Assuming User model has these fields or we pull them from User profile
     # The User model has: real_name, phone, email, college, department, title?
@@ -35,16 +37,22 @@ class ProjectAdvisorSerializer(serializers.ModelSerializer):
     department = serializers.CharField(source="user.department", read_only=True)
     contact = serializers.CharField(source="user.phone", read_only=True)
     email = serializers.CharField(source="user.email", read_only=True)
+    title = serializers.CharField(
+        source="user.department", read_only=True, allow_blank=True, default=""
+    )
     
     class Meta:
         model = ProjectAdvisor
         fields = [
             "id",
             "user",
+            "job_number",
+            "name",
             "user_name",
             "department",
             "contact",
             "email",
+            "title",
             "order",
         ]
 
@@ -55,6 +63,8 @@ class ProjectMemberSerializer(serializers.ModelSerializer):
     """
 
     user_name = serializers.CharField(source="user.real_name", read_only=True)
+    student_id = serializers.CharField(source="user.employee_id", read_only=True)
+    name = serializers.CharField(source="user.real_name", read_only=True)
 
     class Meta:
         model = ProjectMember
@@ -62,8 +72,8 @@ class ProjectMemberSerializer(serializers.ModelSerializer):
             "id",
             "user",
             "user_name",
-            "user",
-            "user_name",
+            "student_id",
+            "name",
             "role",
             "join_date",
             "contribution",
@@ -97,10 +107,20 @@ class ProjectSerializer(serializers.ModelSerializer):
     )
     status_display = serializers.CharField(source="get_status_display", read_only=True)
     level_display = serializers.CharField(source="level.label", read_only=True)
-    category_display = serializers.CharField(
-        source="category.label", read_only=True
-    )
+    category_display = serializers.CharField(source="category.label", read_only=True)
+    source_display = serializers.CharField(source="source.label", read_only=True)
     college = serializers.CharField(source="leader.college", read_only=True)
+    major_code = serializers.CharField(source="leader.major", read_only=True, allow_blank=True)
+    leader_contact = serializers.CharField(source="leader.phone", read_only=True, allow_blank=True)
+    leader_email = serializers.EmailField(source="leader.email", read_only=True, allow_blank=True)
+    leader_major = serializers.CharField(source="leader.major", read_only=True, allow_blank=True)
+    leader_grade = serializers.CharField(source="leader.grade", read_only=True, allow_blank=True)
+    leader_class_name = serializers.CharField(
+        source="leader.class_name", read_only=True, allow_blank=True
+    )
+    leader_department = serializers.CharField(
+        source="leader.department", read_only=True, allow_blank=True
+    )
     # 接收前端传入的字典项 value（字符串代码），自动转换为 DictionaryItem
     level = serializers.SlugRelatedField(
         slug_field="value",
@@ -121,6 +141,10 @@ class ProjectSerializer(serializers.ModelSerializer):
         allow_null=True,
     )
     achievements_count = serializers.SerializerMethodField()
+    proposal_file_url = serializers.SerializerMethodField()
+    attachment_file_url = serializers.SerializerMethodField()
+    proposal_file_name = serializers.SerializerMethodField()
+    attachment_file_name = serializers.SerializerMethodField()
     is_key_field = KeyFieldBoolean(required=False)
 
     class Meta:
@@ -135,12 +159,19 @@ class ProjectSerializer(serializers.ModelSerializer):
             "category",
             "category_display",
             "source",
+            "source_display",
             "leader",
             "leader_name",
             "college",
+            "major_code",
+            "leader_contact",
+            "leader_email",
+            "leader_major",
+            "leader_grade",
+            "leader_class_name",
+            "leader_department",
             "members_info",
             "advisors_info",
-            "is_key_field",
             "is_key_field",
             "self_funding",
             "category_description",
@@ -155,6 +186,10 @@ class ProjectSerializer(serializers.ModelSerializer):
             "attachment_file",
             "final_report",
             "achievement_file",
+            "proposal_file_url",
+            "attachment_file_url",
+            "proposal_file_name",
+            "attachment_file_name",
             "status",
             "status_display",
             "ranking",
@@ -176,6 +211,30 @@ class ProjectSerializer(serializers.ModelSerializer):
     def get_achievements_count(self, obj):
         """获取项目成果数量"""
         return obj.achievements.count()
+
+    def _build_file_url(self, file_field):
+        if not file_field:
+            return ""
+        try:
+            request = self.context.get("request")
+            url = file_field.url
+            if request:
+                return request.build_absolute_uri(url)
+            return url
+        except Exception:
+            return ""
+
+    def get_proposal_file_url(self, obj):
+        return self._build_file_url(obj.proposal_file)
+
+    def get_attachment_file_url(self, obj):
+        return self._build_file_url(obj.attachment_file)
+
+    def get_proposal_file_name(self, obj):
+        return obj.proposal_file.name if obj.proposal_file else ""
+
+    def get_attachment_file_name(self, obj):
+        return obj.attachment_file.name if obj.attachment_file else ""
 
     def validate_proposal_file(self, value):
         """

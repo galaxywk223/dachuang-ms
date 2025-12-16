@@ -32,9 +32,9 @@ class ReviewService:
         """
         创建二级审核记录（申报审核）
         """
-        # 更新项目状态
-        project.status = Project.ProjectStatus.LEVEL2_REVIEWING
-        project.save()
+        # 更新项目状态（沿用 SUBMITTED 作为在审状态）
+        project.status = Project.ProjectStatus.SUBMITTED
+        project.save(update_fields=["status"])
 
         return ReviewService.create_review(
             project=project,
@@ -78,12 +78,9 @@ class ReviewService:
         # 申报审核
         if review.review_type == Review.ReviewType.APPLICATION:
             if review.review_level == Review.ReviewLevel.LEVEL2:
-                project.status = Project.ProjectStatus.LEVEL2_APPROVED
-                # 二级审核通过后，自动创建一级审核记录
-                ReviewService.create_level1_review(project)
+                # 二级管理员通过后，项目进入进行中（学生可后续结题）
+                project.status = Project.ProjectStatus.IN_PROGRESS
             elif review.review_level == Review.ReviewLevel.LEVEL1:
-                project.status = Project.ProjectStatus.LEVEL1_APPROVED
-                # 一级审核通过后，项目进入进行中状态
                 project.status = Project.ProjectStatus.IN_PROGRESS
 
         # 结题审核
@@ -118,9 +115,9 @@ class ReviewService:
         # 申报审核
         if review.review_type == Review.ReviewType.APPLICATION:
             if review.review_level == Review.ReviewLevel.LEVEL2:
-                project.status = Project.ProjectStatus.LEVEL2_REJECTED
+                project.status = Project.ProjectStatus.DRAFT
             elif review.review_level == Review.ReviewLevel.LEVEL1:
-                project.status = Project.ProjectStatus.LEVEL1_REJECTED
+                project.status = Project.ProjectStatus.DRAFT
 
         # 结题审核
         elif review.review_type == Review.ReviewType.CLOSURE:
