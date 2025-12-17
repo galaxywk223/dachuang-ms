@@ -212,7 +212,8 @@ export function useSystemDictionaries(options: { category?: string } = {}) {
   };
 
   const submitForm = async () => {
-    if (!formRef.value || !currentType.value) return;
+    const type = currentType.value;
+    if (!formRef.value || !type) return;
 
     await formRef.value.validate(async (valid) => {
       if (!valid) return;
@@ -239,7 +240,7 @@ export function useSystemDictionaries(options: { category?: string } = {}) {
             )
           );
           payload.append("extra_data", JSON.stringify(extraData));
-          payload.append("dict_type", String(currentType.value.id));
+          payload.append("dict_type", String(type.id));
           payload.append("description", form.description || "");
           payload.append("is_active", "true");
           payload.append("template_file", selectedFile.value);
@@ -252,7 +253,7 @@ export function useSystemDictionaries(options: { category?: string } = {}) {
                 ? form.sort_order
                 : items.value.length + 1,
             extra_data: extraData,
-            dict_type: currentType.value.id,
+            dict_type: type.id,
             description: form.description || "",
             is_active: true,
           };
@@ -267,7 +268,7 @@ export function useSystemDictionaries(options: { category?: string } = {}) {
         }
 
         dialogVisible.value = false;
-        await fetchItems(currentType.value.code);
+        await fetchItems(type.code);
       } catch (error) {
         console.error(error);
         ElMessage.error(isEditMode.value ? "修改失败" : "添加失败");

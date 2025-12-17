@@ -291,6 +291,7 @@ const {
   handleSubmit,
   switchToEdit,
 } = useProjectDetail();
+void formRef;
 </script>
 
 <style scoped lang="scss" src="./ProjectDetail.scss"></style>

@@ -222,6 +222,7 @@ const {
   submitForm,
   deleteItem,
 } = useSystemDictionaries({ category: route.meta.category as string });
+void formRef;
 </script>
 
 <style scoped lang="scss" src="./SystemDictionaries.scss"></style>
