@@ -288,7 +288,10 @@ const currentMenus = computed(() => {
                     title: '系统配置',
                     icon: Setting,
                     children: [
-                         { index: '/level1-admin/settings/dictionaries', title: '字典管理' },
+                         { index: '/level1-admin/settings/project-dictionaries', title: '项目参数' },
+                         { index: '/level1-admin/settings/org-dictionaries', title: '组织参数' },
+                         { index: '/level1-admin/settings/achievement-dictionaries', title: '成果参数' },
+                         { index: '/level1-admin/settings/other-dictionaries', title: '通用参数' },
                     ]
                 }
              ];

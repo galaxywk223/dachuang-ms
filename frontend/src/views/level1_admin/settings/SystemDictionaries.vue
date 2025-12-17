@@ -2,7 +2,7 @@
   <div class="dictionary-page">
     <div class="page-header-wrapper">
       <div class="title-bar">
-        <span class="title">系统字典管理</span>
+        <span class="title">{{ route.meta.title || '系统字典管理' }}</span>
       </div>
     </div>
 
@@ -17,7 +17,7 @@
           >
             <template #header>
               <div class="card-header">
-                <span>字典类型</span>
+                <span>参数类型</span>
               </div>
             </template>
             <div class="types-list">
@@ -43,7 +43,7 @@
               <div class="items-header">
                 <div class="left-panel">
                   <span class="type-title">{{
-                    currentType?.name || "请选择左侧字典类型"
+                    currentType?.name || "请选择左侧参数类型"
                   }}</span>
                   <span class="type-desc" v-if="currentType">{{
                     currentType.description
@@ -127,7 +127,7 @@
               </div>
             </div>
             <div v-else class="empty-selection">
-              <el-empty description="请选择左侧的字典类型进行管理" />
+              <el-empty description="请选择左侧的参数类型进行管理" />
             </div>
           </el-card>
         </el-col>
@@ -194,6 +194,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, watch, computed } from "vue";
+import { useRoute } from "vue-router";
 import { Plus, Collection, ArrowRight } from "@element-plus/icons-vue";
 import {
   ElMessage,
@@ -291,6 +292,36 @@ watch(currentType, async (newType) => {
   }
 });
 
+const route = useRoute();
+
+// Category Definitions
+const CATEGORY_GROUPS: Record<string, string[]> = {
+  project: [
+    DICT_CODES.PROJECT_LEVEL,
+    DICT_CODES.PROJECT_CATEGORY,
+    DICT_CODES.PROJECT_SOURCE,
+    DICT_CODES.KEY_FIELD_CODE,
+    DICT_CODES.PROJECT_STATUS,
+    DICT_CODES.CLOSURE_RATING,
+  ],
+  org: [
+    DICT_CODES.COLLEGE,
+    DICT_CODES.MAJOR_CATEGORY,
+    DICT_CODES.TITLE,
+    DICT_CODES.USER_ROLE,
+    DICT_CODES.MEMBER_ROLE,
+  ],
+  achievement: [
+    DICT_CODES.ACHIEVEMENT_TYPE,
+  ],
+  other: [
+    DICT_CODES.REVIEW_TYPE,
+    DICT_CODES.REVIEW_LEVEL,
+    DICT_CODES.REVIEW_STATUS,
+    DICT_CODES.NOTIFICATION_TYPE,
+  ]
+};
+
 const fetchTypes = async () => {
   try {
     const response = await request.get("/dictionaries/types/");
@@ -300,14 +331,29 @@ const fetchTypes = async () => {
       (response as any)?.data ??
       response;
 
-    dictionaryTypes.value = Array.isArray(list) ? list : [];
+    let allTypes = Array.isArray(list) ? list : [];
+    
+    // Filter based on route category
+    const category = route.meta.category as string;
+    if (category && CATEGORY_GROUPS[category]) {
+      const allowedCodes = CATEGORY_GROUPS[category];
+      dictionaryTypes.value = allTypes.filter(type => allowedCodes.includes(type.code));
+    } else {
+      // If no category specified, maybe show all? Or just show "other" or nothing?
+      // For backward compatibility or "All" view, show all.
+      // But if we want strict separation, we might want to default to something.
+      // Let's show all if no category is provided.
+      dictionaryTypes.value = allTypes;
+    }
 
     if (dictionaryTypes.value.length > 0) {
       currentType.value = dictionaryTypes.value[0];
+    } else {
+      currentType.value = null;
     }
   } catch (error) {
     console.error("Failed to fetch dictionary types:", error);
-    ElMessage.error("获取字典类型失败");
+    ElMessage.error("获取参数类型失败");
   }
 };
 
@@ -326,7 +372,7 @@ const fetchItems = async (typeCode: string) => {
     items.value = Array.isArray(list) ? list : [];
   } catch (error) {
     console.error("Failed to fetch items:", error);
-    ElMessage.error("获取字典数据失败");
+    ElMessage.error("获取参数数据失败");
   } finally {
     loading.value = false;
   }

@@ -10,6 +10,7 @@ declare module "vue-router" {
     title?: string;
     requiresAuth?: boolean;
     role?: "admin" | "student" | "level1_admin" | "level2_admin";
+    category?: string;
   }
 }
 
@@ -55,10 +56,28 @@ const routes: RouteRecordRaw[] = [
         meta: { title: "学院信息维护" },
       },
       {
-        path: "settings/dictionaries",
-        name: "level1-settings-dictionaries",
+        path: "settings/project-dictionaries",
+        name: "level1-settings-project-dictionaries",
         component: () => import("@/views/level1_admin/settings/SystemDictionaries.vue"),
-        meta: { title: "系统字典管理" },
+        meta: { title: "项目参数", category: "project" },
+      },
+      {
+        path: "settings/org-dictionaries",
+        name: "level1-settings-org-dictionaries",
+        component: () => import("@/views/level1_admin/settings/SystemDictionaries.vue"),
+        meta: { title: "组织参数", category: "org" },
+      },
+      {
+        path: "settings/achievement-dictionaries",
+        name: "level1-settings-achievement-dictionaries",
+        component: () => import("@/views/level1_admin/settings/SystemDictionaries.vue"),
+        meta: { title: "成果参数", category: "achievement" },
+      },
+      {
+        path: "settings/other-dictionaries",
+        name: "level1-settings-other-dictionaries",
+        component: () => import("@/views/level1_admin/settings/SystemDictionaries.vue"),
+        meta: { title: "通用参数", category: "other" },
       },
     ],
   },
