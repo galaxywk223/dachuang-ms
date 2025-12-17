@@ -1,0 +1,82 @@
+@use "@/styles/variables.scss" as *;
+
+.form-container {
+  background: white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+  border: 1px solid $color-border-light;
+  overflow: hidden;
+}
+
+.page-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid $slate-100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .title-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .title {
+      font-size: 16px;
+      font-weight: 600;
+      color: $slate-800;
+      position: relative;
+      padding-left: 14px;
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 16px;
+        background: $primary-600;
+        border-radius: 2px;
+      }
+    }
+  }
+}
+
+.main-form {
+  padding: 32px;
+}
+
+.form-section {
+  margin-bottom: 40px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  .section-header {
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px dashed $slate-200;
+    padding-bottom: 8px;
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: $slate-700;
+    }
+  }
+}
+
+.w-full {
+  width: 100%;
+}
+
+.empty-text {
+  color: $slate-400;
+  font-size: 13px;
+  text-align: center;
+  padding: 8px 0;
+}
+

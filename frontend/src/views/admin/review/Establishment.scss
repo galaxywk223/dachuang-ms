@@ -1,0 +1,121 @@
+@use "@/styles/variables.scss" as *;
+
+.filter-section {
+  background: white;
+  padding: 20px 24px 0 24px;
+  border-radius: $radius-lg;
+  margin-bottom: 16px;
+  box-shadow: $shadow-sm;
+  border: 1px solid $color-border-light;
+
+  .filter-form {
+    display: flex;
+    gap: 16px;
+  }
+}
+
+.table-container {
+  background: white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+  border: 1px solid $color-border-light;
+  overflow: hidden;
+
+  .table-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid $slate-100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .title-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .title {
+        font-size: 16px;
+        font-weight: 600;
+        color: $slate-800;
+        position: relative;
+        padding-left: 14px;
+
+        &::before {
+          content: "";
+          position: absolute;
+          left: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 4px;
+          height: 16px;
+          background: $primary-600; // Updated Blue
+          border-radius: 2px;
+        }
+      }
+    }
+  }
+}
+
+.pagination-footer {
+  padding: 16px 24px;
+  border-top: 1px solid $slate-100;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.project-title {
+  font-weight: 500;
+  color: $slate-800;
+  font-size: 14px;
+}
+
+.date-text {
+  color: $slate-500;
+  font-size: 13px;
+}
+
+.status-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+
+    &.dot-success {
+      background: $success;
+      box-shadow: 0 0 0 2px rgba($success, 0.2);
+    }
+    &.dot-warning {
+      background: $warning;
+      box-shadow: 0 0 0 2px rgba($warning, 0.2);
+    }
+    &.dot-danger {
+      background: $danger;
+      box-shadow: 0 0 0 2px rgba($danger, 0.2);
+    }
+    &.dot-info {
+      background: $slate-400;
+    }
+  }
+}
+
+.operation-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.text-success {
+  color: $success;
+}
+
+.text-danger {
+  color: $danger;
+}
+

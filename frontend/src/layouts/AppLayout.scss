@@ -1,0 +1,242 @@
+@use "@/styles/variables.scss" as *;
+
+.layout-container {
+  height: 100vh;
+  background-color: $color-bg-body;
+}
+
+.app-sidebar {
+  background-color: $color-bg-sidebar; // Solid Dark Slate
+  transition: width $transition-base;
+  border-right: none;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.1);
+  z-index: 20;
+
+  .logo-area {
+    height: 70px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    background: rgba(0, 0, 0, 0.2); // Darker top area
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    transition: background 0.3s;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 8px; // Slightly squarer for pro look
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .app-title {
+      margin-left: 14px;
+      color: $slate-100;
+      font-weight: 600;
+      font-size: 16px;
+      white-space: nowrap;
+      letter-spacing: 0.5px;
+    }
+
+    &.collapsed {
+      padding: 0;
+      justify-content: center;
+    }
+  }
+
+  .sidebar-menu {
+    border-right: none;
+    padding-top: 16px;
+
+    /* Standard Menu Item Styles */
+    :deep(.el-menu-item),
+    :deep(.el-sub-menu__title) {
+      height: 50px;
+      margin: 4px 12px;
+      border-radius: $radius-md;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+        color: white;
+      }
+
+      &.is-active {
+        background: $primary-600; // Steady Blue-Grey
+        color: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        font-weight: 500;
+      }
+    }
+
+    /* Collapsed State Overrides */
+    &.el-menu--collapse {
+      :deep(.el-menu-item),
+      :deep(.el-sub-menu__title) {
+        margin: 4px 0 !important;
+        padding: 0 !important;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      :deep(.el-menu-item.is-active),
+      :deep(.el-sub-menu__title.is-active) {
+        background: transparent !important;
+
+        .el-icon {
+          color: $primary-400; // Lighten icon for visibility
+          filter: drop-shadow(0 0 8px rgba($primary-400, 0.4));
+        }
+      }
+    }
+
+    :deep(.el-sub-menu .el-menu-item) {
+      min-width: unset;
+    }
+  }
+}
+
+.main-wrapper {
+  flex-direction: column;
+}
+
+.app-header {
+  height: 64px; // Slightly more compact header
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  border-bottom: 1px solid $slate-200; // Define border clearly
+  z-index: 10;
+  box-shadow: $shadow-sm;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .toggle-btn {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      color: $slate-500;
+      transition: color 0.2s;
+
+      &:hover {
+        color: $slate-800;
+      }
+    }
+
+    .breadcrumb {
+      font-size: 14px;
+      :deep(.el-breadcrumb__inner.is-link) {
+        color: $slate-500;
+        font-weight: normal;
+        &:hover {
+          color: $primary-600;
+        }
+      }
+    }
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+
+    .icon-btn {
+      color: $slate-400;
+      transition: all 0.2s;
+
+      &:hover {
+        color: $slate-700;
+        background: $slate-50;
+      }
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      padding: 4px 8px 4px 4px;
+      border-radius: 30px;
+      transition: background $transition-fast;
+      border: 1px solid transparent;
+
+      &:hover {
+        background: $slate-50;
+        border-color: $slate-100;
+      }
+
+      .username {
+        font-weight: 500;
+        color: $slate-700;
+        font-size: 14px;
+      }
+
+      .avatar-gradient {
+        // Default (Student)
+        background: linear-gradient(135deg, $primary-500, $primary-700);
+        font-weight: 700;
+        color: white;
+        border: 2px solid white;
+        box-shadow: $shadow-sm;
+
+        &.role-admin-1 {
+          // Admin Level 1 (Gold/Amber hint or distinct)
+          background: linear-gradient(135deg, $slate-700, $slate-900);
+        }
+        &.role-admin-2 {
+          // Admin Level 2
+          background: linear-gradient(135deg, $primary-600, $primary-800);
+        }
+      }
+    }
+  }
+}
+
+.app-main {
+  padding: 24px; // Tighter padding for efficiency
+  background-color: $color-bg-body;
+  overflow-y: auto;
+}
+
+/* Transitions */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.fade-transform-enter-active,
+.fade-transform-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.fade-transform-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.fade-transform-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+

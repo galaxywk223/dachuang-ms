@@ -1,0 +1,123 @@
+@use "@/styles/variables.scss" as *;
+
+.page-header-wrapper {
+  background: white;
+  padding: 16px 24px;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+  border: 1px solid $color-border-light;
+  margin-bottom: 20px;
+
+  .title-bar {
+    display: flex;
+    align-items: center;
+
+    .title {
+      font-size: 18px;
+      font-weight: 600;
+      color: $slate-800;
+      position: relative;
+      padding-left: 14px;
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 18px;
+        background: $primary-600;
+        border-radius: 2px;
+      }
+    }
+  }
+}
+
+.types-card {
+  min-height: 600px;
+  border-radius: $radius-lg;
+
+  .card-header {
+    font-weight: 600;
+    font-size: 16px;
+    color: $slate-800;
+  }
+
+  .types-list {
+    .type-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 20px;
+      cursor: pointer;
+      border-bottom: 1px solid $slate-50;
+      transition: all 0.2s;
+
+      &:hover {
+        background-color: $slate-50;
+        color: $primary-600;
+      }
+
+      &.active {
+        background-color: #ecf5ff; // Element Plus primary light
+        color: $primary-600;
+        border-right: 3px solid $primary-600;
+      }
+
+      .icon {
+        margin-right: 12px;
+        font-size: 16px;
+      }
+
+      .type-name {
+        flex: 1;
+        font-size: 14px;
+      }
+
+      .arrow {
+        font-size: 14px;
+        color: $slate-400;
+      }
+    }
+  }
+}
+
+.items-card {
+  min-height: 600px;
+  border-radius: $radius-lg;
+
+  .items-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .left-panel {
+      .type-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: $slate-800;
+        margin-right: 12px;
+      }
+
+      .type-desc {
+        color: $slate-500;
+        font-size: 13px;
+        margin-top: 4px;
+      }
+    }
+  }
+}
+
+.empty-tip {
+  padding: 40px;
+  text-align: center;
+  color: $slate-400;
+}
+
+.empty-selection {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 500px;
+}
+
