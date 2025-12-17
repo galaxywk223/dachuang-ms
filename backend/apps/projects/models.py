@@ -33,6 +33,7 @@ class Project(models.Model):
     project_no = models.CharField(
         max_length=50, unique=True, verbose_name="项目编号", blank=True
     )
+    year = models.IntegerField(verbose_name="项目年份", default=2025)
     title = models.CharField(max_length=200, verbose_name="项目名称")
     description = models.TextField(verbose_name="项目简介", blank=True)
     level = models.ForeignKey(

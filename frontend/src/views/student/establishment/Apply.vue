@@ -211,10 +211,19 @@
            <div class="dynamic-input-row">
             <el-row :gutter="12">
                <el-col :span="8">
-                 <el-input v-model="newMember.student_id" placeholder="成员学号" />
+                 <el-input 
+                    v-model="newMember.student_id" 
+                    placeholder="成员学号 (回车查询)" 
+                    @blur="handleSearchNewMember"
+                    @keyup.enter="handleSearchNewMember"
+                 >
+                    <template #append>
+                        <el-button :icon="Search" @click="handleSearchNewMember" />
+                    </template>
+                 </el-input>
                </el-col>
                <el-col :span="8">
-                 <el-input v-model="newMember.name" placeholder="成员姓名" />
+                 <el-input v-model="newMember.name" placeholder="成员姓名" disabled />
                </el-col>
                <el-col :span="8">
                  <el-button type="primary" plain @click="handleAddNewMember" style="width: 100%">添加成员</el-button>
@@ -437,6 +446,10 @@ const currentTemplateUrl = computed(() => {
 });
 
 const handleDownloadTemplate = () => {
+    if (!formData.category) {
+        ElMessage.warning("请先选择项目类别");
+        return;
+    }
     if (currentTemplateUrl.value) {
         window.open(currentTemplateUrl.value, '_blank');
     } else {
@@ -450,7 +463,12 @@ const rules = {
   category: [{ required: true, message: "必选项", trigger: "change" }],
   title: [{ required: true, message: "必填项", trigger: "blur" }],
   leader_contact: [{ required: true, message: "必填项", trigger: "blur" }],
-  leader_email: [{ required: true, message: "必填项", trigger: "blur" }]
+  leader_email: [{ required: true, message: "必填项", trigger: "blur" }],
+  college: [{ required: true, message: "必选项", trigger: "change" }],
+  major_code: [{ required: true, message: "必选项", trigger: "change" }],
+  expected_results: [{ required: true, message: "必填项", trigger: "blur" }],
+  description: [{ required: true, message: "必填项", trigger: "blur" }],
+  attachment_file: [{ required: true, message: "请上传申请书", trigger: "change" }]
 };
 
 // Dicts
@@ -461,6 +479,9 @@ const advisorTitleOptions = computed(() => getOptions(DICT_CODES.ADVISOR_TITLE))
 const levelOptions = computed(() => getOptions(DICT_CODES.PROJECT_LEVEL));
 const keyFieldOptions = computed(() => getOptions(DICT_CODES.KEY_FIELD_CODE));
 const categoryOptions = computed(() => getOptions(DICT_CODES.PROJECT_CATEGORY));
+
+const getDefaultLevel = () => levelOptions.value[0]?.value || "";
+const getDefaultCategory = () => categoryOptions.value[0]?.value || "";
 
 const keyFieldCascaderOptions = computed(() => {
   let keyChildren: CascaderOption[] = keyFieldOptions.value.map(opt => ({
@@ -552,16 +573,80 @@ const handleSearchNewAdvisor = async () => {
 };
 
 const handleAddNewAdvisor = () => {
+    if (newAdvisor.order === 2) {
+        const hasFirst = formData.advisors.some(a => a.order === 1);
+        if (!hasFirst) {
+            ElMessage.warning("请先添加第一指导教师");
+            return;
+        }
+    }
+    // Check if user is selected
+    if (!newAdvisor.user_id) {
+         ElMessage.warning("请先查询并确认教师信息");
+         return;
+    }
+    
+    // Check duplicate
+    if (formData.advisors.some(a => a.job_number === newAdvisor.job_number)) {
+        ElMessage.warning("该教师已添加");
+        return;
+    }
+
+    // Check if order already exists (optional, but good for UX)
+    if (formData.advisors.some(a => a.order === newAdvisor.order)) {
+         ElMessage.warning(newAdvisor.order === 1 ? "第一指导教师已存在" : "第二指导教师已存在");
+         return;
+    }
+
+    formData.advisors.push({ ...newAdvisor });
+    // Reset
+    newAdvisor.user_id = null;
+    newAdvisor.job_number = "";
+    newAdvisor.name = "";
     newAdvisor.title = "";
     newAdvisor.contact = "";
     newAdvisor.email = "";
 };
 
+const handleSearchNewMember = async () => {
+    if (!newMember.student_id) {
+        ElMessage.warning("请输入学号");
+        return;
+    }
+    
+    try {
+        const res = await getUsers({ employee_id: newMember.student_id, role: 'STUDENT', page_size: 1 });
+        const users = res.data?.results || [];
+        if (users.length > 0) {
+            const user = users[0];
+            newMember.name = user.real_name;
+            ElMessage.success(`已找到学生: ${user.real_name}`);
+        } else {
+            ElMessage.error("未找到该学号的学生");
+            newMember.name = "";
+        }
+    } catch (error) {
+        console.error("Search failed", error);
+        ElMessage.error("查询失败");
+    }
+};
+
 const handleAddNewMember = () => {
-    if(!newMember.student_id || !newMember.name) {
-       ElMessage.warning("请填写学号和姓名");
+    if(!newMember.student_id) {
+       ElMessage.warning("请填写学号");
        return;
     }
+    if(!newMember.name) {
+       ElMessage.warning("请先查询并确认学生信息");
+       return;
+    }
+    
+    // Check duplicate
+    if (formData.members.some(m => m.student_id === newMember.student_id)) {
+        ElMessage.warning("该成员已添加");
+        return;
+    }
+
     formData.members.push({ ...newMember });
     // Reset
     newMember.student_id = "";
@@ -572,7 +657,24 @@ const removeAdvisor = (i: number) => formData.advisors.splice(i, 1);
 const removeMember = (i: number) => formData.members.splice(i, 1);
 
 const handleFileChange = (file: any) => {
+  const isPDF = file.raw.type === 'application/pdf';
+  const isLt2M = file.raw.size / 1024 / 1024 < 2;
+
+  if (!isPDF) {
+    ElMessage.error('只能上传 PDF 文件!');
+    fileList.value = [];
+    formData.attachment_file = null;
+    return;
+  }
+  if (!isLt2M) {
+    ElMessage.error('文件大小不能超过 2MB!');
+    fileList.value = [];
+    formData.attachment_file = null;
+    return;
+  }
+
   formData.attachment_file = file.raw;
+  formRef.value?.validateField('attachment_file');
 };
 
 // Submit Logic
@@ -623,12 +725,15 @@ const processRequest = async (isDraft: boolean) => {
         const basicFields = { ...formData };
         
         // Handle Logic before appending
-        const validLevels = ['NATIONAL', 'PROVINCIAL', 'SCHOOL', 'SCHOOL_KEY'];
-        if (!validLevels.includes(basicFields.level)) basicFields.level = 'SCHOOL';
+        const validLevels = levelOptions.value.map((opt: any) => opt.value);
+        if (!validLevels.includes(basicFields.level)) {
+            basicFields.level = getDefaultLevel();
+        }
 
-        const validCategories = ['INNOVATION_TRAINING', 'ENTREPRENEURSHIP_TRAINING', 'ENTREPRENEURSHIP_PRACTICE'];
-        if (basicFields.category === 'ENTREPRENEURSHIP') basicFields.category = 'ENTREPRENEURSHIP_PRACTICE';
-        if (!validCategories.includes(basicFields.category)) basicFields.category = 'INNOVATION_TRAINING';
+        const validCategories = categoryOptions.value.map((opt: any) => opt.value);
+        if (!validCategories.includes(basicFields.category)) {
+            basicFields.category = getDefaultCategory();
+        }
         
         const keyFieldVal = basicFields.is_key_field;
         basicFields.is_key_field = (keyFieldVal === true || keyFieldVal === 'TRUE' || keyFieldVal === 'YES' || keyFieldVal === 'KEY') ? 'KEY' : 'NORMAL'; // Backend expects boolean or specific value? Serializer expects boolean likely (is_key_field).
@@ -721,8 +826,8 @@ const loadData = async (id: number) => {
             formData.id = data.id;
             formData.title = data.title || "";
             formData.source = data.source || ""; 
-            formData.level = data.level || "SCHOOL"; 
-            formData.category = data.category || "INNOVATION_TRAINING"; 
+            formData.level = data.level || getDefaultLevel(); 
+            formData.category = data.category || getDefaultCategory(); 
             formData.college = data.college || "";
             formData.major_code = data.major_code || "";
             formData.budget = Number(data.budget || 0);
@@ -765,16 +870,30 @@ const loadData = async (id: number) => {
     }
 }
 
-onMounted(() => {
-  loadDictionaries([
+onMounted(async () => {
+  await loadDictionaries([
     DICT_CODES.PROJECT_LEVEL, DICT_CODES.PROJECT_CATEGORY, DICT_CODES.PROJECT_SOURCE,
     DICT_CODES.COLLEGE, DICT_CODES.PROJECT_TYPE, DICT_CODES.MAJOR_CATEGORY,
-    DICT_CODES.TITLE
+    DICT_CODES.TITLE, DICT_CODES.KEY_FIELD_CODE
   ]);
   const id = route.query.id;
   if (id) {
       loadData(Number(id));
+  } else {
+      // Pre-fill contact info if creating new application
+      if (userStore.user) {
+          if (!formData.leader_contact) formData.leader_contact = userStore.user.phone || "";
+          if (!formData.leader_email) formData.leader_email = userStore.user.email || "";
+      }
   }
+});
+
+// Watch for user data loading if not available on mount
+watch(() => userStore.user, (newUser) => {
+    if (newUser && !route.query.id) {
+         if (!formData.leader_contact) formData.leader_contact = newUser.phone || "";
+         if (!formData.leader_email) formData.leader_email = newUser.email || "";
+    }
 });
 </script>
 

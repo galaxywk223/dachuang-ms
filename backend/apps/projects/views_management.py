@@ -27,6 +27,11 @@ class ProjectManagementViewSet(viewsets.ModelViewSet):
         """
         queryset = Project.objects.all().order_by("-created_at")
 
+        # 权限控制：二级管理员只能看到本学院的项目
+        user = self.request.user
+        if user.is_level2_admin:
+            queryset = queryset.filter(leader__college=user.college)
+
         # 搜索
         search = self.request.query_params.get("search", "")
         if search:
@@ -116,11 +121,14 @@ class ProjectManagementViewSet(viewsets.ModelViewSet):
         """
         获取项目统计数据
         """
-        total_projects = Project.objects.count()
-        approved_projects = Project.objects.filter(
+        # 基础查询集（已包含权限过滤）
+        base_queryset = self.get_queryset()
+        
+        total_projects = base_queryset.count()
+        approved_projects = base_queryset.filter(
             status__in=["IN_PROGRESS", "COMPLETED"]
         ).count()
-        pending_review = Project.objects.filter(
+        pending_review = base_queryset.filter(
             status__in=["SUBMITTED", "MIDTERM_SUBMITTED", "CLOSURE_SUBMITTED"]
         ).count()
 
@@ -277,6 +285,11 @@ class AchievementManagementViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = ProjectAchievement.objects.all().order_by("-created_at")
         
+        # 权限控制：二级管理员只能看到本学院项目的成果
+        user = self.request.user
+        if user.is_level2_admin:
+            queryset = queryset.filter(project__leader__college=user.college)
+
         # Search by project title or achievement title
         search = self.request.query_params.get("search", "")
         if search:

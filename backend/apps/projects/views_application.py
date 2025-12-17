@@ -16,7 +16,23 @@ from .serializers import ProjectSerializer, ProjectAdvisorSerializer
 from apps.dictionaries.models import DictionaryItem
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from django.db.models.functions import Cast
+from django.db.models import IntegerField
 import json
+
+
+def _generate_project_no(year):
+    """
+    生成项目编号：指定年份内按数字递增
+    """
+    # Filter by year and non-empty project_no
+    last_project = Project.objects.filter(year=year).exclude(project_no="").annotate(
+        project_no_int=Cast('project_no', IntegerField())
+    ).order_by("-project_no_int").first()
+    
+    if last_project:
+        return str(last_project.project_no_int + 1)
+    return "1"
 
 
 def _to_bool(val, default=True):
@@ -111,21 +127,21 @@ def create_project_application(request):
             # Ensure defaults for required fields if missing
             # Note: We assume DictionaryItems for defaults exist. In a real app, handle DoesNotExist.
             if not data.get("level"):
-                try:
-                    default_level = DictionaryItem.objects.get(
-                        dict_type__code="PROJECT_LEVEL", value="SCHOOL"
-                    )
+                default_level = (
+                    DictionaryItem.objects.filter(dict_type__code="project_level")
+                    .order_by("sort_order", "id")
+                    .first()
+                )
+                if default_level:
                     data["level"] = default_level.value
-                except DictionaryItem.DoesNotExist:
-                    pass # Let serializer validation fail or handle error
             if not data.get("category"):
-                 try:
-                    default_category = DictionaryItem.objects.get(
-                        dict_type__code="PROJECT_CATEGORY", value="INNOVATION_TRAINING"
-                    )
+                default_category = (
+                    DictionaryItem.objects.filter(dict_type__code="project_type")
+                    .order_by("sort_order", "id")
+                    .first()
+                )
+                if default_category:
                     data["category"] = default_category.value
-                 except DictionaryItem.DoesNotExist:
-                    pass
 
             # 序列化并验证
             serializer = ProjectSerializer(data=data)
@@ -145,6 +161,9 @@ def create_project_application(request):
 
             if not is_draft:
                 project.submitted_at = timezone.now()
+                project.year = 2025
+                if not project.project_no:
+                    project.project_no = _generate_project_no(2025)
                 project.save()
                 # 创建二级申报审核记录（避免重复）
                 if not Review.objects.filter(
@@ -313,6 +332,9 @@ def update_project_application(request, pk):
 
             if not is_draft:
                 project.submitted_at = timezone.now()
+                project.year = 2025
+                if not project.project_no:
+                    project.project_no = _generate_project_no(2025)
                 project.save()
                 # 创建二级申报审核记录（避免重复）
                 if not Review.objects.filter(

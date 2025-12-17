@@ -67,7 +67,10 @@ class AuthController(viewsets.GenericViewSet):
         获取用户信息
         """
         user_data = self.user_business.get_user_profile(request.user)
-        return Response(user_data, status=status.HTTP_200_OK)
+        return Response(
+            {"code": 200, "message": "获取成功", "data": user_data},
+            status=status.HTTP_200_OK,
+        )
 
     @action(methods=["put"], detail=False, permission_classes=[IsAuthenticated])
     def update_profile(self, request):
@@ -77,7 +80,10 @@ class AuthController(viewsets.GenericViewSet):
         updated_user = self.user_business.update_user_profile(
             request.user, request.data
         )
-        return Response(updated_user, status=status.HTTP_200_OK)
+        return Response(
+            {"code": 200, "message": "更新成功", "data": updated_user},
+            status=status.HTTP_200_OK,
+        )
 
     @action(methods=["put"], detail=False, permission_classes=[IsAuthenticated])
     def change_password(self, request):

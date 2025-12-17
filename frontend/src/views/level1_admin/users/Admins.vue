@@ -69,7 +69,8 @@
                  {{ getLabel(DICT_CODES.COLLEGE, row.college) }}
              </template>
           </el-table-column>
-          <el-table-column prop="department" label="部门" width="140" />
+          <el-table-column prop="phone" label="手机号" width="120" />
+          <el-table-column prop="email" label="邮箱" width="180" />
           <el-table-column label="状态" width="100">
              <template #default="scope">
                 <el-tag :type="scope.row.is_active ? 'success' : 'danger'" size="small">
@@ -182,14 +183,7 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="12">
-            <el-form-item label="部门" prop="department">
-              <el-input
-                v-model="adminForm.department"
-                placeholder="可填学院下属部门/科室"
-              />
-            </el-form-item>
-          </el-col>
+
         </el-row>
       </el-form>
       <template #footer>
@@ -227,8 +221,7 @@ const adminForm = reactive({
   password: '123456',
   phone: '',
   email: '',
-  college: '',
-  department: ''
+  college: ''
 });
 
 const collegeOptions = computed(() => getOptions(DICT_CODES.COLLEGE));
@@ -372,8 +365,7 @@ const resetAdminForm = () => {
     password: '123456',
     phone: '',
     email: '',
-    college: '',
-    department: ''
+    college: ''
   });
   adminFormRef.value?.clearValidate();
 };

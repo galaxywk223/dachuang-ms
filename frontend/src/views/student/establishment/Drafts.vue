@@ -86,14 +86,14 @@
 
           <el-table-column prop="level" label="项目级别" width="100" align="center">
             <template #default="{ row }">
-               <el-tag v-if="row.level" :type="getLevelType(row.level)" effect="plain" size="small">{{ getLabel(levelOptions, row.level) }}</el-tag>
+               <el-tag v-if="row.level" :type="getLevelType(row.level)" effect="plain" size="small">{{ row.level_display || getLabel(levelOptions, row.level) }}</el-tag>
                <span v-else>-</span>
             </template>
           </el-table-column>
 
           <el-table-column prop="category" label="项目类别" width="120" align="center">
              <template #default="{ row }">
-                 {{ getLabel(categoryOptions, row.category) || '-' }}
+                 {{ row.category_display || getLabel(categoryOptions, row.category) || '-' }}
              </template>
           </el-table-column>
 

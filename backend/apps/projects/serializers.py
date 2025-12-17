@@ -124,19 +124,19 @@ class ProjectSerializer(serializers.ModelSerializer):
     # 接收前端传入的字典项 value（字符串代码），自动转换为 DictionaryItem
     level = serializers.SlugRelatedField(
         slug_field="value",
-        queryset=DictionaryItem.objects.all(),
+        queryset=DictionaryItem.objects.filter(dict_type__code="project_level"),
         required=False,
         allow_null=True,
     )
     category = serializers.SlugRelatedField(
         slug_field="value",
-        queryset=DictionaryItem.objects.all(),
+        queryset=DictionaryItem.objects.filter(dict_type__code="project_type"),
         required=False,
         allow_null=True,
     )
     source = serializers.SlugRelatedField(
         slug_field="value",
-        queryset=DictionaryItem.objects.all(),
+        queryset=DictionaryItem.objects.filter(dict_type__code="project_source"),
         required=False,
         allow_null=True,
     )
@@ -145,6 +145,8 @@ class ProjectSerializer(serializers.ModelSerializer):
     attachment_file_url = serializers.SerializerMethodField()
     proposal_file_name = serializers.SerializerMethodField()
     attachment_file_name = serializers.SerializerMethodField()
+    proposal_file = serializers.FileField(required=False, allow_null=True, allow_empty_file=True)
+    attachment_file = serializers.FileField(required=False, allow_null=True, allow_empty_file=True)
     is_key_field = KeyFieldBoolean(required=False)
 
     class Meta:
@@ -240,16 +242,22 @@ class ProjectSerializer(serializers.ModelSerializer):
         """
         验证申报书文件
         """
-        if value:
-            # 检查文件格式
-            allowed_extensions = [".pdf", ".doc", ".docx"]
-            ext = value.name.lower()[value.name.rfind(".") :]
-            if ext not in allowed_extensions:
-                raise serializers.ValidationError("申报书必须是PDF或Word格式")
+        if not value:
+            return None
+            
+        # Treat empty file (0 bytes) as None
+        if value.size == 0:
+            return None
 
-            # 检查文件大小（不超过20MB）
-            if value.size > 20 * 1024 * 1024:
-                raise serializers.ValidationError("申报书文件大小不能超过20MB")
+        # 检查文件格式
+        allowed_extensions = [".pdf", ".doc", ".docx"]
+        ext = value.name.lower()[value.name.rfind(".") :]
+        if ext not in allowed_extensions:
+            raise serializers.ValidationError("申报书必须是PDF或Word格式")
+
+        # 检查文件大小（不超过20MB）
+        if value.size > 20 * 1024 * 1024:
+            raise serializers.ValidationError("申报书文件大小不能超过20MB")
 
         return value
 
@@ -281,10 +289,8 @@ class ProjectListSerializer(serializers.ModelSerializer):
     leader_name = serializers.CharField(source="leader.real_name", read_only=True)
     college = serializers.CharField(source="leader.college", read_only=True)
     status_display = serializers.CharField(source="get_status_display", read_only=True)
-    level_display = serializers.CharField(source="get_level_display", read_only=True)
-    category_display = serializers.CharField(
-        source="get_category_display", read_only=True
-    )
+    level_display = serializers.SerializerMethodField()
+    category_display = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
@@ -304,6 +310,12 @@ class ProjectListSerializer(serializers.ModelSerializer):
             "created_at",
             "submitted_at",
         ]
+
+    def get_level_display(self, obj):
+        return obj.level.label if obj.level else ""
+
+    def get_category_display(self, obj):
+        return obj.category.label if obj.category else ""
 
 
 class ProjectProgressSerializer(serializers.ModelSerializer):

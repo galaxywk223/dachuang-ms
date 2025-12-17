@@ -383,14 +383,17 @@ const fetchProjectInfo = async () => {
     loading.value = true;
     try {
         const res: any = await getProjectDetail(Number(projectId));
-        if (res.code === 200) {
-            const data = res.data;
-            projectInfo.title = data.title;
-            projectInfo.project_no = data.project_no;
-            projectInfo.leader_name = data.leader_info?.real_name || data.leader_name;
-            projectInfo.level_display = data.level_display;
-            projectInfo.category_display = data.category_display;
-            projectInfo.budget = data.budget;
+        const data = res?.data ?? res; // 兼容两种返回结构
+        if (data) {
+            projectInfo.title = data.title || "";
+            projectInfo.project_no = data.project_no || "";
+            projectInfo.leader_name = data.leader_info?.real_name || data.leader_name || "";
+            // 优先后端提供的 display 字段，否则用字典映射
+            projectInfo.level_display = data.level_display || getLabel(DICT_CODES.PROJECT_LEVEL, data.level);
+            projectInfo.category_display = data.category_display || getLabel(DICT_CODES.PROJECT_CATEGORY, data.category);
+            projectInfo.budget = data.budget ?? 0;
+        } else {
+            ElMessage.error("未获取到项目详情");
         }
     } catch (e) {
         ElMessage.error("获取项目详情失败");
@@ -456,7 +459,11 @@ const submitForm = () => submit(false);
 const saveAsDraft = () => submit(true);
 
 onMounted(() => {
-    loadDictionaries([DICT_CODES.ACHIEVEMENT_TYPE]);
+    loadDictionaries([
+        DICT_CODES.ACHIEVEMENT_TYPE,
+        DICT_CODES.PROJECT_LEVEL,
+        DICT_CODES.PROJECT_CATEGORY
+    ]);
     fetchProjectInfo();
 });
 </script>

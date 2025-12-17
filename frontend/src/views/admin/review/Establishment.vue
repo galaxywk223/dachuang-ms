@@ -172,28 +172,55 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" width="160" align="center" fixed="right">
+        <el-table-column label="操作" width="180" align="center" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" @click="handleViewDetail(row)"
-              >详情</el-button
-            >
-            <el-divider direction="vertical" />
-            <el-dropdown
-              trigger="click"
-              @command="(cmd: string) => handleCommand(cmd, row)"
-            >
-              <span class="el-dropdown-link text-primary">
-                审核<el-icon class="el-icon--right"><arrow-down /></el-icon>
-              </span>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item command="approve">通过</el-dropdown-item>
-                  <el-dropdown-item command="reject" divided
-                    >驳回</el-dropdown-item
-                  >
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
+            <div class="operation-actions">
+              <el-button
+                type="primary"
+                link
+                size="small"
+                :icon="View"
+                @click="handleViewDetail(row)"
+              >
+                详情
+              </el-button>
+              <el-dropdown
+                trigger="click"
+                @command="(cmd: string) => handleCommand(cmd, row)"
+              >
+                <el-button type="primary" link size="small" :icon="EditPen">
+                  审核<el-icon class="el-icon--right"><arrow-down /></el-icon>
+                </el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item command="approve">
+                      <span
+                        style="
+                          display: flex;
+                          align-items: center;
+                          gap: 6px;
+                          color: #67c23a;
+                        "
+                      >
+                        <el-icon><Check /></el-icon>通过申请
+                      </span>
+                    </el-dropdown-item>
+                    <el-dropdown-item command="reject" divided>
+                      <span
+                        style="
+                          display: flex;
+                          align-items: center;
+                          gap: 6px;
+                          color: #f56c6c;
+                        "
+                      >
+                        <el-icon><Close /></el-icon>驳回申请
+                      </span>
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -263,6 +290,8 @@ import {
   Close,
   RefreshLeft,
   ArrowDown,
+  View,
+  EditPen,
 } from "@element-plus/icons-vue";
 import { getReviewProjects, approveProject, rejectProject } from "@/api/admin";
 
@@ -515,5 +544,20 @@ onMounted(() => {
       background: $slate-400;
     }
   }
+}
+
+.operation-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.text-success {
+  color: $success;
+}
+
+.text-danger {
+  color: $danger;
 }
 </style>

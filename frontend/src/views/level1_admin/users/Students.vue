@@ -73,7 +73,10 @@
                  {{ getLabel(DICT_CODES.MAJOR_CATEGORY, row.major) }}
              </template>
           </el-table-column>
+
           <el-table-column prop="class_name" label="班级" width="140" />
+          <el-table-column prop="phone" label="手机号" width="120" />
+          <el-table-column prop="email" label="邮箱" width="180" />
           <el-table-column label="状态" width="100">
              <template #default="scope">
                 <el-tag :type="scope.row.is_active ? 'success' : 'danger'" size="small">
@@ -192,22 +195,10 @@
               <el-input v-model="studentForm.major" placeholder="请输入专业" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
-            <el-form-item label="年级" prop="grade">
-              <el-input v-model="studentForm.grade" placeholder="如 2022" />
-            </el-form-item>
-          </el-col>
+
           <el-col :span="12">
             <el-form-item label="班级" prop="class_name">
               <el-input v-model="studentForm.class_name" placeholder="如 计科2201" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="部门" prop="department">
-              <el-input
-                v-model="studentForm.department"
-                placeholder="可填写学院下属系"
-              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -283,7 +274,7 @@ const formRules: FormRules = {
     }
   ],
   email: [{ type: 'email', message: '邮箱格式不正确', trigger: 'blur' }],
-  college: [{ required: true, message: '请输入学院', trigger: 'blur' }]
+  college: []
 };
 
 const filters = reactive({

@@ -52,6 +52,11 @@ class UserManagementViewSet(viewsets.ModelViewSet):
         if role:
             queryset = queryset.filter(role=role)
 
+        # 按工号/学号精确筛选
+        employee_id = self.request.query_params.get("employee_id", "")
+        if employee_id:
+            queryset = queryset.filter(employee_id=employee_id)
+
         return queryset
 
     def list(self, request, *args, **kwargs):

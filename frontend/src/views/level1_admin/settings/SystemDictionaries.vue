@@ -244,7 +244,7 @@ const selectedFile = ref<File | null>(null);
 const fileList = ref<any[]>([]);
 
 // Types that require explicit Code input
-const CODE_BASED_TYPES = ["major_category", "key_field_code"];
+const CODE_BASED_TYPES = ["major_category", "key_field_code", "project_level"];
 
 // Computed property to check if current type needs Code field
 const showCode = computed(() => {
