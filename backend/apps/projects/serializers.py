@@ -21,25 +21,10 @@ class ProjectAdvisorSerializer(serializers.ModelSerializer):
     job_number = serializers.CharField(source="user.employee_id", read_only=True)
     name = serializers.CharField(source="user.real_name", read_only=True)
     user_name = serializers.CharField(source="user.real_name", read_only=True)
-    # Assuming User model has these fields or we pull them from User profile
-    # The User model has: real_name, phone, email, college, department, title?
-    # Checking User model: real_name, phone, email, college, department are there.
-    # Title is not in User model shown earlier? 
-    # Let's check User model again if needed. User model has: role, employee_id, real_name, phone, email, major, grade, class_name, college, department.
-    # It does NOT have 'title' (职称). 
-    # If 'title' is deleted from Advisor and not in User, where does it come from?
-    # The user said: "delete name, title, department, contact, email".
-    # And "Since Advisor is also a User".
-    # If User doesn't have 'title', maybe we just omit it or assuming User *should* have it?
-    # Or maybe 'title' is not needed anymore?
-    # I will map available fields: real_name, department, email, phone (contact).
-    
     department = serializers.CharField(source="user.department", read_only=True)
     contact = serializers.CharField(source="user.phone", read_only=True)
     email = serializers.CharField(source="user.email", read_only=True)
-    title = serializers.CharField(
-        source="user.department", read_only=True, allow_blank=True, default=""
-    )
+    title = serializers.CharField(source="user.title", read_only=True, allow_blank=True, default="")
     
     class Meta:
         model = ProjectAdvisor

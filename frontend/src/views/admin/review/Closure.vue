@@ -65,13 +65,6 @@
         <el-table-column type="selection" width="55" align="center" />
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column
-          prop="project_no"
-          label="项目编号"
-          width="130"
-          show-overflow-tooltip
-          align="center"
-        />
-        <el-table-column
           prop="title"
           label="项目名称"
           min-width="220"
@@ -81,55 +74,44 @@
             <span class="project-title">{{ row.title }}</span>
           </template>
         </el-table-column>
-        <el-table-column
-          prop="category_display"
-          label="类别"
-          width="120"
-          align="center"
-        >
+        <el-table-column prop="level_display" label="项目级别" width="100" align="center">
           <template #default="{ row }">
-            <el-tag effect="light" size="small" type="info">{{
-              row.category_display
-            }}</el-tag>
+            <el-tag size="small" effect="plain">{{ row.level_display }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column
-          prop="level_display"
-          label="级别"
-          width="100"
-          align="center"
-        >
+        <el-table-column prop="category_display" label="项目类别" width="120" align="center">
           <template #default="{ row }">
-            <el-tag
-              :type="getLevelType(row.level)"
-              effect="plain"
-              size="small"
-              >{{ row.level_display }}</el-tag
-            >
+            <el-tag effect="light" size="small" type="info">{{ row.category_display }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column
-          prop="leader_name"
-          label="负责人"
-          width="100"
-          align="center"
-        />
-        <el-table-column label="状态" width="120" align="center">
+        <el-table-column label="重点领域项目" width="110" align="center">
+          <template #default="{ row }">
+            <el-tag v-if="row.is_key_field" type="success" size="small">是</el-tag>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="重点领域代码" width="110" align="center">
+          <template #default="{ row }">
+            <span>{{ row.key_domain_code || "-" }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="leader_name" label="负责人姓名" width="100" align="center" />
+        <el-table-column prop="leader_student_id" label="负责人学号" width="120" align="center" />
+        <el-table-column prop="college" label="学院" width="140" show-overflow-tooltip align="center" />
+        <el-table-column prop="leader_contact" label="联系电话" width="120" align="center" />
+        <el-table-column prop="leader_email" label="邮箱" width="180" show-overflow-tooltip align="center" />
+        <el-table-column prop="budget" label="项目经费" width="100" align="center">
+          <template #default="{ row }">
+            {{ row.budget }}
+          </template>
+        </el-table-column>
+
+        <el-table-column label="审核节点" width="120" align="center">
           <template #default="{ row }">
             <div class="status-dot">
               <span class="dot" :class="getStatusClass(row.status)"></span>
               <span>{{ row.status_display }}</span>
             </div>
-          </template>
-        </el-table-column>
-        <el-table-column
-          prop="created_at"
-          label="提交时间"
-          width="160"
-          align="center"
-        >
-          <template #default="{ row }">
-            <span class="date-text">{{ formatDate(row.created_at) }}</span>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="180" align="center" fixed="right">
@@ -366,23 +348,12 @@ const downloadFile = (blob: Blob, filename: string) => {
   document.body.removeChild(link);
 };
 
-const getLevelType = (level: string) => {
-  if (level === "NATIONAL") return "danger";
-  if (level === "PROVINCIAL") return "warning";
-  return "info";
-};
-
 const getStatusClass = (status: string) => {
   if (status.includes("APPROVED")) return "dot-success";
   if (status.includes("REJECTED")) return "dot-danger";
   if (status.includes("REVIEWING") || status === "SUBMITTED")
     return "dot-warning";
   return "dot-info";
-};
-
-const formatDate = (date: string) => {
-  if (!date) return "-";
-  return new Date(date).toLocaleDateString();
 };
 
 onMounted(() => {

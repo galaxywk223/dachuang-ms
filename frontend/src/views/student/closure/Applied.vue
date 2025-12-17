@@ -19,30 +19,6 @@
         style="width: 100%"
         :header-cell-style="{ background: '#f5f7fa', color: '#606266' }"
       >
-        <el-table-column type="expand" width="50">
-          <template #default="{ row }">
-            <div class="expand-content">
-              <p><strong>项目简介：</strong>{{ row.description || "暂无" }}</p>
-              <p><strong>负责人姓名：</strong>{{ row.leader_name }}</p>
-              <p><strong>负责人学号：</strong>{{ row.leader_student_id }}</p>
-              <p><strong>学院：</strong>{{ row.college }}</p>
-              <p><strong>联系电话：</strong>{{ row.leader_contact }}</p>
-              <p>
-                <strong>指导教师：</strong>
-                <span v-if="row.advisors_info && row.advisors_info.length > 0">
-                  {{ row.advisors_info.map((a: any) => a.name).join("、") }}
-                </span>
-                <span v-else>暂无</span>
-              </p>
-              <p><strong>成果形式：</strong>{{ getAchievementTypes(row) }}</p>
-              <p>
-                <strong>成果简介：</strong
-                >{{ row.achievement_summary || "暂无" }}
-              </p>
-            </div>
-          </template>
-        </el-table-column>
-
         <el-table-column
           prop="project_no"
           label="立项年份"
@@ -280,22 +256,6 @@ onMounted(() => {
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     min-height: 500px;
-
-    .expand-content {
-      padding: 16px;
-      background: #fafafa;
-
-      p {
-        margin: 8px 0;
-        line-height: 1.6;
-        color: #606266;
-
-        strong {
-          color: #303133;
-          margin-right: 8px;
-        }
-      }
-    }
 
     .pagination-container {
       margin-top: 20px;

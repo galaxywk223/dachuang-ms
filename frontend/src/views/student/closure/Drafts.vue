@@ -19,19 +19,6 @@
         style="width: 100%"
         :header-cell-style="{ background: '#f5f7fa', color: '#606266' }"
       >
-        <el-table-column type="expand" width="50">
-          <template #default="{ row }">
-            <div class="expand-content">
-              <p><strong>项目简介：</strong>{{ row.description || "暂无" }}</p>
-              <p><strong>立项时间：</strong>{{ formatDate(row.start_date) }}</p>
-              <p>
-                <strong>成果简介：</strong
-                >{{ row.achievement_summary || "暂无" }}
-              </p>
-            </div>
-          </template>
-        </el-table-column>
-
         <el-table-column
           prop="project_no"
           label="立项年份"
@@ -179,16 +166,6 @@ const pagination = reactive({
   pageSize: 10,
   total: 0,
 });
-
-// 格式化日期
-const formatDate = (date: string) => {
-  if (!date) return "-";
-  const d = new Date(date);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
 
 // 获取项目年份
 const getProjectYear = (projectNo: string) => {
@@ -338,22 +315,6 @@ onMounted(() => {
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     min-height: 500px;
-
-    .expand-content {
-      padding: 16px;
-      background: #fafafa;
-
-      p {
-        margin: 8px 0;
-        line-height: 1.6;
-        color: #606266;
-
-        strong {
-          color: #303133;
-          margin-right: 8px;
-        }
-      }
-    }
 
     .pagination-container {
       margin-top: 20px;

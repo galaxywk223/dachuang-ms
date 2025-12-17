@@ -50,77 +50,7 @@
           height: '48px',
         }"
         :cell-style="{ color: '#334155', height: '48px' }"
-        @expand-change="handleExpandChange"
       >
-        <el-table-column type="expand" width="50">
-          <template #default="{ row }">
-            <div class="expand-content">
-              <el-descriptions title="项目详情" :column="2" border size="small">
-                <el-descriptions-item label="项目编号">{{
-                  row.project_no
-                }}</el-descriptions-item>
-                <el-descriptions-item label="项目类别">{{
-                  row.category_display
-                }}</el-descriptions-item>
-                <el-descriptions-item label="项目级别">{{
-                  row.level_display
-                }}</el-descriptions-item>
-                <el-descriptions-item label="负责人">{{
-                  row.leader_name
-                }}</el-descriptions-item>
-                <el-descriptions-item label="联系电话">{{
-                  row.leader_contact
-                }}</el-descriptions-item>
-                <el-descriptions-item label="电子邮箱">{{
-                  row.leader_email
-                }}</el-descriptions-item>
-                <el-descriptions-item label="指导老师" :span="2">
-                  <span
-                    v-for="(advisor, index) in row.advisors_info"
-                    :key="advisor.id"
-                  >
-                    {{ advisor.name }} ({{ advisor.title }}){{
-                      index < row.advisors_info.length - 1 ? "、" : ""
-                    }}
-                  </span>
-                </el-descriptions-item>
-                <el-descriptions-item label="项目简介" :span="2">
-                  <div class="text-content">
-                    {{ row.description || "暂无" }}
-                  </div>
-                </el-descriptions-item>
-                <el-descriptions-item label="预期成果" :span="2">
-                  <div class="text-content">
-                    {{ row.expected_results || "暂无" }}
-                  </div>
-                </el-descriptions-item>
-              </el-descriptions>
-
-              <div
-                class="review-actions"
-                v-if="
-                  row.status === 'SUBMITTED' || row.status.includes('REVIEWING')
-                "
-              >
-                <el-button
-                  type="success"
-                  :icon="Check"
-                  plain
-                  @click="handleApprove(row)"
-                  >通过申请</el-button
-                >
-                <el-button
-                  type="danger"
-                  :icon="Close"
-                  plain
-                  @click="handleReject(row)"
-                  >驳回申请</el-button
-                >
-              </div>
-            </div>
-          </template>
-        </el-table-column>
-
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column
           prop="title"
@@ -402,10 +332,6 @@ const handleSizeChange = () => {
   fetchProjects();
 };
 
-const handleExpandChange = (_row: any, _expandedRows: any[]) => {
-  // 展开行时的处理
-};
-
 const handleViewDetail = (_row: any) => {
   ElMessage.info("查看详情功能开发中");
 };
@@ -533,26 +459,6 @@ onMounted(() => {
   border-top: 1px solid $slate-100;
   display: flex;
   justify-content: flex-end;
-}
-
-.expand-content {
-  padding: 24px;
-  background: $slate-50;
-
-  .text-content {
-    white-space: pre-wrap;
-    line-height: 1.6;
-    color: $slate-600;
-  }
-
-  .review-actions {
-    margin-top: 24px;
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    padding-top: 16px;
-    border-top: 1px dashed $slate-200;
-  }
 }
 
 .project-title {

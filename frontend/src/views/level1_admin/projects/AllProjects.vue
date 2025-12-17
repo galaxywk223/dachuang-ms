@@ -118,20 +118,6 @@
         @selection-change="handleSelectionChange"
       >
         <el-table-column type="selection" width="55" align="center" />
-        <el-table-column type="index" label="序号" width="60" align="center" />
-
-        <el-table-column type="expand" label="展开" width="60">
-          <template #default="{ row }">
-            <div class="expand-content">
-               <el-descriptions title="详细信息" :column="3" size="small" border>
-                  <el-descriptions-item label="项目简介" :span="3">{{ row.description || "暂无" }}</el-descriptions-item>
-                  <el-descriptions-item label="预期成果" :span="3">{{ row.expected_results || "暂无" }}</el-descriptions-item>
-                  <el-descriptions-item label="创建时间">{{ formatDate(row.created_at) }}</el-descriptions-item>
-                  <el-descriptions-item label="更新时间">{{ formatDate(row.updated_at) }}</el-descriptions-item>
-               </el-descriptions>
-            </div>
-          </template>
-        </el-table-column>
 
         <el-table-column
           prop="project_no"
@@ -504,10 +490,6 @@ const handleSizeChange = () => {
   fetchProjects();
 };
 
-const handleCreate = () => {
-  ElMessage.info("申报功能请在学生端进行或开发管理员代申请功能");
-};
-
 const handleView = (row: any) => {
   router.push({
     name: "level1-project-detail",
@@ -631,11 +613,6 @@ const getLevelType = (level: string) => {
   if (level === "NATIONAL") return "danger";
   if (level === "PROVINCIAL") return "warning";
   return "info";
-};
-
-const formatDate = (date: string) => {
-  if (!date) return "-";
-  return new Date(date).toLocaleDateString();
 };
 
 const getLabel = (options: any[], value: string) => {
@@ -775,10 +752,4 @@ onMounted(() => {
   }
 }
 
-.expand-content {
-  padding: 20px;
-  background: $slate-50;
-  border-radius: 4px;
-  margin: 0 16px 16px 60px; /* Indent */
-}
 </style>

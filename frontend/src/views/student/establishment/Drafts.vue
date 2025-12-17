@@ -65,19 +65,6 @@
           :cell-style="{ color: '#334155', fontSize: '14px', padding: '8px 0' }"
           border
         >
-          <el-table-column type="expand" label="展开" width="60">
-            <template #default="{ row }">
-              <div class="expand-content">
-                 <el-descriptions title="详细信息" :column="3" size="small" border>
-                    <el-descriptions-item label="项目简介" :span="3">{{ row.description || "暂无" }}</el-descriptions-item>
-                    <el-descriptions-item label="预期成果" :span="3">{{ row.expected_results || "暂无" }}</el-descriptions-item>
-                    <el-descriptions-item label="创建时间">{{ formatDate(row.created_at) }}</el-descriptions-item>
-                    <el-descriptions-item label="更新时间">{{ formatDate(row.updated_at) }}</el-descriptions-item>
-                 </el-descriptions>
-              </div>
-            </template>
-          </el-table-column>
-
           <el-table-column prop="title" label="项目名称" min-width="180" show-overflow-tooltip fixed="left">
              <template #default="{ row }">
                <span class="link-text" @click="handleEdit(row)">{{ row.title || '未命名草稿' }}</span>
@@ -202,11 +189,6 @@ const fetchDrafts = async () => {
   } finally {
     loading.value = false;
   }
-};
-
-const formatDate = (date: string) => {
-  if (!date) return "-";
-  return new Date(date).toLocaleDateString();
 };
 
 const getLabel = (options: any[], value: string) => {
@@ -345,13 +327,6 @@ const handleDelete = async (row: any) => {
   &:hover {
       text-decoration: underline;
   }
-}
-
-.expand-content {
-  padding: 20px;
-  background: $slate-50;
-  border-radius: 4px;
-  margin: 0 16px 16px 60px; /* Indent */
 }
 
 .pagination-container {
