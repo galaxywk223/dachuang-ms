@@ -100,11 +100,99 @@ class ProjectManagementViewSet(viewsets.ModelViewSet):
         """
         更新项目信息
         """
+        from django.db import transaction
+        import json
+        from .models import ProjectAdvisor, ProjectMember
+        from apps.users.models import User
+        import logging
+
+        logger = logging.getLogger(__name__)
+
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
+        
+        # Extract nested data
+        advisors_data = request.data.get("advisors")
+        members_data = request.data.get("members")
+        
+        with transaction.atomic():
+            serializer = self.get_serializer(instance, data=request.data, partial=partial)
+            if not serializer.is_valid():
+                # Debug: 打印本次更新请求的数据与校验错误，方便前后端联调
+                logger.warning(
+                    "Project admin manage update validation failed: project_id=%s user_id=%s partial=%s data=%s errors=%s",
+                    instance.id,
+                    getattr(request.user, "id", None),
+                    partial,
+                    dict(request.data),
+                    serializer.errors,
+                )
+                return Response(
+                    {"code": 400, "message": "数据验证失败", "errors": serializer.errors},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            self.perform_update(serializer)
+            
+            # Update Advisors if provided
+            if advisors_data is not None:
+                if isinstance(advisors_data, str):
+                    try:
+                        advisors_data = json.loads(advisors_data)
+                    except json.JSONDecodeError:
+                        advisors_data = []
+                
+                # Clear existing advisors
+                instance.advisors.all().delete()
+                
+                for idx, advisor_data in enumerate(advisors_data):
+                    user_id = advisor_data.get("user") or advisor_data.get("user_id") or advisor_data.get("id")
+                    job_number = advisor_data.get("job_number") or advisor_data.get("employee_id")
+                    
+                    # Try to find user if no ID
+                    if not user_id and job_number:
+                        u = User.objects.filter(employee_id=job_number).first()
+                        if u:
+                            user_id = u.id
+                            
+                    if user_id:
+                        ProjectAdvisor.objects.create(
+                            project=instance,
+                            user_id=user_id,
+                            order=idx,
+                        )
+
+            # Update Members if provided
+            if members_data is not None:
+                if isinstance(members_data, str):
+                    try:
+                        members_data = json.loads(members_data)
+                    except json.JSONDecodeError:
+                        members_data = []
+                
+                # Clear existing members (except leader)
+                ProjectMember.objects.filter(project=instance).exclude(
+                    role=ProjectMember.MemberRole.LEADER
+                ).delete()
+                
+                for member_data in members_data:
+                    user_id = member_data.get("user") or member_data.get("user_id") or member_data.get("id")
+                    student_id = member_data.get("student_id")
+                    
+                    # Try to find user if no ID
+                    if not user_id and student_id:
+                        u = User.objects.filter(employee_id=student_id).first()
+                        if u:
+                            user_id = u.id
+                            
+                    if not user_id or (instance.leader and user_id == instance.leader.id):
+                        continue
+
+                    ProjectMember.objects.create(
+                        project=instance,
+                        user_id=user_id,
+                        role=ProjectMember.MemberRole.MEMBER,
+                        contribution=member_data.get("contribution", "")
+                    )
 
         return Response({"code": 200, "message": "更新成功", "data": serializer.data})
 

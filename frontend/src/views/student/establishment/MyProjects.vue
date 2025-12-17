@@ -78,7 +78,7 @@
             </template>
           </el-table-column>
 
-          <el-table-column prop="title" label="项目名称" min-width="180" show-overflow-tooltip fixed="left">
+          <el-table-column prop="title" label="项目名称" min-width="200" show-overflow-tooltip fixed="left">
              <template #default="{ row }">
                <span class="link-text" @click="handleEdit(row)">{{ row.title }}</span>
              </template>
@@ -86,38 +86,68 @@
 
           <el-table-column prop="level" label="项目级别" width="100" align="center">
             <template #default="{ row }">
-               <el-tag :type="getLevelType(row.level)" effect="plain" size="small">{{ getLabel(levelOptions, row.level) }}</el-tag>
+               <el-tag :type="getLevelType(row.level)" effect="plain" size="small">{{ row.level_display || getLabel(levelOptions, row.level) }}</el-tag>
             </template>
           </el-table-column>
 
           <el-table-column prop="category" label="项目类别" width="120" align="center">
              <template #default="{ row }">
-                 {{ getLabel(categoryOptions, row.category) }}
+                 <el-tag effect="light" size="small" type="info">{{ row.category_display || getLabel(categoryOptions, row.category) }}</el-tag>
              </template>
           </el-table-column>
 
-          <el-table-column prop="is_key_field" label="重点领域项目" width="140" align="center">
+          <el-table-column label="重点领域项目" width="110" align="center">
             <template #default="{ row }">
-              <el-tag v-if="row.is_key_field" type="success" size="small" effect="light">重点领域项目</el-tag>
-              <el-tag v-else type="info" size="small" effect="plain">一般项目</el-tag>
+              <el-tag v-if="row.is_key_field" type="success" size="small">是</el-tag>
+              <span v-else>-</span>
             </template>
           </el-table-column>
 
-          <el-table-column label="负责人" width="100" align="center">
+          <el-table-column label="重点领域代码" width="110" align="center">
             <template #default="{ row }">
-               {{ row.creator?.real_name || row.creator?.username || '-' }}
+               <span>{{ row.key_domain_code || '-' }}</span>
             </template>
           </el-table-column>
 
-          <el-table-column prop="budget" label="经费" width="100" align="right">
+          <el-table-column prop="leader_name" label="负责人姓名" width="100" align="center">
+            <template #default="{ row }">
+               {{ row.leader_name || row.creator?.real_name || '-' }}
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="leader_student_id" label="负责人学号" width="120" align="center">
+             <template #default="{ row }">
+                 {{ row.leader_student_id || '-' }}
+             </template>
+          </el-table-column>
+
+          <el-table-column prop="college" label="学院" width="140" show-overflow-tooltip align="center">
+              <template #default="{ row }">
+                  {{ row.college || '-' }}
+              </template>
+          </el-table-column>
+
+          <el-table-column prop="leader_contact" label="联系电话" width="120" align="center">
+              <template #default="{ row }">
+                  {{ row.leader_contact || '-' }}
+              </template>
+          </el-table-column>
+
+          <el-table-column prop="leader_email" label="邮箱" width="180" show-overflow-tooltip align="center">
+              <template #default="{ row }">
+                  {{ row.leader_email || '-' }}
+              </template>
+          </el-table-column>
+
+          <el-table-column prop="budget" label="项目经费" width="100" align="center">
              <template #default="{ row }">
                 {{ row.budget }}
              </template>
           </el-table-column>
 
-          <el-table-column label="状态" width="120" align="center" fixed="right">
+          <el-table-column label="审核节点" width="120" align="center" fixed="right">
             <template #default="{ row }">
-               <el-tag :type="getStatusColor(row.status)" size="small" effect="light">{{ getStatusLabel(row.status) }}</el-tag>
+               <el-tag :type="getStatusColor(row.status)" size="small" effect="light">{{ row.status_display || getStatusLabel(row.status) }}</el-tag>
             </template>
           </el-table-column>
 

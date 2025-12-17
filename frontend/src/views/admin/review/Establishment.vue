@@ -125,7 +125,7 @@
         <el-table-column
           prop="title"
           label="项目名称"
-          min-width="220"
+          min-width="200"
           show-overflow-tooltip
         >
           <template #default="{ row }">
@@ -133,8 +133,18 @@
           </template>
         </el-table-column>
         <el-table-column
+          prop="level_display"
+          label="项目级别"
+          width="100"
+          align="center"
+        >
+           <template #default="{ row }">
+             <el-tag size="small" effect="plain">{{ row.level_display }}</el-tag>
+           </template>
+        </el-table-column>
+        <el-table-column
           prop="category_display"
-          label="类别"
+          label="项目类别"
           width="120"
           align="center"
         >
@@ -144,31 +154,74 @@
             }}</el-tag>
           </template>
         </el-table-column>
-
+        <el-table-column
+          label="重点领域项目"
+          width="110"
+          align="center"
+        >
+          <template #default="{ row }">
+            <el-tag v-if="row.is_key_field" type="success" size="small">是</el-tag>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="重点领域代码"
+          width="110"
+          align="center"
+        >
+          <template #default="{ row }">
+             <span>{{ row.key_domain_code || '-' }}</span>
+          </template>
+        </el-table-column>
         <el-table-column
           prop="leader_name"
-          label="负责人"
+          label="负责人姓名"
           width="100"
           align="center"
         />
+        <el-table-column
+          prop="leader_student_id"
+          label="负责人学号"
+          width="120"
+          align="center"
+        />
+        <el-table-column
+          prop="college"
+          label="学院"
+          width="140"
+          show-overflow-tooltip
+          align="center"
+        />
+        <el-table-column
+          prop="leader_contact"
+          label="联系电话"
+          width="120"
+          align="center"
+        />
+        <el-table-column
+          prop="leader_email"
+          label="邮箱"
+          width="180"
+          show-overflow-tooltip
+          align="center"
+        />
+        <el-table-column
+          prop="budget"
+          label="项目经费"
+          width="100"
+          align="center"
+        >
+           <template #default="{ row }">
+             {{ row.budget }}
+           </template>
+        </el-table-column>
 
-        <el-table-column label="状态" width="120" align="center">
+        <el-table-column label="审核节点" width="120" align="center">
           <template #default="{ row }">
             <div class="status-dot">
               <span class="dot" :class="getStatusClass(row.status)"></span>
               <span>{{ row.status_display }}</span>
             </div>
-          </template>
-        </el-table-column>
-
-        <el-table-column
-          prop="created_at"
-          label="申请日期"
-          width="140"
-          align="center"
-        >
-          <template #default="{ row }">
-            <span class="date-text">{{ formatDate(row.created_at) }}</span>
           </template>
         </el-table-column>
 
@@ -409,10 +462,7 @@ const getStatusClass = (status: string) => {
   return "dot-info";
 };
 
-const formatDate = (date: string) => {
-  if (!date) return "-";
-  return new Date(date).toLocaleDateString();
-};
+
 
 onMounted(() => {
   fetchProjects();

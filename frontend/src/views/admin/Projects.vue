@@ -120,25 +120,25 @@
         :cell-style="{ color: '#334155', height: '48px' }"
         @selection-change="handleSelectionChange"
       >
-        <el-table-column type="selection" width="55" align="center" />
-        <el-table-column type="index" label="序号" width="60" align="center" />
-
-        <el-table-column
-          prop="project_no"
-          label="项目编号"
-          width="130"
-          show-overflow-tooltip
-        >
+        <el-table-column type="expand" label="展开" width="60">
           <template #default="{ row }">
-            <span class="font-mono">{{ row.project_no || "-" }}</span>
+            <div class="expand-content">
+               <el-descriptions title="详细信息" :column="3" size="small" border>
+                  <el-descriptions-item label="项目简介" :span="3">{{ row.description || "暂无" }}</el-descriptions-item>
+                  <el-descriptions-item label="预期成果" :span="3">{{ row.expected_results || "暂无" }}</el-descriptions-item>
+                  <el-descriptions-item label="创建时间">{{ formatDate(row.created_at) }}</el-descriptions-item>
+                  <el-descriptions-item label="更新时间">{{ formatDate(row.updated_at) }}</el-descriptions-item>
+               </el-descriptions>
+            </div>
           </template>
         </el-table-column>
 
         <el-table-column
           prop="title"
           label="项目名称"
-          min-width="220"
+          min-width="200"
           show-overflow-tooltip
+          fixed="left"
         >
           <template #default="{ row }">
             <span class="project-title">{{ row.title }}</span>
@@ -146,21 +146,8 @@
         </el-table-column>
 
         <el-table-column
-          prop="category_display"
-          label="类别"
-          width="120"
-          align="center"
-        >
-          <template #default="{ row }">
-            <el-tag effect="light" size="small" type="info">{{
-              row.category_display
-            }}</el-tag>
-          </template>
-        </el-table-column>
-
-        <el-table-column
-          prop="level_display"
-          label="级别"
+          prop="level"
+          label="项目级别"
           width="100"
           align="center"
         >
@@ -169,19 +156,106 @@
               :type="getLevelType(row.level)"
               effect="plain"
               size="small"
-              >{{ row.level_display }}</el-tag
+              >{{ row.level_display || getLabel(levelOptions, row.level) }}</el-tag
             >
           </template>
         </el-table-column>
 
         <el-table-column
+          prop="category"
+          label="项目类别"
+          width="120"
+          align="center"
+        >
+          <template #default="{ row }">
+            <el-tag effect="light" size="small" type="info">{{
+              row.category_display || getLabel(categoryOptions, row.category)
+            }}</el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="重点领域项目" width="110" align="center">
+          <template #default="{ row }">
+            <el-tag v-if="row.is_key_field" type="success" size="small">是</el-tag>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="重点领域代码" width="110" align="center">
+          <template #default="{ row }">
+             <span>{{ row.key_domain_code || '-' }}</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column
           prop="leader_name"
-          label="负责人"
+          label="负责人姓名"
           width="100"
           align="center"
-        />
+        >
+          <template #default="{ row }">
+             {{ row.leader_name || '-' }}
+          </template>
+        </el-table-column>
 
-        <el-table-column label="状态" width="140" align="center">
+        <el-table-column
+          prop="leader_student_id"
+          label="负责人学号"
+          width="120"
+          align="center"
+        >
+           <template #default="{ row }">
+               {{ row.leader_student_id || '-' }}
+           </template>
+        </el-table-column>
+
+        <el-table-column
+          prop="college"
+          label="学院"
+          width="140"
+          show-overflow-tooltip
+          align="center"
+        >
+            <template #default="{ row }">
+                {{ row.college || '-' }}
+            </template>
+        </el-table-column>
+
+        <el-table-column
+          prop="leader_contact"
+          label="联系电话"
+          width="120"
+          align="center"
+        >
+            <template #default="{ row }">
+                {{ row.leader_contact || '-' }}
+            </template>
+        </el-table-column>
+
+        <el-table-column
+          prop="leader_email"
+          label="邮箱"
+          width="180"
+          show-overflow-tooltip
+          align="center"
+        >
+            <template #default="{ row }">
+                {{ row.leader_email || '-' }}
+            </template>
+        </el-table-column>
+
+        <el-table-column
+          prop="budget"
+          label="项目经费"
+          width="100"
+          align="center"
+        >
+           <template #default="{ row }">
+              {{ row.budget }}
+           </template>
+        </el-table-column>
+
+        <el-table-column label="审核节点" width="140" align="center" fixed="right">
           <template #default="{ row }">
             <div class="status-dot">
               <span class="dot" :class="getStatusClass(row.status)"></span>
@@ -398,6 +472,16 @@ const getLevelType = (level: string) => {
   return "info";
 };
 
+const formatDate = (date: string) => {
+  if (!date) return "-";
+  return new Date(date).toLocaleDateString();
+};
+
+const getLabel = (options: any[], value: string) => {
+  const found = options.find((opt) => opt.value === value);
+  return found ? found.label : value;
+};
+
 const getStatusClass = (status: string) => {
   if (status.includes("APPROVED")) return "dot-success";
   if (status.includes("REJECTED")) return "dot-danger";
@@ -528,5 +612,12 @@ onMounted(() => {
       background: $slate-400;
     }
   }
+}
+
+.expand-content {
+  padding: 20px;
+  background: $slate-50;
+  border-radius: 4px;
+  margin: 0 16px 16px 60px; /* Indent */
 }
 </style>

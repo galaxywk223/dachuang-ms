@@ -81,6 +81,7 @@ class Project(models.Model):
 
     # 项目详情
     is_key_field = models.BooleanField(default=False, verbose_name="重点领域项目")
+    key_domain_code = models.CharField(max_length=50, blank=True, verbose_name="重点领域代码")
     # 移除 redundant fields: college, major_code
     # 这些信息应直接从 leader 或 members 获取
     self_funding = models.DecimalField(

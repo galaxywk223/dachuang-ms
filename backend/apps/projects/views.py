@@ -58,6 +58,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
         # 二级管理员只能看到自己学院的项目
         elif user.is_level2_admin:
             queryset = queryset.filter(leader__college=user.college)
+        # 一级管理员可以看到所有项目
+        elif user.is_level1_admin:
+            pass
 
         return queryset
 

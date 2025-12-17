@@ -94,11 +94,18 @@ class ProjectSerializer(serializers.ModelSerializer):
         FALSE_VALUES = {"false", "f", "0", "no", "n", "off", "normal"}
 
         def to_internal_value(self, data):
+            # DRF 3.16 BooleanField no longer accepts Python bool/int directly,
+            # so normalize them here for JSON clients.
+            if isinstance(data, bool):
+                return data
+            if isinstance(data, int) and data in (0, 1):
+                return bool(data)
             if isinstance(data, str):
                 data = data.strip().lower()
             return super().to_internal_value(data)
 
     leader_name = serializers.CharField(source="leader.real_name", read_only=True)
+    leader_student_id = serializers.CharField(source="leader.employee_id", read_only=True)
     members_info = ProjectMemberSerializer(
         source="projectmember_set", many=True, read_only=True
     )
@@ -109,7 +116,8 @@ class ProjectSerializer(serializers.ModelSerializer):
     level_display = serializers.CharField(source="level.label", read_only=True)
     category_display = serializers.CharField(source="category.label", read_only=True)
     source_display = serializers.CharField(source="source.label", read_only=True)
-    college = serializers.CharField(source="leader.college", read_only=True)
+    source_display = serializers.CharField(source="source.label", read_only=True)
+    college = serializers.SerializerMethodField()
     major_code = serializers.CharField(source="leader.major", read_only=True, allow_blank=True)
     leader_contact = serializers.CharField(source="leader.phone", read_only=True, allow_blank=True)
     leader_email = serializers.EmailField(source="leader.email", read_only=True, allow_blank=True)
@@ -164,6 +172,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             "source_display",
             "leader",
             "leader_name",
+            "leader_student_id",
             "college",
             "major_code",
             "leader_contact",
@@ -175,6 +184,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             "members_info",
             "advisors_info",
             "is_key_field",
+            "key_domain_code",
             "self_funding",
             "category_description",
             "start_date",
@@ -238,6 +248,14 @@ class ProjectSerializer(serializers.ModelSerializer):
     def get_attachment_file_name(self, obj):
         return obj.attachment_file.name if obj.attachment_file else ""
 
+    def get_college(self, obj):
+        if not obj.leader or not obj.leader.college:
+            return ""
+        item = DictionaryItem.objects.filter(
+            dict_type__code="college", value=obj.leader.college
+        ).first()
+        return item.label if item else obj.leader.college
+
     def validate_proposal_file(self, value):
         """
         验证申报书文件
@@ -270,6 +288,34 @@ class ProjectSerializer(serializers.ModelSerializer):
             return value
         return value
 
+    def validate(self, attrs):
+        """
+        重点领域逻辑：
+        - 一般项目(is_key_field=False)不要求/不保留重点领域代码
+        - 重点项目(is_key_field=True)必须提供 key_domain_code
+        """
+        instance = getattr(self, "instance", None)
+        next_is_key_field = attrs.get(
+            "is_key_field",
+            instance.is_key_field if instance is not None else False,
+        )
+        next_key_domain_code = attrs.get(
+            "key_domain_code",
+            instance.key_domain_code if instance is not None else "",
+        )
+
+        if next_is_key_field:
+            if not next_key_domain_code:
+                raise serializers.ValidationError(
+                    {"key_domain_code": "重点项目必须选择重点领域代码"}
+                )
+        else:
+            # 仅当明确切换为一般项目时清空重点领域代码，避免 partial update 意外抹掉
+            if "is_key_field" in attrs:
+                attrs["key_domain_code"] = ""
+
+        return attrs
+
     def create(self, validated_data):
         # 自动生成项目编号
         import datetime
@@ -287,7 +333,10 @@ class ProjectListSerializer(serializers.ModelSerializer):
     """
 
     leader_name = serializers.CharField(source="leader.real_name", read_only=True)
-    college = serializers.CharField(source="leader.college", read_only=True)
+    leader_student_id = serializers.CharField(source="leader.employee_id", read_only=True)
+    leader_contact = serializers.CharField(source="leader.phone", read_only=True)
+    leader_email = serializers.CharField(source="leader.email", read_only=True)
+    college = serializers.SerializerMethodField()
     status_display = serializers.CharField(source="get_status_display", read_only=True)
     level_display = serializers.SerializerMethodField()
     category_display = serializers.SerializerMethodField()
@@ -304,9 +353,15 @@ class ProjectListSerializer(serializers.ModelSerializer):
             "category_display",
             "leader",
             "leader_name",
+            "leader_student_id",
+            "leader_contact",
+            "leader_email",
             "status",
             "status_display",
             "college",
+            "budget",
+            "is_key_field",
+            "key_domain_code",
             "created_at",
             "submitted_at",
         ]
@@ -316,6 +371,14 @@ class ProjectListSerializer(serializers.ModelSerializer):
 
     def get_category_display(self, obj):
         return obj.category.label if obj.category else ""
+
+    def get_college(self, obj):
+        if not obj.leader or not obj.leader.college:
+            return ""
+        item = DictionaryItem.objects.filter(
+            dict_type__code="college", value=obj.leader.college
+        ).first()
+        return item.label if item else obj.leader.college
 
 
 class ProjectProgressSerializer(serializers.ModelSerializer):
@@ -369,7 +432,7 @@ class ProjectAchievementSerializer(serializers.ModelSerializer):
     project_title = serializers.CharField(source="project.title", read_only=True)
     project_no = serializers.CharField(source="project.project_no", read_only=True)
     leader_name = serializers.CharField(source="project.leader.real_name", read_only=True)
-    college = serializers.CharField(source="project.leader.college", read_only=True)
+    college = serializers.SerializerMethodField()
 
     class Meta:
         model = ProjectAchievement
@@ -401,6 +464,14 @@ class ProjectAchievementSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "created_at", "updated_at"]
+
+    def get_college(self, obj):
+        if not obj.project.leader or not obj.project.leader.college:
+            return ""
+        item = DictionaryItem.objects.filter(
+            dict_type__code="college", value=obj.project.leader.college
+        ).first()
+        return item.label if item else obj.project.leader.college
 
     def validate(self, attrs):
         """

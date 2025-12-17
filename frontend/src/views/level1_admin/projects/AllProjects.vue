@@ -120,6 +120,19 @@
         <el-table-column type="selection" width="55" align="center" />
         <el-table-column type="index" label="序号" width="60" align="center" />
 
+        <el-table-column type="expand" label="展开" width="60">
+          <template #default="{ row }">
+            <div class="expand-content">
+               <el-descriptions title="详细信息" :column="3" size="small" border>
+                  <el-descriptions-item label="项目简介" :span="3">{{ row.description || "暂无" }}</el-descriptions-item>
+                  <el-descriptions-item label="预期成果" :span="3">{{ row.expected_results || "暂无" }}</el-descriptions-item>
+                  <el-descriptions-item label="创建时间">{{ formatDate(row.created_at) }}</el-descriptions-item>
+                  <el-descriptions-item label="更新时间">{{ formatDate(row.updated_at) }}</el-descriptions-item>
+               </el-descriptions>
+            </div>
+          </template>
+        </el-table-column>
+
         <el-table-column
           prop="project_no"
           label="项目编号"
@@ -134,8 +147,9 @@
         <el-table-column
           prop="title"
           label="项目名称"
-          min-width="220"
+          min-width="200"
           show-overflow-tooltip
+          fixed="left"
         >
           <template #default="{ row }">
             <span class="project-title">{{ row.title }}</span>
@@ -143,21 +157,8 @@
         </el-table-column>
 
         <el-table-column
-          prop="category_display"
-          label="类别"
-          width="120"
-          align="center"
-        >
-          <template #default="{ row }">
-            <el-tag effect="light" size="small" type="info">{{
-              row.category_display
-            }}</el-tag>
-          </template>
-        </el-table-column>
-
-        <el-table-column
-          prop="level_display"
-          label="级别"
+          prop="level"
+          label="项目级别"
           width="100"
           align="center"
         >
@@ -166,26 +167,106 @@
               :type="getLevelType(row.level)"
               effect="plain"
               size="small"
-              >{{ row.level_display }}</el-tag
+              >{{ row.level_display || getLabel(levelOptions, row.level) }}</el-tag
             >
           </template>
         </el-table-column>
 
         <el-table-column
+          prop="category"
+          label="项目类别"
+          width="120"
+          align="center"
+        >
+          <template #default="{ row }">
+            <el-tag effect="light" size="small" type="info">{{
+              row.category_display || getLabel(categoryOptions, row.category)
+            }}</el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="重点领域项目" width="110" align="center">
+          <template #default="{ row }">
+            <el-tag v-if="row.is_key_field" type="success" size="small">是</el-tag>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="重点领域代码" width="110" align="center">
+          <template #default="{ row }">
+             <span>{{ row.key_domain_code || '-' }}</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column
           prop="leader_name"
-          label="负责人"
+          label="负责人姓名"
           width="100"
           align="center"
-        />
-        
+        >
+          <template #default="{ row }">
+             {{ row.leader_name || '-' }}
+          </template>
+        </el-table-column>
+
+        <el-table-column
+          prop="leader_student_id"
+          label="负责人学号"
+          width="120"
+          align="center"
+        >
+           <template #default="{ row }">
+               {{ row.leader_student_id || '-' }}
+           </template>
+        </el-table-column>
+
         <el-table-column
           prop="college"
-          label="所属学院"
-          width="150"
+          label="学院"
+          width="140"
+          show-overflow-tooltip
           align="center"
-        />
+        >
+            <template #default="{ row }">
+                {{ row.college || '-' }}
+            </template>
+        </el-table-column>
 
-        <el-table-column label="状态" width="140" align="center">
+        <el-table-column
+          prop="leader_contact"
+          label="联系电话"
+          width="120"
+          align="center"
+        >
+            <template #default="{ row }">
+                {{ row.leader_contact || '-' }}
+            </template>
+        </el-table-column>
+
+        <el-table-column
+          prop="leader_email"
+          label="邮箱"
+          width="180"
+          show-overflow-tooltip
+          align="center"
+        >
+            <template #default="{ row }">
+                {{ row.leader_email || '-' }}
+            </template>
+        </el-table-column>
+
+        <el-table-column
+          prop="budget"
+          label="项目经费"
+          width="100"
+          align="center"
+        >
+           <template #default="{ row }">
+              {{ row.budget }}
+           </template>
+        </el-table-column>
+
+        <el-table-column label="审核节点" width="140" align="center" fixed="right">
           <template #default="{ row }">
             <div class="status-dot">
               <span class="dot" :class="getStatusClass(row.status)"></span>
@@ -198,6 +279,9 @@
           <template #default="{ row }">
             <el-button link type="primary" @click="handleView(row)"
               >查看</el-button
+            >
+            <el-button link type="primary" @click="handleEdit(row)"
+              >编辑</el-button
             >
             <el-button link type="danger" @click="handleDelete(row)"
               >删除</el-button
@@ -221,18 +305,113 @@
         />
       </div>
     </div>
+
+    <!-- 查看详情弹窗 -->
+    <el-dialog
+      v-model="viewDialogVisible"
+      title="项目详情"
+      width="800px"
+      destroy-on-close
+    >
+      <el-descriptions :column="2" border>
+        <el-descriptions-item label="项目编号">{{ currentProject.project_no }}</el-descriptions-item>
+        <el-descriptions-item label="项目名称">{{ currentProject.title }}</el-descriptions-item>
+        <el-descriptions-item label="项目级别">{{ currentProject.level_display || getLabel(levelOptions, currentProject.level) }}</el-descriptions-item>
+        <el-descriptions-item label="项目类别">{{ currentProject.category_display || getLabel(categoryOptions, currentProject.category) }}</el-descriptions-item>
+        <el-descriptions-item label="重点领域项目">{{ currentProject.is_key_field ? '是' : '否' }}</el-descriptions-item>
+        <el-descriptions-item label="重点领域代码">{{ currentProject.key_domain_code || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="负责人">{{ currentProject.leader_name }}</el-descriptions-item>
+        <el-descriptions-item label="所属学院">{{ currentProject.college }}</el-descriptions-item>
+        <el-descriptions-item label="联系电话">{{ currentProject.leader_contact }}</el-descriptions-item>
+        <el-descriptions-item label="邮箱">{{ currentProject.leader_email }}</el-descriptions-item>
+        <el-descriptions-item label="项目经费">{{ currentProject.budget }}</el-descriptions-item>
+        <el-descriptions-item label="当前状态">{{ currentProject.status_display }}</el-descriptions-item>
+        <el-descriptions-item label="项目简介" :span="2">{{ currentProject.description || '暂无' }}</el-descriptions-item>
+        <el-descriptions-item label="预期成果" :span="2">{{ currentProject.expected_results || '暂无' }}</el-descriptions-item>
+      </el-descriptions>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="viewDialogVisible = false">关闭</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 编辑项目弹窗 -->
+    <el-dialog
+      v-model="editDialogVisible"
+      title="编辑项目"
+      width="600px"
+      destroy-on-close
+    >
+      <el-form
+        ref="editFormRef"
+        :model="editForm"
+        :rules="editRules"
+        label-width="120px"
+      >
+        <el-form-item label="项目名称" prop="title">
+          <el-input v-model="editForm.title" />
+        </el-form-item>
+        <el-form-item label="项目级别" prop="level">
+          <el-select v-model="editForm.level" style="width: 100%">
+            <el-option
+              v-for="item in levelOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="项目类别" prop="category">
+          <el-select v-model="editForm.category" style="width: 100%">
+            <el-option
+              v-for="item in categoryOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="重点领域项目" prop="is_key_field">
+          <el-switch v-model="editForm.is_key_field" />
+        </el-form-item>
+        <el-form-item label="重点领域代码" prop="key_domain_code" v-if="editForm.is_key_field">
+          <el-input v-model="editForm.key_domain_code" />
+        </el-form-item>
+        <el-form-item label="项目经费" prop="budget">
+          <el-input-number v-model="editForm.budget" :precision="2" :step="100" :min="0" style="width: 100%" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="editDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleUpdate" :loading="submitting">
+            保存
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from "vue";
+import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { Search, RefreshLeft, Download } from "@element-plus/icons-vue";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionary";
-import { getAllProjects, deleteProjectById, exportProjects, batchDownloadAttachments } from "@/api/admin";
+import {
+  getAllProjects,
+  deleteProjectById,
+  exportProjects,
+  batchDownloadAttachments,
+  updateProjectInfo,
+} from "@/api/admin";
 
 const { loadDictionaries, getOptions } = useDictionary();
+
+const router = useRouter();
 
 const loading = ref(false);
 const projects = ref<any[]>([]);
@@ -240,6 +419,29 @@ const selectedRows = ref<any[]>([]);
 const currentPage = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
+
+// Dialog controls
+const viewDialogVisible = ref(false);
+const editDialogVisible = ref(false);
+const currentProject = ref<any>({});
+const editFormRef = ref();
+const submitting = ref(false);
+
+const editForm = reactive({
+  id: 0,
+  title: "",
+  level: "",
+  category: "",
+  is_key_field: false,
+  key_domain_code: "",
+  budget: 0,
+});
+
+const editRules = {
+  title: [{ required: true, message: "请输入项目名称", trigger: "blur" }],
+  level: [{ required: true, message: "请选择项目级别", trigger: "change" }],
+  category: [{ required: true, message: "请选择项目类别", trigger: "change" }],
+};
 
 const filters = reactive({
   search: "",
@@ -302,8 +504,45 @@ const handleSizeChange = () => {
   fetchProjects();
 };
 
-const handleView = (row: any) =>
-  ElMessage.success(`正在查看项目: ${row.title}`);
+const handleCreate = () => {
+  ElMessage.info("申报功能请在学生端进行或开发管理员代申请功能");
+};
+
+const handleView = (row: any) => {
+  router.push({
+    name: "level1-project-detail",
+    params: { id: row.id },
+    query: { mode: "view" },
+  });
+};
+
+const handleEdit = (row: any) => {
+  router.push({
+    name: "level1-project-detail",
+    params: { id: row.id },
+    query: { mode: "edit" },
+  });
+};
+
+const handleUpdate = async () => {
+  if (!editFormRef.value) return;
+  
+  await editFormRef.value.validate(async (valid: boolean) => {
+    if (valid) {
+      submitting.value = true;
+      try {
+        await updateProjectInfo(editForm.id, editForm);
+        ElMessage.success("更新成功");
+        editDialogVisible.value = false;
+        fetchProjects();
+      } catch (error) {
+        ElMessage.error("更新失败");
+      } finally {
+        submitting.value = false;
+      }
+    }
+  });
+};
 
 const handleDelete = async (row: any) => {
   try {
@@ -392,6 +631,16 @@ const getLevelType = (level: string) => {
   if (level === "NATIONAL") return "danger";
   if (level === "PROVINCIAL") return "warning";
   return "info";
+};
+
+const formatDate = (date: string) => {
+  if (!date) return "-";
+  return new Date(date).toLocaleDateString();
+};
+
+const getLabel = (options: any[], value: string) => {
+  const found = options.find((opt) => opt.value === value);
+  return found ? found.label : value;
 };
 
 const getStatusClass = (status: string) => {
@@ -524,5 +773,12 @@ onMounted(() => {
       background: $slate-400;
     }
   }
+}
+
+.expand-content {
+  padding: 20px;
+  background: $slate-50;
+  border-radius: 4px;
+  margin: 0 16px 16px 60px; /* Indent */
 }
 </style>

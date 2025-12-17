@@ -69,7 +69,9 @@ request.interceptors.response.use(
           }
           // Handle standard DRF error format (dict of lists)
           else if (data && typeof data === 'object' && !data.code && !data.message) {
-            const details = Object.values(data).flat().join('; ');
+            const details = Object.entries(data)
+              .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.flat().join('; ') : v}`)
+              .join('; ');
             if (details) msg = details;
           }
 

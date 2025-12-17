@@ -64,7 +64,7 @@ export function getProjectDetail(id: number) {
 export function updateProjectInfo(id: number, data: any) {
   return request({
     url: `/projects/admin/manage/${id}/`,
-    method: "put",
+    method: "patch",
     data,
   });
 }
