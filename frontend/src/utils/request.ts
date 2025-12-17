@@ -58,8 +58,23 @@ request.interceptors.response.use(
         case 500:
           ElMessage.error("服务器错误");
           break;
-        default:
-          ElMessage.error(error.response.data?.message || "请求失败");
+        default: {
+          const data = error.response.data as any;
+          let msg = data?.message || "请求失败";
+
+          // Handle custom error format with 'errors' field
+          if (data?.errors) {
+            const details = Object.values(data.errors).flat().join('; ');
+            if (details) msg = `${msg}: ${details}`;
+          }
+          // Handle standard DRF error format (dict of lists)
+          else if (data && typeof data === 'object' && !data.code && !data.message) {
+            const details = Object.values(data).flat().join('; ');
+            if (details) msg = details;
+          }
+
+          ElMessage.error(msg);
+        }
       }
     } else {
       ElMessage.error("网络错误，请检查网络连接");

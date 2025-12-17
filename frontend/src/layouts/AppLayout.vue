@@ -173,7 +173,7 @@ import {
   SwitchButton,
 
   UserFilled,
-  Expand, Fold, Lock, Setting
+  Expand, Fold, Lock, Setting, Folder
 } from '@element-plus/icons-vue';
 import { reactive } from 'vue';
 
@@ -281,6 +281,14 @@ const currentMenus = computed(() => {
                         { index: '/level1-admin/users/students', title: '学生管理' },
                         { index: '/level1-admin/users/teachers', title: '指导教师管理' },
                         { index: '/level1-admin/users/admins', title: '二级管理员' },
+                    ]
+                },
+                {
+                    index: 'projects',
+                    title: '项目管理',
+                    icon: Folder,
+                    children: [
+                         { index: '/level1-admin/projects/all', title: '系统项目管理' },
                     ]
                 },
                 {

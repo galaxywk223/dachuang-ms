@@ -106,7 +106,12 @@ class UserManagementViewSet(viewsets.ModelViewSet):
             data["password"] = "123456"
 
         serializer = self.get_serializer(data=data)
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            print(f"User Creation Validation Errors: {serializer.errors}")
+            return Response(
+                {"code": 400, "message": "参数校验失败", "errors": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         self.perform_create(serializer)
 
         # 返回完整用户信息

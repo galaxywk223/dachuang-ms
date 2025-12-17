@@ -63,8 +63,16 @@
         >
           <el-table-column prop="employee_id" label="学号" width="120" sortable />
           <el-table-column prop="real_name" label="姓名" width="120" />
-          <el-table-column prop="college" label="学院" width="180" />
-          <el-table-column prop="major" label="专业" width="180" />
+          <el-table-column prop="college" label="学院" width="180">
+             <template #default="{ row }">
+                 {{ getLabel(DICT_CODES.COLLEGE, row.college) }}
+             </template>
+          </el-table-column>
+          <el-table-column prop="major" label="专业" width="180">
+             <template #default="{ row }">
+                 {{ getLabel(DICT_CODES.MAJOR_CATEGORY, row.major) }}
+             </template>
+          </el-table-column>
           <el-table-column prop="class_name" label="班级" width="140" />
           <el-table-column label="状态" width="100">
              <template #default="scope">
@@ -84,6 +92,14 @@
                   @click="handleToggleStatus(scope.row)"
               >
                   {{ scope.row.is_active ? '禁用' : '激活' }}
+              </el-button>
+              <el-button 
+                  link 
+                  type="danger" 
+                  size="small" 
+                  @click="handleDelete(scope.row)"
+              >
+                  删除
               </el-button>
             </template>
           </el-table-column>
@@ -215,7 +231,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue';
 import { Search, Plus, Upload } from '@element-plus/icons-vue';
-import { getUsers, toggleUserStatus, createUser } from '@/api/user-admin';
+import { getUsers, toggleUserStatus, createUser, deleteUser } from '@/api/user-admin';
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus';
 import { useDictionary } from '@/composables/useDictionary';
 import { DICT_CODES } from '@/api/dictionary';
@@ -228,7 +244,7 @@ const pageSize = ref(10);
 const addDialogVisible = ref(false);
 const submitLoading = ref(false);
 const studentFormRef = ref<FormInstance>();
-const { loadDictionaries, getOptions } = useDictionary();
+const { loadDictionaries, getOptions, getLabel } = useDictionary();
 const studentForm = reactive({
   employee_id: '',
   real_name: '',
@@ -353,6 +369,35 @@ const handleToggleStatus = async (row: any) => {
    }
 };
 
+const handleDelete = async (row: any) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除用户 "${row.real_name}" 吗？此操作不可恢复。`,
+      '警告',
+      {
+        confirmButtonText: '确定删除',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    );
+
+    const res = await deleteUser(row.id);
+    if (res.code === 200 || res.code === 204) { // 204 No Content is also common for delete
+      ElMessage.success('删除成功');
+      loadData();
+    } else {
+       // Fallback if code isn't 200/204 but request didn't throw
+       ElMessage.success('删除成功'); 
+       loadData();
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error(error);
+      ElMessage.error('删除失败');
+    }
+  }
+};
+
 const resetStudentForm = () => {
   Object.assign(studentForm, {
     employee_id: '',
@@ -381,7 +426,9 @@ const handleCreateStudent = async () => {
 
   submitLoading.value = true;
   try {
-    const payload = { ...studentForm, role: 'STUDENT' };
+    // Sanitize employee_id: remove any non-alphanumeric characters (e.g. quotes, spaces)
+    const sanitizedId = studentForm.employee_id.replace(/[^a-zA-Z0-9]/g, '');
+    const payload = { ...studentForm, employee_id: sanitizedId, role: 'STUDENT' };
     const res = await createUser(payload);
     if (res.code === 200) {
       ElMessage.success('学生添加成功，默认密码为 123456');
@@ -391,14 +438,13 @@ const handleCreateStudent = async () => {
     }
   } catch (error) {
     console.error(error);
-    ElMessage.error('添加学生失败');
   } finally {
     submitLoading.value = false;
   }
 };
 
 onMounted(() => {
-    loadDictionaries([DICT_CODES.COLLEGE]);
+    loadDictionaries([DICT_CODES.COLLEGE, DICT_CODES.MAJOR_CATEGORY]);
     loadData();
 });
 </script>

@@ -56,6 +56,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: "学院信息维护" },
       },
       {
+        path: "projects/all",
+        name: "level1-projects-all",
+        component: () => import("@/views/level1_admin/projects/AllProjects.vue"),
+        meta: { title: "系统项目管理" },
+      },
+      {
         path: "settings/project-dictionaries",
         name: "level1-settings-project-dictionaries",
         component: () => import("@/views/level1_admin/settings/SystemDictionaries.vue"),

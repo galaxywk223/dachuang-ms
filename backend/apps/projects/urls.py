@@ -28,6 +28,7 @@ router = DefaultRouter()
 router.register(r"", ProjectViewSet, basename="project")
 router.register(r"progress", ProjectProgressViewSet, basename="progress")
 router.register(r"admin/review", ProjectReviewViewSet, basename="admin-review")
+router.register(r"admin/manage", ProjectManagementViewSet, basename="admin-manage")
 # router.register(r"admin/achievements", AchievementManagementViewSet, basename="admin-achievements")
 router.register(r"achievements", ProjectAchievementViewSet, basename="achievement")
 

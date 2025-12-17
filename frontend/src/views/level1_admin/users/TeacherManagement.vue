@@ -91,6 +91,14 @@
               >
                   {{ scope.row.is_active ? '禁用' : '激活' }}
               </el-button>
+              <el-button 
+                  link 
+                  type="danger" 
+                  size="small" 
+                  @click="handleDelete(scope.row)"
+              >
+                  删除
+              </el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -207,7 +215,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue';
 import { Search, Plus } from '@element-plus/icons-vue';
-import { getUsers, toggleUserStatus, createUser, updateUser } from '@/api/user-admin';
+import { getUsers, toggleUserStatus, createUser, updateUser, deleteUser } from '@/api/user-admin';
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus';
 import { useDictionary } from '@/composables/useDictionary';
 import { DICT_CODES } from '@/api/dictionary';
@@ -352,6 +360,34 @@ const handleToggleStatus = async (row: any) => {
    }
 };
 
+const handleDelete = async (row: any) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除教师 "${row.real_name}" 吗？此操作不可恢复。`,
+      '警告',
+      {
+        confirmButtonText: '确定删除',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    );
+
+    const res = await deleteUser(row.id);
+    if (res.code === 200 || res.code === 204) {
+      ElMessage.success('删除成功');
+      loadData();
+    } else {
+       ElMessage.success('删除成功');
+       loadData();
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error(error);
+      ElMessage.error('删除失败');
+    }
+  }
+};
+
 const resetFormState = () => {
   addDialogVisible.value = false;
   isEditMode.value = false;
@@ -380,7 +416,9 @@ const handleSubmit = async () => {
 
   submitLoading.value = true;
   try {
-    const payload = { ...formData, role: 'TEACHER' };
+    const sanitizedId = formData.employee_id.replace(/[^a-zA-Z0-9]/g, '');
+    const payload = { ...formData, employee_id: sanitizedId, role: 'TEACHER' };
+    
     let res;
     if (isEditMode.value && currentId.value) {
         res = await updateUser(currentId.value, payload);
@@ -395,7 +433,6 @@ const handleSubmit = async () => {
     }
   } catch (error) {
     console.error(error);
-    ElMessage.error(isEditMode.value ? '修改失败' : '添加失败');
   } finally {
     submitLoading.value = false;
   }
