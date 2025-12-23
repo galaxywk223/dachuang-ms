@@ -46,19 +46,18 @@
     <div class="input-group">
       <label class="input-label">身份选择</label>
       <el-form-item prop="role">
-      <el-form-item prop="role">
-        <el-radio-group v-model="loginForm.role" class="role-radio-group">
-          <el-radio label="student">
-             <span class="role-label">学生</span>
-          </el-radio>
-          <el-radio label="level2_admin">
-             <span class="role-label">二级管理员</span>
-          </el-radio>
-          <el-radio label="level1_admin">
-             <span class="role-label">一级管理员</span>
-          </el-radio>
-        </el-radio-group>
-      </el-form-item>
+        <el-select 
+            v-model="loginForm.role" 
+            placeholder="请选择登录身份" 
+            size="large"
+            class="modern-select"
+        >
+          <el-option label="学生" value="student" />
+          <el-option label="指导教师" value="teacher" />
+          <el-option label="二级学院管理员" value="level2_admin" />
+          <el-option label="校级管理员" value="level1_admin" />
+          <el-option label="评审专家" value="expert" />
+        </el-select>
       </el-form-item>
     </div>
 
@@ -174,29 +173,11 @@ const handleSubmit = async () => {
   }
 }
 
-.role-radio-group {
+:deep(.modern-select) {
     width: 100%;
-    display: flex;
-    justify-content: flex-start; // Align left standardly
-    gap: 24px; // Spacing between standard radios
-
-    :deep(.el-radio) {
-        margin-right: 0;
-        height: auto;
-        
-        .el-radio__label {
-            font-weight: 500;
-            color: $slate-600;
-            padding-left: 6px;
-        }
-
-        &.is-checked {
-            .el-radio__label {
-                color: $primary-700;
-            }
-        }
-    }
 }
+
+
 
 :deep(.modern-input .el-input__inner) {
   font-weight: 500;
