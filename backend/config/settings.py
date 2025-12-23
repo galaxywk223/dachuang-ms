@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "apps.reviews",
     "apps.notifications",
     "apps.dictionaries",
+    "apps.system_settings",
 ]
 
 MIDDLEWARE = [

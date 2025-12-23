@@ -10,6 +10,8 @@ from rest_framework.permissions import IsAuthenticated
 from apps.reviews.models import Review
 from apps.reviews.services import ReviewService
 from .serializers import ProjectSerializer
+from apps.system_settings.services import SystemSettingService
+from django.utils import timezone
 
 
 class ProjectReviewViewSet(viewsets.ViewSet):
@@ -104,6 +106,15 @@ class ProjectReviewViewSet(viewsets.ViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        ok, msg = SystemSettingService.check_review_window(
+            review.review_type, review.review_level, timezone.now().date()
+        )
+        if not ok:
+            return Response(
+                {"code": 400, "message": msg},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         comment = request.data.get("comment", "")
         score = request.data.get("score")
         closure_rating = request.data.get("closure_rating")
@@ -155,6 +166,15 @@ class ProjectReviewViewSet(viewsets.ViewSet):
             return Response(
                 {"code": 404, "message": "未找到待审核记录或无权限"},
                 status=status.HTTP_404_NOT_FOUND,
+            )
+
+        ok, msg = SystemSettingService.check_review_window(
+            review.review_type, review.review_level, timezone.now().date()
+        )
+        if not ok:
+            return Response(
+                {"code": 400, "message": msg},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         comment = request.data.get("comment", "")

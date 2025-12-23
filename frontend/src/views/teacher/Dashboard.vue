@@ -17,6 +17,7 @@
         <el-table-column prop="title" label="项目名称" min-width="200" show-overflow-tooltip />
         <el-table-column prop="leader_name" label="负责人" width="120" />
         <el-table-column prop="level_display" label="级别" width="100" />
+        <el-table-column prop="review_type_display" label="审核类型" width="120" />
         <el-table-column prop="status_display" label="当前状态" width="150">
            <template #default="scope">
               <el-tag>{{ scope.row.status_display }}</el-tag>
@@ -60,8 +61,14 @@
           <el-descriptions-item label="项目名称">{{ currentProject?.title }}</el-descriptions-item>
           <el-descriptions-item label="项目编号">{{ currentProject?.project_no }}</el-descriptions-item>
            <el-descriptions-item label="负责人">{{ currentProject?.leader_name }}</el-descriptions-item>
-          <el-descriptions-item label="申报书">
-             <a v-if="currentProject?.proposal_file_url" :href="currentProject.proposal_file_url" target="_blank">下载申报书</a>
+          <el-descriptions-item label="材料">
+             <a
+               v-if="currentProject?.file_url"
+               :href="currentProject.file_url"
+               target="_blank"
+             >
+               {{ currentProject.file_label }}
+             </a>
              <span v-else>无</span>
           </el-descriptions-item>
       </el-descriptions>
@@ -145,11 +152,29 @@ const fetchProjects = async () => {
              const res: any = await request.get('/reviews/', { params: { status: 'PENDING', review_level: 'TEACHER' } });
              const payload = res.data || res;
              const records = Array.isArray(payload) ? payload : (payload.results || payload.data?.results || payload.data || []);
-             const rows = (records || []).map((r: any) => ({
-                 ...r.project_info,
-                 review_id: r.id,
-                 created_at: r.created_at
-             }));
+             const rows = (records || []).map((r: any) => {
+                 const fileUrl =
+                     r.review_type === 'MID_TERM'
+                         ? r.project_info?.mid_term_report_url
+                         : r.review_type === 'CLOSURE'
+                             ? r.project_info?.final_report_url
+                             : r.project_info?.proposal_file_url;
+                 const fileLabel =
+                     r.review_type === 'MID_TERM'
+                         ? '下载中期报告'
+                         : r.review_type === 'CLOSURE'
+                             ? '下载结题报告'
+                             : '下载申报书';
+                 return {
+                     ...r.project_info,
+                     review_id: r.id,
+                     review_type: r.review_type,
+                     review_type_display: r.review_type_display,
+                     file_url: fileUrl,
+                     file_label: fileLabel,
+                     created_at: r.created_at
+                 };
+             });
              projects.value = rows;
         } else {
              // My Projects (Advised projects)

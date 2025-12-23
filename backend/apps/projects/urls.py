@@ -23,6 +23,7 @@ from .views_closure import (
 )
 from .views_review import ProjectReviewViewSet
 from .views_management import ProjectManagementViewSet, AchievementManagementViewSet
+from .views_changes import ProjectChangeRequestViewSet
 
 router = DefaultRouter()
 router.register(r"", ProjectViewSet, basename="project")
@@ -32,6 +33,7 @@ router.register(r"admin/manage", ProjectManagementViewSet, basename="admin-manag
 # router.register(r"admin/achievements", AchievementManagementViewSet, basename="admin-achievements")
 router.register(r"achievements", ProjectAchievementViewSet, basename="achievement")
 router.register(r"expenditures", ProjectExpenditureViewSet, basename="expenditure")
+router.register(r"change-requests", ProjectChangeRequestViewSet, basename="change-request")
 
 urlpatterns = [
     # 立项管理

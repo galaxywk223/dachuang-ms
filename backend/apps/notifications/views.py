@@ -10,6 +10,7 @@ from django.utils import timezone
 
 from .models import Notification
 from .serializers import NotificationSerializer
+from apps.users.models import User
 
 
 class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
@@ -62,3 +63,51 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
         ).count()
 
         return Response({"code": 200, "data": {"count": count}})
+
+    @action(methods=["post"], detail=False, url_path="batch-send")
+    def batch_send(self, request):
+        """
+        批量发送通知（管理员）
+        """
+        user = request.user
+        if not (user.is_level1_admin or user.is_level2_admin):
+            return Response(
+                {"code": 403, "message": "无权限发送通知"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        title = request.data.get("title")
+        content = request.data.get("content")
+        recipients = request.data.get("recipients", [])
+        role = request.data.get("role")
+        college = request.data.get("college")
+
+        if not title or not content:
+            return Response(
+                {"code": 400, "message": "标题和内容不能为空"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        queryset = User.objects.filter(is_active=True)
+        if recipients and isinstance(recipients, list):
+            queryset = queryset.filter(id__in=recipients)
+        if role:
+            queryset = queryset.filter(role=role)
+        if college:
+            queryset = queryset.filter(college=college)
+        if user.is_level2_admin:
+            queryset = queryset.filter(college=user.college)
+
+        created = 0
+        for recipient in queryset:
+            Notification.objects.create(
+                recipient=recipient,
+                title=title,
+                content=content,
+                notification_type=Notification.NotificationType.SYSTEM,
+            )
+            created += 1
+
+        return Response(
+            {"code": 200, "message": "发送成功", "data": {"created": created}}
+        )

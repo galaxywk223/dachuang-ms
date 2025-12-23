@@ -13,6 +13,8 @@ from .serializers import ReviewSerializer, ReviewActionSerializer
 from .serializers_expert import ExpertGroupSerializer
 from .services import ReviewService
 from apps.projects.models import Project
+from apps.notifications.services import NotificationService
+from apps.system_settings.services import SystemSettingService
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -86,10 +88,31 @@ class ReviewViewSet(viewsets.ModelViewSet):
         action_type = serializer.validated_data["action"]
         comments = serializer.validated_data.get("comments", "")
         score = serializer.validated_data.get("score")
-
-        # 执行审核
         closure_rating = serializer.validated_data.get("closure_rating")
 
+        ok, msg = SystemSettingService.check_review_window(
+            review.review_type, review.review_level, timezone.now().date()
+        )
+        if not ok:
+            return Response(
+                {"code": 400, "message": msg},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        review_rules = SystemSettingService.get_setting("REVIEW_RULES")
+        min_len = int(review_rules.get("teacher_application_comment_min", 0) or 0)
+        if (
+            min_len
+            and review.review_level == Review.ReviewLevel.TEACHER
+            and review.review_type == Review.ReviewType.APPLICATION
+            and len(comments or "") < min_len
+        ):
+            return Response(
+                {"code": 400, "message": f"审核意见至少{min_len}字"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 执行审核
         if action_type == "approve":
             result = ReviewService.approve_review(
                 review, user, comments, score, closure_rating
@@ -98,6 +121,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
             result = ReviewService.reject_review(review, user, comments)
 
         if result:
+            NotificationService.notify_review_result(review.project, action_type == "approve", comments)
             return Response(
                 {
                     "code": 200,
@@ -169,6 +193,59 @@ class ReviewViewSet(viewsets.ModelViewSet):
         elif user.role == "EXPERT":
             return review.reviewer_id == user.id
         return False
+
+    @action(methods=["post"], detail=False, url_path="batch-review")
+    def batch_review(self, request):
+        """
+        批量审核
+        """
+        review_ids = request.data.get("review_ids", [])
+        action_type = request.data.get("action")
+        comments = request.data.get("comments", "")
+        score = request.data.get("score")
+        closure_rating = request.data.get("closure_rating")
+
+        if not isinstance(review_ids, list) or not review_ids:
+            return Response(
+                {"code": 400, "message": "请提供review_ids"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if action_type not in ["approve", "reject"]:
+            return Response(
+                {"code": 400, "message": "无效的审核动作"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        success = 0
+        failed = []
+        for review in Review.objects.filter(id__in=review_ids, status=Review.ReviewStatus.PENDING):
+            if not self.check_review_permission(review, request.user):
+                failed.append({"id": review.id, "reason": "无权限"})
+                continue
+            ok, msg = SystemSettingService.check_review_window(
+                review.review_type, review.review_level, timezone.now().date()
+            )
+            if not ok:
+                failed.append({"id": review.id, "reason": msg or "不在审核时间范围内"})
+                continue
+            if action_type == "approve":
+                ReviewService.approve_review(
+                    review, request.user, comments, score, closure_rating
+                )
+            else:
+                ReviewService.reject_review(review, request.user, comments)
+            NotificationService.notify_review_result(
+                review.project, action_type == "approve", comments
+            )
+            success += 1
+
+        return Response(
+            {
+                "code": 200,
+                "message": "批量审核完成",
+                "data": {"success": success, "failed": failed},
+            }
+        )
 
     @action(methods=["post"], detail=False, url_path="submit-to-level1")
     def submit_to_level1(self, request):

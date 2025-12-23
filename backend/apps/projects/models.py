@@ -39,6 +39,7 @@ class Project(models.Model):
         CLOSURE_LEVEL1_REJECTED = "CLOSURE_LEVEL1_REJECTED", "结题一级审核不通过"
         COMPLETED = "COMPLETED", "已完成"
         CLOSED = "CLOSED", "已结题"
+        TERMINATED = "TERMINATED", "已终止"
 
     # Removed local TextChoices for Level and Category as they are now DictionaryItems
 
@@ -403,3 +404,186 @@ class ProjectExpenditure(models.Model):
 
     def __str__(self):
         return f"{self.project.project_no} - {self.title} - {self.amount}"
+
+
+class ProjectChangeRequest(models.Model):
+    """
+    项目变更/延期/终止申请
+    """
+
+    class ChangeType(models.TextChoices):
+        CHANGE = "CHANGE", "项目变更"
+        TERMINATION = "TERMINATION", "项目终止"
+        EXTENSION = "EXTENSION", "项目延期"
+
+    class ChangeStatus(models.TextChoices):
+        DRAFT = "DRAFT", "草稿"
+        SUBMITTED = "SUBMITTED", "已提交"
+        TEACHER_REVIEWING = "TEACHER_REVIEWING", "导师审核中"
+        LEVEL2_REVIEWING = "LEVEL2_REVIEWING", "二级审核中"
+        LEVEL1_REVIEWING = "LEVEL1_REVIEWING", "一级审核中"
+        APPROVED = "APPROVED", "审核通过"
+        REJECTED = "REJECTED", "审核不通过"
+
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name="change_requests",
+        verbose_name="项目",
+    )
+    request_type = models.CharField(
+        max_length=20, choices=ChangeType.choices, verbose_name="申请类型"
+    )
+    reason = models.TextField(blank=True, verbose_name="申请原因")
+    change_data = models.JSONField(
+        null=True, blank=True, verbose_name="变更内容"
+    )
+    requested_end_date = models.DateField(
+        null=True, blank=True, verbose_name="延期至"
+    )
+    attachment = models.FileField(
+        upload_to="change_requests/",
+        null=True,
+        blank=True,
+        verbose_name="附件",
+        max_length=255,
+    )
+    status = models.CharField(
+        max_length=30,
+        choices=ChangeStatus.choices,
+        default=ChangeStatus.DRAFT,
+        verbose_name="状态",
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="created_change_requests",
+        verbose_name="申请人",
+    )
+    submitted_at = models.DateTimeField(null=True, blank=True, verbose_name="提交时间")
+    reviewed_at = models.DateTimeField(null=True, blank=True, verbose_name="审核时间")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+
+    class Meta:
+        db_table = "project_change_requests"
+        verbose_name = "项目变更申请"
+        verbose_name_plural = verbose_name
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.project.project_no} - {self.get_request_type_display()}"
+
+
+class ProjectChangeReview(models.Model):
+    """
+    项目变更审核记录
+    """
+
+    class ReviewLevel(models.TextChoices):
+        TEACHER = "TEACHER", "导师审核"
+        LEVEL2 = "LEVEL2", "二级审核"
+        LEVEL1 = "LEVEL1", "一级审核"
+
+    class ReviewStatus(models.TextChoices):
+        PENDING = "PENDING", "待审核"
+        APPROVED = "APPROVED", "审核通过"
+        REJECTED = "REJECTED", "审核不通过"
+
+    change_request = models.ForeignKey(
+        ProjectChangeRequest,
+        on_delete=models.CASCADE,
+        related_name="reviews",
+        verbose_name="变更申请",
+    )
+    review_level = models.CharField(
+        max_length=20, choices=ReviewLevel.choices, verbose_name="审核级别"
+    )
+    reviewer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        verbose_name="审核人",
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=ReviewStatus.choices,
+        default=ReviewStatus.PENDING,
+        verbose_name="审核状态",
+    )
+    comments = models.TextField(blank=True, verbose_name="审核意见")
+    reviewed_at = models.DateTimeField(null=True, blank=True, verbose_name="审核时间")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+
+    class Meta:
+        db_table = "project_change_reviews"
+        verbose_name = "项目变更审核"
+        verbose_name_plural = verbose_name
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.change_request.project.project_no} - {self.get_review_level_display()}"
+
+
+class ProjectArchive(models.Model):
+    """
+    项目归档记录
+    """
+
+    project = models.OneToOneField(
+        Project,
+        on_delete=models.CASCADE,
+        related_name="archive",
+        verbose_name="项目",
+    )
+    snapshot = models.JSONField(default=dict, verbose_name="项目快照")
+    attachments = models.JSONField(default=list, verbose_name="附件清单")
+    archived_at = models.DateTimeField(auto_now_add=True, verbose_name="归档时间")
+
+    class Meta:
+        db_table = "project_archives"
+        verbose_name = "项目归档"
+        verbose_name_plural = verbose_name
+        ordering = ["-archived_at"]
+
+    def __str__(self):
+        return f"{self.project.project_no} - 归档"
+
+
+class ProjectPushRecord(models.Model):
+    """
+    项目外部推送记录
+    """
+
+    class PushStatus(models.TextChoices):
+        PENDING = "PENDING", "待推送"
+        SUCCESS = "SUCCESS", "推送成功"
+        FAILED = "FAILED", "推送失败"
+
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name="push_records",
+        verbose_name="项目",
+    )
+    target = models.CharField(max_length=100, verbose_name="目标平台")
+    payload = models.JSONField(default=dict, verbose_name="推送数据")
+    response_message = models.TextField(blank=True, verbose_name="响应信息")
+    status = models.CharField(
+        max_length=20,
+        choices=PushStatus.choices,
+        default=PushStatus.PENDING,
+        verbose_name="推送状态",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+
+    class Meta:
+        db_table = "project_push_records"
+        verbose_name = "项目推送记录"
+        verbose_name_plural = verbose_name
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.project.project_no} -> {self.target}"

@@ -14,6 +14,7 @@ urlpatterns = [
     path("api/v1/reviews/", include("apps.reviews.urls")),
     path("api/v1/notifications/", include("apps.notifications.urls")),
     path("api/v1/dictionaries/", include("apps.dictionaries.urls")),
+    path("api/v1/system-settings/", include("apps.system_settings.urls")),
 ]
 
 # Serve media files in development

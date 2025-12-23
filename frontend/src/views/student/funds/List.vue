@@ -143,10 +143,15 @@ const fetchCategories = async () => {
         // Real logic: fetch by code 'EXPENDITURE_CATEGORY'
         // For now, let's mock or try to fetch if we had the endpoint
         // Let's assume we have /dictionaries/items/?type__code=EXPENDITURE_CATEGORY
-        const { data } = await request.get('/dictionaries/items/', {
+        const response = await request.get('/dictionaries/items/', {
             params: { type_code: 'EXPENDITURE_CATEGORY' }
         });
-        categories.value = data.results || data;
+        const list =
+            (response as any)?.data?.results ??
+            (response as any)?.results ??
+            (response as any)?.data ??
+            response;
+        categories.value = Array.isArray(list) ? list : [];
         
         // Fail-safe mock if empty
         if (categories.value.length === 0) {

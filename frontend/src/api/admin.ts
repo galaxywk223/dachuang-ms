@@ -137,3 +137,80 @@ export function batchDownloadAttachments(params?: any) {
     responseType: "blob",
   });
 }
+
+export function batchUpdateProjectStatus(data: any) {
+  return request({
+    url: "/projects/admin/manage/batch-status/",
+    method: "post",
+    data,
+  });
+}
+
+export function batchExportDocs(params: any) {
+  return request({
+    url: "/projects/admin/manage/batch-export-doc/",
+    method: "get",
+    params,
+    responseType: "blob",
+  });
+}
+
+export function batchExportCertificates(params: any) {
+  return request({
+    url: "/projects/admin/manage/batch-certificates/",
+    method: "get",
+    params,
+    responseType: "blob",
+  });
+}
+
+export function batchExportNotices(params: any) {
+  return request({
+    url: "/projects/admin/manage/batch-establishment-notice/",
+    method: "get",
+    params,
+    responseType: "blob",
+  });
+}
+
+export function importHistoryProjects(data: any) {
+  return request({
+    url: "/projects/admin/manage/import-history/",
+    method: "post",
+    data,
+    headers: {
+      "Content-Type": data instanceof FormData ? "multipart/form-data" : "application/json",
+    },
+  });
+}
+
+export function archiveClosedProjects() {
+  return request({
+    url: "/projects/admin/manage/archive-closed/",
+    method: "post",
+  });
+}
+
+export function pushProjectsExternal(data: any) {
+  return request({
+    url: "/projects/admin/manage/push-external/",
+    method: "post",
+    data,
+  });
+}
+
+export function exportProjectNumbers(params?: any) {
+  return request({
+    url: "/projects/admin/manage/export-project-nos/",
+    method: "get",
+    params,
+    responseType: "blob",
+  });
+}
+
+export function duplicateProjectNumbers() {
+  return request({
+    url: "/projects/admin/manage/duplicate-project-nos/",
+    method: "get",
+  });
+}

@@ -8,8 +8,19 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
 
-from .models import Project, ProjectAchievement
-from .serializers import ProjectSerializer, ProjectAchievementSerializer
+from .models import (
+    Project,
+    ProjectAchievement,
+    ProjectArchive,
+    ProjectPushRecord,
+    ProjectMember,
+)
+from .serializers import (
+    ProjectSerializer,
+    ProjectAchievementSerializer,
+    ProjectArchiveSerializer,
+    ProjectPushRecordSerializer,
+)
 
 
 class ProjectManagementViewSet(viewsets.ModelViewSet):
@@ -31,6 +42,8 @@ class ProjectManagementViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_level2_admin:
             queryset = queryset.filter(leader__college=user.college)
+        elif not user.is_level1_admin:
+            return Project.objects.none()
 
         # 搜索
         search = self.request.query_params.get("search", "")
@@ -459,6 +472,13 @@ class ProjectManagementViewSet(viewsets.ModelViewSet):
                 except Exception:
                     pass
 
+            # 中期报告
+            if p.mid_term_report:
+                try:
+                    files_to_zip.append((p.mid_term_report.path, f"{p.project_no}_{p.title}/中期报告.pdf"))
+                except Exception:
+                    pass
+
             # 结题报告
             if p.final_report:
                 try:
@@ -495,6 +515,495 @@ class ProjectManagementViewSet(viewsets.ModelViewSet):
         )
         response["Content-Disposition"] = f'attachment; filename="{filename}"'
         return response
+
+    @action(methods=["post"], detail=False, url_path="batch-status")
+    def batch_update_status(self, request):
+        """
+        批量更新项目状态
+        """
+        user = request.user
+        if not (user.is_level1_admin or user.is_level2_admin):
+            return Response(
+                {"code": 403, "message": "无权限操作"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        project_ids = request.data.get("project_ids", [])
+        target_status = request.data.get("status")
+        if not isinstance(project_ids, list) or not project_ids:
+            return Response(
+                {"code": 400, "message": "请提供项目ID列表"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not target_status:
+            return Response(
+                {"code": 400, "message": "请提供目标状态"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        allowed_statuses = {c[0] for c in Project.ProjectStatus.choices}
+        if target_status not in allowed_statuses:
+            return Response(
+                {"code": 400, "message": "目标状态不合法"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        queryset = Project.objects.filter(id__in=project_ids)
+        if user.is_level2_admin:
+            queryset = queryset.filter(leader__college=user.college)
+
+        updated = queryset.update(status=target_status)
+        return Response(
+            {"code": 200, "message": "更新成功", "data": {"updated": updated}}
+        )
+
+    def _render_project_doc(self, project, title):
+        advisors = []
+        for advisor in project.advisors.all():
+            advisors.append(f"{advisor.user.real_name}({advisor.user.employee_id})")
+        members = []
+        for member in project.projectmember_set.all():
+            role = "负责人" if member.role == "LEADER" else "成员"
+            members.append(f"{role}: {member.user.real_name}({member.user.employee_id})")
+
+        content = f"""
+        <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>{title}</title>
+        </head>
+        <body>
+          <h1 style="text-align:center;">{title}</h1>
+          <h2>项目基本信息</h2>
+          <p>项目编号：{project.project_no}</p>
+          <p>项目名称：{project.title}</p>
+          <p>项目级别：{project.level.label if project.level else ""}</p>
+          <p>项目类别：{project.category.label if project.category else ""}</p>
+          <p>项目来源：{project.source.label if project.source else ""}</p>
+          <p>负责人：{project.leader.real_name}({project.leader.employee_id})</p>
+          <p>负责人学院：{project.leader.college}</p>
+          <p>指导教师：{"；".join(advisors)}</p>
+          <p>项目成员：{"；".join(members)}</p>
+          <h2>项目内容</h2>
+          <p>项目简介：{project.description or ""}</p>
+          <p>研究内容：{project.research_content or ""}</p>
+          <p>研究方案：{project.research_plan or ""}</p>
+          <p>预期成果：{project.expected_results or ""}</p>
+          <p>创新点：{project.innovation_points or ""}</p>
+        </body>
+        </html>
+        """
+        return content
+
+    def _render_establishment_notice(self, project):
+        html = f"""
+        <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>立项通知书</title>
+        </head>
+        <body>
+          <h1 style="text-align:center;">立项通知书</h1>
+          <p>项目编号：{project.project_no}</p>
+          <p>项目名称：{project.title}</p>
+          <p>负责人：{project.leader.real_name}({project.leader.employee_id})</p>
+          <p>项目级别：{project.level.label if project.level else ""}</p>
+          <p>项目类别：{project.category.label if project.category else ""}</p>
+          <p>批准经费：{project.approved_budget or ""}</p>
+          <p>请按要求组织实施项目。</p>
+        </body>
+        </html>
+        """
+        return html
+
+    @action(methods=["get"], detail=True, url_path="export-doc")
+    def export_doc(self, request, pk=None):
+        """
+        导出单个项目申报书（doc）
+        """
+        project = self.get_object()
+        html = self._render_project_doc(project, "项目申报书")
+        from django.http import HttpResponse
+
+        response = HttpResponse(html, content_type="application/msword")
+        filename = f"{project.project_no}_申报书.doc"
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response
+
+    @action(methods=["get"], detail=False, url_path="batch-export-doc")
+    def batch_export_doc(self, request):
+        """
+        批量导出项目申报书（zip）
+        """
+        ids = request.query_params.get("ids", "")
+        if not ids:
+            return Response(
+                {"code": 400, "message": "请提供项目ID列表"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        id_list = [int(i) for i in ids.split(",") if i.isdigit()]
+        if not id_list:
+            return Response(
+                {"code": 400, "message": "项目ID列表无效"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        queryset = self.get_queryset().filter(id__in=id_list)
+        from io import BytesIO
+        import zipfile
+        from django.http import HttpResponse
+
+        buffer = BytesIO()
+        with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+            for project in queryset:
+                html = self._render_project_doc(project, "项目申报书")
+                filename = f"{project.project_no}_申报书.doc"
+                zf.writestr(filename, html)
+        buffer.seek(0)
+        response = HttpResponse(buffer.read(), content_type="application/zip")
+        response["Content-Disposition"] = 'attachment; filename="project_docs.zip"'
+        return response
+
+    @action(methods=["get"], detail=False, url_path="batch-establishment-notice")
+    def batch_establishment_notice(self, request):
+        """
+        批量生成立项通知书（zip）
+        """
+        ids = request.query_params.get("ids", "")
+        if not ids:
+            return Response(
+                {"code": 400, "message": "请提供项目ID列表"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        id_list = [int(i) for i in ids.split(",") if i.isdigit()]
+        if not id_list:
+            return Response(
+                {"code": 400, "message": "项目ID列表无效"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        queryset = self.get_queryset().filter(id__in=id_list)
+        from io import BytesIO
+        import zipfile
+        from django.http import HttpResponse
+
+        buffer = BytesIO()
+        with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+            for project in queryset:
+                html = self._render_establishment_notice(project)
+                filename = f"{project.project_no}_立项通知书.doc"
+                zf.writestr(filename, html)
+        buffer.seek(0)
+        response = HttpResponse(buffer.read(), content_type="application/zip")
+        response["Content-Disposition"] = 'attachment; filename="notices.zip"'
+        return response
+
+    def _render_certificate_html(self, project, setting):
+        school_name = setting.school_name if setting else ""
+        issuer = setting.issuer_name if setting else ""
+        template_code = setting.template_code if setting else "DEFAULT"
+        return f"""
+        <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>结题证书</title>
+          <style>
+            body {{ font-family: "SimSun", serif; text-align:center; padding: 40px; }}
+            .title {{ font-size: 32px; font-weight: bold; margin-bottom: 24px; }}
+            .content {{ font-size: 18px; line-height: 1.8; }}
+          </style>
+        </head>
+        <body>
+          <div class="title">结题证书</div>
+          <div class="content">
+            <p>{school_name}</p>
+            <p>兹证明：{project.leader.real_name} 负责的项目《{project.title}》已通过结题验收。</p>
+            <p>项目编号：{project.project_no}</p>
+            <p>项目级别：{project.level.label if project.level else ""}</p>
+            <p>项目类别：{project.category.label if project.category else ""}</p>
+            <p>模板编号：{template_code}</p>
+            <p style="margin-top:40px;">{issuer}</p>
+          </div>
+        </body>
+        </html>
+        """
+
+    @action(methods=["get"], detail=True, url_path="certificate-preview")
+    def certificate_preview(self, request, pk=None):
+        """
+        结题证书预览（HTML）
+        """
+        project = self.get_object()
+        from apps.system_settings.models import CertificateSetting
+        setting = CertificateSetting.objects.filter(is_active=True).order_by("-updated_at").first()
+        html = self._render_certificate_html(project, setting)
+        from django.http import HttpResponse
+
+        return HttpResponse(html, content_type="text/html")
+
+    @action(methods=["get"], detail=False, url_path="batch-certificates")
+    def batch_certificates(self, request):
+        """
+        批量生成结题证书（zip）
+        """
+        ids = request.query_params.get("ids", "")
+        if not ids:
+            return Response(
+                {"code": 400, "message": "请提供项目ID列表"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        id_list = [int(i) for i in ids.split(",") if i.isdigit()]
+        if not id_list:
+            return Response(
+                {"code": 400, "message": "项目ID列表无效"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        queryset = self.get_queryset().filter(id__in=id_list, status=Project.ProjectStatus.CLOSED)
+        from apps.system_settings.models import CertificateSetting
+        setting = CertificateSetting.objects.filter(is_active=True).order_by("-updated_at").first()
+
+        from io import BytesIO
+        import zipfile
+        from django.http import HttpResponse
+
+        buffer = BytesIO()
+        with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+            for project in queryset:
+                html = self._render_certificate_html(project, setting)
+                filename = f"{project.project_no}_结题证书.html"
+                zf.writestr(filename, html)
+        buffer.seek(0)
+        response = HttpResponse(buffer.read(), content_type="application/zip")
+        response["Content-Disposition"] = 'attachment; filename="certificates.zip"'
+        return response
+
+    @action(methods=["post"], detail=False, url_path="archive-closed")
+    def archive_closed_projects(self, request):
+        """
+        归档已结题项目
+        """
+        closed_projects = self.get_queryset().filter(status=Project.ProjectStatus.CLOSED)
+        created = 0
+        for project in closed_projects:
+            if hasattr(project, "archive"):
+                continue
+            snapshot = ProjectSerializer(project, context={"request": request}).data
+            attachments = []
+            for field in ["proposal_file", "attachment_file", "mid_term_report", "final_report", "achievement_file"]:
+                f = getattr(project, field, None)
+                if f:
+                    attachments.append({"field": field, "name": f.name})
+            ProjectArchive.objects.create(project=project, snapshot=snapshot, attachments=attachments)
+            created += 1
+        return Response(
+            {"code": 200, "message": "归档完成", "data": {"created": created}}
+        )
+
+    @action(methods=["post"], detail=False, url_path="push-external")
+    def push_external(self, request):
+        """
+        推送项目数据到外部平台（模拟）
+        """
+        ids = request.data.get("project_ids", [])
+        target = request.data.get("target", "ANHUI_INNOVATION_PLATFORM")
+        simulate = bool(request.data.get("simulate", True))
+
+        if not isinstance(ids, list) or not ids:
+            return Response(
+                {"code": 400, "message": "请提供项目ID列表"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        queryset = self.get_queryset().filter(id__in=ids)
+        records = []
+        for project in queryset:
+            payload = ProjectSerializer(project, context={"request": request}).data
+            record = ProjectPushRecord.objects.create(
+                project=project,
+                target=target,
+                payload=payload,
+                status=ProjectPushRecord.PushStatus.SUCCESS if simulate else ProjectPushRecord.PushStatus.PENDING,
+                response_message="模拟推送成功" if simulate else "待推送",
+            )
+            records.append(record)
+
+        serializer = ProjectPushRecordSerializer(records, many=True)
+        return Response({"code": 200, "message": "推送任务已创建", "data": serializer.data})
+
+    @action(methods=["get"], detail=False, url_path="push-records")
+    def push_records(self, request):
+        queryset = ProjectPushRecord.objects.all().order_by("-created_at")
+        serializer = ProjectPushRecordSerializer(queryset, many=True)
+        return Response({"code": 200, "message": "获取成功", "data": serializer.data})
+
+    @action(methods=["get"], detail=False, url_path="archives")
+    def archives(self, request):
+        queryset = ProjectArchive.objects.all().order_by("-archived_at")
+        serializer = ProjectArchiveSerializer(queryset, many=True)
+        return Response({"code": 200, "message": "获取成功", "data": serializer.data})
+
+    @action(methods=["post"], detail=False, url_path="import-history")
+    def import_history_projects(self, request):
+        """
+        批量导入历史项目
+        """
+        file = request.FILES.get("file")
+        if not file:
+            return Response(
+                {"code": 400, "message": "请上传文件"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        import openpyxl
+        from apps.users.models import User
+        from apps.dictionaries.models import DictionaryItem
+        from django.utils import timezone
+
+        wb = openpyxl.load_workbook(file)
+        sheet = wb.active
+        created = 0
+        errors = []
+
+        header = [str(cell.value).strip() if cell.value is not None else "" for cell in sheet[1]]
+        header_map = {name: idx for idx, name in enumerate(header)}
+
+        def get_value(row, name, default=""):
+            idx = header_map.get(name)
+            if idx is None or idx >= len(row):
+                return default
+            value = row[idx]
+            return value if value is not None else default
+
+        for row_idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
+            try:
+                project_no = str(get_value(row, "项目编号", "")).strip()
+                title = str(get_value(row, "项目名称", "")).strip()
+                leader_id = str(get_value(row, "负责人学号/工号", "")).strip()
+                leader_name = str(get_value(row, "负责人姓名", "")).strip()
+                college_code = str(get_value(row, "学院", "")).strip()
+                year_val = get_value(row, "项目年份", timezone.now().year)
+                status_code = str(get_value(row, "项目状态(代码)", "CLOSED")).strip() or "CLOSED"
+                level_code = str(get_value(row, "项目级别(代码)", "")).strip()
+                category_code = str(get_value(row, "项目类别(代码)", "")).strip()
+                source_code = str(get_value(row, "项目来源(代码)", "")).strip()
+
+                if not title or not leader_id:
+                    errors.append(f"第{row_idx}行缺少项目名称或负责人信息")
+                    continue
+
+                leader = User.objects.filter(employee_id=leader_id).first()
+                if not leader:
+                    leader = User.objects.create(
+                        username=leader_id,
+                        employee_id=leader_id,
+                        real_name=leader_name or leader_id,
+                        role=User.UserRole.STUDENT,
+                        college=college_code or "",
+                    )
+                    leader.set_unusable_password()
+                    leader.save()
+
+                level_item = DictionaryItem.objects.filter(
+                    dict_type__code="project_level", value=level_code
+                ).first()
+                category_item = DictionaryItem.objects.filter(
+                    dict_type__code="project_type", value=category_code
+                ).first()
+                source_item = DictionaryItem.objects.filter(
+                    dict_type__code="project_source", value=source_code
+                ).first()
+
+                if project_no and Project.objects.filter(project_no=project_no).exists():
+                    errors.append(f"第{row_idx}行项目编号已存在")
+                    continue
+
+                if not project_no:
+                    from .services import ProjectService
+
+                    project_no = ProjectService.generate_project_no(
+                        int(year_val) if str(year_val).isdigit() else timezone.now().year,
+                        leader.college,
+                    )
+
+                project = Project.objects.create(
+                    project_no=project_no,
+                    title=title,
+                    leader=leader,
+                    year=int(year_val) if str(year_val).isdigit() else timezone.now().year,
+                    status=status_code if status_code in dict(Project.ProjectStatus.choices) else Project.ProjectStatus.CLOSED,
+                    level=level_item,
+                    category=category_item,
+                    source=source_item,
+                )
+                project.save()
+                ProjectMember.objects.get_or_create(
+                    project=project,
+                    user=leader,
+                    defaults={"role": ProjectMember.MemberRole.LEADER},
+                )
+                created += 1
+            except Exception as exc:
+                errors.append(f"第{row_idx}行导入失败: {exc}")
+
+        return Response(
+            {
+                "code": 200,
+                "message": "导入完成",
+                "data": {"created": created, "errors": errors},
+            }
+        )
+
+    @action(methods=["get"], detail=False, url_path="export-project-nos")
+    def export_project_numbers(self, request):
+        """
+        导出项目编号清单
+        """
+        from apps.utils.export import generate_excel
+        from django.http import HttpResponse
+        from datetime import datetime
+
+        queryset = self.get_queryset().select_related("leader")
+        data = []
+        for p in queryset:
+            data.append(
+                {
+                    "project_no": p.project_no,
+                    "title": p.title,
+                    "year": p.year,
+                    "college": p.leader.college if p.leader else "",
+                    "status": p.status,
+                }
+            )
+        headers = {
+            "project_no": "项目编号",
+            "title": "项目名称",
+            "year": "年份",
+            "college": "学院",
+            "status": "状态",
+        }
+        excel_file = generate_excel(data, headers)
+        filename = f"project_numbers_{datetime.now().strftime('%Y%m%d%H%M%S')}.xlsx"
+        response = HttpResponse(
+            excel_file.read(),
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response
+
+    @action(methods=["get"], detail=False, url_path="duplicate-project-nos")
+    def duplicate_project_numbers(self, request):
+        """
+        查重项目编号
+        """
+        from django.db.models import Count
+
+        duplicates = (
+            Project.objects.values("project_no")
+            .annotate(cnt=Count("id"))
+            .filter(cnt__gt=1)
+        )
+        return Response(
+            {"code": 200, "message": "获取成功", "data": list(duplicates)}
+        )
 
 
 class AchievementManagementViewSet(viewsets.ModelViewSet):

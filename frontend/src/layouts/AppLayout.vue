@@ -245,6 +245,11 @@ const currentMenus = computed(() => {
                     ]
                 },
                 {
+                    index: '/change-requests',
+                    title: '项目异动',
+                    icon: DocumentAdd,
+                },
+                {
                     index: 'help',
                     title: '使用帮助',
                     icon: QuestionFilled
@@ -270,6 +275,14 @@ const currentMenus = computed(() => {
                         { index: '/level2-admin/review/achievements', title: '结题成果查看' },
                     ]
                 },
+                {
+                    index: 'change',
+                    title: '项目异动',
+                    icon: DocumentAdd,
+                    children: [
+                        { index: '/level2-admin/change/review', title: '异动审核' },
+                    ]
+                },
             ];
         case 'level1_admin':
 	             return [
@@ -293,12 +306,22 @@ const currentMenus = computed(() => {
 	                    { index: '/level1-admin/projects/all', title: '系统项目管理' },
 	                  ],
 	                },
+                    {
+                      index: 'change',
+                      title: '项目异动',
+                      icon: DocumentAdd,
+                      children: [
+                        { index: '/level1-admin/change/review', title: '异动审核' },
+                      ],
+                    },
 	                {
 	                  index: 'settings',
 	                  title: '系统配置',
 	                  icon: Setting,
 	                  children: [
 	                    { index: '/level1-admin/settings/project-dictionaries', title: '项目参数' },
+                        { index: '/level1-admin/settings/system-config', title: '流程与日期' },
+                        { index: '/level1-admin/settings/certificate', title: '结题证书' },
 	                    { index: '/level1-admin/settings/org-dictionaries', title: '组织参数' },
 	                    { index: '/level1-admin/settings/achievement-dictionaries', title: '成果参数' },
 	                    { index: '/level1-admin/settings/other-dictionaries', title: '通用参数' },
@@ -311,6 +334,11 @@ const currentMenus = computed(() => {
                     index: '/teacher/dashboard',
                     title: '指导项目',
                     icon: DocumentAdd,
+                },
+                {
+                    index: '/teacher/change-reviews',
+                    title: '项目异动审核',
+                    icon: DocumentChecked,
                 },
             ];
         case 'expert':

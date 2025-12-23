@@ -20,13 +20,13 @@ from .serializers import (
     ProjectProgressSerializer,
     ProjectSubmitSerializer,
     ProjectAchievementSerializer,
-    ProjectAchievementSerializer,
     ProjectClosureSerializer,
     ProjectExpenditureSerializer,
 )
 from .serializers_midterm import ProjectMidTermSerializer
 from .services import ProjectService
 from apps.reviews.services import ReviewService
+from apps.system_settings.services import SystemSettingService
 
 
 
@@ -49,7 +49,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         """
         project = self.get_object()
         stats = ProjectService.get_budget_stats(project)
-        return Response(stats)
+        return Response({"code": 200, "message": "获取成功", "data": stats})
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -78,7 +78,49 @@ class ProjectViewSet(viewsets.ModelViewSet):
         elif user.role == "TEACHER":
             queryset = queryset.filter(advisors__user=user).distinct()
 
+        status_in = self.request.query_params.get("status_in")
+        if status_in:
+            status_list = [s.strip() for s in status_in.split(",") if s.strip()]
+            queryset = queryset.filter(status__in=status_list)
+
         return queryset
+
+    def list(self, request, *args, **kwargs):
+        """
+        统一返回结构，方便前端处理
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return Response(
+                {
+                    "code": 200,
+                    "message": "获取成功",
+                    "data": {
+                        "results": serializer.data,
+                        "count": self.paginator.page.paginator.count,
+                    },
+                }
+            )
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(
+            {
+                "code": 200,
+                "message": "获取成功",
+                "data": {"results": serializer.data, "count": len(serializer.data)},
+            }
+        )
+
+    def retrieve(self, request, *args, **kwargs):
+        """
+        项目详情统一返回结构
+        """
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response({"code": 200, "message": "获取成功", "data": serializer.data})
 
     def perform_create(self, serializer):
         """
@@ -261,12 +303,22 @@ class ProjectViewSet(viewsets.ModelViewSet):
         is_draft = serializer.validated_data.get("is_draft", False)
 
         try:
+            if not is_draft:
+                ok, msg = SystemSettingService.check_window(
+                    "MIDTERM_WINDOW", timezone.now().date()
+                )
+                if not ok:
+                    return Response(
+                        {"code": 400, "message": msg or "当前不在中期提交时间范围内"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
             ProjectService.apply_mid_term(project, mid_term_report, is_draft)
             message = "中期检查已保存为草稿" if is_draft else "中期检查申请提交成功"
             
-            # 如果是正式提交，创建审核任务
+            # 如果是正式提交，创建导师审核任务
             if not is_draft:
-                 ReviewService.create_mid_term_review(project)
+                 ReviewService.create_mid_term_teacher_review(project)
                  
             return Response({"code": 200, "message": message})
         except ValueError as e:
@@ -274,15 +326,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 {"code": 400, "message": str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-    @action(detail=True, methods=["get"], url_path="budget-stats")
-    def budget_stats(self, request, pk=None):
-        """
-        获取项目经费统计
-        """
-        project = self.get_object()
-        stats = ProjectService.get_budget_stats(project)
-        return Response(stats)
 
     @action(methods=["post"], detail=True, url_path="submit-mid-term")
     def submit_mid_term(self, request, pk=None):
@@ -299,9 +342,18 @@ class ProjectViewSet(viewsets.ModelViewSet):
             )
 
         try:
+            ok, msg = SystemSettingService.check_window(
+                "MIDTERM_WINDOW", timezone.now().date()
+            )
+            if not ok:
+                return Response(
+                    {"code": 400, "message": msg or "当前不在中期提交时间范围内"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
             if ProjectService.submit_mid_term(project):
-                # 创建审核任务
-                ReviewService.create_mid_term_review(project)
+                # 创建导师审核任务
+                ReviewService.create_mid_term_teacher_review(project)
                 return Response({"code": 200, "message": "中期检查申请提交成功"})
             else:
                 return Response(
@@ -335,6 +387,16 @@ class ProjectViewSet(viewsets.ModelViewSet):
         final_report = serializer.validated_data.get("final_report")
 
         try:
+            if not is_draft:
+                ok, msg = SystemSettingService.check_window(
+                    "CLOSURE_WINDOW", timezone.now().date()
+                )
+                if not ok:
+                    return Response(
+                        {"code": 400, "message": msg or "当前不在结题提交时间范围内"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
             ProjectService.apply_closure(project, final_report, is_draft)
             message = "结题申请已保存为草稿" if is_draft else "结题申请提交成功"
             return Response({"code": 200, "message": message})
@@ -359,9 +421,18 @@ class ProjectViewSet(viewsets.ModelViewSet):
             )
 
         try:
+            ok, msg = SystemSettingService.check_window(
+                "CLOSURE_WINDOW", timezone.now().date()
+            )
+            if not ok:
+                return Response(
+                    {"code": 400, "message": msg or "当前不在结题提交时间范围内"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
             if ProjectService.submit_closure(project):
-                # 创建二级审核记录
-                ReviewService.create_closure_level2_review(project)
+                # 创建导师审核记录
+                ReviewService.create_closure_teacher_review(project)
                 return Response({"code": 200, "message": "结题申请提交成功"})
             else:
                 return Response(
@@ -630,6 +701,17 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     except Exception as e:
                         pass
 
+                # 添加中期报告
+                if project.mid_term_report:
+                    try:
+                        file_path = project.mid_term_report.path
+                        zip_file.write(
+                            file_path,
+                            f"{project.project_no}/中期报告_{project.mid_term_report.name.split('/')[-1]}",
+                        )
+                    except Exception:
+                        pass
+
                 # 添加结题报告
                 if project.final_report:
                     try:
@@ -728,6 +810,32 @@ class ProjectExpenditureViewSet(viewsets.ModelViewSet):
             )
             
         serializer.save(created_by=self.request.user)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return Response(
+                {
+                    "code": 200,
+                    "message": "获取成功",
+                    "data": {
+                        "results": serializer.data,
+                        "count": self.paginator.page.paginator.count,
+                    },
+                }
+            )
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(
+            {
+                "code": 200,
+                "message": "获取成功",
+                "data": {"results": serializer.data, "count": len(serializer.data)},
+            }
+        )
 
     def create(self, request, *args, **kwargs):
         try:

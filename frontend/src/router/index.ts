@@ -100,10 +100,28 @@ const routes: RouteRecordRaw[] = [
         meta: { title: "项目详情" },
       },
       {
+        path: "change/review",
+        name: "level1-change-review",
+        component: () => import("@/views/level1_admin/change/Reviews.vue"),
+        meta: { title: "项目异动审核" },
+      },
+      {
         path: "settings/project-dictionaries",
         name: "level1-settings-project-dictionaries",
         component: () => import("@/views/level1_admin/settings/SystemDictionaries.vue"),
         meta: { title: "项目参数", category: "project" },
+      },
+      {
+        path: "settings/system-config",
+        name: "level1-settings-system-config",
+        component: () => import("@/views/level1_admin/settings/SystemConfig.vue"),
+        meta: { title: "流程与日期" },
+      },
+      {
+        path: "settings/certificate",
+        name: "level1-settings-certificate",
+        component: () => import("@/views/level1_admin/settings/CertificateSettings.vue"),
+        meta: { title: "结题证书" },
       },
       {
         path: "settings/org-dictionaries",
@@ -182,6 +200,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: "结题成果查看" },
       },
       {
+        path: "change/review",
+        name: "admin-change-review",
+        component: () => import("@/views/level2_admin/change/Reviews.vue"),
+        meta: { title: "项目异动审核" },
+      },
+      {
         path: "projects",
         name: "admin-projects",
         component: () => import("@/views/level2_admin/Projects.vue"),
@@ -244,6 +268,12 @@ const routes: RouteRecordRaw[] = [
         name: "student-funds",
         component: () => import("@/views/student/funds/List.vue"),
         meta: { title: "经费管理" },
+      },
+      {
+        path: "change-requests",
+        name: "student-change-requests",
+        component: () => import("@/views/student/change/Requests.vue"),
+        meta: { title: "项目异动" },
       },
 
       {
@@ -319,6 +349,12 @@ const routes: RouteRecordRaw[] = [
         name: "teacher-dashboard",
         component: () => import("@/views/teacher/Dashboard.vue"),
         meta: { title: "指导项目" },
+      },
+      {
+        path: "change-reviews",
+        name: "teacher-change-reviews",
+        component: () => import("@/views/teacher/ChangeReviews.vue"),
+        meta: { title: "项目异动审核" },
       },
     ],
   },

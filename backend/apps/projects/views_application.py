@@ -10,29 +10,22 @@ from django.db import transaction
 from django.utils import timezone
 
 from .models import Project, ProjectAdvisor, ProjectMember
+from .services import ProjectService
 from apps.reviews.models import Review
 from apps.reviews.services import ReviewService
-from .serializers import ProjectSerializer, ProjectAdvisorSerializer
+from .serializers import ProjectSerializer
 from apps.dictionaries.models import DictionaryItem
+from apps.system_settings.services import SystemSettingService
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from django.db.models.functions import Cast
-from django.db.models import IntegerField
 import json
 
 
-def _generate_project_no(year):
+def _generate_project_no(year, college_code=""):
     """
-    生成项目编号：指定年份内按数字递增
+    生成项目编号：年份 + 学院代码 + 序号
     """
-    # Filter by year and non-empty project_no
-    last_project = Project.objects.filter(year=year).exclude(project_no="").annotate(
-        project_no_int=Cast('project_no', IntegerField())
-    ).order_by("-project_no_int").first()
-    
-    if last_project:
-        return str(last_project.project_no_int + 1)
-    return "1"
+    return ProjectService.generate_project_no(year, college_code)
 
 
 def _to_bool(val, default=True):
@@ -44,6 +37,119 @@ def _to_bool(val, default=True):
     if isinstance(val, str):
         return val.strip().lower() not in {"false", "0", "no", "n", "off"}
     return default
+
+
+def _normalize_list(value):
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+            return parsed if isinstance(parsed, list) else []
+        except json.JSONDecodeError:
+            return []
+    if isinstance(value, list):
+        return value
+    if value is None:
+        return []
+    return []
+
+
+def _get_active_projects_qs():
+    return Project.objects.exclude(
+        status__in=[
+            Project.ProjectStatus.DRAFT,
+            Project.ProjectStatus.TEACHER_REJECTED,
+            Project.ProjectStatus.COMPLETED,
+            Project.ProjectStatus.CLOSED,
+            Project.ProjectStatus.TERMINATED,
+        ]
+    )
+
+
+def _check_application_window():
+    ok, msg = SystemSettingService.check_window(
+        "APPLICATION_WINDOW", timezone.now().date()
+    )
+    return ok, msg or "当前不在申报时间范围内"
+
+
+def _validate_limits(user, advisors_data, members_data, project=None):
+    limits = SystemSettingService.get_setting("LIMIT_RULES")
+    max_advisors = int(limits.get("max_advisors", 2) or 0)
+    max_members = int(limits.get("max_members", 5) or 0)
+    max_teacher_active = int(limits.get("max_teacher_active", 0) or 0)
+    max_student_member = int(limits.get("max_student_member", 1) or 0)
+    advisor_title_required = bool(limits.get("advisor_title_required", False))
+    teacher_excellent_bonus = int(limits.get("teacher_excellent_bonus", 0) or 0)
+
+    if max_advisors and len(advisors_data) > max_advisors:
+        return False, f"指导教师人数不能超过{max_advisors}人"
+
+    if max_members and len(members_data) > max_members:
+        return False, f"项目成员人数不能超过{max_members}人"
+
+    active_projects = _get_active_projects_qs()
+    if project:
+        active_projects = active_projects.exclude(id=project.id)
+
+    # 指导教师数量限制
+    if max_teacher_active:
+        excellent_project_ids = []
+        if teacher_excellent_bonus:
+            from apps.reviews.models import Review
+
+            excellent_project_ids = list(
+                Review.objects.filter(
+                    review_type=Review.ReviewType.CLOSURE,
+                    review_level=Review.ReviewLevel.LEVEL1,
+                    status=Review.ReviewStatus.APPROVED,
+                    closure_rating=Review.ClosureRating.EXCELLENT,
+                ).values_list("project_id", flat=True)
+            )
+
+        for advisor in advisors_data:
+            advisor_id = (
+                advisor.get("user")
+                or advisor.get("user_id")
+                or advisor.get("id")
+            )
+            if not advisor_id:
+                continue
+            count = active_projects.filter(advisors__user_id=advisor_id).distinct().count()
+            bonus = 0
+            if teacher_excellent_bonus and excellent_project_ids:
+                bonus = (
+                    ProjectAdvisor.objects.filter(
+                        user_id=advisor_id, project_id__in=excellent_project_ids
+                    )
+                    .distinct()
+                    .count()
+                    * teacher_excellent_bonus
+                )
+            if count >= (max_teacher_active + bonus):
+                return False, "指导教师在研项目数量已达上限"
+
+    # 指导教师职称校验
+    if advisor_title_required:
+        for advisor in advisors_data:
+            title = advisor.get("title")
+            if not title:
+                return False, "指导教师职称信息不能为空"
+
+    # 学生成员参与上限
+    if max_student_member:
+        for member in members_data:
+            member_id = (
+                member.get("user")
+                or member.get("user_id")
+                or member.get("id")
+            )
+            if not member_id:
+                continue
+            count = active_projects.filter(projectmember__user_id=member_id).distinct().count()
+            if count >= max_student_member:
+                return False, "项目成员已参与项目数量达到上限"
+
+    return True, ""
 
 
 def _get_or_create_user_by_identity(employee_id=None, name=None, role=None, phone=None, email=None, department=None):
@@ -104,6 +210,14 @@ def create_project_application(request):
 
     try:
         with transaction.atomic():
+            if not is_draft:
+                ok, msg = _check_application_window()
+                if not ok:
+                    return Response(
+                        {"code": 400, "message": msg},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
             # Override backend-controlled fields
             data["leader"] = user.id
             data["status"] = (
@@ -143,8 +257,20 @@ def create_project_application(request):
                 if default_category:
                     data["category"] = default_category.value
 
+            advisors_data = _normalize_list(request.data.get("advisors", []))
+            members_data = _normalize_list(request.data.get("members", []))
+
+            ok, msg = _validate_limits(user, advisors_data, members_data)
+            if not ok:
+                return Response(
+                    {"code": 400, "message": msg},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
             # 序列化并验证
-            serializer = ProjectSerializer(data=data)
+            serializer = ProjectSerializer(
+                data=data, context={"request": request, "is_draft": is_draft}
+            )
             if not serializer.is_valid():
                 print("Serializer Errors:", serializer.errors)  # Debug logging
                 return Response(
@@ -161,9 +287,11 @@ def create_project_application(request):
 
             if not is_draft:
                 project.submitted_at = timezone.now()
-                project.year = 2025
+                project.year = timezone.now().year
                 if not project.project_no:
-                    project.project_no = _generate_project_no(2025)
+                    project.project_no = _generate_project_no(
+                        project.year, user.college
+                    )
                 project.save()
                 # 创建导师审核记录（避免重复）
                 if not Review.objects.filter(
@@ -175,13 +303,7 @@ def create_project_application(request):
                     ReviewService.create_teacher_review(project)
 
             # 添加指导教师
-            advisors_data = request.data.get("advisors", [])
-            if isinstance(advisors_data, str):
-                try:
-                    advisors_data = json.loads(advisors_data)
-                except json.JSONDecodeError:
-                    advisors_data = []
-
+            advisors_data = advisors_data or []
             for idx, advisor_data in enumerate(advisors_data):
                 # Try to get user_id directly or by employee_id/name
                 user_id = advisor_data.get("user") or advisor_data.get("user_id") or advisor_data.get("id")
@@ -216,13 +338,7 @@ def create_project_application(request):
             )
 
             # 添加其他成员
-            members_data = request.data.get("members", [])
-            if isinstance(members_data, str):
-                try:
-                    members_data = json.loads(members_data)
-                except json.JSONDecodeError:
-                     members_data = []
-
+            members_data = members_data or []
             for member_data in members_data:
                 user_id = (
                     member_data.get("user")
@@ -299,6 +415,14 @@ def update_project_application(request, pk):
 
     try:
         with transaction.atomic():
+            if not is_draft:
+                ok, msg = _check_application_window()
+                if not ok:
+                    return Response(
+                        {"code": 400, "message": msg},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
             # Verify and update fields
             data["status"] = (
                 Project.ProjectStatus.DRAFT if is_draft else Project.ProjectStatus.SUBMITTED
@@ -318,8 +442,23 @@ def update_project_application(request, pk):
             if leader_updates:
                 user.save(update_fields=leader_updates)
             
+            advisors_data = _normalize_list(request.data.get("advisors", []))
+            members_data = _normalize_list(request.data.get("members", []))
+
+            ok, msg = _validate_limits(user, advisors_data, members_data, project)
+            if not ok:
+                return Response(
+                    {"code": 400, "message": msg},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
             # Use partial update to respect existing fields if not provided
-            serializer = ProjectSerializer(project, data=data, partial=True)
+            serializer = ProjectSerializer(
+                project,
+                data=data,
+                partial=True,
+                context={"request": request, "is_draft": is_draft},
+            )
             if not serializer.is_valid():
                 print("Update Serializer Errors:", serializer.errors)
                 return Response(
@@ -335,9 +474,11 @@ def update_project_application(request, pk):
 
             if not is_draft:
                 project.submitted_at = timezone.now()
-                project.year = 2025
+                project.year = timezone.now().year
                 if not project.project_no:
-                    project.project_no = _generate_project_no(2025)
+                    project.project_no = _generate_project_no(
+                        project.year, user.college
+                    )
                 project.save()
                 # 创建导师审核记录（避免重复）
                 if not Review.objects.filter(
@@ -350,13 +491,7 @@ def update_project_application(request, pk):
 
             # 更新指导教师（先删除旧的）
             project.advisors.all().delete()
-            advisors_data = request.data.get("advisors", [])
-            if isinstance(advisors_data, str):
-                try:
-                    advisors_data = json.loads(advisors_data)
-                except json.JSONDecodeError:
-                    advisors_data = []
-            
+            advisors_data = advisors_data or []
             for idx, advisor_data in enumerate(advisors_data):
                 # Try to get user_id directly or by employee_id/name
                 user_id = advisor_data.get("user") or advisor_data.get("user_id") or advisor_data.get("id")
@@ -388,13 +523,7 @@ def update_project_application(request, pk):
                 role=ProjectMember.MemberRole.LEADER
             ).delete()
 
-            members_data = request.data.get("members", [])
-            if isinstance(members_data, str):
-                try:
-                    members_data = json.loads(members_data)
-                except json.JSONDecodeError:
-                    members_data = []
-
+            members_data = members_data or []
             for member_data in members_data:
                 user_id = (
                     member_data.get("user")

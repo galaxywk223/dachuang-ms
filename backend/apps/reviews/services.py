@@ -9,6 +9,7 @@ from .models import (
     ExpertGroup,
 )
 from apps.projects.models import Project
+from apps.system_settings.services import SystemSettingService
 
 
 class ReviewService:
@@ -131,11 +132,18 @@ class ReviewService:
 
         # 中期审核
         elif review.review_type == Review.ReviewType.MID_TERM:
-            project.status = Project.ProjectStatus.MID_TERM_APPROVED
+            if review.review_level == Review.ReviewLevel.TEACHER:
+                # 导师通过后进入二级审核
+                ReviewService.create_mid_term_review(project)
+            elif review.review_level == Review.ReviewLevel.LEVEL2:
+                project.status = Project.ProjectStatus.MID_TERM_APPROVED
 
         # 结题审核
         elif review.review_type == Review.ReviewType.CLOSURE:
-            if review.review_level == Review.ReviewLevel.LEVEL2:
+            if review.review_level == Review.ReviewLevel.TEACHER:
+                # 导师通过后进入一级审核（校级）
+                ReviewService.create_closure_level1_review(project)
+            elif review.review_level == Review.ReviewLevel.LEVEL2:
                 project.status = Project.ProjectStatus.CLOSURE_LEVEL2_APPROVED
                 # 二级审核通过后，自动创建一级审核记录
                 ReviewService.create_closure_level1_review(project)
@@ -143,6 +151,18 @@ class ReviewService:
                 project.status = Project.ProjectStatus.CLOSURE_LEVEL1_APPROVED
                 # 一级审核通过后，项目结题
                 project.status = Project.ProjectStatus.CLOSED
+                from apps.projects.models import ProjectArchive
+                if not hasattr(project, "archive"):
+                    ProjectArchive.objects.create(
+                        project=project,
+                        snapshot={
+                            "project_no": project.project_no,
+                            "title": project.title,
+                            "leader": project.leader_id,
+                            "status": project.status,
+                        },
+                        attachments=[],
+                    )
 
         project.save()
         return True
@@ -164,12 +184,23 @@ class ReviewService:
 
         # 申报审核
         if review.review_type == Review.ReviewType.APPLICATION:
+            process_rules = SystemSettingService.get_setting("PROCESS_RULES")
+            reject_to_previous = bool(process_rules.get("reject_to_previous", False))
+
             if review.review_level == Review.ReviewLevel.TEACHER:
                 project.status = Project.ProjectStatus.TEACHER_REJECTED
             elif review.review_level == Review.ReviewLevel.LEVEL2:
-                project.status = Project.ProjectStatus.DRAFT
+                project.status = (
+                    Project.ProjectStatus.TEACHER_REJECTED
+                    if reject_to_previous
+                    else Project.ProjectStatus.DRAFT
+                )
             elif review.review_level == Review.ReviewLevel.LEVEL1:
-                project.status = Project.ProjectStatus.DRAFT
+                project.status = (
+                    Project.ProjectStatus.TEACHER_REJECTED
+                    if reject_to_previous
+                    else Project.ProjectStatus.DRAFT
+                )
 
         # 中期审核
         elif review.review_type == Review.ReviewType.MID_TERM:
@@ -177,7 +208,9 @@ class ReviewService:
 
         # 结题审核
         elif review.review_type == Review.ReviewType.CLOSURE:
-            if review.review_level == Review.ReviewLevel.LEVEL2:
+            if review.review_level == Review.ReviewLevel.TEACHER:
+                project.status = Project.ProjectStatus.CLOSURE_DRAFT
+            elif review.review_level == Review.ReviewLevel.LEVEL2:
                 project.status = Project.ProjectStatus.CLOSURE_LEVEL2_REJECTED
             elif review.review_level == Review.ReviewLevel.LEVEL1:
                 project.status = Project.ProjectStatus.CLOSURE_LEVEL1_REJECTED
@@ -207,19 +240,26 @@ class ReviewService:
         """
         创建结题一级审核记录
         """
+        existing = Review.objects.filter(
+            project=project,
+            review_type=Review.ReviewType.CLOSURE,
+            review_level=Review.ReviewLevel.LEVEL1,
+            status=Review.ReviewStatus.PENDING,
+        ).first()
+        if existing:
+            project.status = Project.ProjectStatus.CLOSURE_LEVEL1_REVIEWING
+            project.save(update_fields=["status"])
+            return existing
+
         # 更新项目状态
         project.status = Project.ProjectStatus.CLOSURE_LEVEL1_REVIEWING
-        project.save()
+        project.save(update_fields=["status"])
 
         return ReviewService.create_review(
             project=project,
             review_type=Review.ReviewType.CLOSURE,
             review_level=Review.ReviewLevel.LEVEL1,
         )
-
-        project.save()
-        project.save()
-        return True
 
     @staticmethod
     @transaction.atomic
@@ -231,10 +271,64 @@ class ReviewService:
         project.status = Project.ProjectStatus.MID_TERM_REVIEWING
         project.save(update_fields=["status"])
 
+        existing = Review.objects.filter(
+            project=project,
+            review_type=Review.ReviewType.MID_TERM,
+            review_level=Review.ReviewLevel.LEVEL2,
+            status=Review.ReviewStatus.PENDING,
+        ).first()
+        if existing:
+            return existing
+
         return ReviewService.create_review(
             project=project,
             review_type=Review.ReviewType.MID_TERM,
             review_level=Review.ReviewLevel.LEVEL2,
+        )
+
+    @staticmethod
+    @transaction.atomic
+    def create_mid_term_teacher_review(project):
+        """
+        创建中期审核记录（导师审核）
+        """
+        project.status = Project.ProjectStatus.MID_TERM_REVIEWING
+        project.save(update_fields=["status"])
+
+        existing = Review.objects.filter(
+            project=project,
+            review_type=Review.ReviewType.MID_TERM,
+            review_level=Review.ReviewLevel.TEACHER,
+            status=Review.ReviewStatus.PENDING,
+        ).first()
+        if existing:
+            return existing
+
+        return ReviewService.create_review(
+            project=project,
+            review_type=Review.ReviewType.MID_TERM,
+            review_level=Review.ReviewLevel.TEACHER,
+        )
+
+    @staticmethod
+    @transaction.atomic
+    def create_closure_teacher_review(project):
+        """
+        创建结题审核记录（导师审核）
+        """
+        existing = Review.objects.filter(
+            project=project,
+            review_type=Review.ReviewType.CLOSURE,
+            review_level=Review.ReviewLevel.TEACHER,
+            status=Review.ReviewStatus.PENDING,
+        ).first()
+        if existing:
+            return existing
+
+        return ReviewService.create_review(
+            project=project,
+            review_type=Review.ReviewType.CLOSURE,
+            review_level=Review.ReviewLevel.TEACHER,
         )
 
 

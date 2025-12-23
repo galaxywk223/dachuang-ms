@@ -4,7 +4,15 @@
 
 from django.utils import timezone
 from django.db import transaction
-from .models import Project, ProjectMember, ProjectProgress, ProjectAchievement, ProjectExpenditure
+from .models import (
+    Project,
+    ProjectMember,
+    ProjectProgress,
+    ProjectAchievement,
+    ProjectExpenditure,
+    ProjectChangeRequest,
+    ProjectChangeReview,
+)
 
 
 class ProjectService:
@@ -13,16 +21,30 @@ class ProjectService:
     """
 
     @staticmethod
-    def generate_project_no():
+    def generate_project_no(year, college_code=""):
         """
         生成项目编号
-        格式：DC + 年份 + 4位序号
+        格式：YYYY + 学院代码 + 4位序号
+        例如：2025CS0001
         """
-        import datetime
+        import re
 
-        year = datetime.datetime.now().year
-        count = Project.objects.filter(project_no__startswith=f"DC{year}").count() + 1
-        return f"DC{year}{count:04d}"
+        college_code = (college_code or "").strip().upper()
+        # 保证学院代码只包含字母数字
+        college_code = re.sub(r"[^0-9A-Z]", "", college_code) or "XX"
+        prefix = f"{year}{college_code}"
+
+        last_project = (
+            Project.objects.filter(project_no__startswith=prefix)
+            .order_by("-project_no")
+            .first()
+        )
+        if last_project:
+            suffix = last_project.project_no[len(prefix) :]
+            if suffix.isdigit():
+                return f"{prefix}{int(suffix) + 1:04d}"
+
+        return f"{prefix}0001"
 
     @staticmethod
     @transaction.atomic
@@ -300,3 +322,110 @@ class ProjectService:
             proof_file=proof_file,
             created_by=user,
         )
+
+
+class ProjectChangeService:
+    """
+    项目变更服务
+    """
+
+    @staticmethod
+    @transaction.atomic
+    def submit_request(change_request):
+        if change_request.status != ProjectChangeRequest.ChangeStatus.DRAFT:
+            return False
+        change_request.status = ProjectChangeRequest.ChangeStatus.TEACHER_REVIEWING
+        change_request.submitted_at = timezone.now()
+        change_request.save(update_fields=["status", "submitted_at", "updated_at"])
+        ProjectChangeService.create_review(change_request, ProjectChangeReview.ReviewLevel.TEACHER)
+        return True
+
+    @staticmethod
+    def create_review(change_request, review_level):
+        existing = ProjectChangeReview.objects.filter(
+            change_request=change_request,
+            review_level=review_level,
+            status=ProjectChangeReview.ReviewStatus.PENDING,
+        ).first()
+        if existing:
+            return existing
+        return ProjectChangeReview.objects.create(
+            change_request=change_request,
+            review_level=review_level,
+        )
+
+    @staticmethod
+    @transaction.atomic
+    def approve_review(review, reviewer, comments=""):
+        review.status = ProjectChangeReview.ReviewStatus.APPROVED
+        review.reviewer = reviewer
+        review.comments = comments
+        review.reviewed_at = timezone.now()
+        review.save()
+
+        change_request = review.change_request
+        if review.review_level == ProjectChangeReview.ReviewLevel.TEACHER:
+            change_request.status = ProjectChangeRequest.ChangeStatus.LEVEL2_REVIEWING
+            ProjectChangeService.create_review(
+                change_request, ProjectChangeReview.ReviewLevel.LEVEL2
+            )
+        elif review.review_level == ProjectChangeReview.ReviewLevel.LEVEL2:
+            change_request.status = ProjectChangeRequest.ChangeStatus.LEVEL1_REVIEWING
+            ProjectChangeService.create_review(
+                change_request, ProjectChangeReview.ReviewLevel.LEVEL1
+            )
+        elif review.review_level == ProjectChangeReview.ReviewLevel.LEVEL1:
+            change_request.status = ProjectChangeRequest.ChangeStatus.APPROVED
+            change_request.reviewed_at = timezone.now()
+            ProjectChangeService.apply_change(change_request)
+
+        change_request.save(update_fields=["status", "reviewed_at", "updated_at"])
+        return True
+
+    @staticmethod
+    @transaction.atomic
+    def reject_review(review, reviewer, comments=""):
+        review.status = ProjectChangeReview.ReviewStatus.REJECTED
+        review.reviewer = reviewer
+        review.comments = comments
+        review.reviewed_at = timezone.now()
+        review.save()
+
+        change_request = review.change_request
+        change_request.status = ProjectChangeRequest.ChangeStatus.REJECTED
+        change_request.reviewed_at = timezone.now()
+        change_request.save(update_fields=["status", "reviewed_at", "updated_at"])
+        return True
+
+    @staticmethod
+    def apply_change(change_request):
+        project = change_request.project
+        change_type = change_request.request_type
+        change_data = change_request.change_data or {}
+        updated_fields = ["updated_at"]
+
+        if change_type == ProjectChangeRequest.ChangeType.TERMINATION:
+            project.status = Project.ProjectStatus.TERMINATED
+            updated_fields.append("status")
+        elif change_type == ProjectChangeRequest.ChangeType.EXTENSION:
+            if change_request.requested_end_date:
+                project.end_date = change_request.requested_end_date
+                updated_fields.append("end_date")
+        elif change_type == ProjectChangeRequest.ChangeType.CHANGE:
+            allowed_fields = [
+                "title",
+                "description",
+                "research_content",
+                "research_plan",
+                "expected_results",
+                "innovation_points",
+                "start_date",
+                "end_date",
+                "budget",
+                "category_description",
+            ]
+            for field in allowed_fields:
+                if field in change_data:
+                    setattr(project, field, change_data[field])
+                    updated_fields.append(field)
+        project.save(update_fields=sorted(set(updated_fields)))

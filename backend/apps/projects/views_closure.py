@@ -14,6 +14,7 @@ from .serializers import ProjectSerializer, ProjectAchievementSerializer
 from apps.reviews.models import Review
 from apps.reviews.services import ReviewService
 from apps.dictionaries.models import DictionaryItem
+from apps.system_settings.services import SystemSettingService
 
 
 @api_view(["GET"])
@@ -233,6 +234,16 @@ def create_closure_application(request, pk):
 
     try:
         with transaction.atomic():
+            if not is_draft:
+                ok, msg = SystemSettingService.check_window(
+                    "CLOSURE_WINDOW", timezone.now().date()
+                )
+                if not ok:
+                    return Response(
+                        {"code": 400, "message": msg or "当前不在结题提交时间范围内"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
             # 更新项目状态
             project.status = (
                 Project.ProjectStatus.CLOSURE_DRAFT
@@ -303,20 +314,16 @@ def create_closure_application(request, pk):
                         ach.attachment = request.FILES[file_key]
                         ach.save()
 
-            # 非草稿时创建/确保二级结题审核记录
+            # 非草稿时创建/确保导师结题审核记录
             if not is_draft:
                 existing_review = Review.objects.filter(
                     project=project,
                     review_type=Review.ReviewType.CLOSURE,
-                    review_level=Review.ReviewLevel.LEVEL2,
+                    review_level=Review.ReviewLevel.TEACHER,
                     status=Review.ReviewStatus.PENDING,
                 ).first()
                 if not existing_review:
-                    ReviewService.create_closure_level2_review(project)
-                else:
-                    # 确保项目状态与待审核状态一致
-                    project.status = Project.ProjectStatus.CLOSURE_LEVEL2_REVIEWING
-                    project.save()
+                    ReviewService.create_closure_teacher_review(project)
 
             return Response(
                 {
@@ -375,6 +382,16 @@ def update_closure_application(request, pk):
 
     try:
         with transaction.atomic():
+            if not is_draft:
+                ok, msg = SystemSettingService.check_window(
+                    "CLOSURE_WINDOW", timezone.now().date()
+                )
+                if not ok:
+                    return Response(
+                        {"code": 400, "message": msg or "当前不在结题提交时间范围内"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
             # 更新项目状态
             project.status = (
                 Project.ProjectStatus.CLOSURE_DRAFT
@@ -438,19 +455,16 @@ def update_closure_application(request, pk):
                         ach.attachment = request.FILES[file_key]
                         ach.save()
 
-            # 非草稿时创建/确保二级结题审核记录
+            # 非草稿时创建/确保导师结题审核记录
             if not is_draft:
                 existing_review = Review.objects.filter(
                     project=project,
                     review_type=Review.ReviewType.CLOSURE,
-                    review_level=Review.ReviewLevel.LEVEL2,
+                    review_level=Review.ReviewLevel.TEACHER,
                     status=Review.ReviewStatus.PENDING,
                 ).first()
                 if not existing_review:
-                    ReviewService.create_closure_level2_review(project)
-                else:
-                    project.status = Project.ProjectStatus.CLOSURE_LEVEL2_REVIEWING
-                    project.save()
+                    ReviewService.create_closure_teacher_review(project)
 
             return Response(
                 {

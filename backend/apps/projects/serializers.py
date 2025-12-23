@@ -10,8 +10,13 @@ from .models import (
     ProjectProgress,
     ProjectAchievement,
     ProjectExpenditure,
+    ProjectChangeRequest,
+    ProjectChangeReview,
+    ProjectArchive,
+    ProjectPushRecord,
 )
 from apps.dictionaries.models import DictionaryItem
+from apps.system_settings.services import SystemSettingService
 
 
 class ProjectAdvisorSerializer(serializers.ModelSerializer):
@@ -102,7 +107,6 @@ class ProjectSerializer(serializers.ModelSerializer):
     level_display = serializers.CharField(source="level.label", read_only=True)
     category_display = serializers.CharField(source="category.label", read_only=True)
     source_display = serializers.CharField(source="source.label", read_only=True)
-    source_display = serializers.CharField(source="source.label", read_only=True)
     college = serializers.SerializerMethodField()
     major_code = serializers.CharField(source="leader.major", read_only=True, allow_blank=True)
     leader_contact = serializers.CharField(source="leader.phone", read_only=True, allow_blank=True)
@@ -141,6 +145,10 @@ class ProjectSerializer(serializers.ModelSerializer):
     attachment_file_name = serializers.SerializerMethodField()
     mid_term_report_url = serializers.SerializerMethodField()
     mid_term_report_name = serializers.SerializerMethodField()
+    final_report_url = serializers.SerializerMethodField()
+    final_report_name = serializers.SerializerMethodField()
+    achievement_file_url = serializers.SerializerMethodField()
+    achievement_file_name = serializers.SerializerMethodField()
     proposal_file = serializers.FileField(required=False, allow_null=True, allow_empty_file=True)
     attachment_file = serializers.FileField(required=False, allow_null=True, allow_empty_file=True)
     mid_term_report = serializers.FileField(required=False, allow_null=True, allow_empty_file=True)
@@ -192,9 +200,13 @@ class ProjectSerializer(serializers.ModelSerializer):
             "proposal_file_url",
             "attachment_file_url",
             "mid_term_report_url",
+            "final_report_url",
+            "achievement_file_url",
             "proposal_file_name",
             "attachment_file_name",
             "mid_term_report_name",
+            "final_report_name",
+            "achievement_file_name",
             "status",
             "status_display",
             "ranking",
@@ -248,6 +260,18 @@ class ProjectSerializer(serializers.ModelSerializer):
     def get_mid_term_report_name(self, obj):
         return obj.mid_term_report.name if obj.mid_term_report else ""
 
+    def get_final_report_url(self, obj):
+        return self._build_file_url(obj.final_report)
+
+    def get_final_report_name(self, obj):
+        return obj.final_report.name if obj.final_report else ""
+
+    def get_achievement_file_url(self, obj):
+        return self._build_file_url(obj.achievement_file)
+
+    def get_achievement_file_name(self, obj):
+        return obj.achievement_file.name if obj.achievement_file else ""
+
     def get_college(self, obj):
         if not obj.leader or not obj.leader.college:
             return ""
@@ -295,20 +319,58 @@ class ProjectSerializer(serializers.ModelSerializer):
         - 重点项目(is_key_field=True)必须提供 key_domain_code
         """
         request = self.context.get("request")
+        is_draft = bool(self.context.get("is_draft", False))
         if request and request.method == "POST":
             user = request.user
             if user.is_student:
-                active_projects_count = Project.objects.filter(leader=user).exclude(
-                    status__in=[
+                limits = SystemSettingService.get_setting("LIMIT_RULES")
+                process_rules = SystemSettingService.get_setting("PROCESS_RULES")
+                max_student_active = int(limits.get("max_student_active", 1) or 0)
+                allow_active_reapply = bool(process_rules.get("allow_active_reapply", False))
+
+                if not allow_active_reapply and not is_draft:
+                    active_projects_count = Project.objects.filter(leader=user).exclude(
+                        status__in=[
+                        Project.ProjectStatus.DRAFT,
                         Project.ProjectStatus.CLOSED,
                         Project.ProjectStatus.COMPLETED,
                         Project.ProjectStatus.TEACHER_REJECTED,
+                        Project.ProjectStatus.TERMINATED,
                     ]
-                ).count()
-                if active_projects_count > 0:
-                    raise serializers.ValidationError(
-                        "您已有在研或审核中的项目，在校期间限报一项。"
+                    ).count()
+                    if max_student_active and active_projects_count >= max_student_active:
+                        raise serializers.ValidationError(
+                            "您已有在研或审核中的项目，在校期间限报一项。"
+                        )
+
+        limits = SystemSettingService.get_setting("LIMIT_RULES")
+        if not is_draft and limits.get("dedupe_title"):
+            title = attrs.get("title")
+            if title:
+                queryset = Project.objects.filter(title__iexact=title)
+                if self.instance:
+                    queryset = queryset.exclude(id=self.instance.id)
+                if queryset.exists():
+                    raise serializers.ValidationError("项目名称已存在，请勿重复申报")
+
+        if not is_draft:
+            leader = attrs.get("leader") or (request.user if request else None)
+            year = attrs.get("year") or (self.instance.year if self.instance else None)
+            college_code = leader.college if leader else ""
+            college_quota = limits.get("college_quota") or {}
+            if college_code and year and college_code in college_quota:
+                try:
+                    quota = int(college_quota.get(college_code) or 0)
+                except (TypeError, ValueError):
+                    quota = 0
+                if quota:
+                    qs = Project.objects.filter(year=year, leader__college=college_code).exclude(
+                        status=Project.ProjectStatus.DRAFT
                     )
+                    if self.instance:
+                        qs = qs.exclude(id=self.instance.id)
+                    if qs.count() >= quota:
+                        raise serializers.ValidationError("该学院本年度名额已满")
 
         instance = getattr(self, "instance", None)
         next_is_key_field = attrs.get(
@@ -333,12 +395,18 @@ class ProjectSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        # 自动生成项目编号
-        import datetime
+        # 自动生成项目编号（基于年份+学院+序号）
+        from django.utils import timezone
+        from .services import ProjectService
 
-        year = datetime.datetime.now().year
-        count = Project.objects.filter(project_no__startswith=f"DC{year}").count() + 1
-        validated_data["project_no"] = f"DC{year}{count:04d}"
+        if not validated_data.get("project_no"):
+            request = self.context.get("request")
+            leader = validated_data.get("leader") or (request.user if request else None)
+            year = validated_data.get("year") or timezone.now().year
+            college_code = leader.college if leader else ""
+            validated_data["project_no"] = ProjectService.generate_project_no(
+                year, college_code
+            )
 
         return super().create(validated_data)
 
@@ -356,6 +424,9 @@ class ProjectListSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source="get_status_display", read_only=True)
     level_display = serializers.SerializerMethodField()
     category_display = serializers.SerializerMethodField()
+    proposal_file_url = serializers.SerializerMethodField()
+    mid_term_report_url = serializers.SerializerMethodField()
+    final_report_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
@@ -379,6 +450,9 @@ class ProjectListSerializer(serializers.ModelSerializer):
             "approved_budget",
             "is_key_field",
             "key_domain_code",
+            "proposal_file_url",
+            "mid_term_report_url",
+            "final_report_url",
             "created_at",
             "submitted_at",
         ]
@@ -396,6 +470,27 @@ class ProjectListSerializer(serializers.ModelSerializer):
             dict_type__code="college", value=obj.leader.college
         ).first()
         return item.label if item else obj.leader.college
+
+    def _build_file_url(self, file_field):
+        if not file_field:
+            return ""
+        try:
+            request = self.context.get("request")
+            url = file_field.url
+            if request:
+                return request.build_absolute_uri(url)
+            return url
+        except Exception:
+            return ""
+
+    def get_proposal_file_url(self, obj):
+        return self._build_file_url(obj.proposal_file)
+
+    def get_mid_term_report_url(self, obj):
+        return self._build_file_url(obj.mid_term_report)
+
+    def get_final_report_url(self, obj):
+        return self._build_file_url(obj.final_report)
 
 
 class ProjectProgressSerializer(serializers.ModelSerializer):
@@ -588,3 +683,152 @@ class ProjectExpenditureSerializer(serializers.ModelSerializer):
         if obj.proof_file:
             return obj.proof_file.url
         return None
+
+
+class ProjectChangeReviewSerializer(serializers.ModelSerializer):
+    reviewer_name = serializers.CharField(source="reviewer.real_name", read_only=True)
+    review_level_display = serializers.CharField(
+        source="get_review_level_display", read_only=True
+    )
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
+
+    class Meta:
+        model = ProjectChangeReview
+        fields = [
+            "id",
+            "change_request",
+            "review_level",
+            "review_level_display",
+            "reviewer",
+            "reviewer_name",
+            "status",
+            "status_display",
+            "comments",
+            "reviewed_at",
+            "created_at",
+        ]
+        read_only_fields = ["id", "created_at", "reviewed_at"]
+
+
+class ProjectChangeRequestSerializer(serializers.ModelSerializer):
+    project_title = serializers.CharField(source="project.title", read_only=True)
+    project_no = serializers.CharField(source="project.project_no", read_only=True)
+    leader_name = serializers.CharField(source="project.leader.real_name", read_only=True)
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
+    request_type_display = serializers.CharField(
+        source="get_request_type_display", read_only=True
+    )
+    attachment_url = serializers.SerializerMethodField()
+    reviews = ProjectChangeReviewSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ProjectChangeRequest
+        fields = [
+            "id",
+            "project",
+            "project_title",
+            "project_no",
+            "leader_name",
+            "request_type",
+            "request_type_display",
+            "reason",
+            "change_data",
+            "requested_end_date",
+            "attachment",
+            "attachment_url",
+            "status",
+            "status_display",
+            "created_by",
+            "submitted_at",
+            "reviewed_at",
+            "created_at",
+            "updated_at",
+            "reviews",
+        ]
+        read_only_fields = ["id", "created_by", "created_at", "updated_at"]
+
+    def get_attachment_url(self, obj):
+        if not obj.attachment:
+            return ""
+        try:
+            request = self.context.get("request")
+            url = obj.attachment.url
+            if request:
+                return request.build_absolute_uri(url)
+            return url
+        except Exception:
+            return ""
+
+    def validate(self, attrs):
+        request_type = attrs.get("request_type") or (
+            self.instance.request_type if self.instance else None
+        )
+        requested_end_date = attrs.get("requested_end_date")
+        status_val = attrs.get("status") or (
+            self.instance.status if self.instance else ProjectChangeRequest.ChangeStatus.DRAFT
+        )
+        if (
+            request_type == ProjectChangeRequest.ChangeType.EXTENSION
+            and not requested_end_date
+            and status_val != ProjectChangeRequest.ChangeStatus.DRAFT
+        ):
+            raise serializers.ValidationError("延期申请必须填写延期日期")
+        return attrs
+
+    def validate_change_data(self, value):
+        if isinstance(value, str):
+            try:
+                import json
+
+                return json.loads(value) if value else {}
+            except json.JSONDecodeError:
+                raise serializers.ValidationError("变更内容JSON格式不正确")
+        return value
+
+
+class ProjectChangeReviewActionSerializer(serializers.Serializer):
+    action = serializers.ChoiceField(
+        choices=["approve", "reject"], help_text="审核操作"
+    )
+    comments = serializers.CharField(required=False, allow_blank=True)
+
+
+class ProjectArchiveSerializer(serializers.ModelSerializer):
+    project_no = serializers.CharField(source="project.project_no", read_only=True)
+    project_title = serializers.CharField(source="project.title", read_only=True)
+
+    class Meta:
+        model = ProjectArchive
+        fields = [
+            "id",
+            "project",
+            "project_no",
+            "project_title",
+            "snapshot",
+            "attachments",
+            "archived_at",
+        ]
+        read_only_fields = ["id", "archived_at"]
+
+
+class ProjectPushRecordSerializer(serializers.ModelSerializer):
+    project_no = serializers.CharField(source="project.project_no", read_only=True)
+    project_title = serializers.CharField(source="project.title", read_only=True)
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
+
+    class Meta:
+        model = ProjectPushRecord
+        fields = [
+            "id",
+            "project",
+            "project_no",
+            "project_title",
+            "target",
+            "payload",
+            "response_message",
+            "status",
+            "status_display",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
