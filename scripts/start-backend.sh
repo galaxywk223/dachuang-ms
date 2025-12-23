@@ -24,4 +24,12 @@ if [[ ! -f "$VENV_DIR/.deps-installed" || "requirements.txt" -nt "$VENV_DIR/.dep
   touch "$VENV_DIR/.deps-installed"
 fi
 
-python manage.py runserver 0.0.0.0:8000
+SERVER_MODE="${DJANGO_SERVER_MODE:-gunicorn}"
+
+if [[ "$SERVER_MODE" == "runserver" ]]; then
+  exec python manage.py runserver 0.0.0.0:8000
+else
+  # Use a WSGI server to avoid Django's "development server" warning.
+  # --reload keeps a similar dev experience (auto-reload on code changes).
+  exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --reload
+fi
