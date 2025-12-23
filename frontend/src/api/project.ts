@@ -218,3 +218,25 @@ export function getProjectCertificate(id: number) {
     responseType: "blob",
   });
 }
+
+/**
+ * 导出项目申报书 (Word)
+ */
+export function exportProjectDoc(id: number) {
+  return request({
+    url: `/projects/${id}/export-doc/`,
+    method: "get",
+    responseType: "blob",
+  });
+}
+
+/**
+ * 推送项目数据到外部平台
+ */
+export function pushProjectToExternal(data: { project_ids: number[]; target: string }) {
+  return request({
+    url: `/projects/push-external/`,
+    method: "post",
+    data,
+  });
+}

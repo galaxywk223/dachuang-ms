@@ -22,6 +22,10 @@ from .serializers import (
     ProjectPushRecordSerializer,
 )
 from .certificates import render_certificate_html
+from .services import DocumentService, ExternalPushService
+import io
+import zipfile
+from django.http import HttpResponse
 
 
 class ProjectManagementViewSet(viewsets.ModelViewSet):
@@ -621,19 +625,24 @@ class ProjectManagementViewSet(viewsets.ModelViewSet):
         """
         导出单个项目申报书（doc）
         """
-        project = self.get_object()
-        html = self._render_project_doc(project, "项目申报书")
-        from django.http import HttpResponse
-
-        response = HttpResponse(html, content_type="application/msword")
-        filename = f"{project.project_no}_申报书.doc"
-        response["Content-Disposition"] = f'attachment; filename="{filename}"'
-        return response
+        try:
+            buffer, filename = DocumentService.generate_project_doc(pk)
+            response = HttpResponse(
+                buffer.read(),
+                content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            )
+            response["Content-Disposition"] = f'attachment; filename="{filename}"'
+            return response
+        except Exception as e:
+            return Response(
+                {"code": 500, "message": f"生成失败: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
     @action(methods=["get"], detail=False, url_path="batch-export-doc")
     def batch_export_doc(self, request):
         """
-        批量导出项目申报书（zip）
+        批量导出项目申报书（zip-doc）
         """
         ids = request.query_params.get("ids", "")
         if not ids:
@@ -648,17 +657,15 @@ class ProjectManagementViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        queryset = self.get_queryset().filter(id__in=id_list)
-        from io import BytesIO
-        import zipfile
-        from django.http import HttpResponse
-
-        buffer = BytesIO()
+        buffer = io.BytesIO()
         with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
-            for project in queryset:
-                html = self._render_project_doc(project, "项目申报书")
-                filename = f"{project.project_no}_申报书.doc"
-                zf.writestr(filename, html)
+            for pk in id_list:
+                try:
+                    doc_buffer, filename = DocumentService.generate_project_doc(pk)
+                    zf.writestr(filename, doc_buffer.getvalue())
+                except Exception as e:
+                    pass # Ignore failed docs in batch
+        
         buffer.seek(0)
         response = HttpResponse(buffer.read(), content_type="application/zip")
         response["Content-Disposition"] = 'attachment; filename="project_docs.zip"'
@@ -780,29 +787,31 @@ class ProjectManagementViewSet(viewsets.ModelViewSet):
         """
         ids = request.data.get("project_ids", [])
         target = request.data.get("target", "ANHUI_INNOVATION_PLATFORM")
-        simulate = bool(request.data.get("simulate", True))
-
+        
         if not isinstance(ids, list) or not ids:
             return Response(
                 {"code": 400, "message": "请提供项目ID列表"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        queryset = self.get_queryset().filter(id__in=ids)
-        records = []
-        for project in queryset:
-            payload = ProjectSerializer(project, context={"request": request}).data
-            record = ProjectPushRecord.objects.create(
-                project=project,
-                target=target,
-                payload=payload,
-                status=ProjectPushRecord.PushStatus.SUCCESS if simulate else ProjectPushRecord.PushStatus.PENDING,
-                response_message="模拟推送成功" if simulate else "待推送",
-            )
-            records.append(record)
+        success_count = 0
+        failed_count = 0
+        
+        for project_id in ids:
+            success, msg = ExternalPushService.push_project_data(project_id, target)
+            if success:
+                success_count += 1
+            else:
+                failed_count += 1
+                
+        return Response(
+            {
+                "code": 200, 
+                "message": f"推送完成：成功 {success_count}，失败 {failed_count}",
+                "data": {"success": success_count, "failed": failed_count}
+            }
+        )
 
-        serializer = ProjectPushRecordSerializer(records, many=True)
-        return Response({"code": 200, "message": "推送任务已创建", "data": serializer.data})
 
     @action(methods=["get"], detail=False, url_path="push-records")
     def push_records(self, request):

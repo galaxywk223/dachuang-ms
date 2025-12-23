@@ -4,6 +4,7 @@ import { ElMessage } from "element-plus";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionary";
 import { getProjectDetail, updateProjectInfo } from "@/api/admin";
+import { exportProjectDoc } from "@/api/project";
 
 interface AdvisorInfo {
   job_number: string;
@@ -266,6 +267,26 @@ export function useProjectDetail() {
     });
   };
 
+  const handleExportDoc = async () => {
+    if (!form.id) return;
+    try {
+      const res: any = await exportProjectDoc(form.id);
+      const blob = new Blob([res], {
+        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${form.project_no || "project"}_申报书.docx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      ElMessage.error("导出失败");
+    }
+  };
+
   onMounted(async () => {
     await loadDictionaries([
       DICT_CODES.PROJECT_LEVEL,
@@ -300,5 +321,6 @@ export function useProjectDetail() {
     getLabel,
     handleSubmit,
     switchToEdit,
+    handleExportDoc,
   };
 }

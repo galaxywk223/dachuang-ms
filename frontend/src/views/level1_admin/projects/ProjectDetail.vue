@@ -26,6 +26,9 @@
         </div>
         <div class="actions">
           <el-button @click="router.back()">返回</el-button>
+          <el-button v-if="isViewMode" type="success" @click="handleExportDoc">
+            导出申报书
+          </el-button>
           <el-button v-if="isViewMode" type="primary" @click="switchToEdit">
             进入编辑
           </el-button>
@@ -301,6 +304,7 @@ const {
   getLabel,
   handleSubmit,
   switchToEdit,
+  handleExportDoc,
 } = useProjectDetail();
 void formRef;
 </script>

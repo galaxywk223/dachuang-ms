@@ -112,6 +112,7 @@
                 <el-dropdown-item command="docs">批量导出申报书</el-dropdown-item>
                 <el-dropdown-item command="notices">批量生成立项通知书</el-dropdown-item>
                 <el-dropdown-item command="certs">批量生成结题证书</el-dropdown-item>
+                <el-dropdown-item command="push">批量推送至省平台</el-dropdown-item>
                 <el-dropdown-item command="notify">批量通知</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -380,6 +381,7 @@ const {
   handleBatchExportDocs,
   handleBatchExportNotices,
   handleBatchExportCertificates,
+  handlePushToExternal,
   openBatchStatusDialog,
   submitBatchStatus,
   openBatchNotifyDialog,
@@ -400,6 +402,7 @@ const handleBatchCommand = (command: string) => {
   if (command === "docs") handleBatchExportDocs();
   if (command === "notices") handleBatchExportNotices();
   if (command === "certs") handleBatchExportCertificates();
+  if (command === "push") handlePushToExternal();
   if (command === "notify") openBatchNotifyDialog();
 };
 </script>
