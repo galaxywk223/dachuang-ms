@@ -279,6 +279,7 @@ const handleSelectionChange = (rows: any[]) => {
 };
 
 const resetBatchForm = () => {
+  batchFormRef.value?.resetFields();
   batchForm.action = "approve";
   batchForm.score = null;
   batchForm.comments = "";

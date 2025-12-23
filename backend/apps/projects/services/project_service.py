@@ -4,7 +4,7 @@
 
 from django.utils import timezone
 from django.db import transaction
-from .models import (
+from ..models import (
     Project,
     ProjectMember,
     ProjectProgress,
@@ -200,56 +200,29 @@ class ProjectService:
         # 只能在学院审核前撤销
         if project.status == Project.ProjectStatus.CLOSURE_SUBMITTED:
             project.status = Project.ProjectStatus.IN_PROGRESS
-            project.closure_applied_at = None
             project.save()
             return True
         return False
 
     @staticmethod
-    def add_achievement(
-        project,
-        achievement_type,
-        title,
-        description,
-        attachment=None,
-        **extra_fields,
-    ):
-        """
-        添加项目成果
-        """
-        return ProjectAchievement.objects.create(
-            project=project,
-            achievement_type=achievement_type,
-            title=title,
-            description=description,
-            attachment=attachment,
-            **extra_fields,
-        )
-
-    @staticmethod
     @transaction.atomic
     def apply_mid_term(project, mid_term_report, is_draft=False):
         """
-        申请中期检查
+        申请项目中期检查
         """
-        if project.status not in [
-            Project.ProjectStatus.IN_PROGRESS,
-            Project.ProjectStatus.MID_TERM_DRAFT,
-            Project.ProjectStatus.MID_TERM_REJECTED,
-        ]:
-            raise ValueError("只有进行中或被退回的项目才能申请中期检查")
+        if project.status != Project.ProjectStatus.IN_PROGRESS:
+            raise ValueError("只有进行中的项目才能申请中期检查")
 
         # 更新中期报告
-        if mid_term_report:
-            project.mid_term_report = mid_term_report
+        project.mid_term_report = mid_term_report
 
         if is_draft:
+            # 保存为草稿
             project.status = Project.ProjectStatus.MID_TERM_DRAFT
         else:
-            if not project.mid_term_report and not mid_term_report:
-                raise ValueError("请上传中期检查报告")
+            # 提交中期申请
             project.status = Project.ProjectStatus.MID_TERM_SUBMITTED
-            project.mid_term_submitted_at = timezone.now()
+            project.mid_term_applied_at = timezone.now()
 
         project.save()
         return True
@@ -258,23 +231,49 @@ class ProjectService:
     @transaction.atomic
     def submit_mid_term(project):
         """
-        提交中期检查（从草稿状态）
+        提交中期申请（从草稿状态）
         """
-        if project.status not in [
-            Project.ProjectStatus.MID_TERM_DRAFT,
-            Project.ProjectStatus.MID_TERM_REJECTED,
-        ]:
-             # 如果已经在 IN_PROGRESS 且有报告，也允许直接提交
-             if project.status == Project.ProjectStatus.IN_PROGRESS and project.mid_term_report:
-                 pass
-             else:
-                return False
+        if project.status == Project.ProjectStatus.MID_TERM_DRAFT:
+            # 验证必需的材料
+            if not project.mid_term_report:
+                raise ValueError("请先上传中期检查报告书")
 
-        if not project.mid_term_report:
-            raise ValueError("请先上传中期检查报告")
+            project.status = Project.ProjectStatus.MID_TERM_SUBMITTED
+            project.mid_term_applied_at = timezone.now()
+            project.save()
+            return True
+        return False
 
-        project.status = Project.ProjectStatus.MID_TERM_SUBMITTED
-        project.mid_term_submitted_at = timezone.now()
+    @staticmethod
+    @transaction.atomic
+    def revoke_mid_term(project):
+        """
+        撤销中期申请
+        """
+        if project.status == Project.ProjectStatus.MID_TERM_SUBMITTED:
+            project.status = Project.ProjectStatus.IN_PROGRESS
+            project.save()
+            return True
+        return False
+
+    @staticmethod
+    @transaction.atomic
+    def submit_mid_term_review(project, reviewer, review_comments, is_approved=True):
+        """
+        提交中期审核
+        """
+        if project.status != Project.ProjectStatus.MID_TERM_REVIEWING:
+            raise ValueError("项目不在中期审核中")
+
+        project.mid_term_reviewed_by = reviewer
+        project.mid_term_reviewed_at = timezone.now()
+        project.mid_term_review_comments = review_comments
+
+        if is_approved:
+            project.status = Project.ProjectStatus.MID_TERM_APPROVED
+        else:
+            project.status = Project.ProjectStatus.MID_TERM_REJECTED
+
         project.save()
         return True
 
@@ -283,17 +282,11 @@ class ProjectService:
         """
         获取项目经费统计
         """
-        from django.db.models import Sum
-
-        from decimal import Decimal
-        total_budget = project.budget if project.budget else Decimal('0.00')
-        # Ensure total_budget is Decimal
-        if isinstance(total_budget, float):
-             total_budget = Decimal(str(total_budget))
-        
-        used_amount = project.expenditures.aggregate(total=Sum("amount"))["total"] or Decimal('0.00')
+        expenditures = project.expenditures.all()
+        total_budget = project.budget or 0
+        used_amount = sum([exp.amount for exp in expenditures])
         remaining_amount = total_budget - used_amount
-        usage_rate = (used_amount / total_budget * 100) if total_budget > 0 else 0
+        usage_rate = (used_amount / total_budget * 100) if total_budget else 0
 
         return {
             "total_budget": total_budget,
@@ -303,16 +296,10 @@ class ProjectService:
         }
 
     @staticmethod
-    @transaction.atomic
-    def add_expenditure(project, user, title, amount, expenditure_date, category, proof_file=None):
+    def add_expenditure(project, title, amount, expenditure_date, category, proof_file, created_by):
         """
         添加经费支出
         """
-        # 验证余额（严格模式：不允许超支）
-        stats = ProjectService.get_budget_stats(project)
-        if amount > stats["remaining_amount"]:
-            raise ValueError(f"余额不足！当前剩余经费：{stats['remaining_amount']}元，本次申请：{amount}元")
-
         return ProjectExpenditure.objects.create(
             project=project,
             title=title,
@@ -320,112 +307,29 @@ class ProjectService:
             expenditure_date=expenditure_date,
             category=category,
             proof_file=proof_file,
-            created_by=user,
-        )
-
-
-class ProjectChangeService:
-    """
-    项目变更服务
-    """
-
-    @staticmethod
-    @transaction.atomic
-    def submit_request(change_request):
-        if change_request.status != ProjectChangeRequest.ChangeStatus.DRAFT:
-            return False
-        change_request.status = ProjectChangeRequest.ChangeStatus.TEACHER_REVIEWING
-        change_request.submitted_at = timezone.now()
-        change_request.save(update_fields=["status", "submitted_at", "updated_at"])
-        ProjectChangeService.create_review(change_request, ProjectChangeReview.ReviewLevel.TEACHER)
-        return True
-
-    @staticmethod
-    def create_review(change_request, review_level):
-        existing = ProjectChangeReview.objects.filter(
-            change_request=change_request,
-            review_level=review_level,
-            status=ProjectChangeReview.ReviewStatus.PENDING,
-        ).first()
-        if existing:
-            return existing
-        return ProjectChangeReview.objects.create(
-            change_request=change_request,
-            review_level=review_level,
+            created_by=created_by,
         )
 
     @staticmethod
-    @transaction.atomic
-    def approve_review(review, reviewer, comments=""):
-        review.status = ProjectChangeReview.ReviewStatus.APPROVED
-        review.reviewer = reviewer
-        review.comments = comments
-        review.reviewed_at = timezone.now()
-        review.save()
+    def approve_change_request(change_request, reviewer, is_approved=True, comments=None):
+        """
+        审批项目变更申请
+        """
+        if change_request.status != ProjectChangeRequest.RequestStatus.PENDING:
+            raise ValueError("变更申请不是待审核状态")
 
-        change_request = review.change_request
-        if review.review_level == ProjectChangeReview.ReviewLevel.TEACHER:
-            change_request.status = ProjectChangeRequest.ChangeStatus.LEVEL2_REVIEWING
-            ProjectChangeService.create_review(
-                change_request, ProjectChangeReview.ReviewLevel.LEVEL2
-            )
-        elif review.review_level == ProjectChangeReview.ReviewLevel.LEVEL2:
-            change_request.status = ProjectChangeRequest.ChangeStatus.LEVEL1_REVIEWING
-            ProjectChangeService.create_review(
-                change_request, ProjectChangeReview.ReviewLevel.LEVEL1
-            )
-        elif review.review_level == ProjectChangeReview.ReviewLevel.LEVEL1:
-            change_request.status = ProjectChangeRequest.ChangeStatus.APPROVED
-            change_request.reviewed_at = timezone.now()
-            ProjectChangeService.apply_change(change_request)
-
-        change_request.save(update_fields=["status", "reviewed_at", "updated_at"])
-        return True
-
-    @staticmethod
-    @transaction.atomic
-    def reject_review(review, reviewer, comments=""):
-        review.status = ProjectChangeReview.ReviewStatus.REJECTED
-        review.reviewer = reviewer
-        review.comments = comments
-        review.reviewed_at = timezone.now()
-        review.save()
-
-        change_request = review.change_request
-        change_request.status = ProjectChangeRequest.ChangeStatus.REJECTED
+        change_request.reviewed_by = reviewer
         change_request.reviewed_at = timezone.now()
-        change_request.save(update_fields=["status", "reviewed_at", "updated_at"])
+        change_request.review_comments = comments
+        change_request.status = (
+            ProjectChangeRequest.RequestStatus.APPROVED
+            if is_approved
+            else ProjectChangeRequest.RequestStatus.REJECTED
+        )
+        change_request.save()
+
+        # Apply the change to the project if approved
+        if is_approved:
+            ProjectChangeReview.apply_change(change_request)
+
         return True
-
-    @staticmethod
-    def apply_change(change_request):
-        project = change_request.project
-        change_type = change_request.request_type
-        change_data = change_request.change_data or {}
-        updated_fields = ["updated_at"]
-
-        if change_type == ProjectChangeRequest.ChangeType.TERMINATION:
-            project.status = Project.ProjectStatus.TERMINATED
-            updated_fields.append("status")
-        elif change_type == ProjectChangeRequest.ChangeType.EXTENSION:
-            if change_request.requested_end_date:
-                project.end_date = change_request.requested_end_date
-                updated_fields.append("end_date")
-        elif change_type == ProjectChangeRequest.ChangeType.CHANGE:
-            allowed_fields = [
-                "title",
-                "description",
-                "research_content",
-                "research_plan",
-                "expected_results",
-                "innovation_points",
-                "start_date",
-                "end_date",
-                "budget",
-                "category_description",
-            ]
-            for field in allowed_fields:
-                if field in change_data:
-                    setattr(project, field, change_data[field])
-                    updated_fields.append(field)
-        project.save(update_fields=sorted(set(updated_fields)))

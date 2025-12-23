@@ -5,7 +5,8 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, SAFE_METHODS, BasePermission
+from rest_framework.exceptions import PermissionDenied
 from django.utils import timezone
 
 from .models import Review, ExpertGroup
@@ -15,6 +16,17 @@ from .services import ReviewService
 from apps.projects.models import Project
 from apps.notifications.services import NotificationService
 from apps.system_settings.services import SystemSettingService
+
+
+class ExpertGroupPermission(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return bool(request.user and request.user.is_authenticated)
+        return bool(
+            request.user
+            and request.user.is_authenticated
+            and (request.user.is_level1_admin or request.user.is_level2_admin)
+        )
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -260,6 +272,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
         """
         检查用户是否有权限审核
         """
+        if review.reviewer_id:
+            return review.reviewer_id == user.id
         if review.review_level == Review.ReviewLevel.LEVEL2:
             # 二级审核：必须是二级管理员且是同一学院
             project_college = (
@@ -273,8 +287,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
             # 导师审核：必须是该项目的导师
             # Check if user is in project advisors
             return user.role == "TEACHER" and review.project.advisors.filter(user=user).exists()
-        elif user.role == "EXPERT":
-            return review.reviewer_id == user.id
         return False
 
     @action(methods=["post"], detail=False, url_path="batch-review")
@@ -392,7 +404,7 @@ class ExpertGroupViewSet(viewsets.ModelViewSet):
     """
     queryset = ExpertGroup.objects.all()
     serializer_class = ExpertGroupSerializer
-    permission_classes = [IsAuthenticated] 
+    permission_classes = [ExpertGroupPermission] 
 
     def get_queryset(self):
         user = self.request.user
@@ -412,11 +424,23 @@ class ExpertGroupViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         user = self.request.user
-        scope = "COLLEGE"
         if user.is_level1_admin:
             scope = "SCHOOL"
-            
+        elif user.is_level2_admin:
+            scope = "COLLEGE"
+        else:
+            raise PermissionDenied("无权限创建专家组")
         serializer.save(created_by=user, scope=scope)
+
+    def perform_update(self, serializer):
+        user = self.request.user
+        if not (user.is_level1_admin or user.is_level2_admin):
+            raise PermissionDenied("无权限修改专家组")
+        if user.is_level1_admin and serializer.instance.scope != "SCHOOL":
+            raise PermissionDenied("无权限修改该专家组")
+        if user.is_level2_admin and serializer.instance.scope != "COLLEGE":
+            raise PermissionDenied("无权限修改该专家组")
+        serializer.save()
 
 
 class ReviewAssignmentViewSet(viewsets.ViewSet):
@@ -435,6 +459,12 @@ class ReviewAssignmentViewSet(viewsets.ViewSet):
             "review_type": "APPLICATION" (optional)
         }
         """
+        user = request.user
+        if not (user.is_level1_admin or user.is_level2_admin):
+            return Response(
+                {"message": "无权限分配评审任务"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         project_ids = request.data.get('project_ids', [])
         group_id = request.data.get('group_id')
         review_type = request.data.get('review_type', Review.ReviewType.APPLICATION)
@@ -446,6 +476,30 @@ class ReviewAssignmentViewSet(viewsets.ViewSet):
             group = ExpertGroup.objects.get(pk=group_id)
         except ExpertGroup.DoesNotExist:
             return Response({"message": "Expert group not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if group.scope == "SCHOOL":
+            if not user.is_level1_admin:
+                return Response(
+                    {"message": "无权限分配校级专家组评审任务"},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+        elif group.scope == "COLLEGE":
+            if not user.is_level2_admin:
+                return Response(
+                    {"message": "无权限分配院系专家组评审任务"},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+            if group.created_by and group.created_by.college and user.college:
+                if group.created_by.college != user.college:
+                    return Response(
+                        {"message": "无权限分配其他学院的专家组"},
+                        status=status.HTTP_403_FORBIDDEN,
+                    )
+        else:
+            return Response(
+                {"message": "专家组级别无效"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         review_level = (
             Review.ReviewLevel.LEVEL1 if group.scope == "SCHOOL" else Review.ReviewLevel.LEVEL2

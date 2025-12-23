@@ -1,6 +1,6 @@
 <template>
   <div class="teacher-dashboard">
-    <WelcomeSection :user="userStore.user" />
+    <WelcomeSection :user="welcomeUser" />
     <StatsSection :statistics="statistics" />
     <el-card class="box-card">
       <template #header>
@@ -105,7 +105,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive } from "vue";
+import { ref, onMounted, reactive, computed } from "vue";
 import { ElMessage } from "element-plus";
 import type { FormInstance, FormRules } from "element-plus";
 import request from "@/utils/request";
@@ -120,6 +120,7 @@ const projects = ref<any[]>([]);
 const activeTab = ref("pending");
 
 const userStore = useUserStore();
+const welcomeUser = computed(() => userStore.user ?? undefined);
 const statistics = reactive({
     myProjects: 0,
     pending: 0,

@@ -3,7 +3,7 @@
     <el-card class="box-card">
       <template #header>
         <div class="card-header">
-          <span class="title">专家评审分配</span>
+          <span class="title">{{ pageTitle }}</span>
           <div class="header-actions">
               <el-select v-model="selectedGroup" placeholder="选择专家组" style="width: 200px" class="mr-2">
                  <el-option
@@ -83,7 +83,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import { useRoute } from 'vue-router';
 import { Search } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import request from '@/utils/request';
@@ -95,6 +96,8 @@ const groups = ref<any[]>([]);
 const total = ref(0);
 const currentPage = ref(1);
 const pageSize = ref(20);
+const route = useRoute();
+const pageTitle = computed(() => (route.meta.title as string) || "专家评审分配");
 
 // Filters and Selections
 const searchQuery = ref("");

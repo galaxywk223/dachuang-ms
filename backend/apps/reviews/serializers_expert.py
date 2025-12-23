@@ -9,4 +9,4 @@ class ExpertGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExpertGroup
         fields = ['id', 'name', 'members', 'members_info', 'created_by', 'created_by_name', 'scope', 'created_at']
-        read_only_fields = ['created_by', 'created_at']
+        read_only_fields = ['created_by', 'created_at', 'scope']

@@ -397,7 +397,8 @@ const validateExtraFields = () => {
 };
 
 const submitAchievement = async () => {
-  if (!formRef.value || !activeProjectId.value) return;
+  const projectId = activeProjectId.value;
+  if (!formRef.value || projectId === null) return;
   await formRef.value.validate(async (valid) => {
     if (!valid) return;
 
@@ -428,7 +429,7 @@ const submitAchievement = async () => {
       if (form.award_date) payload.append("award_date", form.award_date);
       if (form.attachment) payload.append("attachment", form.attachment);
 
-      const response: any = await addProjectAchievement(activeProjectId.value, payload);
+      const response: any = await addProjectAchievement(projectId, payload);
       if (response.code === 200) {
         ElMessage.success("成果登记成功");
         dialogVisible.value = false;

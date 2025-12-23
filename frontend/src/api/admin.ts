@@ -213,14 +213,6 @@ export function getArchives() {
   });
 }
 
-export function exportProjectNumbers() {
-  return request({
-    url: "/projects/admin/manage/export-project-nos/",
-    method: "get",
-    responseType: "blob",
-  });
-}
-
 export function getDuplicateProjectNumbers() {
   return request({
     url: "/projects/admin/manage/duplicate-project-nos/",

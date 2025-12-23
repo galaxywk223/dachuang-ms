@@ -3,7 +3,7 @@
     <el-card class="box-card">
       <template #header>
         <div class="card-header">
-          <span class="title">专家组管理</span>
+          <span class="title">{{ pageTitle }}</span>
           <el-button type="primary" @click="handleAdd">新建专家组</el-button>
         </div>
       </template>
@@ -89,6 +89,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, reactive, computed } from "vue";
+import { useRoute } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { FormInstance, FormRules } from "element-plus";
 import request from "@/utils/request";
@@ -113,6 +114,7 @@ const loading = ref(false);
 const submitting = ref(false);
 const groups = ref<Group[]>([]);
 const expertList = ref<Expert[]>([]); // All experts
+const route = useRoute();
 
 const dialogVisible = ref(false);
 const isEdit = ref(false);
@@ -129,6 +131,7 @@ const rules = reactive<FormRules>({
 });
 
 const dialogTitle = computed(() => isEdit.value ? "编辑专家组" : "新建专家组");
+const pageTitle = computed(() => (route.meta.title as string) || "专家组管理");
 
 // Fetch Data
 const fetchGroups = async () => {

@@ -45,7 +45,7 @@
     </el-card>
 
     <el-dialog v-model="dialogVisible" title="项目异动申请" width="620px" destroy-on-close>
-      <el-form ref="formRef" :model="form" label-width="120px">
+      <el-form :model="form" label-width="120px">
         <el-form-item label="项目" required>
           <el-select v-model="form.project" placeholder="请选择项目" style="width: 100%">
             <el-option v-for="item in projectOptions" :key="item.id" :label="item.title" :value="item.id" />
@@ -91,14 +91,13 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from "vue";
-import { ElMessage, type FormInstance, type UploadFile, type UploadUserFile } from "element-plus";
+import { ElMessage, type UploadFile, type UploadUserFile } from "element-plus";
 import { getChangeRequests, createChangeRequest, updateChangeRequest, submitChangeRequest } from "@/api/change-requests";
 import request from "@/utils/request";
 
 const loading = ref(false);
 const saving = ref(false);
 const dialogVisible = ref(false);
-const formRef = ref<FormInstance>();
 const requests = ref<any[]>([]);
 const projectOptions = ref<any[]>([]);
 const fileList = ref<UploadUserFile[]>([]);

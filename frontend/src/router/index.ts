@@ -195,13 +195,13 @@ const routes: RouteRecordRaw[] = [
             path: "groups",
             name: "admin-expert-groups",
             component: () => import("@/views/level2_admin/expert/Groups.vue"),
-            meta: { title: "专家组管理" },
+            meta: { title: "院系专家组管理" },
           },
           {
             path: "assignment",
             name: "admin-expert-assignment",
             component: () => import("@/views/level2_admin/expert/Assignment.vue"),
-            meta: { title: "评审分配" },
+            meta: { title: "院系评审分配" },
           }
         ]
       },
