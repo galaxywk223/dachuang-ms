@@ -88,10 +88,28 @@ const routes: RouteRecordRaw[] = [
         meta: { title: "系统项目管理" },
       },
       {
+        path: "funds",
+        name: "level1-funds",
+        component: () => import("@/views/admin/Funds.vue"),
+        meta: { title: "经费管理" },
+      },
+      {
+        path: "statistics",
+        name: "level1-statistics",
+        component: () => import("@/views/admin/Statistics.vue"),
+        meta: { title: "统计概览" },
+      },
+      {
         path: "review/establishment",
         name: "level1-review-establishment",
         component: () => import("@/views/level1_admin/review/Establishment.vue"),
         meta: { title: "校级立项审核" },
+      },
+      {
+        path: "review/closure",
+        name: "level1-review-closure",
+        component: () => import("@/views/level1_admin/review/Closure.vue"),
+        meta: { title: "校级结题审核" },
       },
       {
         path: "projects/:id",
@@ -211,6 +229,18 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/views/level2_admin/Projects.vue"),
         meta: { title: "项目管理" },
       },
+      {
+        path: "funds",
+        name: "level2-funds",
+        component: () => import("@/views/admin/Funds.vue"),
+        meta: { title: "经费管理" },
+      },
+      {
+        path: "statistics",
+        name: "admin-statistics",
+        component: () => import("@/views/admin/Statistics.vue"),
+        meta: { title: "统计概览" },
+      },
     ],
   },
   // 学生路由
@@ -268,6 +298,12 @@ const routes: RouteRecordRaw[] = [
         name: "student-funds",
         component: () => import("@/views/student/funds/List.vue"),
         meta: { title: "经费管理" },
+      },
+      {
+        path: "achievements",
+        name: "student-achievements",
+        component: () => import("@/views/student/achievements/Index.vue"),
+        meta: { title: "成果管理" },
       },
       {
         path: "change-requests",
@@ -355,6 +391,12 @@ const routes: RouteRecordRaw[] = [
         name: "teacher-change-reviews",
         component: () => import("@/views/teacher/ChangeReviews.vue"),
         meta: { title: "项目异动审核" },
+      },
+      {
+        path: "funds",
+        name: "teacher-funds",
+        component: () => import("@/views/admin/Funds.vue"),
+        meta: { title: "经费管理" },
       },
     ],
   },

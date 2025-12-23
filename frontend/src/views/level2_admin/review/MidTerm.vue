@@ -4,6 +4,9 @@
       <template #header>
         <div class="card-header">
           <span>中期检查审核</span>
+          <div class="header-actions">
+            <el-button type="primary" plain @click="openBatchDialog">批量审核</el-button>
+          </div>
         </div>
       </template>
 
@@ -20,12 +23,14 @@
         <el-button type="primary" @click="handleSearch">搜索</el-button>
       </div>
 
-      <el-table 
-        v-loading="loading" 
-        :data="tableData" 
-        style="width: 100%" 
+      <el-table
+        v-loading="loading"
+        :data="tableData"
+        style="width: 100%"
         border
+        @selection-change="handleSelectionChange"
       >
+        <el-table-column type="selection" width="55" align="center" />
         <el-table-column prop="project_no" label="项目编号" width="140" />
         <el-table-column prop="title" label="项目名称" min-width="180"show-overflow-tooltip />
         <el-table-column prop="leader_name" label="负责人" width="100" />
@@ -97,6 +102,28 @@
         </span>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="batchDialogVisible" title="批量审核" width="520px">
+      <el-form label-position="top">
+        <el-form-item label="审核结果">
+          <el-radio-group v-model="batchForm.action">
+            <el-radio label="approve">通过</el-radio>
+            <el-radio label="reject">驳回</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="审核意见">
+          <el-input v-model="batchForm.comments" type="textarea" :rows="4" placeholder="请输入审核意见" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="batchDialogVisible = false">取消</el-button>
+          <el-button type="primary" :loading="batchSubmitting" @click="submitBatchReview">
+            提交
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -116,6 +143,14 @@ const dialogVisible = ref(false)
 const currentRow = ref<any>(null)
 const reviewComments = ref('')
 const reviewing = ref(false)
+const selectedRows = ref<any[]>([])
+
+const batchDialogVisible = ref(false)
+const batchSubmitting = ref(false)
+const batchForm = ref({
+  action: 'approve',
+  comments: ''
+})
 
 const formatDate = (dateStr: string) => {
   if(!dateStr) return '-'
@@ -142,8 +177,24 @@ const fetchData = async () => {
         }
         
         const res = await request.get('/projects/', { params: projectParams })
-        tableData.value = res.data.results
-        total.value = res.data.count
+        const projectPayload = res.data || res
+        const results = projectPayload.results || projectPayload.data?.results || []
+        tableData.value = results
+        total.value = projectPayload.count || projectPayload.data?.count || 0
+        selectedRows.value = []
+
+        const reviewRes: any = await request.get('/reviews/', {
+          params: { review_type: 'MID_TERM', status: 'PENDING' }
+        })
+        const reviewPayload = reviewRes.data || reviewRes
+        const reviewRecords = Array.isArray(reviewPayload)
+          ? reviewPayload
+          : (reviewPayload.results || reviewPayload.data?.results || reviewPayload.data || [])
+        const reviewMap = new Map(reviewRecords.map((r: any) => [r.project, r.id]))
+        tableData.value = results.map((item: any) => ({
+          ...item,
+          review_id: reviewMap.get(item.id)
+        }))
 
     } catch(err) {
         console.error(err)
@@ -179,35 +230,19 @@ const submitReview = async (approved: boolean) => {
   
   reviewing.value = true
   try {
-     // We need to find the pending review ID for this project.
-     // OR call an action on the project like /projects/{id}/review_midterm/ 
-     // BUT backend `approve_review` operates on Review object.
-     // So we must find the Review ID.
-     
-     // Let's fetch the review object for this project first.
-     const reviewRes: any = await request.get('/reviews/', { 
-        params: { 
-           project: currentRow.value.id, 
-           review_type: 'MID_TERM', 
-           status: 'PENDING' 
-        } 
-     })
-
-     const payload = reviewRes.data || reviewRes
-     const records = Array.isArray(payload) ? payload : (payload.results || payload.data?.results || payload.data || [])
-     if (records.length > 0) {
-         const reviewId = records[0].id
-         await request.post(`/reviews/${reviewId}/review/`, {
-            action: approved ? 'approve' : 'reject',
-            comments: reviewComments.value
-         })
-         
-         ElMessage.success('审核完成')
-         dialogVisible.value = false
-         fetchData()
-     } else {
-         ElMessage.error('未找到审核记录')
+     const reviewId = currentRow.value.review_id
+     if (!reviewId) {
+       ElMessage.error('未找到审核记录')
+       return
      }
+     await request.post(`/reviews/${reviewId}/review/`, {
+        action: approved ? 'approve' : 'reject',
+        comments: reviewComments.value
+     })
+     
+     ElMessage.success('审核完成')
+     dialogVisible.value = false
+     fetchData()
 
   } catch(err: any) {
     ElMessage.error(err.response?.data?.message || '操作失败')
@@ -220,6 +255,49 @@ onMounted(() => {
   fetchData()
 })
 
+const handleSelectionChange = (rows: any[]) => {
+  selectedRows.value = rows
+}
+
+const openBatchDialog = () => {
+  if (selectedRows.value.length === 0) {
+    ElMessage.warning('请先勾选要审核的项目')
+    return
+  }
+  batchForm.value = { action: 'approve', comments: '' }
+  batchDialogVisible.value = true
+}
+
+const submitBatchReview = async () => {
+  if (selectedRows.value.length === 0) return
+  batchSubmitting.value = true
+  try {
+    const reviewIds = selectedRows.value
+      .map((row) => row.review_id)
+      .filter((id) => !!id)
+    if (reviewIds.length === 0) {
+      ElMessage.warning('未找到可审核的记录')
+      return
+    }
+    const payload = {
+      review_ids: reviewIds,
+      action: batchForm.value.action,
+      comments: batchForm.value.comments
+    }
+    const res: any = await request.post('/reviews/batch-review/', payload)
+    if (res.code === 200) {
+      ElMessage.success('批量审核完成')
+      batchDialogVisible.value = false
+      selectedRows.value = []
+      fetchData()
+    }
+  } catch (err: any) {
+    ElMessage.error(err.response?.data?.message || '批量审核失败')
+  } finally {
+    batchSubmitting.value = false
+  }
+}
+
 </script>
 
 <style scoped>
@@ -229,5 +307,10 @@ onMounted(() => {
 .pagination-container {
   display: flex;
   justify-content: flex-end;
+}
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 </style>

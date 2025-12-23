@@ -35,6 +35,9 @@
             >共 {{ total }} 项</el-tag
           >
         </div>
+        <div class="actions">
+          <el-button type="danger" plain @click="openBatchDialog">批量驳回</el-button>
+        </div>
       </div>
 
       <el-table
@@ -48,7 +51,9 @@
           height: '48px',
         }"
         :cell-style="{ color: '#334155', height: '48px' }"
+        @selection-change="handleSelectionChange"
       >
+        <el-table-column type="selection" width="55" align="center" />
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column
           prop="title"
@@ -241,6 +246,22 @@
         </span>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="batchDialogVisible" title="批量驳回" width="520px">
+      <el-form label-position="top">
+        <el-form-item label="驳回原因（必填）">
+          <el-input v-model="batchForm.comments" type="textarea" :rows="4" placeholder="请输入驳回原因" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="batchDialogVisible = false">取消</el-button>
+          <el-button type="danger" :loading="batchSubmitting" @click="submitBatchReject">
+            提交驳回
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -257,6 +278,7 @@ import {
   EditPen,
 } from "@element-plus/icons-vue";
 import { getReviewProjects, approveProject, rejectProject } from "@/api/admin";
+import request from "@/utils/request";
 
 const loading = ref(false);
 const projects = ref<any[]>([]);
@@ -264,6 +286,7 @@ const searchQuery = ref("");
 const currentPage = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
+const selectedRows = ref<any[]>([]);
 
 const reviewDialogVisible = ref(false);
 const reviewType = ref<"approve" | "reject">("approve");
@@ -271,6 +294,12 @@ const reviewForm = ref({
   projectId: 0,
   comment: "",
   approved_budget: null as number | null,
+});
+
+const batchDialogVisible = ref(false);
+const batchSubmitting = ref(false);
+const batchForm = ref({
+  comments: "",
 });
 
 const fetchProjects = async () => {
@@ -286,6 +315,7 @@ const fetchProjects = async () => {
     if (response.code === 200) {
       projects.value = response.data.results;
       total.value = response.data.total;
+      selectedRows.value = [];
     }
   } catch {
     ElMessage.error("获取项目列表失败");
@@ -311,6 +341,10 @@ const handlePageChange = () => {
 const handleSizeChange = () => {
   currentPage.value = 1;
   fetchProjects();
+};
+
+const handleSelectionChange = (val: any[]) => {
+  selectedRows.value = val;
 };
 
 const handleViewDetail = (_row: any) => {
@@ -366,6 +400,41 @@ const confirmReview = async () => {
     }
   } catch {
     ElMessage.error("操作失败");
+  }
+};
+
+const openBatchDialog = () => {
+  if (selectedRows.value.length === 0) {
+    ElMessage.warning("请先勾选要驳回的项目");
+    return;
+  }
+  batchForm.value.comments = "";
+  batchDialogVisible.value = true;
+};
+
+const submitBatchReject = async () => {
+  if (!batchForm.value.comments) {
+    ElMessage.warning("请输入驳回原因");
+    return;
+  }
+  batchSubmitting.value = true;
+  try {
+    const payload: any = {
+      review_ids: selectedRows.value.map((row) => row.review_id),
+      action: "reject",
+      comments: batchForm.value.comments,
+    };
+    const res: any = await request.post("/reviews/batch-review/", payload);
+    if (res.code === 200) {
+      ElMessage.success("批量驳回完成");
+      batchDialogVisible.value = false;
+      selectedRows.value = [];
+      fetchProjects();
+    }
+  } catch (error: any) {
+    ElMessage.error(error.response?.data?.message || "批量驳回失败");
+  } finally {
+    batchSubmitting.value = false;
   }
 };
 

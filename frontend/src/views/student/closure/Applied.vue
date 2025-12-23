@@ -109,7 +109,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" width="180" align="center" fixed="right">
+          <el-table-column label="操作" width="220" align="center" fixed="right">
           <template #default="{ row }">
             <el-button
               type="primary"
@@ -118,6 +118,15 @@
               @click="handleView(row)"
             >
               查看详情
+            </el-button>
+            <el-button
+              v-if="row.status === 'CLOSURE_SUBMITTED'"
+              type="warning"
+              size="small"
+              link
+              @click="handleRevoke(row)"
+            >
+              撤回申请
             </el-button>
             <el-button
               v-if="row.status === 'CLOSED'"
@@ -157,8 +166,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from "vue";
-import { ElMessage } from "element-plus";
-import { getAppliedClosureProjects, getProjectCertificate } from "@/api/project";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { getAppliedClosureProjects, getProjectCertificate, revokeClosureApplication } from "@/api/project";
 
 // 表格数据
 const tableData = ref<any[]>([]);
@@ -227,6 +236,23 @@ const handleCurrentChange = (page: number) => {
 // 查看详情
 const handleView = (_row: any) => {
   ElMessage.info("查看结题详情功能待开发");
+};
+
+const handleRevoke = async (row: any) => {
+  try {
+    await ElMessageBox.confirm("确认撤回结题申请吗？", "提示", {
+      type: "warning",
+      confirmButtonText: "确认撤回",
+      cancelButtonText: "取消",
+    });
+    const response: any = await revokeClosureApplication(row.id);
+    if (response.code === 200) {
+      ElMessage.success("已撤回结题申请");
+      fetchAppliedProjects();
+    }
+  } catch {
+    // cancel
+  }
 };
 
 const handleCertificate = async (row: any) => {

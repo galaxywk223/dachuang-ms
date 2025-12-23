@@ -1,5 +1,7 @@
 <template>
   <div class="teacher-dashboard">
+    <WelcomeSection :user="userStore.user" />
+    <StatsSection :statistics="statistics" />
     <el-card class="box-card">
       <template #header>
         <div class="card-header">
@@ -7,7 +9,7 @@
         </div>
       </template>
 
-      <el-tabs v-model="activeTab" @tab-click="fetchProjects">
+      <el-tabs v-model="activeTab" @tab-click="handleTabChange">
         <el-tab-pane label="待审核" name="pending"></el-tab-pane>
         <el-tab-pane label="我指导的项目" name="my_projects"></el-tab-pane>
       </el-tabs>
@@ -108,11 +110,38 @@ import { ElMessage } from "element-plus";
 import type { FormInstance, FormRules } from "element-plus";
 import request from "@/utils/request";
 import dayjs from "dayjs";
+import { useUserStore } from "@/stores/user";
+import WelcomeSection from "@/components/dashboard/WelcomeSection.vue";
+import StatsSection from "@/components/dashboard/StatsSection.vue";
 
 const loading = ref(false);
 const submitting = ref(false);
 const projects = ref<any[]>([]);
 const activeTab = ref("pending");
+
+const userStore = useUserStore();
+const statistics = reactive({
+    myProjects: 0,
+    pending: 0,
+    inProgress: 0,
+    unreadNotifications: 0,
+});
+const inProgressStatuses = new Set([
+    "IN_PROGRESS",
+    "MID_TERM_DRAFT",
+    "MID_TERM_SUBMITTED",
+    "MID_TERM_REVIEWING",
+    "MID_TERM_APPROVED",
+    "MID_TERM_REJECTED",
+    "CLOSURE_DRAFT",
+    "CLOSURE_SUBMITTED",
+    "CLOSURE_LEVEL2_REVIEWING",
+    "CLOSURE_LEVEL2_APPROVED",
+    "CLOSURE_LEVEL2_REJECTED",
+    "CLOSURE_LEVEL1_REVIEWING",
+    "CLOSURE_LEVEL1_APPROVED",
+    "CLOSURE_LEVEL1_REJECTED",
+]);
 
 const dialogVisible = ref(false);
 const currentProject = ref<any>(null);
@@ -129,69 +158,82 @@ const rules = reactive<FormRules>({
     comments: [{ required: true, message: "请输入审核意见", trigger: "blur" }],
 });
 
+const parseListResponse = (payload: any) => {
+    const data = payload?.data ?? payload;
+    const results =
+        data?.results ||
+        data?.data?.results ||
+        data?.data ||
+        (Array.isArray(data) ? data : []);
+    const count = data?.count ?? data?.data?.count ?? results.length;
+    return { results, count };
+};
+
+const fetchPendingReviews = async () => {
+    const res: any = await request.get("/reviews/", {
+        params: { status: "PENDING", review_level: "TEACHER" },
+    });
+    return parseListResponse(res);
+};
+
+const fetchMyProjects = async () => {
+    const res: any = await request.get("/projects/");
+    return parseListResponse(res);
+};
+
+const refreshStats = async () => {
+    try {
+        const [pendingRes, projectsRes] = await Promise.all([
+            fetchPendingReviews(),
+            fetchMyProjects(),
+        ]);
+        statistics.pending = pendingRes.count;
+        statistics.myProjects = projectsRes.count;
+        statistics.inProgress = (projectsRes.results || []).filter(
+            (item: any) => inProgressStatuses.has(item.status)
+        ).length;
+    } catch (error) {
+        console.error(error);
+    }
+};
+
 const fetchProjects = async () => {
     loading.value = true;
     try {
-        if (activeTab.value === 'pending') {
-             // Fetch reviews pending for this teacher?
-             // Or projects where user is advisor AND status is TEACHER_AUDITING?
-             // Review service creates a Review record. We should fetch reviews.
-             // But existing Review API `/reviews/pending/` might not cover 'TEACHER' level if we didn't update Views.
-             
-             // Let's assume we fetch projects and filter, OR we update backend ReviewViewSet.pending to support Teacher.
-             // Given I didn't update ViewSet.pending, I should probably query Projects directly or generic Reviews.
-             
-             // Query Reviews: /reviews/?status=PENDING&review_level=TEACHER
-             // But ReviewViewSet.get_queryset has user role filtering. 
-             // I forgot to update `ReviewViewSet.get_queryset` to allow Teachers to see their reviews!
-             
-             // Wait, I missed updating ReviewViewSet permissions/queryset for Teacher.
-             // Critical fix coming up in next step.
-             
-             // For now frontend assumes it will work.
-             const res: any = await request.get('/reviews/', { params: { status: 'PENDING', review_level: 'TEACHER' } });
-             const payload = res.data || res;
-             const records = Array.isArray(payload) ? payload : (payload.results || payload.data?.results || payload.data || []);
-             const rows = (records || []).map((r: any) => {
-                 const fileUrl =
-                     r.review_type === 'MID_TERM'
-                         ? r.project_info?.mid_term_report_url
-                         : r.review_type === 'CLOSURE'
-                             ? r.project_info?.final_report_url
-                             : r.project_info?.proposal_file_url;
-                 const fileLabel =
-                     r.review_type === 'MID_TERM'
-                         ? '下载中期报告'
-                         : r.review_type === 'CLOSURE'
-                             ? '下载结题报告'
-                             : '下载申报书';
-                 return {
-                     ...r.project_info,
-                     review_id: r.id,
-                     review_type: r.review_type,
-                     review_type_display: r.review_type_display,
-                     file_url: fileUrl,
-                     file_label: fileLabel,
-                     created_at: r.created_at
-                 };
-             });
-             projects.value = rows;
+        if (activeTab.value === "pending") {
+            const { results, count } = await fetchPendingReviews();
+            const rows = (results || []).map((r: any) => {
+                const fileUrl =
+                    r.review_type === "MID_TERM"
+                        ? r.project_info?.mid_term_report_url
+                        : r.review_type === "CLOSURE"
+                            ? r.project_info?.final_report_url
+                            : r.project_info?.proposal_file_url;
+                const fileLabel =
+                    r.review_type === "MID_TERM"
+                        ? "下载中期报告"
+                        : r.review_type === "CLOSURE"
+                            ? "下载结题报告"
+                            : "下载申报书";
+                return {
+                    ...r.project_info,
+                    review_id: r.id,
+                    review_type: r.review_type,
+                    review_type_display: r.review_type_display,
+                    file_url: fileUrl,
+                    file_label: fileLabel,
+                    created_at: r.created_at,
+                };
+            });
+            projects.value = rows;
+            statistics.pending = count;
         } else {
-             // My Projects (Advised projects)
-             // Query projects where advisor=me
-             // We need an endpoint for this. `ProjectViewSet` allows filtering by advisor?
-             // `search_fields = ["project_no", "title", "advisor"]`.
-             // But we want `advisor=current_user`.
-             // The backend `get_queryset` doesn't strictly filter for Teacher role "advising projects".
-             // But we can filter by `advisor` name if we pass it? No User ID.
-             // Actually, `Project` model has `advisors` M2M ? Or `ProjectAdvisor` model?
-             // `ProjectAdvisor` connects User to Project.
-             // We can filter `Project.objects.filter(advisors__user=request.user)`.
-             // I should update `ProjectViewSet.get_queryset` too.
-             
-             const res: any = await request.get('/projects/', { params: { my_advised: true } }); // Need backend support
-             const payload = res.data || res;
-             projects.value = Array.isArray(payload) ? payload : (payload.results || payload.data?.results || payload.data || []);
+            const { results, count } = await fetchMyProjects();
+            projects.value = results || [];
+            statistics.myProjects = count;
+            statistics.inProgress = (results || []).filter(
+                (item: any) => inProgressStatuses.has(item.status)
+            ).length;
         }
     } catch (error) {
         console.error(error);
@@ -234,6 +276,7 @@ const handleSubmit = async () => {
                 ElMessage.success("审核提交成功");
                 dialogVisible.value = false;
                 fetchProjects();
+                refreshStats();
             } catch (error: any) {
                 console.error(error);
                 ElMessage.error(error.response?.data?.message || "提交失败");
@@ -248,8 +291,14 @@ const formatDate = (date: string) => {
     return dayjs(date).format("YYYY-MM-DD HH:mm");
 };
 
+const handleTabChange = () => {
+    fetchProjects();
+    refreshStats();
+};
+
 onMounted(() => {
     fetchProjects();
+    refreshStats();
 });
 </script>
 

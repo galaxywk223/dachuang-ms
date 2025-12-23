@@ -101,6 +101,21 @@
           >
             下载附件
           </el-button>
+          <el-dropdown @command="handleBatchCommand">
+            <el-button type="primary" plain>
+              批量操作
+              <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="status">批量状态变更</el-dropdown-item>
+                <el-dropdown-item command="docs">批量导出申报书</el-dropdown-item>
+                <el-dropdown-item command="notices">批量生成立项通知书</el-dropdown-item>
+                <el-dropdown-item command="certs">批量生成结题证书</el-dropdown-item>
+                <el-dropdown-item command="notify">批量通知</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
           <el-button type="primary" :icon="Plus" @click="handleCreate">
             申报项目
           </el-button>
@@ -283,17 +298,58 @@
         />
       </div>
     </div>
+
+    <el-dialog v-model="batchStatusDialogVisible" title="批量状态变更" width="480px">
+      <el-form label-position="top">
+        <el-form-item label="目标状态">
+          <el-select v-model="batchStatusForm.status" placeholder="请选择状态" style="width: 100%">
+            <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="batchStatusDialogVisible = false">取消</el-button>
+          <el-button type="primary" :loading="batchStatusLoading" @click="submitBatchStatus">确认</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="batchNotifyDialogVisible" title="批量通知" width="520px">
+      <el-form label-position="top">
+        <el-form-item label="通知标题">
+          <el-input v-model="batchNotifyForm.title" placeholder="请输入标题" />
+        </el-form-item>
+        <el-form-item label="通知内容">
+          <el-input v-model="batchNotifyForm.content" type="textarea" :rows="4" placeholder="请输入内容" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="batchNotifyDialogVisible = false">取消</el-button>
+          <el-button type="primary" :loading="batchNotifyLoading" @click="submitBatchNotify">发送</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { Search, Plus, RefreshLeft, Download } from "@element-plus/icons-vue";
+import { Search, Plus, RefreshLeft, Download, ArrowDown } from "@element-plus/icons-vue";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionary";
 import { getProjects, deleteProject } from "@/api/project";
-import { exportProjects, batchDownloadAttachments } from "@/api/admin";
+import {
+  exportProjects,
+  batchDownloadAttachments,
+  batchExportDocs,
+  batchExportNotices,
+  batchExportCertificates,
+  batchUpdateProjectStatus,
+} from "@/api/admin";
+import { batchSendNotifications } from "@/api/notifications";
 
 const { loadDictionaries, getOptions } = useDictionary();
 
@@ -303,6 +359,15 @@ const selectedRows = ref<any[]>([]);
 const currentPage = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
+const batchStatusDialogVisible = ref(false);
+const batchNotifyDialogVisible = ref(false);
+const batchStatusLoading = ref(false);
+const batchNotifyLoading = ref(false);
+const batchStatusForm = reactive({ status: "" });
+const batchNotifyForm = reactive({
+  title: "",
+  content: "",
+});
 
 const filters = reactive({
   search: "",
@@ -395,6 +460,14 @@ const handleSelectionChange = (val: any[]) => {
   selectedRows.value = val;
 };
 
+const ensureSelection = () => {
+  if (selectedRows.value.length === 0) {
+    ElMessage.warning("请先勾选项目");
+    return false;
+  }
+  return true;
+};
+
 const handleBatchExport = async () => {
   try {
     ElMessage.info("正在生成导出文件，请稍候...");
@@ -414,6 +487,45 @@ const handleBatchExport = async () => {
     ElMessage.success("导出成功");
   } catch (error) {
     ElMessage.error("导出失败");
+  }
+};
+
+const handleBatchExportDocs = async () => {
+  if (!ensureSelection()) return;
+  try {
+    ElMessage.info("正在生成申报书，请稍候...");
+    const ids = selectedRows.value.map((row) => row.id).join(",");
+    const res: any = await batchExportDocs({ ids });
+    downloadFile(res, "项目申报书.zip");
+    ElMessage.success("导出成功");
+  } catch {
+    ElMessage.error("导出失败");
+  }
+};
+
+const handleBatchExportNotices = async () => {
+  if (!ensureSelection()) return;
+  try {
+    ElMessage.info("正在生成立项通知书，请稍候...");
+    const ids = selectedRows.value.map((row) => row.id).join(",");
+    const res: any = await batchExportNotices({ ids });
+    downloadFile(res, "立项通知书.zip");
+    ElMessage.success("生成成功");
+  } catch {
+    ElMessage.error("生成失败");
+  }
+};
+
+const handleBatchExportCertificates = async () => {
+  if (!ensureSelection()) return;
+  try {
+    ElMessage.info("正在生成结题证书，请稍候...");
+    const ids = selectedRows.value.map((row) => row.id).join(",");
+    const res: any = await batchExportCertificates({ ids });
+    downloadFile(res, "结题证书.zip");
+    ElMessage.success("生成成功");
+  } catch {
+    ElMessage.error("生成失败");
   }
 };
 
@@ -443,6 +555,77 @@ const handleBatchDownload = async () => {
   } catch (error) {
     ElMessage.error("下载失败，可能没有可下载的附件");
   }
+};
+
+const openBatchStatusDialog = () => {
+  if (!ensureSelection()) return;
+  batchStatusForm.status = "";
+  batchStatusDialogVisible.value = true;
+};
+
+const submitBatchStatus = async () => {
+  if (!batchStatusForm.status) {
+    ElMessage.warning("请选择目标状态");
+    return;
+  }
+  batchStatusLoading.value = true;
+  try {
+    const payload = {
+      project_ids: selectedRows.value.map((row) => row.id),
+      status: batchStatusForm.status,
+    };
+    const res: any = await batchUpdateProjectStatus(payload);
+    if (res.code === 200) {
+      ElMessage.success("状态更新成功");
+      batchStatusDialogVisible.value = false;
+      fetchProjects();
+    }
+  } catch {
+    ElMessage.error("状态更新失败");
+  } finally {
+    batchStatusLoading.value = false;
+  }
+};
+
+const openBatchNotifyDialog = () => {
+  if (!ensureSelection()) return;
+  batchNotifyForm.title = "";
+  batchNotifyForm.content = "";
+  batchNotifyDialogVisible.value = true;
+};
+
+const submitBatchNotify = async () => {
+  if (!batchNotifyForm.title || !batchNotifyForm.content) {
+    ElMessage.warning("请填写通知标题和内容");
+    return;
+  }
+  batchNotifyLoading.value = true;
+  try {
+    const recipients = Array.from(
+      new Set(selectedRows.value.map((row) => row.leader).filter(Boolean))
+    );
+    const res: any = await batchSendNotifications({
+      title: batchNotifyForm.title,
+      content: batchNotifyForm.content,
+      recipients,
+    });
+    if (res.code === 200) {
+      ElMessage.success("通知已发送");
+      batchNotifyDialogVisible.value = false;
+    }
+  } catch (error: any) {
+    ElMessage.error(error.response?.data?.message || "发送失败");
+  } finally {
+    batchNotifyLoading.value = false;
+  }
+};
+
+const handleBatchCommand = (command: string) => {
+  if (command === "status") openBatchStatusDialog();
+  if (command === "docs") handleBatchExportDocs();
+  if (command === "notices") handleBatchExportNotices();
+  if (command === "certs") handleBatchExportCertificates();
+  if (command === "notify") openBatchNotifyDialog();
 };
 
 const downloadFile = (blob: Blob, filename: string) => {

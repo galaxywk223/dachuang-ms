@@ -101,6 +101,21 @@
           >
             下载附件
           </el-button>
+          <el-dropdown @command="handleBatchCommand">
+            <el-button type="primary" plain>
+              批量操作
+              <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="status">批量状态变更</el-dropdown-item>
+                <el-dropdown-item command="docs">批量导出申报书</el-dropdown-item>
+                <el-dropdown-item command="notices">批量生成立项通知书</el-dropdown-item>
+                <el-dropdown-item command="certs">批量生成结题证书</el-dropdown-item>
+                <el-dropdown-item command="notify">批量通知</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
         </div>
       </div>
 
@@ -302,11 +317,44 @@
         />
       </div>
     </div>
+
+    <el-dialog v-model="batchStatusDialogVisible" title="批量状态变更" width="480px">
+      <el-form label-position="top">
+        <el-form-item label="目标状态">
+          <el-select v-model="batchStatusForm.status" placeholder="请选择状态" style="width: 100%">
+            <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="batchStatusDialogVisible = false">取消</el-button>
+          <el-button type="primary" :loading="batchStatusLoading" @click="submitBatchStatus">确认</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="batchNotifyDialogVisible" title="批量通知" width="520px">
+      <el-form label-position="top">
+        <el-form-item label="通知标题">
+          <el-input v-model="batchNotifyForm.title" placeholder="请输入标题" />
+        </el-form-item>
+        <el-form-item label="通知内容">
+          <el-input v-model="batchNotifyForm.content" type="textarea" :rows="4" placeholder="请输入内容" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="batchNotifyDialogVisible = false">取消</el-button>
+          <el-button type="primary" :loading="batchNotifyLoading" @click="submitBatchNotify">发送</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Search, RefreshLeft, Download } from "@element-plus/icons-vue";
+import { Search, RefreshLeft, Download, ArrowDown } from "@element-plus/icons-vue";
 import { useAllProjects } from "./useAllProjects";
 
 const {
@@ -329,10 +377,31 @@ const {
   handleSelectionChange,
   handleBatchExport,
   handleBatchDownload,
+  handleBatchExportDocs,
+  handleBatchExportNotices,
+  handleBatchExportCertificates,
+  openBatchStatusDialog,
+  submitBatchStatus,
+  openBatchNotifyDialog,
+  submitBatchNotify,
+  batchStatusDialogVisible,
+  batchNotifyDialogVisible,
+  batchStatusLoading,
+  batchNotifyLoading,
+  batchStatusForm,
+  batchNotifyForm,
   getLevelType,
   getLabel,
   getStatusClass,
 } = useAllProjects();
+
+const handleBatchCommand = (command: string) => {
+  if (command === "status") openBatchStatusDialog();
+  if (command === "docs") handleBatchExportDocs();
+  if (command === "notices") handleBatchExportNotices();
+  if (command === "certs") handleBatchExportCertificates();
+  if (command === "notify") openBatchNotifyDialog();
+};
 </script>
 
 <style scoped lang="scss" src="./AllProjects.scss"></style>

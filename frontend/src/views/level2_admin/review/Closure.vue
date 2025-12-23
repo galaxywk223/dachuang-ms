@@ -38,6 +38,9 @@
           >
         </div>
         <div class="actions">
+          <el-button type="primary" plain @click="openBatchDialog">
+            批量审核
+          </el-button>
           <el-button
             type="warning"
             plain
@@ -179,11 +182,38 @@
         </span>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="batchDialogVisible" title="批量审核" width="520px">
+      <el-form label-position="top">
+        <el-form-item label="审核结果">
+          <el-radio-group v-model="batchForm.action">
+            <el-radio label="approve">通过</el-radio>
+            <el-radio label="reject">驳回</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="结题评价">
+          <el-select v-model="batchForm.closure_rating" placeholder="请选择" style="width: 100%">
+            <el-option v-for="item in closureRatingOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="审核意见">
+          <el-input v-model="batchForm.comments" type="textarea" :rows="4" placeholder="请输入审核意见" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="batchDialogVisible = false">取消</el-button>
+          <el-button type="primary" :loading="batchSubmitting" @click="submitBatchReview">
+            提交
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { ElMessage } from "element-plus";
 import { Search, RefreshLeft, Download } from "@element-plus/icons-vue";
 import {
@@ -192,6 +222,9 @@ import {
   rejectProject,
   batchDownloadAttachments,
 } from "@/api/admin";
+import request from "@/utils/request";
+import { useDictionary } from "@/composables/useDictionary";
+import { DICT_CODES } from "@/api/dictionary";
 
 const loading = ref(false);
 const projects = ref<any[]>([]);
@@ -208,6 +241,17 @@ const reviewForm = ref({
   comment: "",
 });
 
+const batchDialogVisible = ref(false);
+const batchSubmitting = ref(false);
+const batchForm = ref({
+  action: "approve",
+  comments: "",
+  closure_rating: "",
+});
+
+const { loadDictionaries, getOptions } = useDictionary();
+const closureRatingOptions = computed(() => getOptions(DICT_CODES.CLOSURE_RATING));
+
 const fetchProjects = async () => {
   loading.value = true;
   try {
@@ -221,6 +265,7 @@ const fetchProjects = async () => {
     if (response.code === 200) {
       projects.value = response.data.results;
       total.value = response.data.total;
+      selectedRows.value = [];
     }
   } catch (error) {
     ElMessage.error("获取项目列表失败");
@@ -292,6 +337,41 @@ const handleSelectionChange = (val: any[]) => {
   selectedRows.value = val;
 };
 
+const openBatchDialog = () => {
+  if (selectedRows.value.length === 0) {
+    ElMessage.warning("请先勾选要审核的项目");
+    return;
+  }
+  batchForm.value = { action: "approve", comments: "", closure_rating: "" };
+  batchDialogVisible.value = true;
+};
+
+const submitBatchReview = async () => {
+  if (selectedRows.value.length === 0) return;
+  batchSubmitting.value = true;
+  try {
+    const payload: any = {
+      review_ids: selectedRows.value.map((row) => row.review_id),
+      action: batchForm.value.action,
+      comments: batchForm.value.comments,
+    };
+    if (batchForm.value.closure_rating) {
+      payload.closure_rating = batchForm.value.closure_rating;
+    }
+    const res: any = await request.post("/reviews/batch-review/", payload);
+    if (res.code === 200) {
+      ElMessage.success("批量审核完成");
+      batchDialogVisible.value = false;
+      selectedRows.value = [];
+      fetchProjects();
+    }
+  } catch (error: any) {
+    ElMessage.error(error.response?.data?.message || "批量审核失败");
+  } finally {
+    batchSubmitting.value = false;
+  }
+};
+
 const handleBatchDownload = async () => {
   try {
     ElMessage.info("正在打包附件，请稍候...");
@@ -357,6 +437,7 @@ const getStatusClass = (status: string) => {
 };
 
 onMounted(() => {
+  loadDictionaries([DICT_CODES.CLOSURE_RATING]);
   fetchProjects();
 });
 </script>

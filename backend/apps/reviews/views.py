@@ -141,6 +141,83 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+    @action(methods=["post"], detail=True, url_path="revise")
+    def revise(self, request, pk=None):
+        """
+        在评审时间范围内修改已审核结果/意见
+        """
+        review = self.get_object()
+        user = request.user
+
+        if not self.check_review_permission(review, user):
+            return Response(
+                {"code": 403, "message": "无权限修改此审核"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if review.status == Review.ReviewStatus.PENDING:
+            return Response(
+                {"code": 400, "message": "该审核记录尚未处理"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        ok, msg = SystemSettingService.check_review_window(
+            review.review_type, review.review_level, timezone.now().date()
+        )
+        if not ok:
+            return Response(
+                {"code": 400, "message": msg},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = ReviewActionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        action_type = serializer.validated_data["action"]
+        comments = serializer.validated_data.get("comments", "")
+        score = serializer.validated_data.get("score")
+        closure_rating = serializer.validated_data.get("closure_rating")
+
+        review_rules = SystemSettingService.get_setting("REVIEW_RULES")
+        min_len = int(review_rules.get("teacher_application_comment_min", 0) or 0)
+        if (
+            min_len
+            and review.review_level == Review.ReviewLevel.TEACHER
+            and review.review_type == Review.ReviewType.APPLICATION
+            and len(comments or "") < min_len
+        ):
+            return Response(
+                {"code": 400, "message": f"审核意见至少{min_len}字"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        review.status = (
+            Review.ReviewStatus.APPROVED
+            if action_type == "approve"
+            else Review.ReviewStatus.REJECTED
+        )
+        review.comments = comments
+        review.score = score
+        review.reviewer = user
+        review.reviewed_at = timezone.now()
+        if review.review_type == Review.ReviewType.CLOSURE:
+            review.closure_rating = closure_rating
+        else:
+            review.closure_rating = None
+        review.save()
+
+        NotificationService.notify_review_result(
+            review.project, action_type == "approve", comments
+        )
+
+        return Response(
+            {
+                "code": 200,
+                "message": "审核结果已更新",
+                "data": ReviewSerializer(review).data,
+            }
+        )
+
     @action(methods=["get"], detail=False)
     def pending(self, request):
         """

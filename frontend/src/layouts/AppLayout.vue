@@ -235,14 +235,33 @@ const currentMenus = computed(() => {
                     ]
                 },
                 {
+                    index: 'midterm',
+                    title: '中期检查',
+                    icon: DocumentChecked,
+                    children: [
+                        { index: '/midterm/apply', title: '提交报告' }
+                    ]
+                },
+                {
                     index: 'closure',
                     title: '结题管理',
                     icon: DocumentChecked,
                     children: [
+                        { index: '/closure/apply', title: '申请结题' },
                         { index: '/closure/pending', title: '待结题项目' },
                         { index: '/closure/applied', title: '已申请结题' },
                         { index: '/closure/drafts', title: '草稿箱' }
                     ]
+                },
+                {
+                    index: '/funds',
+                    title: '经费管理',
+                    icon: Folder,
+                },
+                {
+                    index: '/achievements',
+                    title: '成果管理',
+                    icon: Folder,
                 },
                 {
                     index: '/change-requests',
@@ -258,6 +277,16 @@ const currentMenus = computed(() => {
         case 'level2_admin':
             return [
                 {
+                    index: '/level2-admin/statistics',
+                    title: '统计概览',
+                    icon: Folder,
+                },
+                {
+                    index: '/level2-admin/funds',
+                    title: '经费管理',
+                    icon: Folder,
+                },
+                {
                     index: 'establishment',
                     title: '立项管理',
                     icon: DocumentAdd,
@@ -267,12 +296,29 @@ const currentMenus = computed(() => {
                     ]
                 },
                 {
+                    index: 'midterm',
+                    title: '中期管理',
+                    icon: DocumentChecked,
+                    children: [
+                        { index: '/level2-admin/review/midterm', title: '中期审核' },
+                    ]
+                },
+                {
                     index: 'closure',
                     title: '结题管理',
                     icon: DocumentChecked,
                     children: [
                         { index: '/level2-admin/review/closure', title: '结题项目审核' },
                         { index: '/level2-admin/review/achievements', title: '结题成果查看' },
+                    ]
+                },
+                {
+                    index: 'expert',
+                    title: '专家管理',
+                    icon: User,
+                    children: [
+                        { index: '/level2-admin/expert/groups', title: '专家组管理' },
+                        { index: '/level2-admin/expert/assignment', title: '评审分配' },
                     ]
                 },
                 {
@@ -297,20 +343,32 @@ const currentMenus = computed(() => {
                         { index: '/level1-admin/users/experts', title: '专家库管理' },
                     ]
                 },
-	                {
-	                  index: 'projects',
-	                  title: '系统项目',
-	                  icon: Folder,
-	                  children: [
+                {
+                  index: 'projects',
+                  title: '系统项目',
+                  icon: Folder,
+                  children: [
                         { index: '/level1-admin/review/establishment', title: '校级立项审核' },
-	                    { index: '/level1-admin/projects/all', title: '系统项目管理' },
-	                  ],
-	                },
-                    {
-                      index: 'change',
-                      title: '项目异动',
-                      icon: DocumentAdd,
-                      children: [
+                        { index: '/level1-admin/review/closure', title: '校级结题审核' },
+                        { index: '/level1-admin/projects/all', title: '系统项目管理' },
+                        { index: '/level1-admin/statistics', title: '统计概览' },
+                        { index: '/level1-admin/funds', title: '经费管理' },
+                  ],
+                },
+                {
+                  index: 'expert',
+                  title: '专家管理',
+                  icon: User,
+                  children: [
+                        { index: '/level1-admin/expert/groups', title: '校级专家组管理' },
+                        { index: '/level1-admin/expert/assignment', title: '校级评审分配' },
+                  ],
+                },
+                {
+                  index: 'change',
+                  title: '项目异动',
+                  icon: DocumentAdd,
+                  children: [
                         { index: '/level1-admin/change/review', title: '异动审核' },
                       ],
                     },
@@ -339,6 +397,11 @@ const currentMenus = computed(() => {
                     index: '/teacher/change-reviews',
                     title: '项目异动审核',
                     icon: DocumentChecked,
+                },
+                {
+                    index: '/teacher/funds',
+                    title: '经费管理',
+                    icon: Folder,
                 },
             ];
         case 'expert':

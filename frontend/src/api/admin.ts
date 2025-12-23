@@ -199,6 +199,35 @@ export function pushProjectsExternal(data: any) {
   });
 }
 
+export function getPushRecords() {
+  return request({
+    url: "/projects/admin/manage/push-records/",
+    method: "get",
+  });
+}
+
+export function getArchives() {
+  return request({
+    url: "/projects/admin/manage/archives/",
+    method: "get",
+  });
+}
+
+export function exportProjectNumbers() {
+  return request({
+    url: "/projects/admin/manage/export-project-nos/",
+    method: "get",
+    responseType: "blob",
+  });
+}
+
+export function getDuplicateProjectNumbers() {
+  return request({
+    url: "/projects/admin/manage/duplicate-project-nos/",
+    method: "get",
+  });
+}
+
 export function exportProjectNumbers(params?: any) {
   return request({
     url: "/projects/admin/manage/export-project-nos/",

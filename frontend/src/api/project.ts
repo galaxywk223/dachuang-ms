@@ -36,6 +36,16 @@ export function updateProjectApplication(id: number, data: any) {
 }
 
 /**
+ * 撤回项目申报
+ */
+export function withdrawProjectApplication(id: number) {
+  return request({
+    url: `/projects/application/${id}/withdraw/`,
+    method: "post",
+  });
+}
+
+/**
  * 获取我的项目列表
  */
 export function getMyProjects(params?: any) {
@@ -64,6 +74,40 @@ export function getProjectDetail(id: number) {
   return request({
     url: `/projects/${id}/`,
     method: "get",
+  });
+}
+
+/**
+ * 获取项目成果列表（项目过程）
+ */
+export function getProjectAchievementList(id: number) {
+  return request({
+    url: `/projects/${id}/achievements/`,
+    method: "get",
+  });
+}
+
+/**
+ * 添加项目成果
+ */
+export function addProjectAchievement(id: number, data: any) {
+  return request({
+    url: `/projects/${id}/add-achievement/`,
+    method: "post",
+    data,
+    headers: {
+      "Content-Type": data instanceof FormData ? "multipart/form-data" : "application/json",
+    },
+  });
+}
+
+/**
+ * 删除项目成果
+ */
+export function removeProjectAchievement(projectId: number, achievementId: number) {
+  return request({
+    url: `/projects/${projectId}/remove-achievement/${achievementId}/`,
+    method: "delete",
   });
 }
 
@@ -135,6 +179,16 @@ export function updateClosureApplication(id: number, data: any) {
 }
 
 /**
+ * 撤销结题申请
+ */
+export function revokeClosureApplication(id: number) {
+  return request({
+    url: `/projects/${id}/revoke-closure/`,
+    method: "post",
+  });
+}
+
+/**
  * 删除结题草稿
  */
 export function deleteClosureDraft(id: number) {
@@ -164,5 +218,3 @@ export function getProjectCertificate(id: number) {
     responseType: "blob",
   });
 }
-
-

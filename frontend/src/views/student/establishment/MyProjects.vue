@@ -177,7 +177,7 @@
 import { ref, reactive, onMounted, computed } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { Search as SearchIcon, RefreshLeft, Plus } from "@element-plus/icons-vue";
-import { getMyProjects, deleteProject } from "@/api/project";
+import { getMyProjects, deleteProject, withdrawProjectApplication } from "@/api/project";
 import { useRouter } from "vue-router";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionary";
@@ -301,11 +301,24 @@ const handleEdit = (row: any) => {
 
 const canWithdraw = (row: any) => {
     // Only allow withdraw if submitted and not fully approved/rejected yet (logic varies by requirement)
-    return row.status === 'SUBMITTED'; 
+    return ['SUBMITTED', 'TEACHER_AUDITING'].includes(row.status); 
 };
 
-const handleWithdraw = (_row: any) => {
-    ElMessage.info("撤回功能开发中");
+const handleWithdraw = async (row: any) => {
+    try {
+      await ElMessageBox.confirm("确认撤回该项目申请吗？撤回后将进入草稿箱。", "提示", {
+        type: "warning",
+        confirmButtonText: "确认撤回",
+        cancelButtonText: "取消",
+      });
+      const response: any = await withdrawProjectApplication(row.id);
+      if (response.code === 200) {
+        ElMessage.success("撤回成功，已转入草稿箱");
+        fetchProjects();
+      }
+    } catch {
+      // cancel
+    }
 };
 
 const handleDelete = async (row: any) => {
