@@ -154,5 +154,15 @@ export function getProjectAchievements(id: number) {
   });
 }
 
+/**
+ * 获取结题证书（HTML）
+ */
+export function getProjectCertificate(id: number) {
+  return request({
+    url: `/projects/${id}/certificate/`,
+    method: "get",
+    responseType: "blob",
+  });
+}
 
 

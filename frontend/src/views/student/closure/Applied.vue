@@ -109,7 +109,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" width="150" align="center" fixed="right">
+        <el-table-column label="操作" width="180" align="center" fixed="right">
           <template #default="{ row }">
             <el-button
               type="primary"
@@ -118,6 +118,15 @@
               @click="handleView(row)"
             >
               查看详情
+            </el-button>
+            <el-button
+              v-if="row.status === 'CLOSED'"
+              type="success"
+              size="small"
+              link
+              @click="handleCertificate(row)"
+            >
+              下载证书
             </el-button>
           </template>
         </el-table-column>
@@ -149,7 +158,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from "vue";
 import { ElMessage } from "element-plus";
-import { getAppliedClosureProjects } from "@/api/project";
+import { getAppliedClosureProjects, getProjectCertificate } from "@/api/project";
 
 // 表格数据
 const tableData = ref<any[]>([]);
@@ -218,6 +227,19 @@ const handleCurrentChange = (page: number) => {
 // 查看详情
 const handleView = (_row: any) => {
   ElMessage.info("查看结题详情功能待开发");
+};
+
+const handleCertificate = async (row: any) => {
+  try {
+    const res: any = await getProjectCertificate(row.id);
+    const blob = res instanceof Blob ? res : new Blob([res], { type: "text/html" });
+    const url = window.URL.createObjectURL(blob);
+    window.open(url, "_blank");
+    window.setTimeout(() => URL.revokeObjectURL(url), 10000);
+  } catch (error: any) {
+    console.error("获取结题证书失败:", error);
+    ElMessage.error(error.message || "获取结题证书失败");
+  }
 };
 
 // 页面加载时获取数据

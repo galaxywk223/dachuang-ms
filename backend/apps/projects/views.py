@@ -25,6 +25,7 @@ from .serializers import (
 )
 from .serializers_midterm import ProjectMidTermSerializer
 from .services import ProjectService
+from .certificates import render_certificate_html
 from apps.reviews.services import ReviewService
 from apps.system_settings.services import SystemSettingService
 
@@ -50,6 +51,33 @@ class ProjectViewSet(viewsets.ModelViewSet):
         project = self.get_object()
         stats = ProjectService.get_budget_stats(project)
         return Response({"code": 200, "message": "获取成功", "data": stats})
+
+    @action(detail=True, methods=["get"], url_path="certificate")
+    def certificate(self, request, pk=None):
+        """
+        获取结题证书（HTML）
+        """
+        project = self.get_object()
+        user = request.user
+
+        if project.status != Project.ProjectStatus.CLOSED:
+            return Response(
+                {"code": 400, "message": "项目未结题，无法生成证书"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not (
+            user.is_level1_admin
+            or user.is_level2_admin
+            or (user.is_student and project.leader_id == user.id)
+        ):
+            return Response(
+                {"code": 403, "message": "无权限访问"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        html = render_certificate_html(project)
+        return HttpResponse(html, content_type="text/html")
 
     def get_serializer_class(self):
         if self.action == "list":

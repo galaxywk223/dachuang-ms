@@ -139,15 +139,7 @@ const fetchReviews = async () => {
         if (activeTab.value === 'pending') {
             params.status = 'PENDING';
         } else {
-             // Fetch all non-pending? OR separate status query
-             // The API filterset_fields=['status'] supports single value. 
-             // To get 'reviewed' (APPROVED or REJECTED), we might need multiple calls or backend change.
-             // For now, let's just fetch everything if 'reviewed' and client filter, or simple 2 calls.
-             // Or API support 'status__in'. 
-             // Let's assume we want to see "Everything that is NOT Pending"
-             // But simple implementation: Just separate tabs by status if easy.
-             // If clicked 'reviewed', maybe load recently reviewed.
-             params.status = 'APPROVED'; // Just show Approved for now, or need better filter
+             params.status_in = 'APPROVED,REJECTED';
         }
         
         const res: any = await request.get('/reviews/', { params });

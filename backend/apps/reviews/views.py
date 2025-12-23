@@ -57,6 +57,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
         elif user.role == "EXPERT":
             queryset = queryset.filter(reviewer=user)
 
+        status_in = self.request.query_params.get("status_in") or self.request.query_params.get("status__in")
+        if status_in:
+            status_list = [s.strip() for s in status_in.split(",") if s.strip()]
+            if status_list:
+                queryset = queryset.filter(status__in=status_list)
+
         return queryset
 
     @action(methods=["post"], detail=True)
