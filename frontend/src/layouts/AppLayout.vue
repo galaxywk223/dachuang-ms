@@ -169,12 +169,10 @@ import { useUserStore } from '@/stores/user';
 import { ElMessageBox, ElMessage } from 'element-plus';
 import {
   DocumentAdd, DocumentChecked, 
-  QuestionFilled, Bell, ArrowDown, 
-  SwitchButton,
-
-  UserFilled,
-  Expand, Fold, Lock, Setting, Folder
-} from '@element-plus/icons-vue';
+	  QuestionFilled, Bell, ArrowDown, 
+	  SwitchButton,
+	  Expand, Fold, Lock, Setting, Folder, User
+	} from '@element-plus/icons-vue';
 import { reactive } from 'vue';
 
 const route = useRoute();
@@ -245,7 +243,7 @@ const currentMenus = computed(() => {
                     ]
                 },
                 {
-                    index: '/help',
+                    index: 'help',
                     title: '使用帮助',
                     icon: QuestionFilled
                 }
@@ -272,37 +270,38 @@ const currentMenus = computed(() => {
                 },
             ];
         case 'level1_admin':
-             return [
+	             return [
                 {
                     index: 'users',
-                    title: '用户维护',
-                    icon: UserFilled,
+                    title: '用户信息管理',
+                    icon: User,
                     children: [
                         { index: '/level1-admin/users/students', title: '学生管理' },
+                        { index: '/level1-admin/users/admins', title: '二级管理员管理' },
                         { index: '/level1-admin/users/teachers', title: '指导教师管理' },
-                        { index: '/level1-admin/users/admins', title: '二级管理员' },
+                        { index: '/level1-admin/users/experts', title: '专家库管理' },
                     ]
                 },
-                {
-                    index: 'projects',
-                    title: '项目管理',
-                    icon: Folder,
-                    children: [
-                         { index: '/level1-admin/projects/all', title: '系统项目管理' },
-                    ]
-                },
-                {
-                    index: 'settings',
-                    title: '系统配置',
-                    icon: Setting,
-                    children: [
-                         { index: '/level1-admin/settings/project-dictionaries', title: '项目参数' },
-                         { index: '/level1-admin/settings/org-dictionaries', title: '组织参数' },
-                         { index: '/level1-admin/settings/achievement-dictionaries', title: '成果参数' },
-                         { index: '/level1-admin/settings/other-dictionaries', title: '通用参数' },
-                    ]
-                }
-             ];
+	                {
+	                  index: 'projects',
+	                  title: '系统项目',
+	                  icon: Folder,
+	                  children: [
+	                    { index: '/level1-admin/projects/all', title: '系统项目管理' },
+	                  ],
+	                },
+	                {
+	                  index: 'settings',
+	                  title: '系统配置',
+	                  icon: Setting,
+	                  children: [
+	                    { index: '/level1-admin/settings/project-dictionaries', title: '项目参数' },
+	                    { index: '/level1-admin/settings/org-dictionaries', title: '组织参数' },
+	                    { index: '/level1-admin/settings/achievement-dictionaries', title: '成果参数' },
+	                    { index: '/level1-admin/settings/other-dictionaries', title: '通用参数' },
+	                  ],
+	                },
+	             ];
         default:
             return [];
     }

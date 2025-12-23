@@ -50,6 +50,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: "指导教师管理" },
       },
       {
+        path: "users/experts",
+        name: "level1-users-experts",
+        component: () => import("@/views/level1_admin/users/ExpertManagement.vue"),
+        meta: { title: "专家库管理" },
+      },
+      {
         path: "data/colleges",
         name: "level1-data-colleges",
         component: () => import("@/views/level1_admin/data/Colleges.vue"),
