@@ -4,7 +4,7 @@
 
 from django.utils import timezone
 from django.db import transaction
-from .models import Project, ProjectMember, ProjectProgress, ProjectAchievement
+from .models import Project, ProjectMember, ProjectProgress, ProjectAchievement, ProjectExpenditure
 
 
 class ProjectService:
@@ -202,4 +202,101 @@ class ProjectService:
             description=description,
             attachment=attachment,
             **extra_fields,
+        )
+
+    @staticmethod
+    @transaction.atomic
+    def apply_mid_term(project, mid_term_report, is_draft=False):
+        """
+        申请中期检查
+        """
+        if project.status not in [
+            Project.ProjectStatus.IN_PROGRESS,
+            Project.ProjectStatus.MID_TERM_DRAFT,
+            Project.ProjectStatus.MID_TERM_REJECTED,
+        ]:
+            raise ValueError("只有进行中或被退回的项目才能申请中期检查")
+
+        # 更新中期报告
+        if mid_term_report:
+            project.mid_term_report = mid_term_report
+
+        if is_draft:
+            project.status = Project.ProjectStatus.MID_TERM_DRAFT
+        else:
+            if not project.mid_term_report and not mid_term_report:
+                raise ValueError("请上传中期检查报告")
+            project.status = Project.ProjectStatus.MID_TERM_SUBMITTED
+            project.mid_term_submitted_at = timezone.now()
+
+        project.save()
+        return True
+
+    @staticmethod
+    @transaction.atomic
+    def submit_mid_term(project):
+        """
+        提交中期检查（从草稿状态）
+        """
+        if project.status not in [
+            Project.ProjectStatus.MID_TERM_DRAFT,
+            Project.ProjectStatus.MID_TERM_REJECTED,
+        ]:
+             # 如果已经在 IN_PROGRESS 且有报告，也允许直接提交
+             if project.status == Project.ProjectStatus.IN_PROGRESS and project.mid_term_report:
+                 pass
+             else:
+                return False
+
+        if not project.mid_term_report:
+            raise ValueError("请先上传中期检查报告")
+
+        project.status = Project.ProjectStatus.MID_TERM_SUBMITTED
+        project.mid_term_submitted_at = timezone.now()
+        project.save()
+        return True
+
+    @staticmethod
+    def get_budget_stats(project):
+        """
+        获取项目经费统计
+        """
+        from django.db.models import Sum
+
+        from decimal import Decimal
+        total_budget = project.budget if project.budget else Decimal('0.00')
+        # Ensure total_budget is Decimal
+        if isinstance(total_budget, float):
+             total_budget = Decimal(str(total_budget))
+        
+        used_amount = project.expenditures.aggregate(total=Sum("amount"))["total"] or Decimal('0.00')
+        remaining_amount = total_budget - used_amount
+        usage_rate = (used_amount / total_budget * 100) if total_budget > 0 else 0
+
+        return {
+            "total_budget": total_budget,
+            "used_amount": used_amount,
+            "remaining_amount": remaining_amount,
+            "usage_rate": round(usage_rate, 2),
+        }
+
+    @staticmethod
+    @transaction.atomic
+    def add_expenditure(project, user, title, amount, expenditure_date, category, proof_file=None):
+        """
+        添加经费支出
+        """
+        # 验证余额（严格模式：不允许超支）
+        stats = ProjectService.get_budget_stats(project)
+        if amount > stats["remaining_amount"]:
+            raise ValueError(f"余额不足！当前剩余经费：{stats['remaining_amount']}元，本次申请：{amount}元")
+
+        return ProjectExpenditure.objects.create(
+            project=project,
+            title=title,
+            amount=amount,
+            expenditure_date=expenditure_date,
+            category=category,
+            proof_file=proof_file,
+            created_by=user,
         )

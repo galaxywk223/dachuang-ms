@@ -16,6 +16,11 @@ class Project(models.Model):
         DRAFT = "DRAFT", "草稿"
         SUBMITTED = "SUBMITTED", "已提交"
         IN_PROGRESS = "IN_PROGRESS", "进行中"
+        MID_TERM_DRAFT = "MID_TERM_DRAFT", "中期草稿"
+        MID_TERM_SUBMITTED = "MID_TERM_SUBMITTED", "中期已提交"
+        MID_TERM_REVIEWING = "MID_TERM_REVIEWING", "中期审核中"
+        MID_TERM_APPROVED = "MID_TERM_APPROVED", "中期审核通过"
+        MID_TERM_REJECTED = "MID_TERM_REJECTED", "中期审核不通过"
         CLOSURE_DRAFT = "CLOSURE_DRAFT", "结题草稿"
         CLOSURE_SUBMITTED = "CLOSURE_SUBMITTED", "结题已提交"
         CLOSURE_LEVEL2_REVIEWING = "CLOSURE_LEVEL2_REVIEWING", "结题二级审核中"
@@ -112,6 +117,11 @@ class Project(models.Model):
         upload_to="attachments/", blank=True, null=True, verbose_name="上传文件", max_length=255
     )
 
+    # 中期检查材料
+    mid_term_report = models.FileField(
+        upload_to="mid_term_reports/", blank=True, null=True, verbose_name="中期检查报告", max_length=255
+    )
+
     # 结题材料
     final_report = models.FileField(
         upload_to="final_reports/", blank=True, null=True, verbose_name="结题报告", max_length=255
@@ -135,6 +145,9 @@ class Project(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
     submitted_at = models.DateTimeField(null=True, blank=True, verbose_name="提交时间")
+    mid_term_submitted_at = models.DateTimeField(
+        null=True, blank=True, verbose_name="中期提交时间"
+    )
     closure_applied_at = models.DateTimeField(
         null=True, blank=True, verbose_name="结题申请时间"
     )
@@ -313,3 +326,65 @@ class ProjectAchievement(models.Model):
 
     def __str__(self):
         return f"{self.project.project_no} - {self.title}"
+
+
+class ProjectExpenditure(models.Model):
+    """
+    项目经费支出记录
+    """
+
+    class ExpenditureStatus(models.TextChoices):
+        RECORDED = "RECORDED", "已录入"
+        # 预留审核状态，目前简化为只记录
+        # PENDING = "PENDING", "待审核"
+        # APPROVED = "APPROVED", "审核通过"
+        # REJECTED = "REJECTED", "审核不通过"
+
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name="expenditures",
+        verbose_name="项目",
+    )
+    title = models.CharField(max_length=200, verbose_name="支出事项")
+    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="金额")
+    expenditure_date = models.DateField(verbose_name="支出日期")
+    
+    # 使用 DictionaryItem 管理类别更灵活，但为了简化先用 ForeignKey 指向 DictionaryItem
+    category = models.ForeignKey(
+        DictionaryItem,
+        on_delete=models.PROTECT,
+        related_name="project_expenditures",
+        verbose_name="支出类别",
+    )
+
+    proof_file = models.FileField(
+        upload_to="expenditures/", blank=True, null=True, verbose_name="凭证文件", max_length=255
+    )
+    
+    status = models.CharField(
+        max_length=20,
+        choices=ExpenditureStatus.choices,
+        default=ExpenditureStatus.RECORDED,
+        verbose_name="状态",
+    )
+    
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        verbose_name="创建人",
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+
+    class Meta:
+        db_table = "project_expenditures"
+        verbose_name = "经费支出"
+        verbose_name_plural = verbose_name
+        ordering = ["-expenditure_date", "-created_at"]
+        indexes = [
+            models.Index(fields=["project", "expenditure_date"]),
+        ]
+
+    def __str__(self):
+        return f"{self.project.project_no} - {self.title} - {self.amount}"

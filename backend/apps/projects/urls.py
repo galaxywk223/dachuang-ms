@@ -4,7 +4,7 @@
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ProjectViewSet, ProjectProgressViewSet, ProjectAchievementViewSet
+from .views import ProjectViewSet, ProjectProgressViewSet, ProjectAchievementViewSet, ProjectExpenditureViewSet
 from .views_application import (
     create_project_application,
     update_project_application,
@@ -31,6 +31,7 @@ router.register(r"admin/review", ProjectReviewViewSet, basename="admin-review")
 router.register(r"admin/manage", ProjectManagementViewSet, basename="admin-manage")
 # router.register(r"admin/achievements", AchievementManagementViewSet, basename="admin-achievements")
 router.register(r"achievements", ProjectAchievementViewSet, basename="achievement")
+router.register(r"expenditures", ProjectExpenditureViewSet, basename="expenditure")
 
 urlpatterns = [
     # 立项管理

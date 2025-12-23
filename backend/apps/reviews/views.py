@@ -8,8 +8,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 
-from .models import Review
+from .models import Review, ExpertGroup
 from .serializers import ReviewSerializer, ReviewActionSerializer
+from .serializers_expert import ExpertGroupSerializer
 from .services import ReviewService
 from apps.projects.models import Project
 
@@ -207,3 +208,52 @@ class ReviewViewSet(viewsets.ModelViewSet):
             return Response(
                 {"code": 404, "message": "项目不存在"}, status=status.HTTP_404_NOT_FOUND
             )
+
+
+class ExpertGroupViewSet(viewsets.ModelViewSet):
+    """
+    专家组管理视图集
+    """
+    queryset = ExpertGroup.objects.all()
+    serializer_class = ExpertGroupSerializer
+    permission_classes = [IsAuthenticated] # Typically admin only, but for now authenticated
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
+
+class ReviewAssignmentViewSet(viewsets.ViewSet):
+    """
+    专家评审分配视图
+    """
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=False, methods=['post'])
+    def assign_batch(self, request):
+        """
+        批量分配项目给专家组
+        DATA: {
+            "project_ids": [1, 2, 3],
+            "group_id": 1,
+            "review_type": "APPLICATION" (optional)
+        }
+        """
+        project_ids = request.data.get('project_ids', [])
+        group_id = request.data.get('group_id')
+        review_type = request.data.get('review_type', Review.ReviewType.APPLICATION)
+        
+        if not project_ids or not group_id:
+             return Response({"message": "Empty project_ids or group_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+        created = ReviewService.assign_project_to_group(
+            project_ids=project_ids,
+            group_id=group_id,
+            review_type=review_type,
+            creator=request.user
+        )
+        
+        return Response({
+            "message": f"Successfully assigned {len(created)} review tasks.",
+            "count": len(created)
+        })
+

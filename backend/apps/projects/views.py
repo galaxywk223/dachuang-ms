@@ -12,7 +12,7 @@ import openpyxl
 from io import BytesIO
 import zipfile
 
-from .models import Project, ProjectMember, ProjectProgress, ProjectAchievement
+from .models import Project, ProjectMember, ProjectProgress, ProjectAchievement, ProjectExpenditure, ProjectExpenditure
 from .serializers import (
     ProjectSerializer,
     ProjectListSerializer,
@@ -20,10 +20,14 @@ from .serializers import (
     ProjectProgressSerializer,
     ProjectSubmitSerializer,
     ProjectAchievementSerializer,
+    ProjectAchievementSerializer,
     ProjectClosureSerializer,
+    ProjectExpenditureSerializer,
 )
+from .serializers_midterm import ProjectMidTermSerializer
 from .services import ProjectService
 from apps.reviews.services import ReviewService
+
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
@@ -37,6 +41,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
     filterset_fields = ["status", "level", "leader__college", "leader"]
     search_fields = ["project_no", "title", "advisor"]
     ordering_fields = ["created_at", "updated_at", "submitted_at"]
+
+    @action(detail=True, methods=["get"], url_path="budget-stats")
+    def budget_stats(self, request, pk=None):
+        """
+        获取项目经费统计
+        """
+        project = self.get_object()
+        stats = ProjectService.get_budget_stats(project)
+        return Response(stats)
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -217,6 +230,80 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return Response(
             {"code": 200, "message": "进度添加成功", "data": serializer.data}
         )
+
+    @action(methods=["post"], detail=True, url_path="apply-mid-term")
+    def apply_mid_term(self, request, pk=None):
+        """
+        申请中期检查
+        """
+        project = self.get_object()
+
+        # 检查权限
+        if project.leader != request.user:
+            return Response(
+                {"code": 403, "message": "只有项目负责人可以申请中期检查"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        serializer = ProjectMidTermSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        mid_term_report = serializer.validated_data.get("mid_term_report")
+        is_draft = serializer.validated_data.get("is_draft", False)
+
+        try:
+            ProjectService.apply_mid_term(project, mid_term_report, is_draft)
+            message = "中期检查已保存为草稿" if is_draft else "中期检查申请提交成功"
+            
+            # 如果是正式提交，创建审核任务
+            if not is_draft:
+                 ReviewService.create_mid_term_review(project)
+                 
+            return Response({"code": 200, "message": message})
+        except ValueError as e:
+            return Response(
+                {"code": 400, "message": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    @action(detail=True, methods=["get"], url_path="budget-stats")
+    def budget_stats(self, request, pk=None):
+        """
+        获取项目经费统计
+        """
+        project = self.get_object()
+        stats = ProjectService.get_budget_stats(project)
+        return Response(stats)
+
+    @action(methods=["post"], detail=True, url_path="submit-mid-term")
+    def submit_mid_term(self, request, pk=None):
+        """
+        提交中期检查（从草稿状态）
+        """
+        project = self.get_object()
+
+        # 检查权限
+        if project.leader != request.user:
+            return Response(
+                {"code": 403, "message": "只有项目负责人可以提交中期检查"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        try:
+            if ProjectService.submit_mid_term(project):
+                # 创建审核任务
+                ReviewService.create_mid_term_review(project)
+                return Response({"code": 200, "message": "中期检查申请提交成功"})
+            else:
+                return Response(
+                    {"code": 400, "message": "项目状态不允许提交"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        except ValueError as e:
+            return Response(
+                {"code": 400, "message": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     @action(methods=["post"], detail=True, url_path="apply-closure")
     def apply_closure(self, request, pk=None):
@@ -602,3 +689,46 @@ class ProjectAchievementViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(project__leader__college=user.college)
 
         return queryset
+
+
+class ProjectExpenditureViewSet(viewsets.ModelViewSet):
+    """
+    项目经费视图集
+    """
+    queryset = ProjectExpenditure.objects.all()
+    serializer_class = ProjectExpenditureSerializer
+    permission_classes = [IsAuthenticated]
+
+    filterset_fields = ["project"]
+
+    def perform_create(self, serializer):
+        project = serializer.validated_data["project"]
+        amount = serializer.validated_data["amount"]
+        
+        # 验证余额
+        stats = ProjectService.get_budget_stats(project)
+        if amount > stats["remaining_amount"]:
+            raise serializers.ValidationError(
+                f"余额不足！当前剩余经费：{stats['remaining_amount']}元，本次申请：{amount}元"
+            )
+            
+        serializer.save(created_by=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except serializers.ValidationError as e:
+             raise e
+        except ValueError as e:
+            return Response(
+                {"code": 400, "message": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    def get_queryset(self):
+        user = self.request.user
+        if hasattr(user, 'is_student') and user.is_student:
+             return ProjectExpenditure.objects.filter(project__leader=user)
+        # Admins can see all (or filtered by college logic if we add it)
+        return ProjectExpenditure.objects.all()
+

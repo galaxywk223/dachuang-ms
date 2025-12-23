@@ -13,6 +13,7 @@ class Review(models.Model):
 
     class ReviewType(models.TextChoices):
         APPLICATION = "APPLICATION", "申报审核"
+        MID_TERM = "MID_TERM", "中期审核"
         CLOSURE = "CLOSURE", "结题审核"
 
     class ReviewLevel(models.TextChoices):
@@ -89,3 +90,33 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.project.project_no} - {self.get_review_type_display()} - {self.get_review_level_display()}"
+
+
+class ExpertGroup(models.Model):
+    """
+    专家组模型
+    """
+    name = models.CharField(max_length=100, verbose_name="专家组名称")
+    members = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        limit_choices_to={'role': 'EXPERT'},
+        related_name="expert_groups",
+        verbose_name="专家成员"
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="created_expert_groups",
+        verbose_name="创建人"
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+
+    class Meta:
+        db_table = "expert_groups"
+        verbose_name = "专家组"
+        verbose_name_plural = verbose_name
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.name

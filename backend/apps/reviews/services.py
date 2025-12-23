@@ -4,7 +4,10 @@
 
 from django.utils import timezone
 from django.db import transaction
-from .models import Review
+from .models import (
+    Review,
+    ExpertGroup,
+)
 from apps.projects.models import Project
 
 
@@ -83,6 +86,10 @@ class ReviewService:
             elif review.review_level == Review.ReviewLevel.LEVEL1:
                 project.status = Project.ProjectStatus.IN_PROGRESS
 
+        # 中期审核
+        elif review.review_type == Review.ReviewType.MID_TERM:
+            project.status = Project.ProjectStatus.MID_TERM_APPROVED
+
         # 结题审核
         elif review.review_type == Review.ReviewType.CLOSURE:
             if review.review_level == Review.ReviewLevel.LEVEL2:
@@ -118,6 +125,10 @@ class ReviewService:
                 project.status = Project.ProjectStatus.DRAFT
             elif review.review_level == Review.ReviewLevel.LEVEL1:
                 project.status = Project.ProjectStatus.DRAFT
+
+        # 中期审核
+        elif review.review_type == Review.ReviewType.MID_TERM:
+            project.status = Project.ProjectStatus.MID_TERM_REJECTED
 
         # 结题审核
         elif review.review_type == Review.ReviewType.CLOSURE:
@@ -162,7 +173,25 @@ class ReviewService:
         )
 
         project.save()
+        project.save()
         return True
+
+    @staticmethod
+    @transaction.atomic
+    def create_mid_term_review(project):
+        """
+        创建中期审核记录（二级审核）
+        """
+        # 更新项目状态
+        project.status = Project.ProjectStatus.MID_TERM_REVIEWING
+        project.save(update_fields=["status"])
+
+        return ReviewService.create_review(
+            project=project,
+            review_type=Review.ReviewType.MID_TERM,
+            review_level=Review.ReviewLevel.LEVEL2,
+        )
+
 
     @staticmethod
     def get_pending_reviews_for_admin(admin_user):
@@ -181,3 +210,38 @@ class ReviewService:
                 status=Review.ReviewStatus.PENDING,
             )
         return Review.objects.none()
+
+    @staticmethod
+    def assign_project_to_group(project_ids, group_id, review_type=Review.ReviewType.APPLICATION, review_level=Review.ReviewLevel.LEVEL2, creator=None):
+        """
+        批量分配项目给专家组
+        """
+        group = ExpertGroup.objects.get(pk=group_id)
+        experts = group.members.all()
+        created_reviews = []
+
+        with transaction.atomic():
+            for pid in project_ids:
+                try:
+                    project = Project.objects.get(pk=pid)
+                except Project.DoesNotExist:
+                    continue
+                
+                for expert in experts:
+                    # Check duplication
+                    if not Review.objects.filter(
+                        project=project,
+                        reviewer=expert,
+                        review_type=review_type
+                    ).exists():
+                        review = Review.objects.create(
+                            project=project,
+                            review_type=review_type,
+                            review_level=review_level,
+                            reviewer=expert,
+                            status=Review.ReviewStatus.PENDING
+                        )
+                        created_reviews.append(review)
+                        
+        return created_reviews
+

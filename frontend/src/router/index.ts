@@ -117,102 +117,169 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/views/admin/review/Closure.vue"),
         meta: { title: "结题审核" },
       },
-      {
-        path: "review/achievements",
-        name: "admin-review-achievements",
-        component: () => import("@/views/admin/review/Achievements.vue"),
-        meta: { title: "结题成果查看" },
+      meta: { title: "中期审核" },
       },
-      {
-        path: "projects",
-        name: "admin-projects",
-        component: () => import("@/views/admin/Projects.vue"),
-        meta: { title: "项目管理" },
-      },
-
-    ],
-  },
-  // 学生路由
   {
-    path: "/",
-    component: () => import("@/layouts/AppLayout.vue"),
-    meta: { requiresAuth: true, role: "student" },
+    path: "expert",
+    name: "admin-expert",
+    redirect: "/admin/expert/groups",
+    meta: { title: "专家管理" },
     children: [
       {
-        path: "",
-        redirect: "/establishment/apply",
+        path: "groups",
+        name: "admin-expert-groups",
+        component: () => import("@/views/admin/expert/Groups.vue"),
+        meta: { title: "专家组管理" },
       },
       {
-        path: "establishment",
-        name: "establishment",
-        redirect: "/establishment/apply",
-        meta: { title: "立项管理" },
-        children: [
-          {
-            path: "apply",
-            name: "establishment-apply",
-            component: () => import("@/views/student/establishment/Apply.vue"),
-            meta: { title: "申请项目" },
-          },
-          {
-            path: "my-projects",
-            name: "establishment-my-projects",
-            component: () => import("@/views/student/establishment/MyProjects.vue"),
-            meta: { title: "我的项目" },
-          },
-          {
-            path: "drafts",
-            name: "establishment-drafts",
-            component: () => import("@/views/student/establishment/Drafts.vue"),
-            meta: { title: "草稿箱" },
-          },
-        ],
-      },
+        path: "assignment",
+        name: "admin-expert-assignment",
+        component: () => import("@/views/admin/expert/Assignment.vue"),
+        meta: { title: "评审分配" },
+      }
+    ]
+  },
+  {
+    path: "review/midterm",
+    name: "admin-review-midterm",
+    component: () => import("@/views/admin/review/MidTerm.vue"),
+    meta: { title: "中期审核" },
+  },
+  {
+    path: "review/achievements",
+    name: "admin-review-achievements",
+    component: () => import("@/views/admin/review/Achievements.vue"),
+    meta: { title: "结题成果查看" },
+  },
+  {
+    path: "projects",
+    name: "admin-projects",
+    component: () => import("@/views/admin/Projects.vue"),
+    meta: { title: "项目管理" },
+  },
 
-      {
-        path: "closure",
-        name: "closure",
-        redirect: "/closure/pending",
-        meta: { title: "结题管理" },
-        children: [
-          {
-            path: "apply",
-            name: "closure-apply",
-            component: () => import("@/views/student/closure/Apply.vue"),
-            meta: { title: "申请结题" },
-          },
-          {
-            path: "pending",
-            name: "closure-pending",
-            component: () => import("@/views/student/closure/Pending.vue"),
-            meta: { title: "待结题项目" },
-          },
-          {
-            path: "applied",
-            name: "closure-applied",
-            component: () => import("@/views/student/closure/Applied.vue"),
-            meta: { title: "已申请结题项目" },
-          },
-          {
-            path: "drafts",
-            name: "closure-drafts",
-            component: () => import("@/views/student/closure/Drafts.vue"),
-            meta: { title: "草稿箱" },
-          },
-        ],
-      },
-      {
-        path: "help",
-        name: "help",
-        component: () => import("@/views/Help.vue"),
-        meta: { title: "使用帮助" },
+],
+  },
+// 学生路由
+{
+  path: "/",
+    component: () => import("@/layouts/AppLayout.vue"),
+      meta: { requiresAuth: true, role: "student" },
+  children: [
+    {
+      path: "",
+      redirect: "/establishment/apply",
+    },
+    {
+      path: "establishment",
+      name: "establishment",
+      redirect: "/establishment/apply",
+      meta: { title: "立项管理" },
+      children: [
+        {
+          path: "apply",
+          name: "establishment-apply",
+          component: () => import("@/views/student/establishment/Apply.vue"),
+          meta: { title: "申请项目" },
+        },
+        {
+          path: "my-projects",
+          name: "establishment-my-projects",
+          component: () => import("@/views/student/establishment/MyProjects.vue"),
+          meta: { title: "我的项目" },
+        },
+        {
+          path: "drafts",
+          name: "establishment-drafts",
+          component: () => import("@/views/student/establishment/Drafts.vue"),
+          meta: { title: "草稿箱" },
+        },
+      ],
+    },
+    {
+      path: "midterm",
+      name: "midterm",
+      redirect: "/midterm/apply",
+      meta: { title: "中期检查" },
+      children: [
+        {
+          path: "apply",
+          name: "midterm-apply",
+          component: () => import("@/views/student/midterm/Apply.vue"),
+          meta: { title: "提交报告" },
+        },
+      ],
+    },
+    {
+      path: "funds",
+      name: "student-funds",
+      component: () => import("@/views/student/funds/List.vue"),
+      meta: { title: "经费管理" },
+    },
+
+    {
+      path: "closure",
+      name: "closure",
+      redirect: "/closure/pending",
+      meta: { title: "结题管理" },
+      children: [
+        {
+          path: "apply",
+          name: "closure-apply",
+          component: () => import("@/views/student/closure/Apply.vue"),
+          meta: { title: "申请结题" },
+        },
+        {
+          path: "pending",
+          name: "closure-pending",
+          component: () => import("@/views/student/closure/Pending.vue"),
+          meta: { title: "待结题项目" },
+        },
+        {
+          path: "applied",
+          name: "closure-applied",
+          component: () => import("@/views/student/closure/Applied.vue"),
+          meta: { title: "已申请结题项目" },
+        },
+        {
+          path: "drafts",
+          name: "closure-drafts",
+          component: () => import("@/views/student/closure/Drafts.vue"),
+          meta: { title: "草稿箱" },
+        },
+      ],
+    },
+    {
+      path: "help",
+      name: "help",
+      component: () => import("@/views/Help.vue"),
+      meta: { title: "使用帮助" },
+    },
       },
     ],
   },
-  {
-    path: "/:pathMatch(.*)*",
+// 专家路由
+{
+  path: "/expert",
+    component: () => import("@/layouts/AppLayout.vue"),
+      meta: { requiresAuth: true, role: "expert" },
+  children: [
+    {
+      path: "",
+      redirect: "/expert/reviews",
+    },
+    {
+      path: "reviews",
+      name: "expert-reviews",
+      component: () => import("@/views/expert/Reviews.vue"),
+      meta: { title: "评审任务" },
+    },
+  ],
+  },
+{
+  path: "/:pathMatch(.*)*",
     name: "not-found",
-    component: () => import("@/views/NotFound.vue"),
+      component: () => import("@/views/NotFound.vue"),
   },
 ];
 
@@ -237,6 +304,8 @@ router.beforeEach(async (to, _from, next) => {
       next({ path: "/level1-admin/users/students" });
     } else if (userRole === "level2_admin" || userRole === "admin") {
       next({ path: "/admin/projects" });
+    } else if (userRole === "expert") {
+      next({ path: "/expert/reviews" });
     } else {
       next({ path: "/establishment/apply" }); // Default fallback
     }

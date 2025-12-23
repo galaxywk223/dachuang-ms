@@ -18,6 +18,7 @@ class User(AbstractUser):
         LEVEL2_ADMIN = "LEVEL2_ADMIN", "二级管理员"
         LEVEL1_ADMIN = "LEVEL1_ADMIN", "一级管理员"
         TEACHER = "TEACHER", "指导教师"
+        EXPERT = "EXPERT", "评审专家"
 
     # 基本信息
     role = models.CharField(

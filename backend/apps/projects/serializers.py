@@ -9,6 +9,7 @@ from .models import (
     ProjectAdvisor,
     ProjectProgress,
     ProjectAchievement,
+    ProjectExpenditure,
 )
 from apps.dictionaries.models import DictionaryItem
 
@@ -138,8 +139,11 @@ class ProjectSerializer(serializers.ModelSerializer):
     attachment_file_url = serializers.SerializerMethodField()
     proposal_file_name = serializers.SerializerMethodField()
     attachment_file_name = serializers.SerializerMethodField()
+    mid_term_report_url = serializers.SerializerMethodField()
+    mid_term_report_name = serializers.SerializerMethodField()
     proposal_file = serializers.FileField(required=False, allow_null=True, allow_empty_file=True)
     attachment_file = serializers.FileField(required=False, allow_null=True, allow_empty_file=True)
+    mid_term_report = serializers.FileField(required=False, allow_null=True, allow_empty_file=True)
     is_key_field = KeyFieldBoolean(required=False)
 
     class Meta:
@@ -183,10 +187,13 @@ class ProjectSerializer(serializers.ModelSerializer):
             "attachment_file",
             "final_report",
             "achievement_file",
+            "mid_term_report",
             "proposal_file_url",
             "attachment_file_url",
+            "mid_term_report_url",
             "proposal_file_name",
             "attachment_file_name",
+            "mid_term_report_name",
             "status",
             "status_display",
             "ranking",
@@ -202,6 +209,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "submitted_at",
+            "mid_term_submitted_at",
             "closure_applied_at",
         ]
 
@@ -232,6 +240,12 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     def get_attachment_file_name(self, obj):
         return obj.attachment_file.name if obj.attachment_file else ""
+
+    def get_mid_term_report_url(self, obj):
+        return self._build_file_url(obj.mid_term_report)
+
+    def get_mid_term_report_name(self, obj):
+        return obj.mid_term_report.name if obj.mid_term_report else ""
 
     def get_college(self, obj):
         if not obj.leader or not obj.leader.college:
@@ -523,3 +537,36 @@ class ProjectClosureSerializer(serializers.Serializer):
             raise serializers.ValidationError("结题报告文件大小不能超过2MB")
 
         return value
+
+
+class ProjectExpenditureSerializer(serializers.ModelSerializer):
+    """
+    项目经费支出序列化器
+    """
+    category_name = serializers.CharField(source="category.name", read_only=True)
+    created_by_name = serializers.CharField(source="created_by.real_name", read_only=True)
+    proof_file_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProjectExpenditure
+        fields = [
+            "id",
+            "project",
+            "title",
+            "amount",
+            "expenditure_date",
+            "category",
+            "category_name",
+            "proof_file",
+            "proof_file_url",
+            "status",
+            "created_by",
+            "created_by_name",
+            "created_at",
+        ]
+        read_only_fields = ["id", "status", "created_by", "created_at"]
+
+    def get_proof_file_url(self, obj):
+        if obj.proof_file:
+            return obj.proof_file.url
+        return None
