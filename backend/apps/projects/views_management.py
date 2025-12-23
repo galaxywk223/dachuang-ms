@@ -217,7 +217,17 @@ class ProjectManagementViewSet(viewsets.ModelViewSet):
             status__in=["IN_PROGRESS", "COMPLETED"]
         ).count()
         pending_review = base_queryset.filter(
-            status__in=["SUBMITTED", "MIDTERM_SUBMITTED", "CLOSURE_SUBMITTED"]
+            status__in=[
+                "SUBMITTED",
+                "TEACHER_AUDITING",
+                "COLLEGE_AUDITING",
+                "LEVEL1_AUDITING",
+                "MID_TERM_SUBMITTED",
+                "MID_TERM_REVIEWING",
+                "CLOSURE_SUBMITTED",
+                "CLOSURE_LEVEL2_REVIEWING",
+                "CLOSURE_LEVEL1_REVIEWING",
+            ]
         ).count()
 
         return Response(
@@ -295,6 +305,7 @@ class ProjectManagementViewSet(viewsets.ModelViewSet):
             "start_date": "开始日期",
             "end_date": "结束日期",
             "budget": "项目经费(元)",
+            "approved_budget": "批准经费(元)",
             "research_content": "研究内容",
             "research_plan": "研究方案",
             "expected_results": "预期成果",
@@ -370,6 +381,7 @@ class ProjectManagementViewSet(viewsets.ModelViewSet):
                     "start_date": p.start_date,
                     "end_date": p.end_date,
                     "budget": p.budget,
+                    "approved_budget": p.approved_budget,
                     "research_content": p.research_content,
                     "research_plan": p.research_plan,
                     "expected_results": p.expected_results,

@@ -107,6 +107,33 @@ class ProjectReviewViewSet(viewsets.ViewSet):
         comment = request.data.get("comment", "")
         score = request.data.get("score")
         closure_rating = request.data.get("closure_rating")
+        approved_budget = request.data.get("approved_budget")
+
+        if (
+            review.review_type == Review.ReviewType.APPLICATION
+            and review.review_level == Review.ReviewLevel.LEVEL1
+        ):
+            if approved_budget in (None, ""):
+                return Response(
+                    {"code": 400, "message": "请填写批准经费"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            try:
+                from decimal import Decimal
+
+                approved_budget = Decimal(str(approved_budget))
+            except Exception:
+                return Response(
+                    {"code": 400, "message": "批准经费格式不正确"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if approved_budget < 0:
+                return Response(
+                    {"code": 400, "message": "批准经费不能为负数"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            review.project.approved_budget = approved_budget
+            review.project.save(update_fields=["approved_budget", "updated_at"])
 
         ReviewService.approve_review(review, request.user, comment, score, closure_rating)
 

@@ -185,18 +185,20 @@ const submitReview = async (approved: boolean) => {
      // So we must find the Review ID.
      
      // Let's fetch the review object for this project first.
-     const reviewRes = await request.get('/reviews/', { 
+     const reviewRes: any = await request.get('/reviews/', { 
         params: { 
            project: currentRow.value.id, 
            review_type: 'MID_TERM', 
            status: 'PENDING' 
         } 
      })
-     
-     if (reviewRes.data && reviewRes.data.results && reviewRes.data.results.length > 0) {
-         const reviewId = reviewRes.data.results[0].id
-         const action = approved ? 'approve' : 'reject'
-         await request.post(`/reviews/${reviewId}/${action}/`, {
+
+     const payload = reviewRes.data || reviewRes
+     const records = Array.isArray(payload) ? payload : (payload.results || payload.data?.results || payload.data || [])
+     if (records.length > 0) {
+         const reviewId = records[0].id
+         await request.post(`/reviews/${reviewId}/review/`, {
+            action: approved ? 'approve' : 'reject',
             comments: reviewComments.value
          })
          

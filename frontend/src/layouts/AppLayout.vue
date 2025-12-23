@@ -207,7 +207,9 @@ const appTitle = computed(() => {
 const homePath = computed(() => {
     switch(userRole.value) {
         case 'level1_admin': return '/level1-admin/users/students';
-        case 'level2_admin': return '/admin/projects';
+        case 'level2_admin': return '/level2-admin/projects';
+        case 'teacher': return '/teacher/dashboard';
+        case 'expert': return '/expert/reviews';
         default: return '/';
     }
 });
@@ -250,13 +252,13 @@ const currentMenus = computed(() => {
             ];
         case 'level2_admin':
             return [
-                 {
+                {
                     index: 'establishment',
                     title: '立项管理',
                     icon: DocumentAdd,
                     children: [
-                        { index: '/admin/review/establishment', title: '立项审核' },
-                        { index: '/admin/projects', title: '查看项目' },
+                        { index: '/level2-admin/review/establishment', title: '立项审核' },
+                        { index: '/level2-admin/projects', title: '查看项目' },
                     ]
                 },
                 {
@@ -264,8 +266,8 @@ const currentMenus = computed(() => {
                     title: '结题管理',
                     icon: DocumentChecked,
                     children: [
-                        { index: '/admin/review/closure', title: '结题项目审核' },
-                        { index: '/admin/review/achievements', title: '结题成果查看' },
+                        { index: '/level2-admin/review/closure', title: '结题项目审核' },
+                        { index: '/level2-admin/review/achievements', title: '结题成果查看' },
                     ]
                 },
             ];
@@ -287,6 +289,7 @@ const currentMenus = computed(() => {
 	                  title: '系统项目',
 	                  icon: Folder,
 	                  children: [
+                        { index: '/level1-admin/review/establishment', title: '校级立项审核' },
 	                    { index: '/level1-admin/projects/all', title: '系统项目管理' },
 	                  ],
 	                },
@@ -302,6 +305,22 @@ const currentMenus = computed(() => {
 	                  ],
 	                },
 	             ];
+        case 'teacher':
+            return [
+                {
+                    index: '/teacher/dashboard',
+                    title: '指导项目',
+                    icon: DocumentAdd,
+                },
+            ];
+        case 'expert':
+            return [
+                {
+                    index: '/expert/reviews',
+                    title: '评审任务',
+                    icon: DocumentChecked,
+                },
+            ];
         default:
             return [];
     }

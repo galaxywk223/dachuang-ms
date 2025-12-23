@@ -88,6 +88,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: "系统项目管理" },
       },
       {
+        path: "review/establishment",
+        name: "level1-review-establishment",
+        component: () => import("@/views/level1_admin/review/Establishment.vue"),
+        meta: { title: "校级立项审核" },
+      },
+      {
         path: "projects/:id",
         name: "level1-project-detail",
         component: () => import("@/views/level1_admin/projects/ProjectDetail.vue"),
@@ -295,6 +301,24 @@ const routes: RouteRecordRaw[] = [
         name: "expert-reviews",
         component: () => import("@/views/expert/Reviews.vue"),
         meta: { title: "评审任务" },
+      },
+    ],
+  },
+  // 指导教师路由
+  {
+    path: "/teacher",
+    component: () => import("@/layouts/AppLayout.vue"),
+    meta: { requiresAuth: true, role: "teacher" },
+    children: [
+      {
+        path: "",
+        redirect: "/teacher/dashboard",
+      },
+      {
+        path: "dashboard",
+        name: "teacher-dashboard",
+        component: () => import("@/views/teacher/Dashboard.vue"),
+        meta: { title: "指导项目" },
       },
     ],
   },

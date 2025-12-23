@@ -19,6 +19,7 @@ class Project(models.Model):
         TEACHER_APPROVED = "TEACHER_APPROVED", "导师审核通过"
         TEACHER_REJECTED = "TEACHER_REJECTED", "导师审核不通过"
         COLLEGE_AUDITING = "COLLEGE_AUDITING", "学院审核中" # Level 2
+        LEVEL1_AUDITING = "LEVEL1_AUDITING", "校级审核中"
         # Original IN_PROGRESS was likely used for "Approved and running".
         # Let's keep IN_PROGRESS for "Established".
         
@@ -108,6 +109,13 @@ class Project(models.Model):
     end_date = models.DateField(null=True, blank=True, verbose_name="结束日期")
     budget = models.DecimalField(
         max_digits=10, decimal_places=2, default=0, verbose_name="项目经费"
+    )
+    approved_budget = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="批准经费",
     )
 
     # 项目内容

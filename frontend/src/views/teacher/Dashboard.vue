@@ -142,13 +142,15 @@ const fetchProjects = async () => {
              // Critical fix coming up in next step.
              
              // For now frontend assumes it will work.
-             const { data } = await request.get('/reviews/', { params: { status: 'PENDING', review_level: 'TEACHER' } });
-             // Transform review to project-like structure for table
-             projects.value = data.results.map((r: any) => ({
-                 ...r.project,
-                 review_id: r.id, // Store review id for submission
+             const res: any = await request.get('/reviews/', { params: { status: 'PENDING', review_level: 'TEACHER' } });
+             const payload = res.data || res;
+             const records = Array.isArray(payload) ? payload : (payload.results || payload.data?.results || payload.data || []);
+             const rows = (records || []).map((r: any) => ({
+                 ...r.project_info,
+                 review_id: r.id,
                  created_at: r.created_at
              }));
+             projects.value = rows;
         } else {
              // My Projects (Advised projects)
              // Query projects where advisor=me
@@ -162,8 +164,9 @@ const fetchProjects = async () => {
              // We can filter `Project.objects.filter(advisors__user=request.user)`.
              // I should update `ProjectViewSet.get_queryset` too.
              
-             const { data } = await request.get('/projects/', { params: { my_advised: true } }); // Need backend support
-             projects.value = data.results || [];
+             const res: any = await request.get('/projects/', { params: { my_advised: true } }); // Need backend support
+             const payload = res.data || res;
+             projects.value = Array.isArray(payload) ? payload : (payload.results || payload.data?.results || payload.data || []);
         }
     } catch (error) {
         console.error(error);

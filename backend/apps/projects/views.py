@@ -2,7 +2,7 @@
 项目视图
 """
 
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -12,7 +12,7 @@ import openpyxl
 from io import BytesIO
 import zipfile
 
-from .models import Project, ProjectMember, ProjectProgress, ProjectAchievement, ProjectExpenditure, ProjectExpenditure
+from .models import Project, ProjectMember, ProjectProgress, ProjectAchievement, ProjectExpenditure
 from .serializers import (
     ProjectSerializer,
     ProjectListSerializer,
@@ -39,7 +39,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     serializer_class = ProjectSerializer
     permission_classes = [IsAuthenticated]
     filterset_fields = ["status", "level", "leader__college", "leader"]
-    search_fields = ["project_no", "title", "advisor"]
+    search_fields = ["project_no", "title", "advisors__user__real_name"]
     ordering_fields = ["created_at", "updated_at", "submitted_at"]
 
     @action(detail=True, methods=["get"], url_path="budget-stats")
@@ -252,7 +252,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        serializer = ProjectMidTermSerializer(data=request.data)
+        data = request.data.copy()
+        data["project_id"] = project.id
+        serializer = ProjectMidTermSerializer(data=data)
         serializer.is_valid(raise_exception=True)
 
         mid_term_report = serializer.validated_data.get("mid_term_report")
@@ -540,15 +542,21 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
         # 写入数据
         for project in projects:
+            level_label = project.level.label if project.level else ""
+            category_label = project.category.label if project.category else ""
+            advisor_names = ", ".join(
+                [advisor.user.real_name for advisor in project.advisors.all()]
+            )
+            research_field = project.key_domain_code if project.is_key_field else ""
             ws.append(
                 [
                     project.project_no,
                     project.title,
-                    project.get_level_display(),
+                    level_label,
                     project.leader.real_name,
-                    project.advisor,
-                    project.category,
-                    project.research_field,
+                    advisor_names,
+                    category_label,
+                    research_field,
                     project.get_status_display(),
                     project.ranking or "",
                     project.created_at.strftime("%Y-%m-%d %H:%M:%S"),

@@ -68,6 +68,19 @@ class ReviewService:
         """
         创建一级审核记录
         """
+        existing = Review.objects.filter(
+            project=project,
+            review_type=Review.ReviewType.APPLICATION,
+            review_level=Review.ReviewLevel.LEVEL1,
+            status=Review.ReviewStatus.PENDING,
+        ).first()
+        if existing:
+            project.status = Project.ProjectStatus.LEVEL1_AUDITING
+            project.save(update_fields=["status"])
+            return existing
+
+        project.status = Project.ProjectStatus.LEVEL1_AUDITING
+        project.save(update_fields=["status"])
         return ReviewService.create_review(
             project=project,
             review_type=Review.ReviewType.APPLICATION,
@@ -102,28 +115,17 @@ class ReviewService:
                 project.status = Project.ProjectStatus.TEACHER_APPROVED
                 ReviewService.create_level2_review(project)
             elif review.review_level == Review.ReviewLevel.LEVEL2:
-                # 二级管理员通过后，项目进入进行中（或一级审核，视乎规则，通常大创有校级复核？）
-                # Previous logic said IN_PROGRESS. 
-                # If User requirement says "School Expert" does final review?
-                # "校级专家...复评/终评".
-                # So Level 2 -> Level 1 (School) -> In Progress.
-                # Let's assume Level 2 -> Level 1 is optional or mandatory?
-                # "一级管理员...最终结题审核".
-                # For Establishment: "发布立项" (Level 1).
-                # So Level 2 Approved -> Level 1 Pending?
-                # Or Level 2 Approved -> Submitted to School?
-                # Previous code had `submit_to_level1` action in ViewSet.
-                # So maybe auto-transition is NOT desired here?
-                # But for Teacher -> College, it's automatic flow?
-                # Let's make Teacher -> College automatic.
-                pass 
-                
-                # Check if we should keep existing logic for Level 2
-                project.status = Project.ProjectStatus.IN_PROGRESS 
-                # (Or create LEVEL1 review automatically? ViewSet had manual submit_to_level1)
-                # Let's keep existing Level 2 logic (IN_PROGRESS) for now, 
-                # assuming Admin creates Level 1 explicitly or "In Progress" IS established.
-                pass
+                # 二级审核通过后，提交至校级审核
+                if not Review.objects.filter(
+                    project=project,
+                    review_type=Review.ReviewType.APPLICATION,
+                    review_level=Review.ReviewLevel.LEVEL1,
+                    status=Review.ReviewStatus.PENDING,
+                ).exists():
+                    ReviewService.create_level1_review(project)
+                else:
+                    project.status = Project.ProjectStatus.LEVEL1_AUDITING
+                    project.save(update_fields=["status"])
             elif review.review_level == Review.ReviewLevel.LEVEL1:
                 project.status = Project.ProjectStatus.IN_PROGRESS
 
@@ -162,7 +164,9 @@ class ReviewService:
 
         # 申报审核
         if review.review_type == Review.ReviewType.APPLICATION:
-            if review.review_level == Review.ReviewLevel.LEVEL2:
+            if review.review_level == Review.ReviewLevel.TEACHER:
+                project.status = Project.ProjectStatus.TEACHER_REJECTED
+            elif review.review_level == Review.ReviewLevel.LEVEL2:
                 project.status = Project.ProjectStatus.DRAFT
             elif review.review_level == Review.ReviewLevel.LEVEL1:
                 project.status = Project.ProjectStatus.DRAFT
@@ -244,11 +248,13 @@ class ReviewService:
                 project__leader__college=admin_user.college,
                 review_level=Review.ReviewLevel.LEVEL2,
                 status=Review.ReviewStatus.PENDING,
+                reviewer__isnull=True,
             )
         elif admin_user.is_level1_admin:
             return Review.objects.filter(
                 review_level=Review.ReviewLevel.LEVEL1,
                 status=Review.ReviewStatus.PENDING,
+                reviewer__isnull=True,
             )
         return Review.objects.none()
 

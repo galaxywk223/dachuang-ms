@@ -54,15 +54,21 @@ class ProjectExportActionsMixin:
         ws.append(headers)
 
         for project in projects:
+            level_label = project.level.label if project.level else ""
+            category_label = project.category.label if project.category else ""
+            advisor_names = ", ".join(
+                [advisor.user.real_name for advisor in project.advisors.all()]
+            )
+            research_field = project.key_domain_code if project.is_key_field else ""
             ws.append(
                 [
                     project.project_no,
                     project.title,
-                    project.get_level_display(),
+                    level_label,
                     project.leader.real_name,
-                    project.advisor,
-                    project.category,
-                    project.research_field,
+                    advisor_names,
+                    category_label,
+                    research_field,
                     project.get_status_display(),
                     project.ranking or "",
                     project.created_at.strftime("%Y-%m-%d %H:%M:%S"),
@@ -156,4 +162,3 @@ class ProjectExportActionsMixin:
             f'attachment; filename="attachments_{user.college}.zip"'
         )
         return response
-

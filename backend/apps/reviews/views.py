@@ -52,6 +52,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
                  project__advisors__user=user,
                  review_level=Review.ReviewLevel.TEACHER
              ).distinct()
+        elif user.role == "EXPERT":
+            queryset = queryset.filter(reviewer=user)
 
         return queryset
 
@@ -122,12 +124,14 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 project__leader__college=user.college,
                 review_level=Review.ReviewLevel.LEVEL2,
                 status=Review.ReviewStatus.PENDING,
+                reviewer__isnull=True,
             )
         elif user.is_level1_admin:
             # 一级管理员获取待一级审核的项目
             queryset = Review.objects.filter(
                 review_level=Review.ReviewLevel.LEVEL1,
                 status=Review.ReviewStatus.PENDING,
+                reviewer__isnull=True,
             )
         else:
             return Response(
@@ -162,6 +166,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
             # 导师审核：必须是该项目的导师
             # Check if user is in project advisors
             return user.role == "TEACHER" and review.project.advisors.filter(user=user).exists()
+        elif user.role == "EXPERT":
+            return review.reviewer_id == user.id
         return False
 
     @action(methods=["post"], detail=False, url_path="submit-to-level1")
@@ -204,7 +210,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
             review = ReviewService.create_level1_review(project)
 
             # 更新项目状态
-            project.status = Project.ProjectStatus.SUBMITTED
+            project.status = Project.ProjectStatus.LEVEL1_AUDITING
             project.save(update_fields=["status"])
 
             return Response(
@@ -276,10 +282,20 @@ class ReviewAssignmentViewSet(viewsets.ViewSet):
         if not project_ids or not group_id:
              return Response({"message": "Empty project_ids or group_id"}, status=status.HTTP_400_BAD_REQUEST)
 
+        try:
+            group = ExpertGroup.objects.get(pk=group_id)
+        except ExpertGroup.DoesNotExist:
+            return Response({"message": "Expert group not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        review_level = (
+            Review.ReviewLevel.LEVEL1 if group.scope == "SCHOOL" else Review.ReviewLevel.LEVEL2
+        )
+
         created = ReviewService.assign_project_to_group(
             project_ids=project_ids,
             group_id=group_id,
             review_type=review_type,
+            review_level=review_level,
             creator=request.user
         )
         

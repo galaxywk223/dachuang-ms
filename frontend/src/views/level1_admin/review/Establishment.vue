@@ -1,6 +1,5 @@
 <template>
   <div class="review-page">
-    <!-- Filter Section -->
     <div class="filter-section">
       <el-form :inline="true" class="filter-form">
         <el-form-item label="项目名称">
@@ -23,11 +22,10 @@
       </el-form>
     </div>
 
-    <!-- Table Section -->
     <div class="table-container">
       <div class="table-header">
         <div class="title-bar">
-          <span class="title">立项审核</span>
+          <span class="title">校级立项审核</span>
           <el-tag
             type="info"
             size="small"
@@ -68,9 +66,9 @@
           width="100"
           align="center"
         >
-           <template #default="{ row }">
-             <el-tag size="small" effect="plain">{{ row.level_display }}</el-tag>
-           </template>
+          <template #default="{ row }">
+            <el-tag size="small" effect="plain">{{ row.level_display }}</el-tag>
+          </template>
         </el-table-column>
         <el-table-column
           prop="category_display"
@@ -84,37 +82,11 @@
             }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column
-          label="重点领域项目"
-          width="110"
-          align="center"
-        >
+        <el-table-column label="负责人" width="100" align="center">
           <template #default="{ row }">
-            <el-tag v-if="row.is_key_field" type="success" size="small">是</el-tag>
-            <span v-else>-</span>
+            {{ row.leader_name || "-" }}
           </template>
         </el-table-column>
-        <el-table-column
-          label="重点领域代码"
-          width="110"
-          align="center"
-        >
-          <template #default="{ row }">
-             <span>{{ row.key_domain_code || '-' }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column
-          prop="leader_name"
-          label="负责人姓名"
-          width="100"
-          align="center"
-        />
-        <el-table-column
-          prop="leader_student_id"
-          label="负责人学号"
-          width="120"
-          align="center"
-        />
         <el-table-column
           prop="college"
           label="学院"
@@ -123,29 +95,25 @@
           align="center"
         />
         <el-table-column
-          prop="leader_contact"
-          label="联系电话"
-          width="120"
-          align="center"
-        />
-        <el-table-column
-          prop="leader_email"
-          label="邮箱"
-          width="180"
-          show-overflow-tooltip
-          align="center"
-        />
-        <el-table-column
           prop="budget"
-          label="项目经费"
+          label="申报经费"
           width="100"
           align="center"
         >
-           <template #default="{ row }">
-             {{ row.budget }}
-           </template>
+          <template #default="{ row }">
+            {{ row.budget }}
+          </template>
         </el-table-column>
-
+        <el-table-column
+          prop="approved_budget"
+          label="批准经费"
+          width="100"
+          align="center"
+        >
+          <template #default="{ row }">
+            {{ row.approved_budget ?? "-" }}
+          </template>
+        </el-table-column>
         <el-table-column label="审核节点" width="120" align="center">
           <template #default="{ row }">
             <div class="status-dot">
@@ -224,15 +192,27 @@
       </div>
     </div>
 
-    <!-- 审核对话框 -->
     <el-dialog
       v-model="reviewDialogVisible"
       :title="reviewType === 'approve' ? '审核通过' : '驳回申请'"
-      width="480px"
+      width="520px"
       align-center
       destroy-on-close
     >
       <el-form :model="reviewForm" label-position="top">
+        <el-form-item
+          v-if="reviewType === 'approve'"
+          label="批准经费"
+          required
+        >
+          <el-input-number
+            v-model="reviewForm.approved_budget"
+            :min="0"
+            :precision="2"
+            class="w-full"
+            controls-position="right"
+          />
+        </el-form-item>
         <el-form-item
           :label="
             reviewType === 'approve' ? '审核意见 (可选)' : '驳回原因 (必填)'
@@ -290,6 +270,7 @@ const reviewType = ref<"approve" | "reject">("approve");
 const reviewForm = ref({
   projectId: 0,
   comment: "",
+  approved_budget: null as number | null,
 });
 
 const fetchProjects = async () => {
@@ -306,7 +287,7 @@ const fetchProjects = async () => {
       projects.value = response.data.results;
       total.value = response.data.total;
     }
-  } catch (error) {
+  } catch {
     ElMessage.error("获取项目列表失败");
   } finally {
     loading.value = false;
@@ -345,6 +326,8 @@ const handleApprove = (row: any) => {
   reviewType.value = "approve";
   reviewForm.value.projectId = row.id;
   reviewForm.value.comment = "";
+  reviewForm.value.approved_budget =
+    row.approved_budget ?? (row.budget ? Number(row.budget) : null);
   reviewDialogVisible.value = true;
 };
 
@@ -352,6 +335,7 @@ const handleReject = (row: any) => {
   reviewType.value = "reject";
   reviewForm.value.projectId = row.id;
   reviewForm.value.comment = "";
+  reviewForm.value.approved_budget = null;
   reviewDialogVisible.value = true;
 };
 
@@ -360,11 +344,16 @@ const confirmReview = async () => {
     ElMessage.warning("请输入驳回原因");
     return;
   }
+  if (reviewType.value === "approve" && reviewForm.value.approved_budget === null) {
+    ElMessage.warning("请填写批准经费");
+    return;
+  }
 
   try {
-    const data = { comment: reviewForm.value.comment };
+    const data: any = { comment: reviewForm.value.comment };
     let response: any;
     if (reviewType.value === "approve") {
+      data.approved_budget = reviewForm.value.approved_budget;
       response = await approveProject(reviewForm.value.projectId, data);
     } else {
       response = await rejectProject(reviewForm.value.projectId, data);
@@ -375,7 +364,7 @@ const confirmReview = async () => {
       reviewDialogVisible.value = false;
       fetchProjects();
     }
-  } catch (error) {
+  } catch {
     ElMessage.error("操作失败");
   }
 };
@@ -388,11 +377,9 @@ const getStatusClass = (status: string) => {
   return "dot-info";
 };
 
-
-
 onMounted(() => {
   fetchProjects();
 });
 </script>
 
-<style scoped lang="scss" src="./Establishment.scss"></style>
+<style scoped lang="scss" src="@/views/level2_admin/review/Establishment.scss"></style>

@@ -165,14 +165,14 @@ def create_project_application(request):
                 if not project.project_no:
                     project.project_no = _generate_project_no(2025)
                 project.save()
-                # 创建二级申报审核记录（避免重复）
+                # 创建导师审核记录（避免重复）
                 if not Review.objects.filter(
                     project=project,
                     review_type=Review.ReviewType.APPLICATION,
-                    review_level=Review.ReviewLevel.LEVEL2,
+                    review_level=Review.ReviewLevel.TEACHER,
                     status=Review.ReviewStatus.PENDING,
                 ).exists():
-                    ReviewService.create_level2_review(project)
+                    ReviewService.create_teacher_review(project)
 
             # 添加指导教师
             advisors_data = request.data.get("advisors", [])
@@ -284,10 +284,13 @@ def update_project_application(request, pk):
             status=status.HTTP_404_NOT_FOUND,
         )
 
-    # 只能编辑草稿状态的项目
-    if project.status != Project.ProjectStatus.DRAFT:
+    # 只能编辑草稿或导师退回的项目
+    if project.status not in [
+        Project.ProjectStatus.DRAFT,
+        Project.ProjectStatus.TEACHER_REJECTED,
+    ]:
         return Response(
-            {"code": 400, "message": "只能编辑草稿状态的项目"},
+            {"code": 400, "message": "只能编辑草稿或导师退回的项目"},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -336,14 +339,14 @@ def update_project_application(request, pk):
                 if not project.project_no:
                     project.project_no = _generate_project_no(2025)
                 project.save()
-                # 创建二级申报审核记录（避免重复）
+                # 创建导师审核记录（避免重复）
                 if not Review.objects.filter(
                     project=project,
                     review_type=Review.ReviewType.APPLICATION,
-                    review_level=Review.ReviewLevel.LEVEL2,
+                    review_level=Review.ReviewLevel.TEACHER,
                     status=Review.ReviewStatus.PENDING,
                 ).exists():
-                    ReviewService.create_level2_review(project)
+                    ReviewService.create_teacher_review(project)
 
             # 更新指导教师（先删除旧的）
             project.advisors.all().delete()
@@ -511,7 +514,10 @@ def withdraw_project_application(request, pk):
             status=status.HTTP_404_NOT_FOUND,
         )
 
-    if project.status != Project.ProjectStatus.SUBMITTED:
+    if project.status not in [
+        Project.ProjectStatus.SUBMITTED,
+        Project.ProjectStatus.TEACHER_AUDITING,
+    ]:
         return Response(
             {"code": 400, "message": "当前状态不允许撤回"},
             status=status.HTTP_400_BAD_REQUEST,

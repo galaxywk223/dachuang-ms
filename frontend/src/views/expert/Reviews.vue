@@ -150,8 +150,14 @@ const fetchReviews = async () => {
              params.status = 'APPROVED'; // Just show Approved for now, or need better filter
         }
         
-        const { data } = await request.get('/reviews/', { params });
-        reviews.value = data.results || data;
+        const res: any = await request.get('/reviews/', { params });
+        const payload = res.data || res;
+        const records = Array.isArray(payload) ? payload : (payload.results || payload.data?.results || payload.data || []);
+        reviews.value = (records || []).map((r: any) => ({
+            ...r,
+            project_no: r.project_info?.project_no,
+            project_title: r.project_info?.title,
+        }));
     } catch (error) {
         console.error(error);
         ElMessage.error("获取评审任务失败");

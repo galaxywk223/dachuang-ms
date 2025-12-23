@@ -120,6 +120,17 @@
               </el-form-item>
             </el-col>
             <el-col :span="8">
+              <el-form-item label="批准经费" prop="approved_budget">
+                <el-input-number
+                  v-model="form.approved_budget"
+                  :min="0"
+                  :precision="2"
+                  class="w-full"
+                  controls-position="right"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
               <el-form-item label="所属学院">
                 <el-select v-model="form.college" class="w-full" disabled>
                   <el-option

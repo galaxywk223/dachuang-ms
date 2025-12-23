@@ -40,6 +40,7 @@ export function useProjectDetail() {
     key_field_code: "",
     title: "",
     budget: 0,
+    approved_budget: null as number | null,
     college: "",
     major_code: "",
     leader_name: "",
@@ -150,6 +151,10 @@ export function useProjectDetail() {
       form.key_field_code = data.key_domain_code || data.key_field_code || "";
       form.title = data.title || "";
       form.budget = Number(data.budget || 0);
+      form.approved_budget =
+        data.approved_budget !== null && data.approved_budget !== undefined
+          ? Number(data.approved_budget)
+          : null;
       form.college = data.college || "";
       form.major_code = data.major_code || "";
       form.leader_name = data.leader_name || "";
@@ -210,6 +215,10 @@ export function useProjectDetail() {
         is_key_field: !!form.is_key_field,
         key_domain_code: form.key_field_code || "",
         budget: Number(form.budget) || 0,
+        approved_budget:
+          form.approved_budget === null || form.approved_budget === undefined
+            ? null
+            : Number(form.approved_budget),
         expected_results: form.expected_results,
         description: form.description,
       };
@@ -293,4 +302,3 @@ export function useProjectDetail() {
     switchToEdit,
   };
 }
-

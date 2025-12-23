@@ -252,6 +252,17 @@
            </template>
         </el-table-column>
 
+        <el-table-column
+          prop="approved_budget"
+          label="批准经费"
+          width="100"
+          align="center"
+        >
+           <template #default="{ row }">
+              {{ row.approved_budget ?? '-' }}
+           </template>
+        </el-table-column>
+
         <el-table-column label="审核节点" width="140" align="center" fixed="right">
           <template #default="{ row }">
             <div class="status-dot">

@@ -195,7 +195,7 @@ export function useAllProjects() {
   const getStatusClass = (status: string) => {
     if (status.includes("APPROVED")) return "dot-success";
     if (status.includes("REJECTED")) return "dot-danger";
-    if (status.includes("REVIEWING") || status === "SUBMITTED")
+    if (status.includes("REVIEWING") || status.includes("AUDITING") || status === "SUBMITTED")
       return "dot-warning";
     return "dot-info";
   };
@@ -235,4 +235,3 @@ export function useAllProjects() {
     getStatusClass,
   };
 }
-
