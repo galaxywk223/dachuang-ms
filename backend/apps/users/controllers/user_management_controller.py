@@ -103,3 +103,24 @@ class UserManagementController(viewsets.ModelViewSet):
             )
 
         return Response(log_data, status=status.HTTP_200_OK)
+
+    @action(methods=["post"], detail=False)
+    def import_data(self, request):
+        """
+        批量导入用户数据
+        """
+        file = request.FILES.get("file")
+        role = request.data.get("role", "STUDENT")
+        
+        if not file:
+             return Response({"code": 400, "message": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            result = self.user_business.import_users(file, role)
+            return Response({
+                "code": 200, 
+                "message": f"Imported {result['created']} users.",
+                "data": result
+            })
+        except Exception as e:
+            return Response({"code": 500, "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

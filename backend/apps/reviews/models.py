@@ -104,6 +104,12 @@ class ExpertGroup(models.Model):
         related_name="expert_groups",
         verbose_name="专家成员"
     )
+    # 区分专家组级别：SCHOOL (校级), COLLEGE (院级)
+    scope = models.CharField(
+        max_length=20,
+        default="COLLEGE",
+        verbose_name="专家组级别"
+    )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,

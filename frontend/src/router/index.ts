@@ -56,6 +56,26 @@ const routes: RouteRecordRaw[] = [
         meta: { title: "学院信息维护" },
       },
       {
+        path: "expert",
+        name: "level1-expert",
+        redirect: "/level1-admin/expert/groups",
+        meta: { title: "专家管理" },
+        children: [
+          {
+            path: "groups",
+            name: "level1-expert-groups",
+            component: () => import("@/views/level2_admin/expert/Groups.vue"),
+            meta: { title: "校级专家组管理" },
+          },
+          {
+            path: "assignment",
+            name: "level1-expert-assignment",
+            component: () => import("@/views/level2_admin/expert/Assignment.vue"),
+            meta: { title: "校级评审分配" },
+          }
+        ]
+      },
+      {
         path: "projects/all",
         name: "level1-projects-all",
         component: () => import("@/views/level1_admin/projects/AllProjects.vue"),

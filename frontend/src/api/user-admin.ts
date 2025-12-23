@@ -84,3 +84,17 @@ export function getUserStatistics(): Promise<any> {
     method: "get",
   });
 }
+
+/**
+ * 批量导入用户
+ */
+export function importUsers(data: FormData): Promise<any> {
+  return request({
+    url: "/auth/admin/users/import_data/",
+    method: "post",
+    data,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+}

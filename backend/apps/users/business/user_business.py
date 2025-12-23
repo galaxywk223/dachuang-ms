@@ -138,3 +138,53 @@ class UserBusiness:
             User: 创建的用户对象
         """
         return self.user_repository.create_user(data)
+
+    def import_users(self, file, default_role="STUDENT"):
+        """
+        批量导入用户
+        """
+        import openpyxl
+        from django.db import transaction
+        from apps.users.models import User
+
+        wb = openpyxl.load_workbook(file)
+        sheet = wb.active
+        
+        created_count = 0
+        errors = []
+
+        # Assuming headers: 工号/学号, 姓名, 学院, 专业, 班级, 手机号, 邮箱
+        # Row 1 is header
+        
+        with transaction.atomic():
+            for row_idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
+                employee_id = str(row[0]).strip() if row[0] else None
+                real_name = str(row[1]).strip() if row[1] else None
+                
+                if not employee_id or not real_name:
+                    continue
+
+                if User.objects.filter(employee_id=employee_id).exists():
+                    errors.append(f"Row {row_idx}: User {employee_id} already exists")
+                    continue
+                
+                try:
+                    user_data = {
+                        "employee_id": employee_id,
+                        "real_name": real_name,
+                        "username": employee_id,
+                        "role": default_role,
+                        "college": str(row[2]).strip() if len(row) > 2 and row[2] else "",
+                        "major": str(row[3]).strip() if len(row) > 3 and row[3] else "",
+                        "class_name": str(row[4]).strip() if len(row) > 4 and row[4] else "",
+                        "phone": str(row[5]).strip() if len(row) > 5 and row[5] else "",
+                        "email": str(row[6]).strip() if len(row) > 6 and row[6] else "",
+                    }
+                    user = User.objects.create(**user_data)
+                    user.set_password("123456") # Default password
+                    user.save()
+                    created_count += 1
+                except Exception as e:
+                    errors.append(f"Row {row_idx}: {str(e)}")
+
+        return {"created": created_count, "errors": errors}

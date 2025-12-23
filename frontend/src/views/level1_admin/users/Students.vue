@@ -49,7 +49,7 @@
             <el-button type="primary" @click="openCreateDialog">
               <el-icon><Plus /></el-icon>添加学生
             </el-button>
-            <el-button>
+            <el-button @click="handleImportClick">
                 <el-icon><Upload /></el-icon>批量导入
             </el-button>
           </div>
@@ -216,12 +216,50 @@
         </span>
       </template>
     </el-dialog>
+
+
+    <!-- Import Dialog -->
+    <el-dialog
+       v-model="importDialogVisible"
+       title="批量导入学生"
+       width="500px"
+    >
+       <div style="text-align: center; margin-bottom: 20px;">
+          <el-upload
+             class="upload-demo"
+             drag
+             action="#"
+             :auto-upload="false"
+             :limit="1"
+             :on-change="handleFileChange"
+             accept=".xlsx, .xls"
+          >
+             <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+             <div class="el-upload__text">
+                将文件拖到此处，或 <em>点击上传</em>
+             </div>
+             <template #tip>
+                <div class="el-upload__tip">
+                   只能上传 xlsx/xls 文件，且不超过 5MB
+                </div>
+             </template>
+          </el-upload>
+       </div>
+       <template #footer>
+          <span class="dialog-footer">
+             <el-button @click="importDialogVisible = false">取消</el-button>
+             <el-button type="primary" :loading="importLoading" @click="handleImportSubmit">
+                开始导入
+             </el-button>
+          </span>
+       </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue';
-import { Search, Plus, Upload } from '@element-plus/icons-vue';
+import { Search, Plus, Upload, UploadFilled } from '@element-plus/icons-vue';
 import { getUsers, toggleUserStatus, createUser, deleteUser } from '@/api/user-admin';
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus';
 import { useDictionary } from '@/composables/useDictionary';
@@ -432,6 +470,50 @@ const handleCreateStudent = async () => {
   } finally {
     submitLoading.value = false;
   }
+
+};
+
+// Import Logic
+const importDialogVisible = ref(false);
+const importFile = ref<File | null>(null);
+const importLoading = ref(false);
+
+const handleImportClick = () => {
+    importDialogVisible.value = true;
+    importFile.value = null;
+};
+
+const handleFileChange = (file: any) => {
+    importFile.value = file.raw;
+};
+
+const handleImportSubmit = async () => {
+    if (!importFile.value) {
+        ElMessage.warning("请选择文件");
+        return;
+    }
+    
+    importLoading.value = true;
+    try {
+        const formData = new FormData();
+        formData.append('file', importFile.value);
+        formData.append('role', 'STUDENT');
+        
+        // Dynamic import to avoid circular dependency issues if any, or just direct
+        const { importUsers } = await import('@/api/user-admin');
+        const res = await importUsers(formData);
+        
+        if (res.code === 200) {
+            ElMessage.success(res.message);
+            importDialogVisible.value = false;
+            loadData();
+        }
+    } catch (error: any) {
+        console.error(error);
+        ElMessage.error(error.response?.data?.message || "导入失败");
+    } finally {
+        importLoading.value = false;
+    }
 };
 
 onMounted(() => {

@@ -226,10 +226,31 @@ class ExpertGroupViewSet(viewsets.ModelViewSet):
     """
     queryset = ExpertGroup.objects.all()
     serializer_class = ExpertGroupSerializer
-    permission_classes = [IsAuthenticated] # Typically admin only, but for now authenticated
+    permission_classes = [IsAuthenticated] 
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = super().get_queryset()
+        
+        if user.is_level1_admin:
+            # 校级管理员管理校级专家组
+            return queryset.filter(scope="SCHOOL")
+        elif user.is_level2_admin:
+             # 院级管理员管理本院专家组 (created_by handles college implication usually, or we filter by creator)
+             # Better: Filter by scope COLLEGE and created_by college (if we had college field, but created_by is proxy)
+             return queryset.filter(scope="COLLEGE", created_by__college=user.college)
+        elif user.role == "EXPERT":
+            # 专家只能看自己在的组? Or generic access? Let's say experts only see groups they are in if needed.
+             return queryset.filter(members=user)
+        return queryset.none()
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        user = self.request.user
+        scope = "COLLEGE"
+        if user.is_level1_admin:
+            scope = "SCHOOL"
+            
+        serializer.save(created_by=user, scope=scope)
 
 
 class ReviewAssignmentViewSet(viewsets.ViewSet):
