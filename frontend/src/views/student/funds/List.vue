@@ -59,7 +59,7 @@
             </template>
           </el-table-column>
           <el-table-column prop="status" label="状态" width="100" align="center">
-            <template #default="scope">
+            <template #default>
                <el-tag type="info">已录入</el-tag>
             </template>
           </el-table-column>

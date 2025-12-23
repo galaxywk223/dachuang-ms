@@ -9,7 +9,7 @@ declare module "vue-router" {
   interface RouteMeta {
     title?: string;
     requiresAuth?: boolean;
-    role?: "admin" | "student" | "level1_admin" | "level2_admin";
+    role?: "admin" | "student" | "level1_admin" | "level2_admin" | "expert";
     category?: string;
   }
 }
@@ -117,12 +117,10 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/views/admin/review/Closure.vue"),
         meta: { title: "结题审核" },
       },
-      meta: { title: "中期审核" },
-      },
-  {
-    path: "expert",
-    name: "admin-expert",
-    redirect: "/admin/expert/groups",
+	  {
+	    path: "expert",
+	    name: "admin-expert",
+	    redirect: "/admin/expert/groups",
     meta: { title: "专家管理" },
     children: [
       {
@@ -255,7 +253,6 @@ const routes: RouteRecordRaw[] = [
       component: () => import("@/views/Help.vue"),
       meta: { title: "使用帮助" },
     },
-      },
     ],
   },
 // 专家路由

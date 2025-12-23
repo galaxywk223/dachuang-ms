@@ -10,6 +10,22 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
+  build: {
+    chunkSizeWarningLimit: 900,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+          if (id.includes("@element-plus/icons-vue")) return "element-plus-icons";
+          if (id.includes("element-plus")) return "element-plus";
+          if (id.includes("vue-router")) return "vue-router";
+          if (id.includes("pinia")) return "pinia";
+          if (id.includes("axios")) return "axios";
+          return "vendor";
+        },
+      },
+    },
+  },
   server: {
     // Use polling so file changes on Windows/WSL mounts are detected reliably
     watch: {

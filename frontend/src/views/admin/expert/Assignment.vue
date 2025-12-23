@@ -143,10 +143,10 @@ const handleSelectionChange = (val: any[]) => {
 };
 
 const handleAssign = () => {
-    if (!selectedGroup.value || selectedProjects.length === 0) return;
+    if (!selectedGroup.value || selectedProjects.value.length === 0) return;
     
     ElMessageBox.confirm(
-       `确定将选中的 ${selectedProjects.length} 个项目分配给该专家组进行 "${reviewType.value}" 评审吗？`, 
+       `确定将选中的 ${selectedProjects.value.length} 个项目分配给该专家组进行 "${reviewType.value}" 评审吗？`, 
        "提示",
        { confirmButtonText: "确定", cancelButtonText: "取消", type: "warning" }
     ).then(async () => {

@@ -42,11 +42,14 @@ request.interceptors.response.use(
       switch (error.response.status) {
         case 401: {
           ElMessage.error("登录已过期，请重新登录");
-          localStorage.removeItem("token");
-          localStorage.removeItem("refresh_token");
-          // 动态导入 router 以避免循环依赖
-          const { default: router } = await import("@/router");
-          router.push("/login");
+          localStorage.removeItem(CONFIG.app.STORAGE_KEYS.TOKEN);
+          localStorage.removeItem(CONFIG.app.STORAGE_KEYS.REFRESH_TOKEN);
+          localStorage.removeItem(CONFIG.app.STORAGE_KEYS.USER_ROLE);
+
+          // 避免引入 router 造成循环依赖：直接跳转到登录页
+          if (window.location.pathname !== "/login") {
+            window.location.replace("/login");
+          }
           break;
         }
         case 403:

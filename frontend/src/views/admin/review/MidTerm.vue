@@ -101,7 +101,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive } from 'vue'
+import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import request from '@/utils/request'
 import dayjs from 'dayjs'
@@ -125,38 +125,7 @@ const formatDate = (dateStr: string) => {
 const fetchData = async () => {
     loading.value = true
     try {
-        const params = {
-            page: currentPage.value,
-            page_size: pageSize.value,
-            project_no: searchQuery.value || undefined,
-            // Fetch reviews that correspond to mid-term
-            review_type: 'MID_TERM', 
-            status: 'PENDING'
-        }
-        
-        // We need to hit the review list endpoint, but currently it might be segregated.
-        // Let's assume there is a general review endpoint or we filter projects.
-        // According to backend services, we create Review records. 
-        // So we should query the Review list endpoint.
-        // Let's check api for reviews. Assuming '/reviews/' exists and filters work.
-        // If not, we might need to query projects with status=MID_TERM_REVIEWING/SUBMITTED.
-        
-        // Actually, let's query reviews 
-        const { data } = await request.get('/reviews/pending/', { params }) 
-        // Backend: ReviewService.get_pending_reviews_for_admin returns QuerySet.
-        // ViewSet needed for this.
-        // If '/reviews/pending/' is not standard, let's check 'views_review.py' from file list earlier.
-        // Assuming standard DRF ModelViewSet at /reviews/ is not enough for pending logic easily without filter.
-        // Let's try query projects pending mid-term review for now if review API is uncertain.
-        // Creating logic to use the review endpoint is safer if exists.
-        
-        // Fallback: Query projects list with status filtering if review API is tricky.
-        // But ReviewService created a Review object.
-        // Let's assume we can list reviews.
-        
-        // However, looking at previous context, we didn't inspect 'views_review.py'. 
-        // Let's query projects for now as it's safer given what we know.
-        // Projects with status 'MID_TERM_SUBMITTED' (for teachers?) or 'MID_TERM_REVIEWING' (for admins).
+        // 查询项目（当前后端实现更确定：中期申请会将项目置为 MID_TERM_REVIEWING）
         
         // ADMIN Logic:
         // Level 2 Admin (College) sees MID_TERM_REVIEWING (after submission/teacher check?).
