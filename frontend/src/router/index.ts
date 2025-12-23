@@ -93,46 +93,46 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
-  // 二级管理员路由 (院级) - Maintained at /admin for backward compatibility but role updated
+  // 二级管理员路由 (院级)
   {
-    path: "/admin",
+    path: "/level2-admin",
     component: () => import("@/layouts/AppLayout.vue"),
     meta: { requiresAuth: true, role: "level2_admin" },
     children: [
       {
         path: "",
-        redirect: "/admin/projects",
+        redirect: "/level2-admin/projects",
       },
 
       {
         path: "review/establishment",
         name: "admin-review-establishment",
-        component: () => import("@/views/admin/review/Establishment.vue"),
+        component: () => import("@/views/level2_admin/review/Establishment.vue"),
         meta: { title: "立项审核" },
       },
 
       {
         path: "review/closure",
         name: "admin-review-closure",
-        component: () => import("@/views/admin/review/Closure.vue"),
+        component: () => import("@/views/level2_admin/review/Closure.vue"),
         meta: { title: "结题审核" },
       },
       {
         path: "expert",
         name: "admin-expert",
-        redirect: "/admin/expert/groups",
+        redirect: "/level2-admin/expert/groups",
         meta: { title: "专家管理" },
         children: [
           {
             path: "groups",
             name: "admin-expert-groups",
-            component: () => import("@/views/admin/expert/Groups.vue"),
+            component: () => import("@/views/level2_admin/expert/Groups.vue"),
             meta: { title: "专家组管理" },
           },
           {
             path: "assignment",
             name: "admin-expert-assignment",
-            component: () => import("@/views/admin/expert/Assignment.vue"),
+            component: () => import("@/views/level2_admin/expert/Assignment.vue"),
             meta: { title: "评审分配" },
           }
         ]
@@ -140,22 +140,21 @@ const routes: RouteRecordRaw[] = [
       {
         path: "review/midterm",
         name: "admin-review-midterm",
-        component: () => import("@/views/admin/review/MidTerm.vue"),
+        component: () => import("@/views/level2_admin/review/MidTerm.vue"),
         meta: { title: "中期审核" },
       },
       {
         path: "review/achievements",
         name: "admin-review-achievements",
-        component: () => import("@/views/admin/review/Achievements.vue"),
+        component: () => import("@/views/level2_admin/review/Achievements.vue"),
         meta: { title: "结题成果查看" },
       },
       {
         path: "projects",
         name: "admin-projects",
-        component: () => import("@/views/admin/Projects.vue"),
+        component: () => import("@/views/level2_admin/Projects.vue"),
         meta: { title: "项目管理" },
       },
-
     ],
   },
   // 学生路由
@@ -280,62 +279,62 @@ const routes: RouteRecordRaw[] = [
   },
 ];
 
-    const router = createRouter({
-      history: createWebHistory(import.meta.env.BASE_URL),
-      routes,
-    });
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes,
+});
 
-    // 路由守卫
-    router.beforeEach(async (to, _from, next) => {
-      const userStore = useUserStore();
-      const userRole = localStorage.getItem('user_role'); // 获取用户角色
+// 路由守卫
+router.beforeEach(async (to, _from, next) => {
+  const userStore = useUserStore();
+  const userRole = localStorage.getItem('user_role'); // 获取用户角色
 
-      if (to.meta.requiresAuth !== false && !userStore.isLoggedIn) {
-        // 需要登录但未登录
-        next({ name: "login" });
-      } else if (to.name === "login" && userStore.isLoggedIn) {
-        // 已登录则根据角色跳转
-        if (userRole === "student") {
-          next({ path: "/establishment/apply" });
-        } else if (userRole === "level1_admin") {
-          next({ path: "/level1-admin/users/students" });
-        } else if (userRole === "level2_admin" || userRole === "admin") {
-          next({ path: "/admin/projects" });
-        } else if (userRole === "expert") {
-          next({ path: "/expert/reviews" });
-        } else if (userRole === "teacher") {
-          next({ path: "/teacher/dashboard" });
-        } else {
-          next({ path: "/establishment/apply" }); // Default fallback
-        }
-      } else if (userStore.isLoggedIn) {
-        // 如果已登录但没有用户信息，尝试获取用户信息
-        if (!userStore.user) {
-          await userStore.fetchProfile();
-        }
+  if (to.meta.requiresAuth !== false && !userStore.isLoggedIn) {
+    // 需要登录但未登录
+    next({ name: "login" });
+  } else if (to.name === "login" && userStore.isLoggedIn) {
+    // 已登录则根据角色跳转
+    if (userRole === "student") {
+      next({ path: "/establishment/apply" });
+    } else if (userRole === "level1_admin") {
+      next({ path: "/level1-admin/users/students" });
+    } else if (userRole === "level2_admin" || userRole === "admin") {
+      next({ path: "/level2-admin/projects" });
+    } else if (userRole === "expert") {
+      next({ path: "/expert/reviews" });
+    } else if (userRole === "teacher") {
+      next({ path: "/teacher/dashboard" });
+    } else {
+      next({ path: "/establishment/apply" }); // Default fallback
+    }
+  } else if (userStore.isLoggedIn) {
+    // 如果已登录但没有用户信息，尝试获取用户信息
+    if (!userStore.user) {
+      await userStore.fetchProfile();
+    }
 
-        // 角色权限检查
-        const routeRole = to.meta.role as string | undefined;
+    // 角色权限检查
+    const routeRole = to.meta.role as string | undefined;
 
-        // Strict role check
-        if (routeRole && routeRole !== userRole) {
-          // Allow legacy match for admin/level2_admin if strictness causes issues, but for now strict:
-          if (routeRole === 'level1_admin' && userRole !== 'level1_admin') {
-            next({ name: 'login' }); // or forbidden page 
-          } else if ((routeRole === 'level2_admin' || routeRole === 'admin') &&
-            (userRole !== 'level2_admin' && userRole !== 'admin')) {
-            next({ name: 'login' });
-          } else if (routeRole === 'student' && userRole !== 'student') {
-            next({ name: 'login' });
-          } else {
-            next();
-          }
-        } else {
-          next();
-        }
+    // Strict role check
+    if (routeRole && routeRole !== userRole) {
+      // Allow legacy match for admin/level2_admin if strictness causes issues, but for now strict:
+      if (routeRole === 'level1_admin' && userRole !== 'level1_admin') {
+        next({ name: 'login' }); // or forbidden page 
+      } else if ((routeRole === 'level2_admin' || routeRole === 'admin') &&
+        (userRole !== 'level2_admin' && userRole !== 'admin')) {
+        next({ name: 'login' });
+      } else if (routeRole === 'student' && userRole !== 'student') {
+        next({ name: 'login' });
       } else {
         next();
       }
-    });
+    } else {
+      next();
+    }
+  } else {
+    next();
+  }
+});
 
-    export default router;
+export default router;

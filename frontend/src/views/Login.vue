@@ -73,7 +73,7 @@ const handleLogin = async (formData: any) => {
           router.push('/level1-admin/users/students');
           break;
         case 'level2_admin':
-          router.push('/admin/projects');
+          router.push('/level2-admin/projects');
           break;
         case 'expert':
           router.push('/expert/reviews');
