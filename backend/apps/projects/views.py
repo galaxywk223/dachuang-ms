@@ -74,6 +74,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
         # 一级管理员可以看到所有项目
         elif user.is_level1_admin:
             pass
+        # 指导教师只能看到自己指导的项目
+        elif user.role == "TEACHER":
+            queryset = queryset.filter(advisors__user=user).distinct()
 
         return queryset
 
@@ -111,11 +114,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
             )
 
         # 更新项目状态
-        project.status = Project.ProjectStatus.SUBMITTED
+        # 更新项目状态并创建导师审核
+        from apps.reviews.services import ReviewService
+        # This will set status to TEACHER_AUDITING
+        ReviewService.create_teacher_review(project)
+        
         project.submitted_at = timezone.now()
-        project.save()
+        project.save(update_fields=["submitted_at"])
 
-        return Response({"code": 200, "message": "项目提交成功"})
+        return Response({"code": 200, "message": "项目提交成功，等待导师审核"})
 
     @action(methods=["post"], detail=True)
     def add_member(self, request, pk=None):

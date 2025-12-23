@@ -46,6 +46,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
         # 一级管理员可以看到所有一级审核记录
         elif user.is_level1_admin:
             queryset = queryset.filter(review_level=Review.ReviewLevel.LEVEL1)
+        # 指导教师只能看到分配给自己的审核
+        elif user.role == "TEACHER":
+             queryset = queryset.filter(
+                 project__advisors__user=user,
+                 review_level=Review.ReviewLevel.TEACHER
+             ).distinct()
 
         return queryset
 
@@ -152,6 +158,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
         elif review.review_level == Review.ReviewLevel.LEVEL1:
             # 一级审核：必须是一级管理员
             return user.is_level1_admin
+        elif review.review_level == Review.ReviewLevel.TEACHER:
+            # 导师审核：必须是该项目的导师
+            # Check if user is in project advisors
+            return user.role == "TEACHER" and review.project.advisors.filter(user=user).exists()
         return False
 
     @action(methods=["post"], detail=False, url_path="submit-to-level1")

@@ -146,6 +146,59 @@ class ProjectSerializer(serializers.ModelSerializer):
     mid_term_report = serializers.FileField(required=False, allow_null=True, allow_empty_file=True)
     is_key_field = KeyFieldBoolean(required=False)
 
+    def validate(self, attrs):
+        request = self.context.get("request")
+        if request and request.method == "POST":
+            user = request.user
+            if user.is_student:
+                # 检查学生是否已有在研项目 (Limit: 1 active project as leader)
+                # 排除已结题、已完成、或在申报阶段被驳回的项目
+                # Statuses that imply "Finished" or "Dead":
+                # CLOSED, COMPLETED
+                # TERMINATED (if exists, but we don't have it yet)
+                # REJECTED states: TEACHER_REJECTED, CLOSURE_LEVEL*_REJECTED (means closure failed, but project might still be active? No, closure rejected means fix and resubmit usually. But Establishment rejection means properly dead.)
+                
+                # We need to distinguish Establishment Rejection vs Closure Rejection.
+                # ProjectStatus doesn't explicitly separate "Establishment Rejected" besides TEACHER_REJECTED.
+                # We need LEVEL2_REJECTED for establishment if we add it. 
+                # Currently we have CLOSURE_LEVEL2_REJECTED.
+                # Wait, do we have LEVEL2_REJECTED for establishment?
+                # The ProjectStatus enum in previous tools showed: MID_TERM_..., CLOSURE_...
+                # It didn't have explicit ESTABLISHMENT_LEVEL2_REJECTED.
+                # It just had IN_PROGRESS.
+                
+                # Let's assume if status is NOT (CLOSED, COMPLETED, TEACHER_REJECTED), it counts.
+                # Also if they are just DRAFT, it counts? No, they can have drafts.
+                # But they can only SUBMIT one?
+                # Requirement: "负责人在校期间限报一项".
+                # "Limit 1 project". Usually means 1 active.
+                # If they have a DRAFT, they can delete it.
+                # If they have a SUBMITTED, they wait.
+                
+                # Let's block if they have any project that is:
+                # - Not CLOSED
+                # - Not COMPLETED
+                # - Not TEACHER_REJECTED (if that implies end of road)
+                
+                # Checking `Review` results might be more accurate for "Rejected", 
+                # but Project.status should reflect it.
+                
+                active_projects_count = Project.objects.filter(leader=user).exclude(
+                    status__in=[
+                        Project.ProjectStatus.CLOSED,
+                        Project.ProjectStatus.COMPLETED,
+                        Project.ProjectStatus.TEACHER_REJECTED,
+                        # If we implement College Rejection for establishment:
+                        # Project.ProjectStatus.REJECTED (if we add generic)
+                    ]
+                ).count()
+                
+                if active_projects_count > 0:
+                     raise serializers.ValidationError("您已有在研或审核中的项目，在校期间限报一项。")
+
+        return attrs
+
+
     class Meta:
         model = Project
         fields = [

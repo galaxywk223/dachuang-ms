@@ -14,8 +14,15 @@ class Project(models.Model):
 
     class ProjectStatus(models.TextChoices):
         DRAFT = "DRAFT", "草稿"
-        SUBMITTED = "SUBMITTED", "已提交"
-        IN_PROGRESS = "IN_PROGRESS", "进行中"
+        SUBMITTED = "SUBMITTED", "已提交"  # 提交给老师
+        TEACHER_AUDITING = "TEACHER_AUDITING", "导师审核中"
+        TEACHER_APPROVED = "TEACHER_APPROVED", "导师审核通过"
+        TEACHER_REJECTED = "TEACHER_REJECTED", "导师审核不通过"
+        COLLEGE_AUDITING = "COLLEGE_AUDITING", "学院审核中" # Level 2
+        # Original IN_PROGRESS was likely used for "Approved and running".
+        # Let's keep IN_PROGRESS for "Established".
+        
+        IN_PROGRESS = "IN_PROGRESS", "进行中" # 立项成功
         MID_TERM_DRAFT = "MID_TERM_DRAFT", "中期草稿"
         MID_TERM_SUBMITTED = "MID_TERM_SUBMITTED", "中期已提交"
         MID_TERM_REVIEWING = "MID_TERM_REVIEWING", "中期审核中"

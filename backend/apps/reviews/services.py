@@ -31,12 +31,29 @@ class ReviewService:
 
     @staticmethod
     @transaction.atomic
+    def create_teacher_review(project):
+        """
+        创建导师审核记录（申报审核）
+        """
+        project.status = Project.ProjectStatus.TEACHER_AUDITING
+        project.save(update_fields=["status"])
+
+        return ReviewService.create_review(
+            project=project,
+            review_type=Review.ReviewType.APPLICATION,
+            review_level=Review.ReviewLevel.TEACHER,
+        )
+
+    @staticmethod
+    @transaction.atomic
     def create_level2_review(project):
         """
-        创建二级审核记录（申报审核）
+        创建二级审核记录（申报审核 - 学院）
         """
-        # 更新项目状态（沿用 SUBMITTED 作为在审状态）
-        project.status = Project.ProjectStatus.SUBMITTED
+        # 导师通过后进入二级审核
+        # status usually SUBMITTED or COLLEGE_AUDITING
+        # If we use strict statuses: COLLEGE_AUDITING
+        project.status = Project.ProjectStatus.COLLEGE_AUDITING
         project.save(update_fields=["status"])
 
         return ReviewService.create_review(
@@ -80,9 +97,33 @@ class ReviewService:
 
         # 申报审核
         if review.review_type == Review.ReviewType.APPLICATION:
-            if review.review_level == Review.ReviewLevel.LEVEL2:
-                # 二级管理员通过后，项目进入进行中（学生可后续结题）
-                project.status = Project.ProjectStatus.IN_PROGRESS
+            if review.review_level == Review.ReviewLevel.TEACHER:
+                # 导师通过，进入二级审核 (学院)
+                project.status = Project.ProjectStatus.TEACHER_APPROVED
+                ReviewService.create_level2_review(project)
+            elif review.review_level == Review.ReviewLevel.LEVEL2:
+                # 二级管理员通过后，项目进入进行中（或一级审核，视乎规则，通常大创有校级复核？）
+                # Previous logic said IN_PROGRESS. 
+                # If User requirement says "School Expert" does final review?
+                # "校级专家...复评/终评".
+                # So Level 2 -> Level 1 (School) -> In Progress.
+                # Let's assume Level 2 -> Level 1 is optional or mandatory?
+                # "一级管理员...最终结题审核".
+                # For Establishment: "发布立项" (Level 1).
+                # So Level 2 Approved -> Level 1 Pending?
+                # Or Level 2 Approved -> Submitted to School?
+                # Previous code had `submit_to_level1` action in ViewSet.
+                # So maybe auto-transition is NOT desired here?
+                # But for Teacher -> College, it's automatic flow?
+                # Let's make Teacher -> College automatic.
+                pass 
+                
+                # Check if we should keep existing logic for Level 2
+                project.status = Project.ProjectStatus.IN_PROGRESS 
+                # (Or create LEVEL1 review automatically? ViewSet had manual submit_to_level1)
+                # Let's keep existing Level 2 logic (IN_PROGRESS) for now, 
+                # assuming Admin creates Level 1 explicitly or "In Progress" IS established.
+                pass
             elif review.review_level == Review.ReviewLevel.LEVEL1:
                 project.status = Project.ProjectStatus.IN_PROGRESS
 

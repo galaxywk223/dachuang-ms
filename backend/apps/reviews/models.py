@@ -17,6 +17,7 @@ class Review(models.Model):
         CLOSURE = "CLOSURE", "结题审核"
 
     class ReviewLevel(models.TextChoices):
+        TEACHER = "TEACHER", "导师审核"
         LEVEL2 = "LEVEL2", "二级审核"
         LEVEL1 = "LEVEL1", "一级审核"
 
