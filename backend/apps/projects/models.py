@@ -132,6 +132,9 @@ class Project(models.Model):
     research_content = models.TextField(blank=True, verbose_name="研究内容")
     research_plan = models.TextField(blank=True, verbose_name="研究方案")
     expected_results = models.TextField(blank=True, verbose_name="预期成果")
+    expected_results_data = models.JSONField(
+        default=list, blank=True, verbose_name="预期成果清单"
+    )
     innovation_points = models.TextField(blank=True, verbose_name="创新点")
 
     # 申报材料
@@ -140,6 +143,20 @@ class Project(models.Model):
     )
     attachment_file = models.FileField(
         upload_to="attachments/", blank=True, null=True, verbose_name="上传文件", max_length=255
+    )
+    contract_file = models.FileField(
+        upload_to="contracts/",
+        blank=True,
+        null=True,
+        verbose_name="项目合同",
+        max_length=255,
+    )
+    task_book_file = models.FileField(
+        upload_to="task_books/",
+        blank=True,
+        null=True,
+        verbose_name="项目任务书",
+        max_length=255,
     )
 
     # 中期检查材料
@@ -335,6 +352,7 @@ class ProjectAchievement(models.Model):
     attachment = models.FileField(
         upload_to="achievements/", blank=True, null=True, verbose_name="成果附件", max_length=255
     )
+    extra_data = models.JSONField(default=dict, blank=True, verbose_name="扩展信息")
 
     # 时间戳
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")

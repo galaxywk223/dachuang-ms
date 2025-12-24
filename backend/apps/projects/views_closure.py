@@ -15,6 +15,79 @@ from apps.reviews.models import Review
 from apps.reviews.services import ReviewService
 from apps.dictionaries.models import DictionaryItem
 from apps.system_settings.services import SystemSettingService
+import json
+
+
+def _parse_json_payload(value, default):
+    if value is None:
+        return default
+    if isinstance(value, (dict, list)):
+        return value
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+            return parsed if isinstance(parsed, (dict, list)) else default
+        except json.JSONDecodeError:
+            return default
+    return default
+
+
+def _resolve_achievement_type_value(raw_value, cache):
+    if raw_value is None or raw_value == "":
+        return None
+    if isinstance(raw_value, int) or (isinstance(raw_value, str) and raw_value.isdigit()):
+        item_id = int(raw_value)
+        if item_id not in cache:
+            cache[item_id] = DictionaryItem.objects.filter(id=item_id).first()
+        item = cache.get(item_id)
+        return item.value if item else None
+    if isinstance(raw_value, str):
+        return raw_value
+    return None
+
+
+def _validate_expected_results(project, achievements_data):
+    expected_list = project.expected_results_data or []
+    if not expected_list:
+        return True, ""
+
+    type_cache = {}
+    actual_counts = {}
+    for item in achievements_data or []:
+        type_value = _resolve_achievement_type_value(
+            item.get("achievement_type"), type_cache
+        )
+        if not type_value:
+            continue
+        actual_counts[type_value] = actual_counts.get(type_value, 0) + 1
+
+    expected_type_values = set()
+    for expected in expected_list:
+        if not isinstance(expected, dict):
+            continue
+        raw_type = expected.get("achievement_type")
+        type_value = _resolve_achievement_type_value(raw_type, type_cache)
+        if not type_value:
+            continue
+        expected_type_values.add(type_value)
+        try:
+            expected_count = int(expected.get("expected_count") or expected.get("count") or 0)
+        except (TypeError, ValueError):
+            expected_count = 0
+        if expected_count <= 0:
+            continue
+        actual = actual_counts.get(type_value, 0)
+        if actual < expected_count:
+            label = None
+            item = DictionaryItem.objects.filter(
+                dict_type__code="achievement_type", value=type_value
+            ).first()
+            if item:
+                label = item.label
+            label = label or type_value
+            return False, f"预期成果未完成：{label} 需{expected_count}项，当前{actual}项"
+
+    return True, ""
 
 
 @api_view(["GET"])
@@ -209,14 +282,19 @@ def create_closure_application(request, pk):
             status=status.HTTP_404_NOT_FOUND,
         )
 
-    # 只有进行中的项目才能申请结题
-    if project.status != Project.ProjectStatus.IN_PROGRESS:
+    # 允许进行中/结题驳回的项目重新发起结题
+    allowed_statuses = {
+        Project.ProjectStatus.IN_PROGRESS,
+        Project.ProjectStatus.CLOSURE_DRAFT,
+        Project.ProjectStatus.CLOSURE_LEVEL2_REJECTED,
+        Project.ProjectStatus.CLOSURE_LEVEL1_REJECTED,
+    }
+    if project.status not in allowed_statuses:
         return Response(
-            {"code": 400, "message": "只有进行中的项目才能申请结题"},
+            {"code": 400, "message": "当前项目状态无法申请结题"},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    import json
     data = request.data
     is_draft = data.get("is_draft")
     if isinstance(is_draft, str):
@@ -241,6 +319,14 @@ def create_closure_application(request, pk):
                 if not ok:
                     return Response(
                         {"code": 400, "message": msg or "当前不在结题提交时间范围内"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+            if not is_draft:
+                ok, msg = _validate_expected_results(project, achievements_data)
+                if not ok:
+                    return Response(
+                        {"code": 400, "message": msg},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
 
@@ -293,6 +379,9 @@ def create_closure_application(request, pk):
                         achievement_type=ach_type_obj,
                         title=achievement_data.get("title", ""),
                         description=achievement_data.get("description", ""),
+                        extra_data=_parse_json_payload(
+                            achievement_data.get("extra_data"), {}
+                        ),
                         authors=achievement_data.get("authors", ""),
                         journal=achievement_data.get("journal", ""),
                         publication_date=achievement_data.get("publication_date") or None,
@@ -364,7 +453,6 @@ def update_closure_application(request, pk):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    import json
     data = request.data
     is_draft = data.get("is_draft")
     if isinstance(is_draft, str):
@@ -389,6 +477,14 @@ def update_closure_application(request, pk):
                 if not ok:
                     return Response(
                         {"code": 400, "message": msg or "当前不在结题提交时间范围内"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+            if not is_draft:
+                ok, msg = _validate_expected_results(project, achievements_data)
+                if not ok:
+                    return Response(
+                        {"code": 400, "message": msg},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
 
@@ -435,6 +531,9 @@ def update_closure_application(request, pk):
                         achievement_type=ach_type_obj,
                         title=achievement_data.get("title", ""),
                         description=achievement_data.get("description", ""),
+                        extra_data=_parse_json_payload(
+                            achievement_data.get("extra_data"), {}
+                        ),
                         authors=achievement_data.get("authors", ""),
                         journal=achievement_data.get("journal", ""),
                         publication_date=achievement_data.get("publication_date") or None,

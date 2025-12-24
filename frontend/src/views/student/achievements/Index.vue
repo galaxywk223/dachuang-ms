@@ -181,6 +181,63 @@
           </el-form-item>
         </template>
 
+        <template v-if="isCompanyType">
+          <el-form-item label="公司名称" required>
+            <el-input v-model="form.company_name" placeholder="请输入公司名称" />
+          </el-form-item>
+          <el-form-item label="角色/职责">
+            <el-input v-model="form.company_role" placeholder="如：法人/技术负责人" />
+          </el-form-item>
+          <el-form-item label="成立日期">
+            <el-date-picker
+              v-model="form.company_date"
+              type="date"
+              placeholder="选择日期"
+              style="width: 100%"
+              value-format="YYYY-MM-DD"
+            />
+          </el-form-item>
+        </template>
+
+        <template v-if="isConferenceType">
+          <el-form-item label="会议名称" required>
+            <el-input v-model="form.conference_name" placeholder="请输入会议名称" />
+          </el-form-item>
+          <el-form-item label="会议级别">
+            <el-input v-model="form.conference_level" placeholder="如：国际会议/国内会议" />
+          </el-form-item>
+          <el-form-item label="会议日期">
+            <el-date-picker
+              v-model="form.conference_date"
+              type="date"
+              placeholder="选择日期"
+              style="width: 100%"
+              value-format="YYYY-MM-DD"
+            />
+          </el-form-item>
+        </template>
+
+        <template v-if="isReportType">
+          <el-form-item label="报告名称" required>
+            <el-input v-model="form.report_title" placeholder="请输入报告名称" />
+          </el-form-item>
+          <el-form-item label="报告类型">
+            <el-input v-model="form.report_type" placeholder="如：研究报告/调查报告" />
+          </el-form-item>
+        </template>
+
+        <template v-if="isMediaType">
+          <el-form-item label="作品名称" required>
+            <el-input v-model="form.media_title" placeholder="请输入作品名称" />
+          </el-form-item>
+          <el-form-item label="作品形式">
+            <el-input v-model="form.media_format" placeholder="如：视频/音频/多媒体" />
+          </el-form-item>
+          <el-form-item label="作品链接">
+            <el-input v-model="form.media_link" placeholder="可填写网盘或展示链接" />
+          </el-form-item>
+        </template>
+
         <el-form-item label="成果附件">
           <el-upload
             class="upload-block"
@@ -238,6 +295,10 @@
           </el-link>
           <span v-else>-</span>
         </el-descriptions-item>
+        <el-descriptions-item label="扩展信息">
+          <pre v-if="currentAchievement?.extra_data" class="extra-data">{{ JSON.stringify(currentAchievement.extra_data, null, 2) }}</pre>
+          <span v-else>-</span>
+        </el-descriptions-item>
         <el-descriptions-item label="登记时间">
           {{ formatDate(currentAchievement?.created_at) }}
         </el-descriptions-item>
@@ -284,6 +345,17 @@ const form = reactive({
   competition_name: "",
   award_level: "",
   award_date: "",
+  company_name: "",
+  company_role: "",
+  company_date: "",
+  conference_name: "",
+  conference_level: "",
+  conference_date: "",
+  report_title: "",
+  report_type: "",
+  media_title: "",
+  media_format: "",
+  media_link: "",
   attachment: null as File | null,
 });
 
@@ -307,6 +379,16 @@ const selectedType = computed(() => {
 });
 
 const selectedTypeValue = computed(() => selectedType.value?.value || "");
+
+const COMPANY_TYPES = ["COMPANY", "STARTUP", "COMPANY_FORMATION"];
+const CONFERENCE_TYPES = ["CONFERENCE", "ACADEMIC_CONFERENCE"];
+const REPORT_TYPES = ["REPORT", "RESEARCH_REPORT", "SURVEY_REPORT"];
+const MEDIA_TYPES = ["MULTIMEDIA", "AUDIO_VIDEO", "VIDEO"];
+
+const isCompanyType = computed(() => COMPANY_TYPES.includes(selectedTypeValue.value));
+const isConferenceType = computed(() => CONFERENCE_TYPES.includes(selectedTypeValue.value));
+const isReportType = computed(() => REPORT_TYPES.includes(selectedTypeValue.value));
+const isMediaType = computed(() => MEDIA_TYPES.includes(selectedTypeValue.value));
 
 const canAdd = computed(() => {
   if (!activeProject.value) return false;
@@ -393,6 +475,18 @@ const validateExtraFields = () => {
   if (selectedTypeValue.value === "COMPETITION_AWARD") {
     if (!form.competition_name || !form.award_level) return "竞赛成果需填写竞赛名称和获奖等级";
   }
+  if (isCompanyType.value) {
+    if (!form.company_name) return "公司成果需填写公司名称";
+  }
+  if (isConferenceType.value) {
+    if (!form.conference_name) return "会议成果需填写会议名称";
+  }
+  if (isReportType.value) {
+    if (!form.report_title) return "报告成果需填写报告名称";
+  }
+  if (isMediaType.value) {
+    if (!form.media_title) return "音视频成果需填写作品名称";
+  }
   return "";
 };
 
@@ -427,6 +521,29 @@ const submitAchievement = async () => {
       if (form.competition_name) payload.append("competition_name", form.competition_name);
       if (form.award_level) payload.append("award_level", form.award_level);
       if (form.award_date) payload.append("award_date", form.award_date);
+      const extraData: Record<string, string> = {};
+      if (isCompanyType.value) {
+        extraData.company_name = form.company_name;
+        if (form.company_role) extraData.company_role = form.company_role;
+        if (form.company_date) extraData.company_date = form.company_date;
+      }
+      if (isConferenceType.value) {
+        extraData.conference_name = form.conference_name;
+        if (form.conference_level) extraData.conference_level = form.conference_level;
+        if (form.conference_date) extraData.conference_date = form.conference_date;
+      }
+      if (isReportType.value) {
+        extraData.report_title = form.report_title;
+        if (form.report_type) extraData.report_type = form.report_type;
+      }
+      if (isMediaType.value) {
+        extraData.media_title = form.media_title;
+        if (form.media_format) extraData.media_format = form.media_format;
+        if (form.media_link) extraData.media_link = form.media_link;
+      }
+      if (Object.keys(extraData).length > 0) {
+        payload.append("extra_data", JSON.stringify(extraData));
+      }
       if (form.attachment) payload.append("attachment", form.attachment);
 
       const response: any = await addProjectAchievement(projectId, payload);
@@ -464,6 +581,17 @@ const resetForm = () => {
     competition_name: "",
     award_level: "",
     award_date: "",
+    company_name: "",
+    company_role: "",
+    company_date: "",
+    conference_name: "",
+    conference_level: "",
+    conference_date: "",
+    report_title: "",
+    report_type: "",
+    media_title: "",
+    media_format: "",
+    media_link: "",
     attachment: null,
   });
   fileList.value = [];
@@ -534,6 +662,14 @@ onMounted(async () => {
 
   .mt-4 {
     margin-top: 16px;
+  }
+
+  .extra-data {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 12px;
+    color: #64748b;
   }
 }
 </style>

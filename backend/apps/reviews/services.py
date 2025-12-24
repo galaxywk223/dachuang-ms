@@ -169,7 +169,7 @@ class ReviewService:
 
     @staticmethod
     @transaction.atomic
-    def reject_review(review, reviewer, comments=""):
+    def reject_review(review, reviewer, comments="", reject_to=None):
         """
         审核不通过
         """
@@ -215,7 +215,13 @@ class ReviewService:
             elif review.review_level == Review.ReviewLevel.LEVEL2:
                 project.status = Project.ProjectStatus.CLOSURE_LEVEL2_REJECTED
             elif review.review_level == Review.ReviewLevel.LEVEL1:
-                project.status = Project.ProjectStatus.CLOSURE_LEVEL1_REJECTED
+                if reject_to == "teacher":
+                    project.status = Project.ProjectStatus.CLOSURE_SUBMITTED
+                    ReviewService.create_closure_teacher_review(project)
+                elif reject_to == "student":
+                    project.status = Project.ProjectStatus.CLOSURE_DRAFT
+                else:
+                    project.status = Project.ProjectStatus.CLOSURE_LEVEL1_REJECTED
 
         project.save()
         return True

@@ -269,6 +269,52 @@
                 </el-form-item>
              </el-col>
              <el-col :span="24">
+                <el-form-item label="预期成果清单">
+                  <div class="expected-grid">
+                    <el-select
+                      v-model="expectedForm.achievement_type"
+                      placeholder="成果类型"
+                      class="expected-select"
+                    >
+                      <el-option
+                        v-for="item in achievementTypeOptions"
+                        :key="item.value"
+                        :label="item.label"
+                        :value="item.value"
+                      />
+                    </el-select>
+                    <el-input-number
+                      v-model="expectedForm.expected_count"
+                      :min="1"
+                      controls-position="right"
+                      class="expected-count"
+                    />
+                    <el-button type="primary" plain @click="addExpectedResult">
+                      添加
+                    </el-button>
+                  </div>
+                  <el-table
+                    v-if="formData.expected_results_data.length"
+                    :data="formData.expected_results_data"
+                    border
+                    style="width: 100%; margin-top: 12px;"
+                    :header-cell-style="{ background: '#f8fafc', color: '#475569' }"
+                  >
+                    <el-table-column label="成果类型">
+                      <template #default="{ row }">
+                        {{ getLabel(achievementTypeOptions, row.achievement_type) }}
+                      </template>
+                    </el-table-column>
+                    <el-table-column prop="expected_count" label="数量" width="120" />
+                    <el-table-column label="操作" width="100" align="center">
+                      <template #default="{ $index }">
+                        <el-button link type="danger" @click="removeExpectedResult($index)">删除</el-button>
+                      </template>
+                    </el-table-column>
+                  </el-table>
+                </el-form-item>
+             </el-col>
+             <el-col :span="24">
                 <el-form-item label="项目简介" prop="description">
                    <el-input 
                      v-model="formData.description" 
@@ -392,6 +438,7 @@ interface FormDataState {
   leader_email: string;
   title: string;
   expected_results: string;
+  expected_results_data: { achievement_type: string; expected_count: number }[];
   description: string;
   advisors: AdvisorInfo[];
   members: MemberInfo[];
@@ -412,6 +459,7 @@ const formData = reactive<FormDataState>({
   leader_email: "",
   title: "",
   expected_results: "",
+  expected_results_data: [],
   description: "",
   advisors: [],
   members: [],
@@ -479,6 +527,7 @@ const advisorTitleOptions = computed(() => getOptions(DICT_CODES.ADVISOR_TITLE))
 const levelOptions = computed(() => getOptions(DICT_CODES.PROJECT_LEVEL));
 const keyFieldOptions = computed(() => getOptions(DICT_CODES.KEY_FIELD_CODE));
 const categoryOptions = computed(() => getOptions(DICT_CODES.PROJECT_CATEGORY));
+const achievementTypeOptions = computed(() => getOptions(DICT_CODES.ACHIEVEMENT_TYPE));
 
 const getDefaultLevel = () => levelOptions.value[0]?.value || "";
 const getDefaultCategory = () => categoryOptions.value[0]?.value || "";
@@ -531,6 +580,28 @@ const keyFieldCascaderValue = computed({
     }
   }
 });
+
+const expectedForm = reactive({
+  achievement_type: "",
+  expected_count: 1,
+});
+
+const addExpectedResult = () => {
+  if (!expectedForm.achievement_type) {
+    ElMessage.warning("请选择成果类型");
+    return;
+  }
+  formData.expected_results_data.push({
+    achievement_type: expectedForm.achievement_type,
+    expected_count: expectedForm.expected_count || 1,
+  });
+  expectedForm.achievement_type = "";
+  expectedForm.expected_count = 1;
+};
+
+const removeExpectedResult = (index: number) => {
+  formData.expected_results_data.splice(index, 1);
+};
 
 const getLabel = (options: any[], value: string) => {
     const found = options.find(opt => opt.value === value);
@@ -699,6 +770,10 @@ const handleSaveOrSubmit = async (isDraft: boolean) => {
         if(formData.advisors.length === 0) {
              console.warn("No advisors added, user might have forgotten to click add");
         }
+        if (formData.expected_results_data.length === 0) {
+            ElMessage.warning("请补充预期成果清单");
+            return;
+        }
         await formRef.value.validate(async (valid) => {
             if (!valid) {
                  ElMessage.error("请完善必填信息");
@@ -761,6 +836,8 @@ const processRequest = async (isDraft: boolean) => {
                 }
             } else if (key === 'advisors' || key === 'members') {
                 payload.append(key, JSON.stringify(basicFields[key]));
+            } else if (key === 'expected_results_data') {
+                payload.append(key, JSON.stringify(basicFields[key] || []));
             } else if (key === 'id') {
                 // Skip ID in body
             } else {
@@ -835,8 +912,9 @@ const loadData = async (id: number) => {
             formData.leader_email = data.leader_email || "";
             formData.description = data.description || "";
             formData.expected_results = data.expected_results || "";
-            
-            formData.expected_results = data.expected_results || "";
+            formData.expected_results_data = Array.isArray(data.expected_results_data)
+              ? data.expected_results_data
+              : [];
             
             // Handle Boolean Key Field
             formData.is_key_field = !!data.is_key_field;
@@ -874,7 +952,7 @@ onMounted(async () => {
   await loadDictionaries([
     DICT_CODES.PROJECT_LEVEL, DICT_CODES.PROJECT_CATEGORY, DICT_CODES.PROJECT_SOURCE,
     DICT_CODES.COLLEGE, DICT_CODES.PROJECT_TYPE, DICT_CODES.MAJOR_CATEGORY,
-    DICT_CODES.TITLE, DICT_CODES.KEY_FIELD_CODE
+    DICT_CODES.TITLE, DICT_CODES.KEY_FIELD_CODE, DICT_CODES.ACHIEVEMENT_TYPE
   ]);
   const id = route.query.id;
   if (id) {
@@ -970,6 +1048,20 @@ watch(() => userStore.user, (newUser) => {
 }
 
 .w-full { width: 100%; }
+
+.expected-grid {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.expected-select {
+  width: 260px;
+}
+
+.expected-count {
+  width: 140px;
+}
 
 .dynamic-input-row {
   background: $slate-50;

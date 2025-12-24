@@ -107,6 +107,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         comments = serializer.validated_data.get("comments", "")
         score = serializer.validated_data.get("score")
         closure_rating = serializer.validated_data.get("closure_rating")
+        reject_to = serializer.validated_data.get("reject_to")
 
         ok, msg = SystemSettingService.check_review_window(
             review.review_type,
@@ -141,7 +142,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 review, user, comments, score, closure_rating
             )
         else:
-            result = ReviewService.reject_review(review, user, comments)
+            result = ReviewService.reject_review(review, user, comments, reject_to)
 
         if result:
             NotificationService.notify_review_result(review.project, action_type == "approve", comments)
@@ -197,6 +198,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         comments = serializer.validated_data.get("comments", "")
         score = serializer.validated_data.get("score")
         closure_rating = serializer.validated_data.get("closure_rating")
+        reject_to = serializer.validated_data.get("reject_to")
 
         review_rules = SystemSettingService.get_setting(
             "REVIEW_RULES", batch=review.project.batch
@@ -227,6 +229,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
         else:
             review.closure_rating = None
         review.save()
+
+        if action_type == "reject":
+            ReviewService.reject_review(review, user, comments, reject_to)
 
         NotificationService.notify_review_result(
             review.project, action_type == "approve", comments
@@ -309,6 +314,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         comments = request.data.get("comments", "")
         score = request.data.get("score")
         closure_rating = request.data.get("closure_rating")
+        reject_to = request.data.get("reject_to")
 
         if not isinstance(review_ids, list) or not review_ids:
             return Response(
@@ -341,7 +347,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
                     review, request.user, comments, score, closure_rating
                 )
             else:
-                ReviewService.reject_review(review, request.user, comments)
+                ReviewService.reject_review(review, request.user, comments, reject_to)
             NotificationService.notify_review_result(
                 review.project, action_type == "approve", comments
             )

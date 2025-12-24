@@ -153,8 +153,12 @@ class ProjectService:
         """
         申请项目结题
         """
-        if project.status != Project.ProjectStatus.IN_PROGRESS:
-            raise ValueError("只有进行中的项目才能申请结题")
+        if project.status not in [
+            Project.ProjectStatus.IN_PROGRESS,
+            Project.ProjectStatus.CLOSURE_LEVEL2_REJECTED,
+            Project.ProjectStatus.CLOSURE_LEVEL1_REJECTED,
+        ]:
+            raise ValueError("当前项目状态无法申请结题")
 
         # 更新结题报告
         project.final_report = final_report
@@ -184,6 +188,32 @@ class ProjectService:
             # 验证至少有一项成果
             if project.achievements.count() < 1:
                 raise ValueError("请至少添加一项研究成果")
+
+            expected_list = project.expected_results_data or []
+            if expected_list:
+                actual_counts = {}
+                for ach in project.achievements.select_related("achievement_type"):
+                    if not ach.achievement_type:
+                        continue
+                    type_value = ach.achievement_type.value
+                    actual_counts[type_value] = actual_counts.get(type_value, 0) + 1
+                for expected in expected_list:
+                    if not isinstance(expected, dict):
+                        continue
+                    type_value = expected.get("achievement_type")
+                    try:
+                        expected_count = int(
+                            expected.get("expected_count") or expected.get("count") or 0
+                        )
+                    except (TypeError, ValueError):
+                        expected_count = 0
+                    if not type_value or expected_count <= 0:
+                        continue
+                    actual = actual_counts.get(type_value, 0)
+                    if actual < expected_count:
+                        raise ValueError(
+                            f"预期成果未完成：{type_value} 需{expected_count}项，当前{actual}项"
+                        )
 
             project.status = Project.ProjectStatus.CLOSURE_SUBMITTED
             project.closure_applied_at = timezone.now()
@@ -222,7 +252,7 @@ class ProjectService:
         else:
             # 提交中期申请
             project.status = Project.ProjectStatus.MID_TERM_SUBMITTED
-            project.mid_term_applied_at = timezone.now()
+            project.mid_term_submitted_at = timezone.now()
 
         project.save()
         return True
@@ -239,7 +269,7 @@ class ProjectService:
                 raise ValueError("请先上传中期检查报告书")
 
             project.status = Project.ProjectStatus.MID_TERM_SUBMITTED
-            project.mid_term_applied_at = timezone.now()
+            project.mid_term_submitted_at = timezone.now()
             project.save()
             return True
         return False
@@ -264,10 +294,6 @@ class ProjectService:
         """
         if project.status != Project.ProjectStatus.MID_TERM_REVIEWING:
             raise ValueError("项目不在中期审核中")
-
-        project.mid_term_reviewed_by = reviewer
-        project.mid_term_reviewed_at = timezone.now()
-        project.mid_term_review_comments = review_comments
 
         if is_approved:
             project.status = Project.ProjectStatus.MID_TERM_APPROVED
@@ -315,16 +341,18 @@ class ProjectService:
         """
         审批项目变更申请
         """
-        if change_request.status != ProjectChangeRequest.RequestStatus.PENDING:
+        if change_request.status not in [
+            ProjectChangeRequest.ChangeStatus.TEACHER_REVIEWING,
+            ProjectChangeRequest.ChangeStatus.LEVEL2_REVIEWING,
+            ProjectChangeRequest.ChangeStatus.LEVEL1_REVIEWING,
+        ]:
             raise ValueError("变更申请不是待审核状态")
 
-        change_request.reviewed_by = reviewer
         change_request.reviewed_at = timezone.now()
-        change_request.review_comments = comments
         change_request.status = (
-            ProjectChangeRequest.RequestStatus.APPROVED
+            ProjectChangeRequest.ChangeStatus.APPROVED
             if is_approved
-            else ProjectChangeRequest.RequestStatus.REJECTED
+            else ProjectChangeRequest.ChangeStatus.REJECTED
         )
         change_request.save()
 

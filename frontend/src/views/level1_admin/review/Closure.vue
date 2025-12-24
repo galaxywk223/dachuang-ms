@@ -154,6 +154,12 @@
       destroy-on-close
     >
       <el-form :model="reviewForm" label-position="top">
+        <el-form-item v-if="reviewType === 'reject'" label="驳回去向">
+          <el-radio-group v-model="reviewForm.reject_to">
+            <el-radio label="student">退回学生</el-radio>
+            <el-radio label="teacher">退回导师</el-radio>
+          </el-radio-group>
+        </el-form-item>
         <el-form-item
           :label="
             reviewType === 'approve' ? '审核意见 (可选)' : '驳回原因 (必填)'
@@ -189,6 +195,12 @@
           <el-radio-group v-model="batchForm.action">
             <el-radio label="approve">通过</el-radio>
             <el-radio label="reject">驳回</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item v-if="batchForm.action === 'reject'" label="驳回去向">
+          <el-radio-group v-model="batchForm.reject_to">
+            <el-radio label="student">退回学生</el-radio>
+            <el-radio label="teacher">退回导师</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="结题评价">
@@ -239,6 +251,7 @@ const reviewType = ref<"approve" | "reject">("approve");
 const reviewForm = ref({
   projectId: 0,
   comment: "",
+  reject_to: "student",
 });
 
 const batchDialogVisible = ref(false);
@@ -247,6 +260,7 @@ const batchForm = ref({
   action: "approve",
   comments: "",
   closure_rating: "",
+  reject_to: "student",
 });
 
 const { loadDictionaries, getOptions } = useDictionary();
@@ -297,6 +311,7 @@ const handleApprove = (row: any) => {
   reviewType.value = "approve";
   reviewForm.value.projectId = row.id;
   reviewForm.value.comment = "";
+  reviewForm.value.reject_to = "student";
   reviewDialogVisible.value = true;
 };
 
@@ -304,6 +319,7 @@ const handleReject = (row: any) => {
   reviewType.value = "reject";
   reviewForm.value.projectId = row.id;
   reviewForm.value.comment = "";
+  reviewForm.value.reject_to = "student";
   reviewDialogVisible.value = true;
 };
 
@@ -314,7 +330,10 @@ const confirmReview = async () => {
   }
 
   try {
-    const data = { comment: reviewForm.value.comment };
+    const data: any = { comment: reviewForm.value.comment };
+    if (reviewType.value === "reject") {
+      data.reject_to = reviewForm.value.reject_to;
+    }
 
     let response: any;
     if (reviewType.value === "approve") {
@@ -342,7 +361,7 @@ const openBatchDialog = () => {
     ElMessage.warning("请先勾选要审核的项目");
     return;
   }
-  batchForm.value = { action: "approve", comments: "", closure_rating: "" };
+  batchForm.value = { action: "approve", comments: "", closure_rating: "", reject_to: "student" };
   batchDialogVisible.value = true;
 };
 
@@ -355,6 +374,9 @@ const submitBatchReview = async () => {
       action: batchForm.value.action,
       comments: batchForm.value.comments,
     };
+    if (batchForm.value.action === "reject") {
+      payload.reject_to = batchForm.value.reject_to;
+    }
     if (batchForm.value.closure_rating) {
       payload.closure_rating = batchForm.value.closure_rating;
     }

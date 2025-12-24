@@ -120,6 +120,15 @@
               查看详情
             </el-button>
             <el-button
+              v-if="['CLOSURE_LEVEL2_REJECTED', 'CLOSURE_LEVEL1_REJECTED'].includes(row.status)"
+              type="danger"
+              size="small"
+              link
+              @click="handleReapply(row)"
+            >
+              重新提交
+            </el-button>
+            <el-button
               v-if="row.status === 'CLOSURE_SUBMITTED'"
               type="warning"
               size="small"
@@ -167,7 +176,10 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
+import { useRouter } from "vue-router";
 import { getAppliedClosureProjects, getProjectCertificate, revokeClosureApplication } from "@/api/project";
+
+const router = useRouter();
 
 // 表格数据
 const tableData = ref<any[]>([]);
@@ -236,6 +248,11 @@ const handleCurrentChange = (page: number) => {
 // 查看详情
 const handleView = (_row: any) => {
   ElMessage.info("查看结题详情功能待开发");
+};
+
+const handleReapply = (row: any) => {
+  if (!row?.id) return;
+  router.push({ path: "/closure/apply", query: { projectId: row.id } });
 };
 
 const handleRevoke = async (row: any) => {

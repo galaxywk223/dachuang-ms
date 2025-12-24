@@ -210,15 +210,60 @@
                 </el-form-item>
             </template>
 
-             <template v-if="achievementForm.achievement_type === 'COMPETITION_AWARD'">
-                <el-form-item label="竞赛名称">
-                    <el-input v-model="achievementForm.competition_name" />
+            <template v-if="achievementForm.achievement_type === 'COMPETITION_AWARD'">
+               <el-form-item label="竞赛名称">
+                   <el-input v-model="achievementForm.competition_name" />
+               </el-form-item>
+               <el-form-item label="获奖等级">
+                   <el-input v-model="achievementForm.award_level" placeholder="如：国家级一等奖" />
+               </el-form-item>
+               <el-form-item label="获奖日期">
+                   <el-date-picker v-model="achievementForm.award_date" type="date" placeholder="选择日期" style="width: 100%" value-format="YYYY-MM-DD" />
+               </el-form-item>
+            </template>
+
+            <template v-if="isCompanyType">
+                <el-form-item label="公司名称">
+                    <el-input v-model="achievementForm.company_name" placeholder="请输入公司名称" />
                 </el-form-item>
-                <el-form-item label="获奖等级">
-                    <el-input v-model="achievementForm.award_level" placeholder="如：国家级一等奖" />
+                <el-form-item label="角色/职责">
+                    <el-input v-model="achievementForm.company_role" placeholder="如：法人/技术负责人" />
                 </el-form-item>
-                <el-form-item label="获奖日期">
-                    <el-date-picker v-model="achievementForm.award_date" type="date" placeholder="选择日期" style="width: 100%" value-format="YYYY-MM-DD" />
+                <el-form-item label="成立日期">
+                    <el-date-picker v-model="achievementForm.company_date" type="date" placeholder="选择日期" style="width: 100%" value-format="YYYY-MM-DD" />
+                </el-form-item>
+            </template>
+
+            <template v-if="isConferenceType">
+                <el-form-item label="会议名称">
+                    <el-input v-model="achievementForm.conference_name" placeholder="请输入会议名称" />
+                </el-form-item>
+                <el-form-item label="会议级别">
+                    <el-input v-model="achievementForm.conference_level" placeholder="如：国际会议/国内会议" />
+                </el-form-item>
+                <el-form-item label="会议日期">
+                    <el-date-picker v-model="achievementForm.conference_date" type="date" placeholder="选择日期" style="width: 100%" value-format="YYYY-MM-DD" />
+                </el-form-item>
+            </template>
+
+            <template v-if="isReportType">
+                <el-form-item label="报告名称">
+                    <el-input v-model="achievementForm.report_title" placeholder="请输入报告名称" />
+                </el-form-item>
+                <el-form-item label="报告类型">
+                    <el-input v-model="achievementForm.report_type" placeholder="如：研究报告/调查报告" />
+                </el-form-item>
+            </template>
+
+            <template v-if="isMediaType">
+                <el-form-item label="作品名称">
+                    <el-input v-model="achievementForm.media_title" placeholder="请输入作品名称" />
+                </el-form-item>
+                <el-form-item label="作品形式">
+                    <el-input v-model="achievementForm.media_format" placeholder="如：视频/音频/多媒体" />
+                </el-form-item>
+                <el-form-item label="作品链接">
+                    <el-input v-model="achievementForm.media_link" placeholder="可填写网盘或展示链接" />
                 </el-form-item>
             </template>
 
@@ -308,10 +353,32 @@ const achievementForm = reactive({
     competition_name: "",
     award_level: "",
     award_date: "",
+    company_name: "",
+    company_role: "",
+    company_date: "",
+    conference_name: "",
+    conference_level: "",
+    conference_date: "",
+    report_title: "",
+    report_type: "",
+    media_title: "",
+    media_format: "",
+    media_link: "",
+    extra_data: {} as Record<string, string>,
     file: null as File | null
 });
 
 const achievementTypeOptions = computed(() => getOptions(DICT_CODES.ACHIEVEMENT_TYPE));
+
+const selectedAchievementTypeValue = computed(() => achievementForm.achievement_type || "");
+const COMPANY_TYPES = ["COMPANY", "STARTUP", "COMPANY_FORMATION"];
+const CONFERENCE_TYPES = ["CONFERENCE", "ACADEMIC_CONFERENCE"];
+const REPORT_TYPES = ["REPORT", "RESEARCH_REPORT", "SURVEY_REPORT"];
+const MEDIA_TYPES = ["MULTIMEDIA", "AUDIO_VIDEO", "VIDEO"];
+const isCompanyType = computed(() => COMPANY_TYPES.includes(selectedAchievementTypeValue.value));
+const isConferenceType = computed(() => CONFERENCE_TYPES.includes(selectedAchievementTypeValue.value));
+const isReportType = computed(() => REPORT_TYPES.includes(selectedAchievementTypeValue.value));
+const isMediaType = computed(() => MEDIA_TYPES.includes(selectedAchievementTypeValue.value));
 
 const rules = {
   final_report: [{ required: true, message: "请上传结题报告", trigger: "change" }],
@@ -343,6 +410,18 @@ const openAchievementDialog = (row?: any, index = -1) => {
     
     if (row && index > -1) {
         Object.assign(achievementForm, { ...row });
+        const extraData = row.extra_data || {};
+        achievementForm.company_name = extraData.company_name || row.company_name || "";
+        achievementForm.company_role = extraData.company_role || row.company_role || "";
+        achievementForm.company_date = extraData.company_date || row.company_date || "";
+        achievementForm.conference_name = extraData.conference_name || row.conference_name || "";
+        achievementForm.conference_level = extraData.conference_level || row.conference_level || "";
+        achievementForm.conference_date = extraData.conference_date || row.conference_date || "";
+        achievementForm.report_title = extraData.report_title || row.report_title || "";
+        achievementForm.report_type = extraData.report_type || row.report_type || "";
+        achievementForm.media_title = extraData.media_title || row.media_title || "";
+        achievementForm.media_format = extraData.media_format || row.media_format || "";
+        achievementForm.media_link = extraData.media_link || row.media_link || "";
         if (row.file) {
              dialogFileList.value = [{ name: row.file.name, status: 'ready' }];
         }
@@ -351,6 +430,7 @@ const openAchievementDialog = (row?: any, index = -1) => {
         Object.keys(achievementForm).forEach(key => {
             (achievementForm as any)[key] = "";
         });
+        achievementForm.extra_data = {};
         achievementForm.file = null;
     }
 };
@@ -361,7 +441,27 @@ const confirmAchievement = () => {
         return;
     }
     
-    const newItem = { ...achievementForm };
+    const extraData: Record<string, string> = {};
+    if (isCompanyType.value) {
+        extraData.company_name = achievementForm.company_name;
+        if (achievementForm.company_role) extraData.company_role = achievementForm.company_role;
+        if (achievementForm.company_date) extraData.company_date = achievementForm.company_date;
+    }
+    if (isConferenceType.value) {
+        extraData.conference_name = achievementForm.conference_name;
+        if (achievementForm.conference_level) extraData.conference_level = achievementForm.conference_level;
+        if (achievementForm.conference_date) extraData.conference_date = achievementForm.conference_date;
+    }
+    if (isReportType.value) {
+        extraData.report_title = achievementForm.report_title;
+        if (achievementForm.report_type) extraData.report_type = achievementForm.report_type;
+    }
+    if (isMediaType.value) {
+        extraData.media_title = achievementForm.media_title;
+        if (achievementForm.media_format) extraData.media_format = achievementForm.media_format;
+        if (achievementForm.media_link) extraData.media_link = achievementForm.media_link;
+    }
+    const newItem = { ...achievementForm, extra_data: extraData };
     if (dialogIndex.value > -1) {
         achievements.value[dialogIndex.value] = newItem;
     } else {

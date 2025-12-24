@@ -276,6 +276,68 @@
             </el-col>
           </el-row>
         </div>
+
+        <div class="form-section">
+          <div class="section-header">
+            <span class="section-title">项目合同与任务书</span>
+          </div>
+          <el-row :gutter="24">
+            <el-col :span="12">
+              <el-form-item label="项目合同">
+                <template v-if="isViewMode">
+                  <el-link
+                    v-if="form.contract_file_url"
+                    :href="form.contract_file_url"
+                    target="_blank"
+                  >
+                    {{ form.contract_file_name || "下载合同" }}
+                  </el-link>
+                  <span v-else>无</span>
+                </template>
+                <template v-else>
+                  <el-upload
+                    action="#"
+                    :auto-upload="false"
+                    :limit="1"
+                    :on-change="handleContractFileChange"
+                  >
+                    <el-button type="primary" plain>选择合同文件</el-button>
+                  </el-upload>
+                  <div v-if="form.contract_file_url" class="file-hint">
+                    当前：{{ form.contract_file_name || "已上传" }}
+                  </div>
+                </template>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="项目任务书">
+                <template v-if="isViewMode">
+                  <el-link
+                    v-if="form.task_book_file_url"
+                    :href="form.task_book_file_url"
+                    target="_blank"
+                  >
+                    {{ form.task_book_file_name || "下载任务书" }}
+                  </el-link>
+                  <span v-else>无</span>
+                </template>
+                <template v-else>
+                  <el-upload
+                    action="#"
+                    :auto-upload="false"
+                    :limit="1"
+                    :on-change="handleTaskBookFileChange"
+                  >
+                    <el-button type="primary" plain>选择任务书文件</el-button>
+                  </el-upload>
+                  <div v-if="form.task_book_file_url" class="file-hint">
+                    当前：{{ form.task_book_file_name || "已上传" }}
+                  </div>
+                </template>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </div>
       </el-form>
     </div>
   </div>
@@ -305,6 +367,8 @@ const {
   handleSubmit,
   switchToEdit,
   handleExportDoc,
+  handleContractFileChange,
+  handleTaskBookFileChange,
 } = useProjectDetail();
 void formRef;
 </script>

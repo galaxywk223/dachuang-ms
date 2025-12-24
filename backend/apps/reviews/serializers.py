@@ -5,6 +5,7 @@
 from rest_framework import serializers
 from .models import Review
 from apps.projects.serializers import ProjectListSerializer
+from apps.system_settings.services import SystemSettingService
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -12,7 +13,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     审核序列化器
     """
 
-    project_info = ProjectListSerializer(source="project", read_only=True)
+    project_info = serializers.SerializerMethodField()
     reviewer_name = serializers.CharField(source="reviewer.real_name", read_only=True)
     review_type_display = serializers.CharField(
         source="get_review_type_display", read_only=True
@@ -48,6 +49,17 @@ class ReviewSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "created_at", "reviewed_at"]
 
+    def get_project_info(self, obj):
+        request = self.context.get("request")
+        data = ProjectListSerializer(obj.project, context={"request": request}).data
+        if obj.review_type == Review.ReviewType.CLOSURE:
+            rules = SystemSettingService.get_setting(
+                "PROCESS_RULES", batch=obj.project.batch
+            )
+            if not rules.get("show_material_in_closure_review", True):
+                data["proposal_file_url"] = ""
+        return data
+
 
 class ReviewActionSerializer(serializers.Serializer):
     """
@@ -67,4 +79,9 @@ class ReviewActionSerializer(serializers.Serializer):
         choices=Review.ClosureRating.choices,
         required=False,
         help_text="结题评价等级（仅结题审核需要）",
+    )
+    reject_to = serializers.ChoiceField(
+        choices=["teacher", "student"],
+        required=False,
+        help_text="结题驳回流向（teacher-退回导师，student-退回学生）",
     )

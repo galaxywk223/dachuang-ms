@@ -6,6 +6,7 @@ from rest_framework import viewsets, status, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
 from django.utils import timezone
 from django.http import HttpResponse
 import openpyxl
@@ -426,6 +427,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     )
 
             ProjectService.apply_closure(project, final_report, is_draft)
+            if not is_draft:
+                ReviewService.create_closure_teacher_review(project)
             message = "结题申请已保存为草稿" if is_draft else "结题申请提交成功"
             return Response({"code": 200, "message": message})
         except ValueError as e:
@@ -826,9 +829,43 @@ class ProjectExpenditureViewSet(viewsets.ModelViewSet):
 
     filterset_fields = ["project"]
 
+    def _can_manage_expenditure(self, user, project):
+        if user.is_level1_admin or user.is_level2_admin:
+            return True
+        if user.is_student:
+            return project.leader_id == user.id or project.members.filter(id=user.id).exists()
+        if user.role == "TEACHER":
+            return project.advisors.filter(user=user).exists()
+        return False
+
+    def _ensure_project_status(self, project):
+        allowed_statuses = {
+            Project.ProjectStatus.IN_PROGRESS,
+            Project.ProjectStatus.MID_TERM_DRAFT,
+            Project.ProjectStatus.MID_TERM_SUBMITTED,
+            Project.ProjectStatus.MID_TERM_REVIEWING,
+            Project.ProjectStatus.MID_TERM_APPROVED,
+            Project.ProjectStatus.MID_TERM_REJECTED,
+            Project.ProjectStatus.CLOSURE_DRAFT,
+            Project.ProjectStatus.CLOSURE_SUBMITTED,
+            Project.ProjectStatus.CLOSURE_LEVEL2_REVIEWING,
+            Project.ProjectStatus.CLOSURE_LEVEL2_APPROVED,
+            Project.ProjectStatus.CLOSURE_LEVEL2_REJECTED,
+            Project.ProjectStatus.CLOSURE_LEVEL1_REVIEWING,
+            Project.ProjectStatus.CLOSURE_LEVEL1_APPROVED,
+            Project.ProjectStatus.CLOSURE_LEVEL1_REJECTED,
+        }
+        return project.status in allowed_statuses
+
     def perform_create(self, serializer):
         project = serializer.validated_data["project"]
         amount = serializer.validated_data["amount"]
+
+        if not self._can_manage_expenditure(self.request.user, project):
+            raise PermissionDenied("无权限录入该项目经费")
+
+        if not self._ensure_project_status(project):
+            raise serializers.ValidationError("当前项目状态不允许录入经费")
         
         # 验证余额
         stats = ProjectService.get_budget_stats(project)
@@ -878,8 +915,19 @@ class ProjectExpenditureViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if hasattr(user, 'is_student') and user.is_student:
-             return ProjectExpenditure.objects.filter(project__leader=user)
-        # Admins can see all (or filtered by college logic if we add it)
+        if hasattr(user, "is_student") and user.is_student:
+            from django.db.models import Q
+
+            return ProjectExpenditure.objects.filter(
+                Q(project__leader=user) | Q(project__members=user)
+            ).distinct()
+        if user.role == "TEACHER":
+            return ProjectExpenditure.objects.filter(
+                project__advisors__user=user
+            ).distinct()
+        if user.is_level2_admin:
+            return ProjectExpenditure.objects.filter(
+                project__leader__college=user.college
+            )
         return ProjectExpenditure.objects.all()
 

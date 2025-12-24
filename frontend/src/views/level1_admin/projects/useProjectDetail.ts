@@ -50,6 +50,12 @@ export function useProjectDetail() {
     leader_email: "",
     expected_results: "",
     description: "",
+    contract_file_url: "",
+    contract_file_name: "",
+    task_book_file_url: "",
+    task_book_file_name: "",
+    contract_file: null as File | null,
+    task_book_file: null as File | null,
     advisors: [] as AdvisorInfo[],
     members: [] as MemberInfo[],
   });
@@ -164,6 +170,12 @@ export function useProjectDetail() {
       form.leader_email = data.leader_email || "";
       form.expected_results = data.expected_results || "";
       form.description = data.description || "";
+      form.contract_file_url = data.contract_file_url || "";
+      form.contract_file_name = data.contract_file_name || "";
+      form.task_book_file_url = data.task_book_file_url || "";
+      form.task_book_file_name = data.task_book_file_name || "";
+      form.contract_file = null;
+      form.task_book_file = null;
 
       if (Array.isArray(data.advisors_info)) {
         form.advisors = data.advisors_info.map((item: any, index: number) => ({
@@ -208,7 +220,7 @@ export function useProjectDetail() {
         return;
       }
       saving.value = true;
-      const payload = {
+      const basePayload = {
         title: form.title,
         source: form.source || null,
         level: form.level || null,
@@ -223,6 +235,22 @@ export function useProjectDetail() {
         expected_results: form.expected_results,
         description: form.description,
       };
+      const hasFiles = !!(form.contract_file || form.task_book_file);
+      const payload = hasFiles ? new FormData() : basePayload;
+      if (hasFiles) {
+        Object.entries(basePayload).forEach(([key, value]) => {
+          if (value === null || value === undefined || value === "") {
+            return;
+          }
+          payload.append(key, String(value));
+        });
+        if (form.contract_file) {
+          payload.append("contract_file", form.contract_file);
+        }
+        if (form.task_book_file) {
+          payload.append("task_book_file", form.task_book_file);
+        }
+      }
       try {
         await updateProjectInfo(form.id, payload);
         ElMessage.success("保存成功");
@@ -257,6 +285,14 @@ export function useProjectDetail() {
         saving.value = false;
       }
     });
+  };
+
+  const handleContractFileChange = (file: any) => {
+    form.contract_file = file.raw || null;
+  };
+
+  const handleTaskBookFileChange = (file: any) => {
+    form.task_book_file = file.raw || null;
   };
 
   const switchToEdit = () => {
@@ -322,5 +358,7 @@ export function useProjectDetail() {
     handleSubmit,
     switchToEdit,
     handleExportDoc,
+    handleContractFileChange,
+    handleTaskBookFileChange,
   };
 }
