@@ -14,6 +14,10 @@ if [[ ! -d "$VENV_DIR" || ! -s "$VENV_DIR/bin/python" ]]; then
   # Clean up any broken venv contents before recreating.
   [[ -d "$VENV_DIR" ]] && rm -rf "$VENV_DIR"
   python3 -m venv "$VENV_DIR"
+elif ! grep -qF "$VENV_DIR" "$VENV_DIR/bin/activate"; then
+  # Recreate if the venv was moved (activate has a stale absolute path).
+  rm -rf "$VENV_DIR"
+  python3 -m venv "$VENV_DIR"
 fi
 
 source "$VENV_DIR/bin/activate"
