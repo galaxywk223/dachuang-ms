@@ -71,11 +71,15 @@ request.interceptors.response.use(
             if (details) msg = `${msg}: ${details}`;
           }
           // Handle standard DRF error format (dict of lists)
-          else if (data && typeof data === 'object' && !data.code && !data.message) {
-            const details = Object.entries(data)
-              .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.flat().join('; ') : v}`)
-              .join('; ');
-            if (details) msg = details;
+          else if (data && typeof data === 'object' && !data.message) {
+            const values = Object.values(data);
+            const hasArrayErrors = values.some((v) => Array.isArray(v));
+            if (hasArrayErrors) {
+              const details = Object.entries(data)
+                .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.flat().join('; ') : v}`)
+                .join('; ');
+              if (details) msg = details;
+            }
           }
 
           ElMessage.error(msg);
