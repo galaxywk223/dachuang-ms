@@ -3,7 +3,33 @@
     <el-card class="config-card">
       <template #header>
         <div class="card-header">
-          <span class="title">流程与日期配置</span>
+          <div class="header-left">
+            <span class="title">流程与日期配置</span>
+            <el-select
+              v-model="selectedBatchId"
+              placeholder="选择批次"
+              size="small"
+              style="width: 220px"
+              :loading="batchLoading"
+              @change="handleBatchChange"
+            >
+              <el-option
+                v-for="item in batches"
+                :key="item.id"
+                :label="`${item.name} (${item.year})`"
+                :value="item.id"
+              />
+            </el-select>
+            <el-button size="small" @click="openBatchDialog">新建批次</el-button>
+            <el-button
+              size="small"
+              type="warning"
+              :disabled="!selectedBatchId || selectedBatchId === currentBatchId"
+              @click="setSelectedCurrent"
+            >
+              设为当前
+            </el-button>
+          </div>
           <el-button type="primary" :loading="savingAll" @click="saveAll">
             保存全部
           </el-button>
@@ -205,15 +231,58 @@
       </el-tabs>
     </el-card>
   </div>
+
+  <el-dialog v-model="batchDialogVisible" title="新建批次" width="420px">
+    <el-form :model="batchForm" label-width="90px">
+      <el-form-item label="批次名称">
+        <el-input v-model="batchForm.name" placeholder="如：2025年第一批" />
+      </el-form-item>
+      <el-form-item label="年度">
+        <el-input-number v-model="batchForm.year" :min="2000" :max="2100" />
+      </el-form-item>
+      <el-form-item label="批次编码">
+        <el-input v-model="batchForm.code" placeholder="如：2025-A" />
+      </el-form-item>
+      <el-form-item label="设为当前">
+        <el-switch v-model="batchForm.is_current" />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="batchDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="batchSaving" @click="submitBatch">
+          创建
+        </el-button>
+      </span>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
 import { reactive, ref, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import { getEffectiveSettings, updateSettingByCode } from "@/api/system-settings";
+import {
+  listProjectBatches,
+  createProjectBatch,
+  setCurrentBatch,
+} from "@/api/project-batches";
 
 const activeTab = ref("dates");
 const savingAll = ref(false);
+const batchLoading = ref(false);
+const batches = ref<any[]>([]);
+const selectedBatchId = ref<number | null>(null);
+const currentBatchId = ref<number | null>(null);
+const batchDialogVisible = ref(false);
+const batchSaving = ref(false);
+const batchForm = reactive({
+  name: "",
+  year: new Date().getFullYear(),
+  code: "",
+  is_current: true,
+  is_active: true,
+});
 
 const applicationWindow = reactive({ enabled: false, range: [] as string[] });
 const midtermWindow = reactive({ enabled: false, range: [] as string[] });
@@ -266,7 +335,7 @@ const fillRange = (target: { range: string[] }, data: any) => {
 
 const loadSettings = async () => {
   try {
-    const res: any = await getEffectiveSettings();
+    const res: any = await getEffectiveSettings(selectedBatchId.value);
     const data = res.data || res;
 
     const app = data.APPLICATION_WINDOW || {};
@@ -355,34 +424,62 @@ const saveAll = async () => {
     }
 
     const payloads = [
-      updateSettingByCode("APPLICATION_WINDOW", {
+      updateSettingByCode(
+        "APPLICATION_WINDOW",
+        {
         name: "项目申报时间设置",
         data: toWindowPayload(applicationWindow),
-      }),
-      updateSettingByCode("MIDTERM_WINDOW", {
+        },
+        selectedBatchId.value
+      ),
+      updateSettingByCode(
+        "MIDTERM_WINDOW",
+        {
         name: "中期提交时间设置",
         data: toWindowPayload(midtermWindow),
-      }),
-      updateSettingByCode("CLOSURE_WINDOW", {
+        },
+        selectedBatchId.value
+      ),
+      updateSettingByCode(
+        "CLOSURE_WINDOW",
+        {
         name: "结题提交时间设置",
         data: toWindowPayload(closureWindow),
-      }),
-      updateSettingByCode("REVIEW_WINDOW", {
+        },
+        selectedBatchId.value
+      ),
+      updateSettingByCode(
+        "REVIEW_WINDOW",
+        {
         name: "审核时间设置",
         data: buildReviewWindowPayload(),
-      }),
-      updateSettingByCode("LIMIT_RULES", {
+        },
+        selectedBatchId.value
+      ),
+      updateSettingByCode(
+        "LIMIT_RULES",
+        {
         name: "限制与校验规则",
         data: { ...limitRules, college_quota: quota },
-      }),
-      updateSettingByCode("PROCESS_RULES", {
+        },
+        selectedBatchId.value
+      ),
+      updateSettingByCode(
+        "PROCESS_RULES",
+        {
         name: "流程规则配置",
         data: { ...processRules },
-      }),
-      updateSettingByCode("REVIEW_RULES", {
+        },
+        selectedBatchId.value
+      ),
+      updateSettingByCode(
+        "REVIEW_RULES",
+        {
         name: "审核规则配置",
         data: { ...reviewRules },
-      }),
+        },
+        selectedBatchId.value
+      ),
     ];
 
     await Promise.all(payloads);
@@ -396,8 +493,81 @@ const saveAll = async () => {
   }
 };
 
-onMounted(() => {
+const loadBatches = async () => {
+  batchLoading.value = true;
+  try {
+    const res: any = await listProjectBatches();
+    const data = res.data || res;
+    batches.value = Array.isArray(data) ? data : [];
+    const current = batches.value.find((item) => item.is_current);
+    currentBatchId.value = current?.id || null;
+    selectedBatchId.value = currentBatchId.value || batches.value[0]?.id || null;
+  } catch (error) {
+    console.error(error);
+    ElMessage.error("加载批次失败");
+  } finally {
+    batchLoading.value = false;
+  }
+};
+
+const handleBatchChange = () => {
   loadSettings();
+};
+
+const openBatchDialog = () => {
+  batchForm.name = "";
+  batchForm.year = new Date().getFullYear();
+  batchForm.code = "";
+  batchForm.is_current = true;
+  batchDialogVisible.value = true;
+};
+
+const submitBatch = async () => {
+  if (!batchForm.name || !batchForm.code) {
+    ElMessage.warning("请填写批次名称和编码");
+    return;
+  }
+  batchSaving.value = true;
+  try {
+    const res: any = await createProjectBatch({ ...batchForm });
+    if (res.code === 200 || res.code === 201) {
+      ElMessage.success("批次创建成功");
+      batchDialogVisible.value = false;
+      await loadBatches();
+      if (batchForm.is_current) {
+        currentBatchId.value = batches.value.find((item) => item.is_current)?.id || null;
+      }
+      if (!selectedBatchId.value && currentBatchId.value) {
+        selectedBatchId.value = currentBatchId.value;
+      }
+      await loadSettings();
+    }
+  } catch (error) {
+    console.error(error);
+    ElMessage.error("批次创建失败");
+  } finally {
+    batchSaving.value = false;
+  }
+};
+
+const setSelectedCurrent = async () => {
+  if (!selectedBatchId.value) return;
+  try {
+    const res: any = await setCurrentBatch(selectedBatchId.value);
+    if (res.code === 200) {
+      ElMessage.success("已设置为当前批次");
+      await loadBatches();
+      await loadSettings();
+    }
+  } catch (error) {
+    console.error(error);
+    ElMessage.error("设置当前批次失败");
+  }
+};
+
+onMounted(async () => {
+  await loadBatches();
+  await loadSettings();
 });
 </script>
 
@@ -412,6 +582,14 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 .title {
   font-size: 16px;

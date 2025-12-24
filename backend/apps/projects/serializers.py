@@ -17,6 +17,7 @@ from .models import (
 )
 from apps.dictionaries.models import DictionaryItem
 from apps.system_settings.services import SystemSettingService
+from apps.system_settings.models import ProjectBatch
 
 
 class ProjectAdvisorSerializer(serializers.ModelSerializer):
@@ -139,6 +140,13 @@ class ProjectSerializer(serializers.ModelSerializer):
         allow_null=True,
     )
     achievements_count = serializers.SerializerMethodField()
+    batch_name = serializers.SerializerMethodField()
+    batch_year = serializers.SerializerMethodField()
+    batch = serializers.PrimaryKeyRelatedField(
+        queryset=ProjectBatch.objects.all(),
+        required=False,
+        allow_null=True,
+    )
     proposal_file_url = serializers.SerializerMethodField()
     attachment_file_url = serializers.SerializerMethodField()
     proposal_file_name = serializers.SerializerMethodField()
@@ -159,6 +167,9 @@ class ProjectSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "project_no",
+            "batch",
+            "batch_name",
+            "batch_year",
             "title",
             "description",
             "level",
@@ -280,6 +291,16 @@ class ProjectSerializer(serializers.ModelSerializer):
         ).first()
         return item.label if item else obj.leader.college
 
+    def get_batch_name(self, obj):
+        if not obj.batch:
+            return ""
+        return obj.batch.name
+
+    def get_batch_year(self, obj):
+        if not obj.batch:
+            return obj.year
+        return obj.batch.year
+
     def validate_proposal_file(self, value):
         """
         验证申报书文件
@@ -320,11 +341,12 @@ class ProjectSerializer(serializers.ModelSerializer):
         """
         request = self.context.get("request")
         is_draft = bool(self.context.get("is_draft", False))
+        batch = attrs.get("batch") or (self.instance.batch if self.instance else None)
         if request and request.method == "POST":
             user = request.user
             if user.is_student:
-                limits = SystemSettingService.get_setting("LIMIT_RULES")
-                process_rules = SystemSettingService.get_setting("PROCESS_RULES")
+                limits = SystemSettingService.get_setting("LIMIT_RULES", batch=batch)
+                process_rules = SystemSettingService.get_setting("PROCESS_RULES", batch=batch)
                 max_student_active = int(limits.get("max_student_active", 1) or 0)
                 allow_active_reapply = bool(process_rules.get("allow_active_reapply", False))
 
@@ -343,7 +365,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                             "您已有在研或审核中的项目，在校期间限报一项。"
                         )
 
-        limits = SystemSettingService.get_setting("LIMIT_RULES")
+        limits = SystemSettingService.get_setting("LIMIT_RULES", batch=batch)
         if not is_draft and limits.get("dedupe_title"):
             title = attrs.get("title")
             if title:
@@ -364,9 +386,11 @@ class ProjectSerializer(serializers.ModelSerializer):
                 except (TypeError, ValueError):
                     quota = 0
                 if quota:
-                    qs = Project.objects.filter(year=year, leader__college=college_code).exclude(
-                        status=Project.ProjectStatus.DRAFT
-                    )
+                    qs = Project.objects.filter(
+                        year=year, leader__college=college_code
+                    ).exclude(status=Project.ProjectStatus.DRAFT)
+                    if batch:
+                        qs = qs.filter(batch=batch)
                     if self.instance:
                         qs = qs.exclude(id=self.instance.id)
                     if qs.count() >= quota:
@@ -402,7 +426,11 @@ class ProjectSerializer(serializers.ModelSerializer):
         if not validated_data.get("project_no"):
             request = self.context.get("request")
             leader = validated_data.get("leader") or (request.user if request else None)
-            year = validated_data.get("year") or timezone.now().year
+            batch = validated_data.get("batch") or SystemSettingService.get_current_batch()
+            if batch and not validated_data.get("batch"):
+                validated_data["batch"] = batch
+            year = validated_data.get("year") or (batch.year if batch else timezone.now().year)
+            validated_data["year"] = year
             college_code = leader.college if leader else ""
             validated_data["project_no"] = ProjectService.generate_project_no(
                 year, college_code
@@ -427,12 +455,17 @@ class ProjectListSerializer(serializers.ModelSerializer):
     proposal_file_url = serializers.SerializerMethodField()
     mid_term_report_url = serializers.SerializerMethodField()
     final_report_url = serializers.SerializerMethodField()
+    batch_name = serializers.SerializerMethodField()
+    batch_year = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
         fields = [
             "id",
             "project_no",
+            "batch",
+            "batch_name",
+            "batch_year",
             "title",
             "level",
             "level_display",
@@ -470,6 +503,16 @@ class ProjectListSerializer(serializers.ModelSerializer):
             dict_type__code="college", value=obj.leader.college
         ).first()
         return item.label if item else obj.leader.college
+
+    def get_batch_name(self, obj):
+        if not obj.batch:
+            return ""
+        return obj.batch.name
+
+    def get_batch_year(self, obj):
+        if not obj.batch:
+            return obj.year
+        return obj.batch.year
 
     def _build_file_url(self, file_field):
         if not file_field:

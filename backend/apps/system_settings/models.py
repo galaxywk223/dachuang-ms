@@ -8,14 +8,45 @@ from django.conf import settings
 from apps.dictionaries.models import DictionaryItem
 
 
+class ProjectBatch(models.Model):
+    """
+    项目批次（多批次/多年度）
+    """
+
+    name = models.CharField(max_length=100, verbose_name="批次名称")
+    year = models.IntegerField(verbose_name="年度")
+    code = models.CharField(max_length=50, unique=True, verbose_name="批次编码")
+    is_current = models.BooleanField(default=False, verbose_name="是否当前批次")
+    is_active = models.BooleanField(default=True, verbose_name="是否启用")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+
+    class Meta:
+        db_table = "project_batches"
+        verbose_name = "项目批次"
+        verbose_name_plural = verbose_name
+        ordering = ["-year", "-created_at"]
+
+    def __str__(self):
+        return f"{self.name}({self.year})"
+
+
 class SystemSetting(models.Model):
     """
     系统配置（JSON）
     """
 
-    code = models.CharField(max_length=50, unique=True, verbose_name="配置编码")
+    code = models.CharField(max_length=50, verbose_name="配置编码")
     name = models.CharField(max_length=100, verbose_name="配置名称")
     data = models.JSONField(default=dict, verbose_name="配置数据")
+    batch = models.ForeignKey(
+        ProjectBatch,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="settings",
+        verbose_name="所属批次",
+    )
     is_locked = models.BooleanField(default=False, verbose_name="是否锁定")
     is_active = models.BooleanField(default=True, verbose_name="是否启用")
     updated_by = models.ForeignKey(
@@ -34,6 +65,7 @@ class SystemSetting(models.Model):
         verbose_name = "系统配置"
         verbose_name_plural = verbose_name
         ordering = ["code"]
+        unique_together = ("code", "batch")
 
     def __str__(self):
         return f"{self.name}({self.code})"

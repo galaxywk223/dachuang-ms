@@ -39,7 +39,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = [IsAuthenticated]
-    filterset_fields = ["status", "level", "leader__college", "leader"]
+    filterset_fields = ["status", "level", "leader__college", "leader", "batch", "year"]
     search_fields = ["project_no", "title", "advisors__user__real_name"]
     ordering_fields = ["created_at", "updated_at", "submitted_at"]
 
@@ -333,7 +333,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         try:
             if not is_draft:
                 ok, msg = SystemSettingService.check_window(
-                    "MIDTERM_WINDOW", timezone.now().date()
+                    "MIDTERM_WINDOW", timezone.now().date(), batch=project.batch
                 )
                 if not ok:
                     return Response(
@@ -371,7 +371,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
         try:
             ok, msg = SystemSettingService.check_window(
-                "MIDTERM_WINDOW", timezone.now().date()
+                "MIDTERM_WINDOW", timezone.now().date(), batch=project.batch
             )
             if not ok:
                 return Response(
@@ -417,7 +417,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         try:
             if not is_draft:
                 ok, msg = SystemSettingService.check_window(
-                    "CLOSURE_WINDOW", timezone.now().date()
+                    "CLOSURE_WINDOW", timezone.now().date(), batch=project.batch
                 )
                 if not ok:
                     return Response(
@@ -450,7 +450,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
         try:
             ok, msg = SystemSettingService.check_window(
-                "CLOSURE_WINDOW", timezone.now().date()
+                "CLOSURE_WINDOW", timezone.now().date(), batch=project.batch
             )
             if not ok:
                 return Response(

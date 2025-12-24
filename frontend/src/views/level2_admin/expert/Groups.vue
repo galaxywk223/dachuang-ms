@@ -94,6 +94,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import type { FormInstance, FormRules } from "element-plus";
 import request from "@/utils/request";
 import dayjs from "dayjs";
+import { useUserStore } from "@/stores/user";
 
 // interfaces
 interface Expert {
@@ -115,6 +116,7 @@ const submitting = ref(false);
 const groups = ref<Group[]>([]);
 const expertList = ref<Expert[]>([]); // All experts
 const route = useRoute();
+const userStore = useUserStore();
 
 const dialogVisible = ref(false);
 const isEdit = ref(false);
@@ -149,7 +151,9 @@ const fetchGroups = async () => {
 
 const fetchExperts = async () => {
     try {
-        const { data } = await request.get('/users/', { params: { role: 'EXPERT' } });
+        const userRole = userStore.user?.role || localStorage.getItem('user_role');
+        const expertScope = (userRole === 'level1_admin' || userRole === 'admin') ? 'SCHOOL' : 'COLLEGE';
+        const { data } = await request.get('/users/', { params: { role: 'EXPERT', expert_scope: expertScope } });
         expertList.value = data.results || data;
     } catch (error) {
         console.error(error);
@@ -227,7 +231,10 @@ const formatDate = (date: string) => {
     return dayjs(date).format("YYYY-MM-DD HH:mm");
 };
 
-onMounted(() => {
+onMounted(async () => {
+    if (!userStore.user) {
+        await userStore.fetchProfile();
+    }
     fetchGroups();
 });
 

@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
 from ..serializers import UserSerializer, UserCreateSerializer
+from ..models import User
 from ..business.user_business import UserBusiness
 from ..repositories.login_log_repository import LoginLogRepository
 
@@ -33,11 +34,16 @@ class UserManagementController(viewsets.ModelViewSet):
     def get_queryset(self):
         """获取查询集"""
         filters = {}
+        current_user = self.request.user
 
         # 根据角色过滤
         role = self.request.query_params.get("role")
         if role:
             filters["role"] = role
+
+        expert_scope = self.request.query_params.get("expert_scope")
+        if expert_scope:
+            filters["expert_scope"] = expert_scope
 
         # 根据激活状态过滤
         is_active = self.request.query_params.get("is_active")
@@ -48,6 +54,14 @@ class UserManagementController(viewsets.ModelViewSet):
         search = self.request.query_params.get("search")
         if search:
             filters["search"] = search
+
+        if current_user.is_level2_admin:
+            filters["role"] = User.UserRole.EXPERT
+            if current_user.college:
+                filters["college"] = current_user.college
+                filters["expert_scope"] = User.ExpertScope.COLLEGE
+            else:
+                return User.objects.none()
 
         return self.user_business.get_user_list(filters)
 
@@ -111,12 +125,37 @@ class UserManagementController(viewsets.ModelViewSet):
         """
         file = request.FILES.get("file")
         role = request.data.get("role", "STUDENT")
+        expert_scope = request.data.get("expert_scope")
         
         if not file:
              return Response({"code": 400, "message": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
-            result = self.user_business.import_users(file, role)
+            current_user = request.user
+            default_college = None
+            if current_user.is_level2_admin:
+                if role != User.UserRole.EXPERT:
+                    return Response(
+                        {"code": 403, "message": "二级管理员仅可导入院级专家"},
+                        status=status.HTTP_403_FORBIDDEN,
+                    )
+                if not current_user.college:
+                    return Response(
+                        {"code": 400, "message": "当前账号未设置学院信息"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                expert_scope = User.ExpertScope.COLLEGE
+                default_college = current_user.college
+            elif role == User.UserRole.EXPERT:
+                expert_scope = expert_scope or User.ExpertScope.COLLEGE
+                if expert_scope == User.ExpertScope.SCHOOL:
+                    default_college = ""
+            result = self.user_business.import_users(
+                file,
+                role,
+                expert_scope=expert_scope,
+                default_college=default_college,
+            )
             return Response({
                 "code": 200, 
                 "message": f"Imported {result['created']} users.",

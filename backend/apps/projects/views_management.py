@@ -74,6 +74,14 @@ class ProjectManagementViewSet(viewsets.ModelViewSet):
         if project_status:
             queryset = queryset.filter(status=project_status)
 
+        batch_id = self.request.query_params.get("batch_id", "")
+        if batch_id:
+            queryset = queryset.filter(batch_id=batch_id)
+
+        year = self.request.query_params.get("year", "")
+        if year:
+            queryset = queryset.filter(year=year)
+
         return queryset
 
     def list(self, request, *args, **kwargs):
@@ -830,6 +838,9 @@ class ProjectManagementViewSet(viewsets.ModelViewSet):
         """
         批量导入历史项目
         """
+        from apps.system_settings.models import ProjectBatch
+        from apps.system_settings.services import SystemSettingService
+
         file = request.FILES.get("file")
         if not file:
             return Response(
@@ -855,6 +866,8 @@ class ProjectManagementViewSet(viewsets.ModelViewSet):
                 return default
             value = row[idx]
             return value if value is not None else default
+
+        batch_id = request.data.get("batch_id") or request.query_params.get("batch_id")
 
         for row_idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
             try:
@@ -907,11 +920,34 @@ class ProjectManagementViewSet(viewsets.ModelViewSet):
                         leader.college,
                     )
 
+                batch = None
+                if batch_id:
+                    batch = ProjectBatch.objects.filter(id=batch_id).first()
+                if not batch and str(year_val).isdigit():
+                    batch = (
+                        ProjectBatch.objects.filter(
+                            year=int(year_val), is_active=True
+                        )
+                        .order_by("-is_current", "-id")
+                        .first()
+                    )
+                if not batch:
+                    batch = SystemSettingService.get_current_batch()
+
                 project = Project.objects.create(
                     project_no=project_no,
                     title=title,
                     leader=leader,
-                    year=int(year_val) if str(year_val).isdigit() else timezone.now().year,
+                    batch=batch,
+                    year=(
+                        batch.year
+                        if batch
+                        else (
+                            int(year_val)
+                            if str(year_val).isdigit()
+                            else timezone.now().year
+                        )
+                    ),
                     status=status_code if status_code in dict(Project.ProjectStatus.choices) else Project.ProjectStatus.CLOSED,
                     level=level_item,
                     category=category_item,

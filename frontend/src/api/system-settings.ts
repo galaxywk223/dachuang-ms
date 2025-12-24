@@ -1,17 +1,19 @@
 import request from "@/utils/request";
 
-export function getEffectiveSettings() {
+export function getEffectiveSettings(batchId?: number | null) {
   return request({
     url: "/system-settings/settings/effective/",
     method: "get",
+    params: batchId ? { batch_id: batchId } : undefined,
   });
 }
 
-export function updateSettingByCode(code: string, data: any) {
+export function updateSettingByCode(code: string, data: any, batchId?: number | null) {
   return request({
     url: `/system-settings/settings/by-code/${code}/`,
     method: "put",
     data,
+    params: batchId ? { batch_id: batchId } : undefined,
   });
 }
 

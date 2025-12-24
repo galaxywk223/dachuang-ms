@@ -107,7 +107,10 @@ class ProjectReviewViewSet(viewsets.ViewSet):
             )
 
         ok, msg = SystemSettingService.check_review_window(
-            review.review_type, review.review_level, timezone.now().date()
+            review.review_type,
+            review.review_level,
+            timezone.now().date(),
+            batch=review.project.batch,
         )
         if not ok:
             return Response(
@@ -169,7 +172,10 @@ class ProjectReviewViewSet(viewsets.ViewSet):
             )
 
         ok, msg = SystemSettingService.check_review_window(
-            review.review_type, review.review_level, timezone.now().date()
+            review.review_type,
+            review.review_level,
+            timezone.now().date(),
+            batch=review.project.batch,
         )
         if not ok:
             return Response(

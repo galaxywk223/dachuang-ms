@@ -8,8 +8,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.users.permissions import IsLevel1Admin
-from .models import SystemSetting, CertificateSetting
-from .serializers import SystemSettingSerializer, CertificateSettingSerializer
+from .models import SystemSetting, CertificateSetting, ProjectBatch
+from .serializers import (
+    SystemSettingSerializer,
+    CertificateSettingSerializer,
+    ProjectBatchSerializer,
+)
 from .services import DEFAULT_SETTINGS, SystemSettingService
 
 
@@ -30,6 +34,9 @@ class SystemSettingViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset().order_by("code")
+        batch_id = request.query_params.get("batch_id")
+        if batch_id:
+            queryset = queryset.filter(batch_id=batch_id)
         serializer = self.get_serializer(queryset, many=True)
         return Response({"code": 200, "message": "获取成功", "data": serializer.data})
 
@@ -57,8 +64,10 @@ class SystemSettingViewSet(viewsets.ModelViewSet):
         获取合并默认值后的有效配置
         """
         data = {}
+        batch_id = request.query_params.get("batch_id")
+        batch = batch_id or None
         for code in DEFAULT_SETTINGS.keys():
-            data[code] = SystemSettingService.get_setting(code)
+            data[code] = SystemSettingService.get_setting(code, batch=batch)
         return Response({"code": 200, "message": "获取成功", "data": data})
 
     @action(detail=False, methods=["put"], url_path="by-code/(?P<code>[^/.]+)")
@@ -66,7 +75,16 @@ class SystemSettingViewSet(viewsets.ModelViewSet):
         """
         按编码更新配置（不存在则创建）
         """
+        batch_id = request.query_params.get("batch_id") or request.data.get("batch")
+        batch = None
+        if batch_id:
+            batch = ProjectBatch.objects.filter(id=batch_id).first()
+        else:
+            batch = SystemSettingService.get_current_batch()
+
         setting = SystemSetting.objects.filter(code=code).first()
+        if batch:
+            setting = SystemSetting.objects.filter(code=code, batch=batch).first()
         if setting and setting.is_locked:
             return Response(
                 {"code": 400, "message": "该配置已锁定，无法修改"},
@@ -75,6 +93,8 @@ class SystemSettingViewSet(viewsets.ModelViewSet):
 
         payload = request.data.copy()
         payload["code"] = code
+        if batch:
+            payload["batch"] = batch.id
         if setting:
             serializer = self.get_serializer(setting, data=payload, partial=True)
         else:
@@ -83,6 +103,53 @@ class SystemSettingViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save(updated_by=request.user)
         return Response({"code": 200, "message": "更新成功", "data": serializer.data})
+
+
+class ProjectBatchViewSet(viewsets.ModelViewSet):
+    """
+    项目批次管理
+    """
+
+    queryset = ProjectBatch.objects.all()
+    serializer_class = ProjectBatchSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action in ["list", "retrieve", "current"]:
+            return [IsAuthenticated()]
+        return [IsLevel1Admin()]
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset().order_by("-year", "-created_at")
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({"code": 200, "message": "获取成功", "data": serializer.data})
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        if instance.is_current:
+            ProjectBatch.objects.exclude(id=instance.id).update(is_current=False)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        if instance.is_current:
+            ProjectBatch.objects.exclude(id=instance.id).update(is_current=False)
+
+    @action(detail=False, methods=["get"], url_path="current")
+    def current(self, request):
+        batch = SystemSettingService.get_current_batch()
+        if not batch:
+            return Response({"code": 200, "message": "获取成功", "data": None})
+        serializer = self.get_serializer(batch)
+        return Response({"code": 200, "message": "获取成功", "data": serializer.data})
+
+    @action(detail=True, methods=["post"], url_path="set-current")
+    def set_current(self, request, pk=None):
+        batch = self.get_object()
+        ProjectBatch.objects.exclude(id=batch.id).update(is_current=False)
+        batch.is_current = True
+        batch.save(update_fields=["is_current"])
+        serializer = self.get_serializer(batch)
+        return Response({"code": 200, "message": "设置成功", "data": serializer.data})
 
 
 class CertificateSettingViewSet(viewsets.ModelViewSet):

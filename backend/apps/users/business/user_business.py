@@ -139,7 +139,13 @@ class UserBusiness:
         """
         return self.user_repository.create_user(data)
 
-    def import_users(self, file, default_role="STUDENT"):
+    def import_users(
+        self,
+        file,
+        default_role="STUDENT",
+        expert_scope=None,
+        default_college=None,
+    ):
         """
         批量导入用户
         """
@@ -180,6 +186,12 @@ class UserBusiness:
                         "phone": str(row[5]).strip() if len(row) > 5 and row[5] else "",
                         "email": str(row[6]).strip() if len(row) > 6 and row[6] else "",
                     }
+                    if default_role == User.UserRole.EXPERT:
+                        user_data["expert_scope"] = expert_scope or User.ExpertScope.COLLEGE
+                        if user_data["expert_scope"] == User.ExpertScope.SCHOOL:
+                            user_data["college"] = ""
+                        elif default_college:
+                            user_data["college"] = default_college
                     user = User.objects.create(**user_data)
                     user.set_password("123456") # Default password
                     user.save()

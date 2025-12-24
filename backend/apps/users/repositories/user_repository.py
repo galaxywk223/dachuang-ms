@@ -101,6 +101,14 @@ class UserRepository:
             if "role" in filters:
                 queryset = queryset.filter(role=filters["role"])
 
+            # 按学院过滤
+            if "college" in filters:
+                queryset = queryset.filter(college=filters["college"])
+
+            # 按专家级别过滤
+            if "expert_scope" in filters:
+                queryset = queryset.filter(expert_scope=filters["expert_scope"])
+
             # 按激活状态过滤
             if "is_active" in filters:
                 queryset = queryset.filter(is_active=filters["is_active"])

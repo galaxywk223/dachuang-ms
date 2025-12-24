@@ -236,7 +236,7 @@ def create_closure_application(request, pk):
         with transaction.atomic():
             if not is_draft:
                 ok, msg = SystemSettingService.check_window(
-                    "CLOSURE_WINDOW", timezone.now().date()
+                    "CLOSURE_WINDOW", timezone.now().date(), batch=project.batch
                 )
                 if not ok:
                     return Response(
@@ -384,7 +384,7 @@ def update_closure_application(request, pk):
         with transaction.atomic():
             if not is_draft:
                 ok, msg = SystemSettingService.check_window(
-                    "CLOSURE_WINDOW", timezone.now().date()
+                    "CLOSURE_WINDOW", timezone.now().date(), batch=project.batch
                 )
                 if not ok:
                     return Response(

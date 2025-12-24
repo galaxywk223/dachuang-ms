@@ -16,7 +16,9 @@ export interface User {
   real_name?: string;
   email: string;
   role: UserRole;
+  expert_scope?: string;
   department?: string;
+  college?: string;
   phone?: string;
   created_at: string;
   updated_at: string;

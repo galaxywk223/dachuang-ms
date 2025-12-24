@@ -184,7 +184,9 @@ class ReviewService:
 
         # 申报审核
         if review.review_type == Review.ReviewType.APPLICATION:
-            process_rules = SystemSettingService.get_setting("PROCESS_RULES")
+            process_rules = SystemSettingService.get_setting(
+                "PROCESS_RULES", batch=project.batch
+            )
             reject_to_previous = bool(process_rules.get("reject_to_previous", False))
 
             if review.review_level == Review.ReviewLevel.TEACHER:

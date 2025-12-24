@@ -317,6 +317,7 @@ const currentMenus = computed(() => {
                     title: '专家管理',
                     icon: User,
                     children: [
+                        { index: '/level2-admin/users/experts', title: '院级专家库管理' },
                         { index: '/level2-admin/expert/groups', title: '院系专家组管理' },
                         { index: '/level2-admin/expert/assignment', title: '院系评审分配' },
                     ]

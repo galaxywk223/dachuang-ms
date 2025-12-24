@@ -109,7 +109,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
         closure_rating = serializer.validated_data.get("closure_rating")
 
         ok, msg = SystemSettingService.check_review_window(
-            review.review_type, review.review_level, timezone.now().date()
+            review.review_type,
+            review.review_level,
+            timezone.now().date(),
+            batch=review.project.batch,
         )
         if not ok:
             return Response(
@@ -117,7 +120,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        review_rules = SystemSettingService.get_setting("REVIEW_RULES")
+        review_rules = SystemSettingService.get_setting(
+            "REVIEW_RULES", batch=review.project.batch
+        )
         min_len = int(review_rules.get("teacher_application_comment_min", 0) or 0)
         if (
             min_len
@@ -174,7 +179,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
             )
 
         ok, msg = SystemSettingService.check_review_window(
-            review.review_type, review.review_level, timezone.now().date()
+            review.review_type,
+            review.review_level,
+            timezone.now().date(),
+            batch=review.project.batch,
         )
         if not ok:
             return Response(
@@ -190,7 +198,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
         score = serializer.validated_data.get("score")
         closure_rating = serializer.validated_data.get("closure_rating")
 
-        review_rules = SystemSettingService.get_setting("REVIEW_RULES")
+        review_rules = SystemSettingService.get_setting(
+            "REVIEW_RULES", batch=review.project.batch
+        )
         min_len = int(review_rules.get("teacher_application_comment_min", 0) or 0)
         if (
             min_len
@@ -318,7 +328,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 failed.append({"id": review.id, "reason": "无权限"})
                 continue
             ok, msg = SystemSettingService.check_review_window(
-                review.review_type, review.review_level, timezone.now().date()
+                review.review_type,
+                review.review_level,
+                timezone.now().date(),
+                batch=review.project.batch,
             )
             if not ok:
                 failed.append({"id": review.id, "reason": msg or "不在审核时间范围内"})

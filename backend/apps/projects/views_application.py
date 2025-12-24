@@ -53,8 +53,8 @@ def _normalize_list(value):
     return []
 
 
-def _get_active_projects_qs():
-    return Project.objects.exclude(
+def _get_active_projects_qs(batch=None):
+    queryset = Project.objects.exclude(
         status__in=[
             Project.ProjectStatus.DRAFT,
             Project.ProjectStatus.TEACHER_REJECTED,
@@ -63,17 +63,24 @@ def _get_active_projects_qs():
             Project.ProjectStatus.TERMINATED,
         ]
     )
+    if batch:
+        queryset = queryset.filter(batch=batch)
+    return queryset
 
 
-def _check_application_window():
+def _get_current_batch():
+    return SystemSettingService.get_current_batch()
+
+
+def _check_application_window(batch=None):
     ok, msg = SystemSettingService.check_window(
-        "APPLICATION_WINDOW", timezone.now().date()
+        "APPLICATION_WINDOW", timezone.now().date(), batch=batch
     )
     return ok, msg or "当前不在申报时间范围内"
 
 
-def _validate_limits(user, advisors_data, members_data, project=None):
-    limits = SystemSettingService.get_setting("LIMIT_RULES")
+def _validate_limits(user, advisors_data, members_data, project=None, batch=None):
+    limits = SystemSettingService.get_setting("LIMIT_RULES", batch=batch)
     max_advisors = int(limits.get("max_advisors", 2) or 0)
     max_members = int(limits.get("max_members", 5) or 0)
     max_teacher_active = int(limits.get("max_teacher_active", 0) or 0)
@@ -87,7 +94,7 @@ def _validate_limits(user, advisors_data, members_data, project=None):
     if max_members and len(members_data) > max_members:
         return False, f"项目成员人数不能超过{max_members}人"
 
-    active_projects = _get_active_projects_qs()
+    active_projects = _get_active_projects_qs(batch=batch)
     if project:
         active_projects = active_projects.exclude(id=project.id)
 
@@ -210,8 +217,9 @@ def create_project_application(request):
 
     try:
         with transaction.atomic():
+            current_batch = _get_current_batch()
             if not is_draft:
-                ok, msg = _check_application_window()
+                ok, msg = _check_application_window(current_batch)
                 if not ok:
                     return Response(
                         {"code": 400, "message": msg},
@@ -260,7 +268,9 @@ def create_project_application(request):
             advisors_data = _normalize_list(request.data.get("advisors", []))
             members_data = _normalize_list(request.data.get("members", []))
 
-            ok, msg = _validate_limits(user, advisors_data, members_data)
+            ok, msg = _validate_limits(
+                user, advisors_data, members_data, batch=current_batch
+            )
             if not ok:
                 return Response(
                     {"code": 400, "message": msg},
@@ -285,22 +295,26 @@ def create_project_application(request):
             # 保存项目
             project = serializer.save()
 
+            if current_batch and not project.batch:
+                project.batch = current_batch
+            if project.batch:
+                project.year = project.batch.year
+
             if not is_draft:
                 project.submitted_at = timezone.now()
-                project.year = timezone.now().year
                 if not project.project_no:
                     project.project_no = _generate_project_no(
-                        project.year, user.college
+                        project.year or timezone.now().year, user.college
                     )
-                project.save()
-                # 创建导师审核记录（避免重复）
-                if not Review.objects.filter(
-                    project=project,
-                    review_type=Review.ReviewType.APPLICATION,
-                    review_level=Review.ReviewLevel.TEACHER,
-                    status=Review.ReviewStatus.PENDING,
-                ).exists():
-                    ReviewService.create_teacher_review(project)
+            project.save()
+            # 创建导师审核记录（避免重复）
+            if not is_draft and not Review.objects.filter(
+                project=project,
+                review_type=Review.ReviewType.APPLICATION,
+                review_level=Review.ReviewLevel.TEACHER,
+                status=Review.ReviewStatus.PENDING,
+            ).exists():
+                ReviewService.create_teacher_review(project)
 
             # 添加指导教师
             advisors_data = advisors_data or []
@@ -415,8 +429,9 @@ def update_project_application(request, pk):
 
     try:
         with transaction.atomic():
+            current_batch = _get_current_batch()
             if not is_draft:
-                ok, msg = _check_application_window()
+                ok, msg = _check_application_window(current_batch)
                 if not ok:
                     return Response(
                         {"code": 400, "message": msg},
@@ -445,7 +460,9 @@ def update_project_application(request, pk):
             advisors_data = _normalize_list(request.data.get("advisors", []))
             members_data = _normalize_list(request.data.get("members", []))
 
-            ok, msg = _validate_limits(user, advisors_data, members_data, project)
+            ok, msg = _validate_limits(
+                user, advisors_data, members_data, project, batch=current_batch
+            )
             if not ok:
                 return Response(
                     {"code": 400, "message": msg},
@@ -472,22 +489,26 @@ def update_project_application(request, pk):
 
             project = serializer.save()
 
+            if current_batch and not project.batch:
+                project.batch = current_batch
+            if project.batch:
+                project.year = project.batch.year
+
             if not is_draft:
                 project.submitted_at = timezone.now()
-                project.year = timezone.now().year
                 if not project.project_no:
                     project.project_no = _generate_project_no(
-                        project.year, user.college
+                        project.year or timezone.now().year, user.college
                     )
-                project.save()
-                # 创建导师审核记录（避免重复）
-                if not Review.objects.filter(
-                    project=project,
-                    review_type=Review.ReviewType.APPLICATION,
-                    review_level=Review.ReviewLevel.TEACHER,
-                    status=Review.ReviewStatus.PENDING,
-                ).exists():
-                    ReviewService.create_teacher_review(project)
+            project.save()
+            # 创建导师审核记录（避免重复）
+            if not is_draft and not Review.objects.filter(
+                project=project,
+                review_type=Review.ReviewType.APPLICATION,
+                review_level=Review.ReviewLevel.TEACHER,
+                status=Review.ReviewStatus.PENDING,
+            ).exists():
+                ReviewService.create_teacher_review(project)
 
             # 更新指导教师（先删除旧的）
             project.advisors.all().delete()

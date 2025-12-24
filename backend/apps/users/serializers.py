@@ -20,6 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
             "employee_id",
             "real_name",
             "role",
+            "expert_scope",
             "phone",
             "email",
             "major",
@@ -123,6 +124,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
             "employee_id",
             "real_name",
             "role",
+            "expert_scope",
             "password",
             "phone",
             "email",
@@ -136,6 +138,10 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         password = validated_data.pop("password", "123456")
+        if validated_data.get("role") != User.UserRole.EXPERT:
+            validated_data.pop("expert_scope", None)
+        elif not validated_data.get("expert_scope"):
+            validated_data["expert_scope"] = User.ExpertScope.COLLEGE
         user = User.objects.create(**validated_data)
         user.username = user.employee_id  # 使用学号/工号作为用户名
         user.set_password(password)

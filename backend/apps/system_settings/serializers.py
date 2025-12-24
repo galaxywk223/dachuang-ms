@@ -4,7 +4,7 @@
 
 from rest_framework import serializers
 
-from .models import SystemSetting, CertificateSetting
+from .models import SystemSetting, CertificateSetting, ProjectBatch
 
 
 class SystemSettingSerializer(serializers.ModelSerializer):
@@ -19,6 +19,7 @@ class SystemSettingSerializer(serializers.ModelSerializer):
             "code",
             "name",
             "data",
+            "batch",
             "is_locked",
             "is_active",
             "updated_by",
@@ -27,6 +28,22 @@ class SystemSettingSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "created_at", "updated_at", "updated_by"]
+
+
+class ProjectBatchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectBatch
+        fields = [
+            "id",
+            "name",
+            "year",
+            "code",
+            "is_current",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
 
 
 class CertificateSettingSerializer(serializers.ModelSerializer):

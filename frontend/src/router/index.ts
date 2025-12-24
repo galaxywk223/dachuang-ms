@@ -186,6 +186,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: "结题审核" },
       },
       {
+        path: "users/experts",
+        name: "level2-users-experts",
+        component: () => import("@/views/level2_admin/users/ExpertManagement.vue"),
+        meta: { title: "院级专家库管理" },
+      },
+      {
         path: "expert",
         name: "admin-expert",
         redirect: "/level2-admin/expert/groups",

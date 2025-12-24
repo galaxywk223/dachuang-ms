@@ -4,7 +4,7 @@
 
 from datetime import datetime
 
-from .models import SystemSetting
+from .models import SystemSetting, ProjectBatch
 
 
 DEFAULT_SETTINGS = {
@@ -67,8 +67,31 @@ class SystemSettingService:
     """
 
     @staticmethod
-    def get_setting(code, default=None):
-        setting = SystemSetting.objects.filter(code=code, is_active=True).first()
+    def get_current_batch():
+        current = ProjectBatch.objects.filter(is_current=True, is_active=True).first()
+        if current:
+            return current
+        return ProjectBatch.objects.filter(is_active=True).order_by("-year", "-id").first()
+
+    @staticmethod
+    def get_setting(code, default=None, batch=None):
+        batch_obj = batch
+        if batch_obj is None:
+            batch_obj = SystemSettingService.get_current_batch()
+        elif isinstance(batch_obj, int):
+            batch_obj = ProjectBatch.objects.filter(id=batch_obj).first()
+        elif isinstance(batch_obj, str) and batch_obj.isdigit():
+            batch_obj = ProjectBatch.objects.filter(id=int(batch_obj)).first()
+
+        setting = None
+        if batch_obj:
+            setting = SystemSetting.objects.filter(
+                code=code, is_active=True, batch=batch_obj
+            ).first()
+        if setting is None:
+            setting = SystemSetting.objects.filter(
+                code=code, is_active=True, batch__isnull=True
+            ).first()
         base = default or DEFAULT_SETTINGS.get(code, {})
         if setting:
             merged = dict(base)
@@ -86,8 +109,8 @@ class SystemSettingService:
             return None
 
     @staticmethod
-    def check_window(code, now_date):
-        data = SystemSettingService.get_setting(code)
+    def check_window(code, now_date, batch=None):
+        data = SystemSettingService.get_setting(code, batch=batch)
         if not data.get("enabled"):
             return True, ""
 
@@ -101,8 +124,8 @@ class SystemSettingService:
         return True, ""
 
     @staticmethod
-    def check_review_window(review_type, review_level, now_date):
-        data = SystemSettingService.get_setting("REVIEW_WINDOW")
+    def check_review_window(review_type, review_level, now_date, batch=None):
+        data = SystemSettingService.get_setting("REVIEW_WINDOW", batch=batch)
         level_key = review_level.lower()
         type_map = {
             "APPLICATION": "application",

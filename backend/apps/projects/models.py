@@ -5,6 +5,7 @@
 from django.db import models
 from django.conf import settings
 from apps.dictionaries.models import DictionaryItem
+from apps.system_settings.models import ProjectBatch
 
 
 class Project(models.Model):
@@ -46,6 +47,14 @@ class Project(models.Model):
     # 基本信息
     project_no = models.CharField(
         max_length=50, unique=True, verbose_name="项目编号", blank=True
+    )
+    batch = models.ForeignKey(
+        ProjectBatch,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="projects",
+        verbose_name="项目批次",
     )
     year = models.IntegerField(verbose_name="项目年份", default=2025)
     title = models.CharField(max_length=200, verbose_name="项目名称")

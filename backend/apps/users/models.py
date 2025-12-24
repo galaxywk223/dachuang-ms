@@ -20,6 +20,10 @@ class User(AbstractUser):
         TEACHER = "TEACHER", "指导教师"
         EXPERT = "EXPERT", "评审专家"
 
+    class ExpertScope(models.TextChoices):
+        SCHOOL = "SCHOOL", "校级专家"
+        COLLEGE = "COLLEGE", "院级专家"
+
     # 基本信息
     role = models.CharField(
         max_length=20,
@@ -51,6 +55,14 @@ class User(AbstractUser):
     college = models.CharField(max_length=100, blank=True, verbose_name="所属学院")
     department = models.CharField(max_length=100, blank=True, verbose_name="所属部门")
     title = models.CharField(max_length=50, blank=True, verbose_name="职称")
+
+    expert_scope = models.CharField(
+        max_length=20,
+        choices=ExpertScope.choices,
+        blank=True,
+        default=ExpertScope.COLLEGE,
+        verbose_name="专家级别",
+    )
 
     # 扩展字段
     avatar = models.ImageField(
