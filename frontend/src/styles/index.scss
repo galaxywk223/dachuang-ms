@@ -1,3 +1,5 @@
+@use "./variables.scss" as *;
+
 // Global Reset & Base Styles
 *,
 *::before,
@@ -97,4 +99,79 @@ a {
 .fade-enter-from,
 .fade-leave-to {
     opacity: 0;
+}
+
+// -------------------------------------------------------------
+// GLOBAL STANDARDIZATION (Added by Refactoring Task)
+// -------------------------------------------------------------
+
+// 1. Standard Page Container
+// Usage: Wrapper div for every admin/management page
+.page-container,
+.app-container,
+.apply-page,
+.my-projects-page,
+.help-page,
+.change-requests-page,
+.midterm-apply-container,
+.funds-list-page,
+.project-list-page,
+.user-management-page,
+.settings-page,
+.applied-page,
+.drafts-page,
+.pending-page,
+.change-review-page,
+.expert-assignment-container,
+.expert-groups-container,
+.projects-page,
+.achievements-page,
+.review-page,
+.midterm-review-container,
+.admins-page,
+.teacher-management-page,
+.funds-manage-container,
+.statistics-page {
+    padding: 20px !important;
+}
+
+// 2. Standard Card Header Title with Blue Bar
+// Usage: <span class="header-title">Title</span>
+.header-title {
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+    font-weight: 600;
+    color: $slate-800; // Using variable from compilation context? 
+    // Ideally index.scss compiles with variables. But if not, we use literal or CSS var.
+    // Since variables.scss is likely imported in main.ts/vite config or explicitly here?
+    // index.scss import is usually: @import 'variables';
+
+    // Check if variables are available. If index.scss is imported in main.ts directly,
+    // variables might need to be imported at the top of this file.
+    // They are not imported in the current file content, so I will add the import.
+
+    &::before {
+        content: "";
+        display: inline-block;
+        width: 4px;
+        height: 18px;
+        background-color: #486581; // $primary-600 hardcoded in case var not avail
+        background-color: var(--el-color-primary, #486581); // Better usage
+        margin-right: 12px;
+        border-radius: 2px;
+    }
+}
+
+// 3. Standard Card Header Layout
+.main-card {
+    border-radius: 8px !important;
+    border: none;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    // Tailwind shadow-sm equivalent or just shadow="never" from element
+
+    .el-card__header {
+        padding: 16px 20px !important;
+        border-bottom: 1px solid #e2e8f0 !important; // $slate-200
+    }
 }

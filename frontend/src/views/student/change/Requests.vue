@@ -226,6 +226,7 @@ onMounted(() => {
 });
 </script>
 
+<style scoped lang="scss">
 @use "@/styles/variables.scss" as *;
 
 .change-requests-page {
@@ -261,4 +262,5 @@ onMounted(() => {
     display: flex;
     gap: 12px;
 }
+</style>
 

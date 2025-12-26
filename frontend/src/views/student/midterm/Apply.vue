@@ -256,6 +256,7 @@ onMounted(() => {
 })
 </script>
 
+<style scoped lang="scss">
 @use "@/styles/variables.scss" as *;
 
 .midterm-apply-container {
@@ -316,4 +317,5 @@ onMounted(() => {
 .mr-2 {
     margin-right: 8px;
 }
+</style>
 
