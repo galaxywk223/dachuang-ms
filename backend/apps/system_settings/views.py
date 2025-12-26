@@ -185,7 +185,7 @@ class ProjectBatchViewSet(viewsets.ModelViewSet):
             instance.is_current = True
             instance.is_active = True
             instance.save(update_fields=["is_current", "is_active"])
-        elif instance.status in [ProjectBatch.STATUS_REVIEWING, ProjectBatch.STATUS_FINISHED]:
+        elif instance.status == ProjectBatch.STATUS_FINISHED:
             instance.is_current = False
             instance.is_active = True
             instance.save(update_fields=["is_current", "is_active"])
@@ -220,6 +220,14 @@ class ProjectBatchViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"], url_path="set-current")
     def set_current(self, request, pk=None):
         batch = self.get_object()
+        if batch.is_deleted or batch.status in [
+            ProjectBatch.STATUS_FINISHED,
+            ProjectBatch.STATUS_ARCHIVED,
+        ]:
+            return Response(
+                {"code": 400, "message": "当前批次状态不允许设为进行中"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         ProjectBatch.objects.exclude(id=batch.id).update(is_current=False)
         batch.is_current = True
         batch.is_active = True
@@ -249,12 +257,11 @@ class ProjectBatchViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         if instance.status in [
             ProjectBatch.STATUS_ACTIVE,
-            ProjectBatch.STATUS_REVIEWING,
             ProjectBatch.STATUS_FINISHED,
             ProjectBatch.STATUS_ARCHIVED,
         ]:
             return Response(
-                {"code": 400, "message": "当前批次处于进行中/评审中/已结束/已归档状态，禁止删除"},
+                {"code": 400, "message": "当前批次处于进行中/已结束/已归档状态，禁止删除"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         project_exists = Project.objects.filter(batch_id=instance.id).exists()

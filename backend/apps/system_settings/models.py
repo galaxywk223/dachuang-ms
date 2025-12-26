@@ -15,13 +15,11 @@ class ProjectBatch(models.Model):
 
     STATUS_DRAFT = "draft"
     STATUS_ACTIVE = "active"
-    STATUS_REVIEWING = "reviewing"
     STATUS_FINISHED = "finished"
     STATUS_ARCHIVED = "archived"
     STATUS_CHOICES = [
         (STATUS_DRAFT, "草稿"),
         (STATUS_ACTIVE, "进行中"),
-        (STATUS_REVIEWING, "评审中"),
         (STATUS_FINISHED, "已结束"),
         (STATUS_ARCHIVED, "已归档"),
     ]
@@ -29,14 +27,6 @@ class ProjectBatch(models.Model):
     name = models.CharField(max_length=100, verbose_name="批次名称")
     year = models.IntegerField(verbose_name="年度")
     code = models.CharField(max_length=50, unique=True, verbose_name="批次编码")
-    project_level = models.ForeignKey(
-        DictionaryItem,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="batch_project_levels",
-        verbose_name="项目级别",
-    )
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,

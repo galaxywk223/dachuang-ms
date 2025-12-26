@@ -102,7 +102,7 @@ import { Message, Location } from '@element-plus/icons-vue'
         
         .el-icon {
             font-size: 18px;
-            color: $primary-color;
+            color: $primary-600;
         }
     }
 }

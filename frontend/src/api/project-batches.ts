@@ -31,6 +31,13 @@ export function updateProjectBatch(id: number, data: any) {
   });
 }
 
+export function deleteProjectBatch(id: number) {
+  return request({
+    url: `/system-settings/batches/${id}/`,
+    method: "delete",
+  });
+}
+
 export function getProjectBatch(id: number) {
   return request({
     url: `/system-settings/batches/${id}/`,

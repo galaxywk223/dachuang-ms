@@ -5,7 +5,6 @@
 from rest_framework import serializers
 
 from .models import SystemSetting, CertificateSetting, ProjectBatch
-from apps.dictionaries.models import DictionaryItem
 
 
 class SystemSettingSerializer(serializers.ModelSerializer):
@@ -32,11 +31,6 @@ class SystemSettingSerializer(serializers.ModelSerializer):
 
 
 class ProjectBatchSerializer(serializers.ModelSerializer):
-    project_level = serializers.PrimaryKeyRelatedField(
-        queryset=DictionaryItem.objects.filter(dict_type__code="project_level"),
-        allow_null=True,
-        required=False,
-    )
 
     class Meta:
         model = ProjectBatch
@@ -45,7 +39,6 @@ class ProjectBatchSerializer(serializers.ModelSerializer):
             "name",
             "year",
             "code",
-            "project_level",
             "status",
             "is_current",
             "is_active",
@@ -54,6 +47,27 @@ class ProjectBatchSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "created_at", "updated_at", "is_deleted"]
+
+    def validate(self, attrs):
+        instance = getattr(self, "instance", None)
+        new_status = attrs.get("status")
+        if not instance and new_status and new_status != ProjectBatch.STATUS_DRAFT:
+            raise serializers.ValidationError({"status": "新建批次仅允许草稿状态"})
+        if instance and new_status and new_status != instance.status:
+            transitions = {
+                ProjectBatch.STATUS_DRAFT: ProjectBatch.STATUS_ACTIVE,
+                ProjectBatch.STATUS_ACTIVE: ProjectBatch.STATUS_FINISHED,
+                ProjectBatch.STATUS_FINISHED: ProjectBatch.STATUS_ARCHIVED,
+            }
+            expected = transitions.get(instance.status)
+            if expected != new_status:
+                labels = dict(ProjectBatch.STATUS_CHOICES)
+                from_label = labels.get(instance.status, instance.status)
+                to_label = labels.get(new_status, new_status)
+                raise serializers.ValidationError(
+                    {"status": f"批次状态不允许从{from_label}变更为{to_label}"}
+                )
+        return attrs
 
 
 class CertificateSettingSerializer(serializers.ModelSerializer):

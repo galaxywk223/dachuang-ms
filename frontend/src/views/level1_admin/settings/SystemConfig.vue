@@ -28,7 +28,7 @@
       <template v-else>
         <el-alert class="config-tip" type="info" :closable="false" show-icon>
           <template #default>
-            当前配置仅对本批次生效；进行中/评审中仅允许调整日期窗口，已结束或归档为只读。
+            当前配置仅对本批次生效；进行中仅允许调整日期窗口，已结束或归档为只读。
           </template>
         </el-alert>
 
@@ -295,7 +295,6 @@ const batchId = computed(() => {
 const batchStatusOptions = [
   { value: "draft", label: "草稿" },
   { value: "active", label: "进行中" },
-  { value: "reviewing", label: "评审中" },
   { value: "finished", label: "已结束" },
   { value: "archived", label: "已归档" },
 ];
@@ -309,8 +308,6 @@ const getStatusTagType = (status?: string) => {
   switch (status) {
     case "active":
       return "success";
-    case "reviewing":
-      return "warning";
     case "finished":
       return "info";
     case "archived":
@@ -332,9 +329,8 @@ const batchStatusType = computed(() => getStatusTagType(batchInfo.value?.status)
 const isArchived = computed(() => batchInfo.value?.status === "archived");
 const isFinished = computed(() => batchInfo.value?.status === "finished");
 const isActive = computed(() => batchInfo.value?.status === "active");
-const isReviewing = computed(() => batchInfo.value?.status === "reviewing");
 const isReadOnly = computed(() => isArchived.value || isFinished.value);
-const isProcessLocked = computed(() => isReadOnly.value || isActive.value || isReviewing.value);
+const isProcessLocked = computed(() => isReadOnly.value || isActive.value);
 
 const applicationWindow = reactive({ enabled: false, range: [] as string[] });
 const midtermWindow = reactive({ enabled: false, range: [] as string[] });
