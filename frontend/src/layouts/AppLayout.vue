@@ -206,7 +206,7 @@ const appTitle = computed(() => {
 
 const homePath = computed(() => {
     switch(userRole.value) {
-        case 'level1_admin': return '/level1-admin/users/students';
+        case 'level1_admin': return '/level1-admin/statistics';
         case 'level2_admin': return '/level2-admin/projects';
         case 'teacher': return '/teacher/dashboard';
         case 'expert': return '/expert/reviews';
@@ -334,53 +334,55 @@ const currentMenus = computed(() => {
         case 'level1_admin':
 	             return [
                 {
-                    index: 'users',
-                    title: '用户信息管理',
-                    icon: User,
-                    children: [
-                        { index: '/level1-admin/users/students', title: '学生管理' },
-                        { index: '/level1-admin/users/admins', title: '二级管理员管理' },
-                        { index: '/level1-admin/users/teachers', title: '指导教师管理' },
-                        { index: '/level1-admin/users/experts', title: '专家库管理' },
-                    ]
+                    index: '/level1-admin/statistics',
+                    title: '统计概览',
+                    icon: Folder,
                 },
                 {
-                  index: 'projects',
-                  title: '系统项目',
-                  icon: Folder,
+                  index: 'project-review',
+                  title: '项目与审核',
+                  icon: DocumentChecked,
                   children: [
                         { index: '/level1-admin/review/establishment', title: '校级立项审核' },
                         { index: '/level1-admin/review/closure', title: '校级结题审核' },
-                        { index: '/level1-admin/projects/all', title: '系统项目管理' },
-                        { index: '/level1-admin/statistics', title: '统计概览' },
-                        { index: '/level1-admin/funds', title: '经费管理' },
+                        { index: '/level1-admin/change/review', title: '项目异动审核' },
+                        { index: '/level1-admin/projects/all', title: '项目库管理' },
+                  ],
+                },
+                {
+                  index: '/level1-admin/funds',
+                  title: '经费管理',
+                  icon: Folder,
+                },
+                {
+                  index: 'users',
+                  title: '用户与组织',
+                  icon: User,
+                  children: [
+                        { index: '/level1-admin/users/students', title: '学生管理' },
+                        { index: '/level1-admin/users/teachers', title: '指导教师管理' },
+                        { index: '/level1-admin/users/experts', title: '专家库管理' },
+                        { index: '/level1-admin/users/admins', title: '学院管理员管理' },
+                        { index: '/level1-admin/data/colleges', title: '学院信息维护' },
                   ],
                 },
                 {
                   index: 'expert',
-                  title: '专家管理',
+                  title: '专家评审',
                   icon: User,
                   children: [
                         { index: '/level1-admin/expert/groups', title: '校级专家组管理' },
                         { index: '/level1-admin/expert/assignment', title: '校级评审分配' },
                   ],
                 },
-                {
-                  index: 'change',
-                  title: '项目异动',
-                  icon: DocumentAdd,
-                  children: [
-                        { index: '/level1-admin/change/review', title: '异动审核' },
-                      ],
-                    },
 	                {
 	                  index: 'settings',
 	                  title: '系统配置',
 	                  icon: Setting,
 	                  children: [
-	                    { index: '/level1-admin/settings/project-dictionaries', title: '项目参数' },
-                        { index: '/level1-admin/settings/system-config', title: '流程与日期' },
+                        { index: '/level1-admin/settings/batches', title: '批次管理' },
                         { index: '/level1-admin/settings/certificate', title: '结题证书' },
+	                    { index: '/level1-admin/settings/project-dictionaries', title: '项目参数' },
 	                    { index: '/level1-admin/settings/org-dictionaries', title: '组织参数' },
 	                    { index: '/level1-admin/settings/achievement-dictionaries', title: '成果参数' },
 	                    { index: '/level1-admin/settings/other-dictionaries', title: '通用参数' },

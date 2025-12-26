@@ -13,9 +13,26 @@ class ProjectBatch(models.Model):
     项目批次（多批次/多年度）
     """
 
+    STATUS_DRAFT = "draft"
+    STATUS_PUBLISHED = "published"
+    STATUS_RUNNING = "running"
+    STATUS_ARCHIVED = "archived"
+    STATUS_CHOICES = [
+        (STATUS_DRAFT, "草稿"),
+        (STATUS_PUBLISHED, "已发布"),
+        (STATUS_RUNNING, "进行中"),
+        (STATUS_ARCHIVED, "已归档"),
+    ]
+
     name = models.CharField(max_length=100, verbose_name="批次名称")
     year = models.IntegerField(verbose_name="年度")
     code = models.CharField(max_length=50, unique=True, verbose_name="批次编码")
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_DRAFT,
+        verbose_name="批次状态",
+    )
     is_current = models.BooleanField(default=False, verbose_name="是否当前批次")
     is_active = models.BooleanField(default=True, verbose_name="是否启用")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")

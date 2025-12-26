@@ -124,15 +124,33 @@ class ProjectBatchViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response({"code": 200, "message": "获取成功", "data": serializer.data})
 
+    def _sync_batch_status(self, instance):
+        if instance.status == ProjectBatch.STATUS_RUNNING:
+            ProjectBatch.objects.exclude(id=instance.id).update(
+                status=ProjectBatch.STATUS_PUBLISHED, is_current=False
+            )
+            instance.is_current = True
+            instance.is_active = True
+            instance.save(update_fields=["is_current", "is_active"])
+        elif instance.status == ProjectBatch.STATUS_ARCHIVED:
+            instance.is_current = False
+            instance.is_active = False
+            instance.save(update_fields=["is_current", "is_active"])
+        else:
+            if instance.is_current:
+                instance.is_current = False
+                instance.save(update_fields=["is_current"])
+            if not instance.is_active:
+                instance.is_active = True
+                instance.save(update_fields=["is_active"])
+
     def perform_create(self, serializer):
         instance = serializer.save()
-        if instance.is_current:
-            ProjectBatch.objects.exclude(id=instance.id).update(is_current=False)
+        self._sync_batch_status(instance)
 
     def perform_update(self, serializer):
         instance = serializer.save()
-        if instance.is_current:
-            ProjectBatch.objects.exclude(id=instance.id).update(is_current=False)
+        self._sync_batch_status(instance)
 
     @action(detail=False, methods=["get"], url_path="current")
     def current(self, request):
@@ -145,9 +163,13 @@ class ProjectBatchViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"], url_path="set-current")
     def set_current(self, request, pk=None):
         batch = self.get_object()
-        ProjectBatch.objects.exclude(id=batch.id).update(is_current=False)
+        ProjectBatch.objects.exclude(id=batch.id).update(
+            status=ProjectBatch.STATUS_PUBLISHED, is_current=False
+        )
         batch.is_current = True
-        batch.save(update_fields=["is_current"])
+        batch.is_active = True
+        batch.status = ProjectBatch.STATUS_RUNNING
+        batch.save(update_fields=["is_current", "is_active", "status"])
         serializer = self.get_serializer(batch)
         return Response({"code": 200, "message": "设置成功", "data": serializer.data})
 

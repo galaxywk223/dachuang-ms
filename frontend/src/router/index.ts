@@ -29,7 +29,7 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: "",
-        redirect: "/level1-admin/users/students",
+        redirect: "/level1-admin/statistics",
       },
       {
         path: "users/students",
@@ -41,7 +41,7 @@ const routes: RouteRecordRaw[] = [
         path: "users/admins",
         name: "level1-users-admins",
         component: () => import("@/views/level1_admin/users/Admins.vue"),
-        meta: { title: "二级管理员管理" },
+        meta: { title: "学院管理员管理" },
       },
       {
         path: "users/teachers",
@@ -85,7 +85,7 @@ const routes: RouteRecordRaw[] = [
         path: "projects/all",
         name: "level1-projects-all",
         component: () => import("@/views/level1_admin/projects/AllProjects.vue"),
-        meta: { title: "系统项目管理" },
+        meta: { title: "项目库管理" },
       },
       {
         path: "funds",
@@ -130,10 +130,21 @@ const routes: RouteRecordRaw[] = [
         meta: { title: "项目参数", category: "project" },
       },
       {
+        path: "settings/batches",
+        name: "level1-settings-batches",
+        component: () => import("@/views/level1_admin/settings/Batches.vue"),
+        meta: { title: "批次管理" },
+      },
+      {
+        path: "settings/batches/:id",
+        name: "level1-settings-batch-config",
+        component: () => import("@/views/level1_admin/settings/SystemConfig.vue"),
+        meta: { title: "批次配置" },
+      },
+      {
         path: "settings/system-config",
         name: "level1-settings-system-config",
-        component: () => import("@/views/level1_admin/settings/SystemConfig.vue"),
-        meta: { title: "流程与日期" },
+        redirect: "/level1-admin/settings/batches",
       },
       {
         path: "settings/certificate",
@@ -431,7 +442,7 @@ router.beforeEach(async (to, _from, next) => {
     if (userRole === "student") {
       next({ path: "/establishment/apply" });
     } else if (userRole === "level1_admin") {
-      next({ path: "/level1-admin/users/students" });
+      next({ path: "/level1-admin/statistics" });
     } else if (userRole === "level2_admin" || userRole === "admin") {
       next({ path: "/level2-admin/projects" });
     } else if (userRole === "expert") {

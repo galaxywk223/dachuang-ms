@@ -68,6 +68,11 @@ class SystemSettingService:
 
     @staticmethod
     def get_current_batch():
+        current = ProjectBatch.objects.filter(
+            status=ProjectBatch.STATUS_RUNNING, is_active=True
+        ).first()
+        if current:
+            return current
         current = ProjectBatch.objects.filter(is_current=True, is_active=True).first()
         if current:
             return current

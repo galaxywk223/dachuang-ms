@@ -4,285 +4,316 @@
       <template #header>
         <div class="card-header">
           <div class="header-left">
-            <span class="title">流程与日期配置</span>
-            <el-select
-              v-model="selectedBatchId"
-              placeholder="选择批次"
-              size="small"
-              style="width: 220px"
-              :loading="batchLoading"
-              @change="handleBatchChange"
-            >
-              <el-option
-                v-for="item in batches"
-                :key="item.id"
-                :label="`${item.name} (${item.year})`"
-                :value="item.id"
-              />
-            </el-select>
-            <el-button size="small" @click="openBatchDialog">新建批次</el-button>
-            <el-button
-              size="small"
-              type="warning"
-              :disabled="!selectedBatchId || selectedBatchId === currentBatchId"
-              @click="setSelectedCurrent"
-            >
-              设为当前
-            </el-button>
+            <el-button link @click="goBack">返回批次管理</el-button>
+            <span class="title">批次配置</span>
+            <span v-if="batchTitle" class="batch-title">{{ batchTitle }}</span>
+            <el-tag v-if="batchStatusLabel" :type="batchStatusType" effect="light">
+              状态：{{ batchStatusLabel }}
+            </el-tag>
           </div>
-          <el-button type="primary" :loading="savingAll" @click="saveAll">
+          <el-button
+            type="primary"
+            :loading="savingAll"
+            :disabled="!batchId || isArchived"
+            @click="saveAll"
+          >
             保存全部
           </el-button>
         </div>
       </template>
 
-      <el-tabs v-model="activeTab">
-        <el-tab-pane label="申报/中期/结题日期" name="dates">
-          <el-form label-width="160px" class="config-form">
-            <el-form-item label="项目申报时间">
-              <el-switch v-model="applicationWindow.enabled" class="mr-2" />
-              <el-date-picker
-                v-model="applicationWindow.range"
-                type="daterange"
-                range-separator="至"
-                start-placeholder="开始日期"
-                end-placeholder="截止日期"
-                value-format="YYYY-MM-DD"
-              />
-            </el-form-item>
+      <div v-if="!batchId" class="empty-wrap">
+        <el-empty description="请从批次管理进入配置" />
+      </div>
+      <template v-else>
+        <el-alert class="config-tip" type="info" :closable="false" show-icon>
+          <template #default>
+            当前配置仅对本批次生效；进行中仅允许调整日期窗口，归档后为只读。
+          </template>
+        </el-alert>
 
-            <el-form-item label="中期提交时间">
-              <el-switch v-model="midtermWindow.enabled" class="mr-2" />
-              <el-date-picker
-                v-model="midtermWindow.range"
-                type="daterange"
-                range-separator="至"
-                start-placeholder="开始日期"
-                end-placeholder="截止日期"
-                value-format="YYYY-MM-DD"
-              />
-            </el-form-item>
+        <el-tabs v-model="activeTab">
+          <el-tab-pane label="日期配置" name="dates">
+            <el-form label-width="160px" class="config-form">
+              <el-divider content-position="left">申报/中期/结题提交时间</el-divider>
+              <el-form-item label="项目申报时间">
+                <el-switch v-model="applicationWindow.enabled" class="mr-2" :disabled="isArchived" />
+                <el-date-picker
+                  v-model="applicationWindow.range"
+                  type="daterange"
+                  range-separator="至"
+                  start-placeholder="开始日期"
+                  end-placeholder="截止日期"
+                  value-format="YYYY-MM-DD"
+                  :disabled="isArchived"
+                />
+                <div class="form-hint">开启后该批次仅在所选时间范围内允许申报。</div>
+              </el-form-item>
 
-            <el-form-item label="结题提交时间">
-              <el-switch v-model="closureWindow.enabled" class="mr-2" />
-              <el-date-picker
-                v-model="closureWindow.range"
-                type="daterange"
-                range-separator="至"
-                start-placeholder="开始日期"
-                end-placeholder="截止日期"
-                value-format="YYYY-MM-DD"
-              />
-            </el-form-item>
-          </el-form>
-        </el-tab-pane>
+              <el-form-item label="中期提交时间">
+                <el-switch v-model="midtermWindow.enabled" class="mr-2" :disabled="isArchived" />
+                <el-date-picker
+                  v-model="midtermWindow.range"
+                  type="daterange"
+                  range-separator="至"
+                  start-placeholder="开始日期"
+                  end-placeholder="截止日期"
+                  value-format="YYYY-MM-DD"
+                  :disabled="isArchived"
+                />
+                <div class="form-hint">开启后该批次仅在所选时间范围内允许提交中期。</div>
+              </el-form-item>
 
-        <el-tab-pane label="审核时间" name="reviews">
-          <el-form label-width="160px" class="config-form">
-            <el-divider content-position="left">申报审核</el-divider>
-            <el-form-item label="导师审核时间">
-              <el-switch v-model="reviewWindow.application.teacher.enabled" class="mr-2" />
-              <el-date-picker
-                v-model="reviewWindow.application.teacher.range"
-                type="daterange"
-                range-separator="至"
-                start-placeholder="开始日期"
-                end-placeholder="截止日期"
-                value-format="YYYY-MM-DD"
-              />
-            </el-form-item>
-            <el-form-item label="学院审核时间">
-              <el-switch v-model="reviewWindow.application.level2.enabled" class="mr-2" />
-              <el-date-picker
-                v-model="reviewWindow.application.level2.range"
-                type="daterange"
-                range-separator="至"
-                start-placeholder="开始日期"
-                end-placeholder="截止日期"
-                value-format="YYYY-MM-DD"
-              />
-            </el-form-item>
-            <el-form-item label="校级审核时间">
-              <el-switch v-model="reviewWindow.application.level1.enabled" class="mr-2" />
-              <el-date-picker
-                v-model="reviewWindow.application.level1.range"
-                type="daterange"
-                range-separator="至"
-                start-placeholder="开始日期"
-                end-placeholder="截止日期"
-                value-format="YYYY-MM-DD"
-              />
-            </el-form-item>
+              <el-form-item label="结题提交时间">
+                <el-switch v-model="closureWindow.enabled" class="mr-2" :disabled="isArchived" />
+                <el-date-picker
+                  v-model="closureWindow.range"
+                  type="daterange"
+                  range-separator="至"
+                  start-placeholder="开始日期"
+                  end-placeholder="截止日期"
+                  value-format="YYYY-MM-DD"
+                  :disabled="isArchived"
+                />
+                <div class="form-hint">开启后该批次仅在所选时间范围内允许提交结题。</div>
+              </el-form-item>
 
-            <el-divider content-position="left">中期审核</el-divider>
-            <el-form-item label="导师审核时间">
-              <el-switch v-model="reviewWindow.midterm.teacher.enabled" class="mr-2" />
-              <el-date-picker
-                v-model="reviewWindow.midterm.teacher.range"
-                type="daterange"
-                range-separator="至"
-                start-placeholder="开始日期"
-                end-placeholder="截止日期"
-                value-format="YYYY-MM-DD"
-              />
-            </el-form-item>
-            <el-form-item label="学院审核时间">
-              <el-switch v-model="reviewWindow.midterm.level2.enabled" class="mr-2" />
-              <el-date-picker
-                v-model="reviewWindow.midterm.level2.range"
-                type="daterange"
-                range-separator="至"
-                start-placeholder="开始日期"
-                end-placeholder="截止日期"
-                value-format="YYYY-MM-DD"
-              />
-            </el-form-item>
+              <el-divider content-position="left">各角色审核时间</el-divider>
+              <el-divider content-position="left">申报审核</el-divider>
+              <el-form-item label="导师审核时间">
+                <el-switch v-model="reviewWindow.application.teacher.enabled" class="mr-2" :disabled="isArchived" />
+                <el-date-picker
+                  v-model="reviewWindow.application.teacher.range"
+                  type="daterange"
+                  range-separator="至"
+                  start-placeholder="开始日期"
+                  end-placeholder="截止日期"
+                  value-format="YYYY-MM-DD"
+                  :disabled="isArchived"
+                />
+                <div class="form-hint">开启后仅在该时间段允许导师审核申报。</div>
+              </el-form-item>
+              <el-form-item label="学院审核时间">
+                <el-switch v-model="reviewWindow.application.level2.enabled" class="mr-2" :disabled="isArchived" />
+                <el-date-picker
+                  v-model="reviewWindow.application.level2.range"
+                  type="daterange"
+                  range-separator="至"
+                  start-placeholder="开始日期"
+                  end-placeholder="截止日期"
+                  value-format="YYYY-MM-DD"
+                  :disabled="isArchived"
+                />
+                <div class="form-hint">开启后仅在该时间段允许学院审核申报。</div>
+              </el-form-item>
+              <el-form-item label="校级审核时间">
+                <el-switch v-model="reviewWindow.application.level1.enabled" class="mr-2" :disabled="isArchived" />
+                <el-date-picker
+                  v-model="reviewWindow.application.level1.range"
+                  type="daterange"
+                  range-separator="至"
+                  start-placeholder="开始日期"
+                  end-placeholder="截止日期"
+                  value-format="YYYY-MM-DD"
+                  :disabled="isArchived"
+                />
+                <div class="form-hint">开启后仅在该时间段允许校级审核申报。</div>
+              </el-form-item>
 
-            <el-divider content-position="left">结题审核</el-divider>
-            <el-form-item label="导师审核时间">
-              <el-switch v-model="reviewWindow.closure.teacher.enabled" class="mr-2" />
-              <el-date-picker
-                v-model="reviewWindow.closure.teacher.range"
-                type="daterange"
-                range-separator="至"
-                start-placeholder="开始日期"
-                end-placeholder="截止日期"
-                value-format="YYYY-MM-DD"
-              />
-            </el-form-item>
-            <el-form-item label="学院审核时间">
-              <el-switch v-model="reviewWindow.closure.level2.enabled" class="mr-2" />
-              <el-date-picker
-                v-model="reviewWindow.closure.level2.range"
-                type="daterange"
-                range-separator="至"
-                start-placeholder="开始日期"
-                end-placeholder="截止日期"
-                value-format="YYYY-MM-DD"
-              />
-            </el-form-item>
-            <el-form-item label="校级审核时间">
-              <el-switch v-model="reviewWindow.closure.level1.enabled" class="mr-2" />
-              <el-date-picker
-                v-model="reviewWindow.closure.level1.range"
-                type="daterange"
-                range-separator="至"
-                start-placeholder="开始日期"
-                end-placeholder="截止日期"
-                value-format="YYYY-MM-DD"
-              />
-            </el-form-item>
-          </el-form>
-        </el-tab-pane>
+              <el-divider content-position="left">中期审核</el-divider>
+              <el-form-item label="导师审核时间">
+                <el-switch v-model="reviewWindow.midterm.teacher.enabled" class="mr-2" :disabled="isArchived" />
+                <el-date-picker
+                  v-model="reviewWindow.midterm.teacher.range"
+                  type="daterange"
+                  range-separator="至"
+                  start-placeholder="开始日期"
+                  end-placeholder="截止日期"
+                  value-format="YYYY-MM-DD"
+                  :disabled="isArchived"
+                />
+                <div class="form-hint">开启后仅在该时间段允许导师审核中期。</div>
+              </el-form-item>
+              <el-form-item label="学院审核时间">
+                <el-switch v-model="reviewWindow.midterm.level2.enabled" class="mr-2" :disabled="isArchived" />
+                <el-date-picker
+                  v-model="reviewWindow.midterm.level2.range"
+                  type="daterange"
+                  range-separator="至"
+                  start-placeholder="开始日期"
+                  end-placeholder="截止日期"
+                  value-format="YYYY-MM-DD"
+                  :disabled="isArchived"
+                />
+                <div class="form-hint">开启后仅在该时间段允许学院审核中期。</div>
+              </el-form-item>
 
-        <el-tab-pane label="限制与校验" name="limits">
-          <el-form label-width="200px" class="config-form">
-            <el-form-item label="指导教师最大数量">
-              <el-input-number v-model="limitRules.max_advisors" :min="0" />
-            </el-form-item>
-            <el-form-item label="项目成员最大数量">
-              <el-input-number v-model="limitRules.max_members" :min="0" />
-            </el-form-item>
-            <el-form-item label="导师在研项目上限">
-              <el-input-number v-model="limitRules.max_teacher_active" :min="0" />
-            </el-form-item>
-            <el-form-item label="学生作为负责人上限">
-              <el-input-number v-model="limitRules.max_student_active" :min="0" />
-            </el-form-item>
-            <el-form-item label="学生作为成员上限">
-              <el-input-number v-model="limitRules.max_student_member" :min="0" />
-            </el-form-item>
-            <el-form-item label="优秀结题加成数">
-              <el-input-number v-model="limitRules.teacher_excellent_bonus" :min="0" />
-            </el-form-item>
-            <el-form-item label="项目名称查重">
-              <el-switch v-model="limitRules.dedupe_title" />
-            </el-form-item>
-            <el-form-item label="指导教师职称必填">
-              <el-switch v-model="limitRules.advisor_title_required" />
-            </el-form-item>
-            <el-form-item label="学院名额配置(JSON)">
-              <el-input
-                v-model="collegeQuotaText"
-                type="textarea"
-                :rows="4"
-                placeholder='{"CS": 30, "EE": 20}'
-              />
-            </el-form-item>
-          </el-form>
-        </el-tab-pane>
+              <el-divider content-position="left">结题审核</el-divider>
+              <el-form-item label="导师审核时间">
+                <el-switch v-model="reviewWindow.closure.teacher.enabled" class="mr-2" :disabled="isArchived" />
+                <el-date-picker
+                  v-model="reviewWindow.closure.teacher.range"
+                  type="daterange"
+                  range-separator="至"
+                  start-placeholder="开始日期"
+                  end-placeholder="截止日期"
+                  value-format="YYYY-MM-DD"
+                  :disabled="isArchived"
+                />
+                <div class="form-hint">开启后仅在该时间段允许导师审核结题。</div>
+              </el-form-item>
+              <el-form-item label="学院审核时间">
+                <el-switch v-model="reviewWindow.closure.level2.enabled" class="mr-2" :disabled="isArchived" />
+                <el-date-picker
+                  v-model="reviewWindow.closure.level2.range"
+                  type="daterange"
+                  range-separator="至"
+                  start-placeholder="开始日期"
+                  end-placeholder="截止日期"
+                  value-format="YYYY-MM-DD"
+                  :disabled="isArchived"
+                />
+                <div class="form-hint">开启后仅在该时间段允许学院审核结题。</div>
+              </el-form-item>
+              <el-form-item label="校级审核时间">
+                <el-switch v-model="reviewWindow.closure.level1.enabled" class="mr-2" :disabled="isArchived" />
+                <el-date-picker
+                  v-model="reviewWindow.closure.level1.range"
+                  type="daterange"
+                  range-separator="至"
+                  start-placeholder="开始日期"
+                  end-placeholder="截止日期"
+                  value-format="YYYY-MM-DD"
+                  :disabled="isArchived"
+                />
+                <div class="form-hint">开启后仅在该时间段允许校级审核结题。</div>
+              </el-form-item>
+            </el-form>
+          </el-tab-pane>
 
-        <el-tab-pane label="流程设置" name="process">
-          <el-form label-width="200px" class="config-form">
-            <el-form-item label="在研项目允许继续申报">
-              <el-switch v-model="processRules.allow_active_reapply" />
-            </el-form-item>
-            <el-form-item label="审核退回上一级">
-              <el-switch v-model="processRules.reject_to_previous" />
-            </el-form-item>
-            <el-form-item label="结题评审可见立项材料">
-              <el-switch v-model="processRules.show_material_in_closure_review" />
-            </el-form-item>
-            <el-form-item label="导师审核意见最少字数">
-              <el-input-number v-model="reviewRules.teacher_application_comment_min" :min="0" />
-            </el-form-item>
-          </el-form>
-        </el-tab-pane>
-      </el-tabs>
+          <el-tab-pane label="限制与校验" name="limits">
+            <el-form label-width="200px" class="config-form">
+              <el-form-item label="指导教师最大数量">
+                <el-input-number v-model="limitRules.max_advisors" :min="0" :disabled="isArchived" />
+              </el-form-item>
+              <el-form-item label="项目成员最大数量">
+                <el-input-number v-model="limitRules.max_members" :min="0" :disabled="isArchived" />
+              </el-form-item>
+              <el-form-item label="导师在研项目上限">
+                <el-input-number v-model="limitRules.max_teacher_active" :min="0" :disabled="isArchived" />
+              </el-form-item>
+              <el-form-item label="学生作为负责人上限">
+                <el-input-number v-model="limitRules.max_student_active" :min="0" :disabled="isArchived" />
+              </el-form-item>
+              <el-form-item label="学生作为成员上限">
+                <el-input-number v-model="limitRules.max_student_member" :min="0" :disabled="isArchived" />
+              </el-form-item>
+              <el-form-item label="优秀结题加成数">
+                <el-input-number v-model="limitRules.teacher_excellent_bonus" :min="0" :disabled="isArchived" />
+              </el-form-item>
+              <el-form-item label="项目名称查重">
+                <el-switch v-model="limitRules.dedupe_title" :disabled="isArchived" />
+              </el-form-item>
+              <el-form-item label="指导教师职称必填">
+                <el-switch v-model="limitRules.advisor_title_required" :disabled="isArchived" />
+              </el-form-item>
+              <el-form-item label="学院名额配置(JSON)">
+                <el-input
+                  v-model="collegeQuotaText"
+                  type="textarea"
+                  :rows="4"
+                  placeholder='{"CS": 30, "EE": 20}'
+                  :disabled="isArchived"
+                />
+              </el-form-item>
+            </el-form>
+          </el-tab-pane>
+
+          <el-tab-pane label="流程配置" name="process">
+            <el-form label-width="200px" class="config-form">
+              <el-form-item label="在研项目允许继续申报">
+                <el-switch v-model="processRules.allow_active_reapply" :disabled="isProcessLocked" />
+                <div class="form-hint">开启后，已有在研项目的学生仍可提交新申报。</div>
+              </el-form-item>
+              <el-form-item label="审核退回上一级">
+                <el-switch v-model="processRules.reject_to_previous" :disabled="isProcessLocked" />
+                <div class="form-hint">开启后，退回会返回到上一级角色重新审核。</div>
+              </el-form-item>
+              <el-form-item label="结题评审可见立项材料">
+                <el-switch v-model="processRules.show_material_in_closure_review" :disabled="isProcessLocked" />
+                <div class="form-hint">开启后，结题评审可查看立项阶段材料。</div>
+              </el-form-item>
+              <el-form-item label="导师审核意见最少字数">
+                <el-input-number v-model="reviewRules.teacher_application_comment_min" :min="0" :disabled="isProcessLocked" />
+                <div class="form-hint">设置为 0 表示不限制字数。</div>
+              </el-form-item>
+            </el-form>
+          </el-tab-pane>
+        </el-tabs>
+      </template>
     </el-card>
   </div>
-
-  <el-dialog v-model="batchDialogVisible" title="新建批次" width="420px">
-    <el-form :model="batchForm" label-width="90px">
-      <el-form-item label="批次名称">
-        <el-input v-model="batchForm.name" placeholder="如：2025年第一批" />
-      </el-form-item>
-      <el-form-item label="年度">
-        <el-input-number v-model="batchForm.year" :min="2000" :max="2100" />
-      </el-form-item>
-      <el-form-item label="批次编码">
-        <el-input v-model="batchForm.code" placeholder="如：2025-A" />
-      </el-form-item>
-      <el-form-item label="设为当前">
-        <el-switch v-model="batchForm.is_current" />
-      </el-form-item>
-    </el-form>
-    <template #footer>
-      <span class="dialog-footer">
-        <el-button @click="batchDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="batchSaving" @click="submitBatch">
-          创建
-        </el-button>
-      </span>
-    </template>
-  </el-dialog>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted } from "vue";
+import { reactive, ref, computed, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { getEffectiveSettings, updateSettingByCode } from "@/api/system-settings";
-import {
-  listProjectBatches,
-  createProjectBatch,
-  setCurrentBatch,
-} from "@/api/project-batches";
+import { getProjectBatch } from "@/api/project-batches";
+
+const route = useRoute();
+const router = useRouter();
 
 const activeTab = ref("dates");
 const savingAll = ref(false);
-const batchLoading = ref(false);
-const batches = ref<any[]>([]);
-const selectedBatchId = ref<number | null>(null);
-const currentBatchId = ref<number | null>(null);
-const batchDialogVisible = ref(false);
-const batchSaving = ref(false);
-const batchForm = reactive({
-  name: "",
-  year: new Date().getFullYear(),
-  code: "",
-  is_current: true,
-  is_active: true,
+const batchInfo = ref<any | null>(null);
+
+const batchId = computed(() => {
+  const raw = route.params.id || route.query.batch_id;
+  if (!raw) return null;
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
 });
+
+const batchStatusOptions = [
+  { value: "draft", label: "草稿" },
+  { value: "published", label: "已发布" },
+  { value: "running", label: "进行中" },
+  { value: "archived", label: "已归档" },
+];
+
+const getStatusLabel = (status?: string) => {
+  const match = batchStatusOptions.find((item) => item.value === status);
+  return match ? match.label : "未知";
+};
+
+const getStatusTagType = (status?: string) => {
+  switch (status) {
+    case "running":
+      return "success";
+    case "published":
+      return "warning";
+    case "archived":
+      return "info";
+    default:
+      return "";
+  }
+};
+
+const batchTitle = computed(() => {
+  if (!batchInfo.value) return "";
+  return `${batchInfo.value.name} (${batchInfo.value.year})`;
+});
+
+const batchStatusLabel = computed(() =>
+  batchInfo.value ? getStatusLabel(batchInfo.value.status) : ""
+);
+const batchStatusType = computed(() => getStatusTagType(batchInfo.value?.status));
+const isArchived = computed(() => batchInfo.value?.status === "archived");
+const isRunning = computed(() => batchInfo.value?.status === "running");
+const isProcessLocked = computed(() => isArchived.value || isRunning.value);
 
 const applicationWindow = reactive({ enabled: false, range: [] as string[] });
 const midtermWindow = reactive({ enabled: false, range: [] as string[] });
@@ -329,13 +360,32 @@ const reviewRules = reactive({
 
 const collegeQuotaText = ref("{}");
 
+const goBack = () => {
+  router.push({ name: "level1-settings-batches" });
+};
+
 const fillRange = (target: { range: string[] }, data: any) => {
   target.range = data.start && data.end ? [data.start, data.end] : [];
 };
 
-const loadSettings = async () => {
+const loadBatch = async () => {
+  if (!batchId.value) {
+    batchInfo.value = null;
+    return;
+  }
   try {
-    const res: any = await getEffectiveSettings(selectedBatchId.value);
+    const res: any = await getProjectBatch(batchId.value);
+    batchInfo.value = res.data || res;
+  } catch (error) {
+    console.error(error);
+    ElMessage.error("加载批次失败");
+  }
+};
+
+const loadSettings = async () => {
+  if (!batchId.value) return;
+  try {
+    const res: any = await getEffectiveSettings(batchId.value);
     const data = res.data || res;
 
     const app = data.APPLICATION_WINDOW || {};
@@ -413,6 +463,7 @@ const buildReviewWindowPayload = () => {
 };
 
 const saveAll = async () => {
+  if (!batchId.value) return;
   savingAll.value = true;
   try {
     let quota = {};
@@ -427,58 +478,58 @@ const saveAll = async () => {
       updateSettingByCode(
         "APPLICATION_WINDOW",
         {
-        name: "项目申报时间设置",
-        data: toWindowPayload(applicationWindow),
+          name: "项目申报时间设置",
+          data: toWindowPayload(applicationWindow),
         },
-        selectedBatchId.value
+        batchId.value
       ),
       updateSettingByCode(
         "MIDTERM_WINDOW",
         {
-        name: "中期提交时间设置",
-        data: toWindowPayload(midtermWindow),
+          name: "中期提交时间设置",
+          data: toWindowPayload(midtermWindow),
         },
-        selectedBatchId.value
+        batchId.value
       ),
       updateSettingByCode(
         "CLOSURE_WINDOW",
         {
-        name: "结题提交时间设置",
-        data: toWindowPayload(closureWindow),
+          name: "结题提交时间设置",
+          data: toWindowPayload(closureWindow),
         },
-        selectedBatchId.value
+        batchId.value
       ),
       updateSettingByCode(
         "REVIEW_WINDOW",
         {
-        name: "审核时间设置",
-        data: buildReviewWindowPayload(),
+          name: "审核时间设置",
+          data: buildReviewWindowPayload(),
         },
-        selectedBatchId.value
+        batchId.value
       ),
       updateSettingByCode(
         "LIMIT_RULES",
         {
-        name: "限制与校验规则",
-        data: { ...limitRules, college_quota: quota },
+          name: "限制与校验规则",
+          data: { ...limitRules, college_quota: quota },
         },
-        selectedBatchId.value
+        batchId.value
       ),
       updateSettingByCode(
         "PROCESS_RULES",
         {
-        name: "流程规则配置",
-        data: { ...processRules },
+          name: "流程规则配置",
+          data: { ...processRules },
         },
-        selectedBatchId.value
+        batchId.value
       ),
       updateSettingByCode(
         "REVIEW_RULES",
         {
-        name: "审核规则配置",
-        data: { ...reviewRules },
+          name: "审核规则配置",
+          data: { ...reviewRules },
         },
-        selectedBatchId.value
+        batchId.value
       ),
     ];
 
@@ -493,82 +544,15 @@ const saveAll = async () => {
   }
 };
 
-const loadBatches = async () => {
-  batchLoading.value = true;
-  try {
-    const res: any = await listProjectBatches();
-    const data = res.data || res;
-    batches.value = Array.isArray(data) ? data : [];
-    const current = batches.value.find((item) => item.is_current);
-    currentBatchId.value = current?.id || null;
-    selectedBatchId.value = currentBatchId.value || batches.value[0]?.id || null;
-  } catch (error) {
-    console.error(error);
-    ElMessage.error("加载批次失败");
-  } finally {
-    batchLoading.value = false;
-  }
-};
-
-const handleBatchChange = () => {
-  loadSettings();
-};
-
-const openBatchDialog = () => {
-  batchForm.name = "";
-  batchForm.year = new Date().getFullYear();
-  batchForm.code = "";
-  batchForm.is_current = true;
-  batchDialogVisible.value = true;
-};
-
-const submitBatch = async () => {
-  if (!batchForm.name || !batchForm.code) {
-    ElMessage.warning("请填写批次名称和编码");
-    return;
-  }
-  batchSaving.value = true;
-  try {
-    const res: any = await createProjectBatch({ ...batchForm });
-    if (res.code === 200 || res.code === 201) {
-      ElMessage.success("批次创建成功");
-      batchDialogVisible.value = false;
-      await loadBatches();
-      if (batchForm.is_current) {
-        currentBatchId.value = batches.value.find((item) => item.is_current)?.id || null;
-      }
-      if (!selectedBatchId.value && currentBatchId.value) {
-        selectedBatchId.value = currentBatchId.value;
-      }
-      await loadSettings();
-    }
-  } catch (error) {
-    console.error(error);
-    ElMessage.error("批次创建失败");
-  } finally {
-    batchSaving.value = false;
-  }
-};
-
-const setSelectedCurrent = async () => {
-  if (!selectedBatchId.value) return;
-  try {
-    const res: any = await setCurrentBatch(selectedBatchId.value);
-    if (res.code === 200) {
-      ElMessage.success("已设置为当前批次");
-      await loadBatches();
-      await loadSettings();
-    }
-  } catch (error) {
-    console.error(error);
-    ElMessage.error("设置当前批次失败");
-  }
-};
-
-onMounted(async () => {
-  await loadBatches();
-  await loadSettings();
-});
+watch(
+  () => batchId.value,
+  async (id) => {
+    if (!id) return;
+    await loadBatch();
+    await loadSettings();
+  },
+  { immediate: true }
+);
 </script>
 
 <style scoped>
@@ -595,10 +579,25 @@ onMounted(async () => {
   font-size: 16px;
   font-weight: 600;
 }
+.batch-title {
+  color: #475569;
+  font-size: 13px;
+}
 .config-form {
   max-width: 880px;
 }
 .mr-2 {
   margin-right: 8px;
+}
+.config-tip {
+  margin-bottom: 16px;
+}
+.form-hint {
+  margin-top: 6px;
+  color: #6b7280;
+  font-size: 12px;
+}
+.empty-wrap {
+  padding: 24px 0;
 }
 </style>

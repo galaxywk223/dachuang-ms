@@ -38,6 +38,7 @@ class ProjectBatchSerializer(serializers.ModelSerializer):
             "name",
             "year",
             "code",
+            "status",
             "is_current",
             "is_active",
             "created_at",
