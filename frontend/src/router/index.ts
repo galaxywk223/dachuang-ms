@@ -124,51 +124,54 @@ const routes: RouteRecordRaw[] = [
         meta: { title: "项目异动审核" },
       },
       {
-        path: "settings/project-dictionaries",
-        name: "level1-settings-project-dictionaries",
-        component: () => import("@/views/level1_admin/settings/SystemDictionaries.vue"),
-        meta: { title: "项目参数", category: "project" },
-      },
-      {
-        path: "settings/batches",
-        name: "level1-settings-batches",
-        component: () => import("@/views/level1_admin/settings/Batches.vue"),
-        meta: { title: "批次管理" },
-      },
-      {
-        path: "settings/batches/:id",
-        name: "level1-settings-batch-config",
-        component: () => import("@/views/level1_admin/settings/SystemConfig.vue"),
-        meta: { title: "批次配置" },
-      },
-      {
-        path: "settings/system-config",
-        name: "level1-settings-system-config",
+        path: "settings",
+        component: () => import("@/layouts/BlankLayout.vue"), // Use a simple pass-through layout
+        meta: { title: "系统配置" },
         redirect: "/level1-admin/settings/batches",
-      },
-      {
-        path: "settings/certificate",
-        name: "level1-settings-certificate",
-        component: () => import("@/views/level1_admin/settings/CertificateSettings.vue"),
-        meta: { title: "结题证书" },
-      },
-      {
-        path: "settings/org-dictionaries",
-        name: "level1-settings-org-dictionaries",
-        component: () => import("@/views/level1_admin/settings/SystemDictionaries.vue"),
-        meta: { title: "组织参数", category: "org" },
-      },
-      {
-        path: "settings/achievement-dictionaries",
-        name: "level1-settings-achievement-dictionaries",
-        component: () => import("@/views/level1_admin/settings/SystemDictionaries.vue"),
-        meta: { title: "成果参数", category: "achievement" },
-      },
-      {
-        path: "settings/other-dictionaries",
-        name: "level1-settings-other-dictionaries",
-        component: () => import("@/views/level1_admin/settings/SystemDictionaries.vue"),
-        meta: { title: "通用参数", category: "other" },
+        children: [
+            {
+                path: "batches",
+                name: "level1-settings-batches",
+                component: () => import("@/views/level1_admin/settings/Batches.vue"),
+                meta: { title: "批次管理" },
+            },
+            {
+                path: "batches/:id",
+                name: "level1-settings-batch-config",
+                component: () => import("@/views/level1_admin/settings/SystemConfig.vue"),
+                meta: { title: "批次配置" },
+            },
+            {
+                path: "certificate",
+                name: "level1-settings-certificate",
+                component: () => import("@/views/level1_admin/settings/CertificateSettings.vue"),
+                meta: { title: "结题证书" },
+            },
+            {
+                path: "project-dictionaries",
+                name: "level1-settings-project-dictionaries",
+                component: () => import("@/views/level1_admin/settings/SystemDictionaries.vue"),
+                meta: { title: "项目参数", category: "project" },
+            },
+            {
+                path: "org-dictionaries",
+                name: "level1-settings-org-dictionaries",
+                component: () => import("@/views/level1_admin/settings/SystemDictionaries.vue"),
+                meta: { title: "组织参数", category: "org" },
+            },
+            {
+                path: "achievement-dictionaries",
+                name: "level1-settings-achievement-dictionaries",
+                component: () => import("@/views/level1_admin/settings/SystemDictionaries.vue"),
+                meta: { title: "成果参数", category: "achievement" },
+            },
+            {
+                path: "other-dictionaries",
+                name: "level1-settings-other-dictionaries",
+                component: () => import("@/views/level1_admin/settings/SystemDictionaries.vue"),
+                meta: { title: "通用参数", category: "other" },
+            },
+        ]
       },
     ],
   },

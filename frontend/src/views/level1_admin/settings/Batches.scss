@@ -1,0 +1,30 @@
+@use "@/styles/variables.scss" as *;
+
+// .batch-page and .main-card styles handled globally or can be added later if specific overrides needed.
+
+
+.card-header {
+    // Global styles might handle this if used correctly, 
+    // but usually we define flex behavior here or use utility classes.
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+// .header-title is global now.
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px; // Use gap instead of margins on children
+}
+
+// Utility overrides or specific components
+.el-select {
+    width: 140px;
+}

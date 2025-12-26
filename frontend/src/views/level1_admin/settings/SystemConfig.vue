@@ -541,31 +541,36 @@ const saveAll = async () => {
         },
         batchId.value
       ),
-      updateSettingByCode(
-        "LIMIT_RULES",
-        {
-          name: "限制与校验规则",
-          data: { ...limitRules, college_quota: quota },
-        },
-        batchId.value
-      ),
-      updateSettingByCode(
-        "PROCESS_RULES",
-        {
-          name: "流程规则配置",
-          data: { ...processRules },
-        },
-        batchId.value
-      ),
-      updateSettingByCode(
-        "REVIEW_RULES",
-        {
-          name: "审核规则配置",
-          data: { ...reviewRules },
-        },
-        batchId.value
-      ),
     ];
+
+    if (!isProcessLocked.value) {
+      payloads.push(
+        updateSettingByCode(
+          "LIMIT_RULES",
+          {
+            name: "限制与校验规则",
+            data: { ...limitRules, college_quota: quota },
+          },
+          batchId.value
+        ),
+        updateSettingByCode(
+          "PROCESS_RULES",
+          {
+            name: "流程规则配置",
+            data: { ...processRules },
+          },
+          batchId.value
+        ),
+        updateSettingByCode(
+          "REVIEW_RULES",
+          {
+            name: "审核规则配置",
+            data: { ...reviewRules },
+          },
+          batchId.value
+        )
+      );
+    }
 
     await Promise.all(payloads);
     ElMessage.success("保存成功");

@@ -11,7 +11,7 @@
               v-model="statusFilter"
               placeholder="状态筛选"
               size="default"
-              style="width: 140px; margin-right: 12px"
+
               @change="handleFilterChange"
             >
               <el-option label="全部状态" value="" />
@@ -398,42 +398,5 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables.scss" as *;
-
-.batch-page {
-  padding: 20px;
-}
-
-.main-card {
-  border-radius: 8px;
-  :deep(.el-card__header) {
-      padding: 16px 20px;
-      font-weight: 600;
-      border-bottom: 1px solid $color-border-light;
-  }
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.header-left {
-    display: flex;
-    align-items: center;
-}
-
-.header-title {
-    font-size: 16px;
-    color: $slate-800;
-}
-
-.header-actions {
-    display: flex;
-    align-items: center;
-}
-    
-.mr-1 { margin-right: 4px; }
-.ml-6 { margin-left: 6px; }
+@use "./Batches.scss";
 </style>
