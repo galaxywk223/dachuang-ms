@@ -39,6 +39,11 @@ DEFAULT_SETTINGS = {
             "level1": {"enabled": False, "start": "", "end": ""},
         },
     },
+    "EXPERT_REVIEW_WINDOW": {
+        "enabled": False,
+        "start": "",
+        "end": "",
+    },
     "LIMIT_RULES": {
         "max_advisors": 2,
         "max_members": 5,
@@ -68,15 +73,21 @@ class SystemSettingService:
 
     @staticmethod
     def get_current_batch():
-        current = ProjectBatch.objects.filter(
-            status=ProjectBatch.STATUS_RUNNING, is_active=True
+        base_qs = ProjectBatch.objects.filter(is_deleted=False)
+        current = base_qs.filter(
+            status=ProjectBatch.STATUS_ACTIVE, is_active=True
         ).first()
         if current:
             return current
-        current = ProjectBatch.objects.filter(is_current=True, is_active=True).first()
+        current = base_qs.filter(is_current=True, is_active=True).first()
         if current:
             return current
-        return ProjectBatch.objects.filter(is_active=True).order_by("-year", "-id").first()
+        return (
+            base_qs.filter(is_active=True)
+            .exclude(status=ProjectBatch.STATUS_ARCHIVED)
+            .order_by("-year", "-id")
+            .first()
+        )
 
     @staticmethod
     def get_setting(code, default=None, batch=None):

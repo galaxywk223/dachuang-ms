@@ -4,6 +4,7 @@ import request from "@/utils/request";
  * 字典条目类型
  */
 export interface DictionaryItem {
+  id?: number;
   value: string;
   label: string;
   extra_data?: any;

@@ -100,4 +100,4 @@ class DictionaryItemSimpleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DictionaryItem
-        fields = ["value", "label", "extra_data"]
+        fields = ["id", "value", "label", "extra_data"]

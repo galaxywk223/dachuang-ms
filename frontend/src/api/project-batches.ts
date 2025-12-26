@@ -1,9 +1,10 @@
 import request from "@/utils/request";
 
-export function listProjectBatches() {
+export function listProjectBatches(params?: Record<string, any>) {
   return request({
     url: "/system-settings/batches/",
     method: "get",
+    params,
   });
 }
 
@@ -40,6 +41,12 @@ export function getProjectBatch(id: number) {
 export function setCurrentBatch(id: number) {
   return request({
     url: `/system-settings/batches/${id}/set-current/`,
+    method: "post",
+  });
+}
+export function restoreProjectBatch(id: number) {
+  return request({
+    url: `/system-settings/batches/${id}/restore/`,
     method: "post",
   });
 }

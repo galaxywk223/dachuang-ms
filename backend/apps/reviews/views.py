@@ -109,6 +109,18 @@ class ReviewViewSet(viewsets.ModelViewSet):
         closure_rating = serializer.validated_data.get("closure_rating")
         reject_to = serializer.validated_data.get("reject_to")
 
+        if user.role == "EXPERT":
+            ok, msg = SystemSettingService.check_window(
+                "EXPERT_REVIEW_WINDOW",
+                timezone.now().date(),
+                batch=review.project.batch,
+            )
+            if not ok:
+                return Response(
+                    {"code": 400, "message": msg},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         ok, msg = SystemSettingService.check_review_window(
             review.review_type,
             review.review_level,
@@ -178,6 +190,18 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 {"code": 400, "message": "该审核记录尚未处理"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        if user.role == "EXPERT":
+            ok, msg = SystemSettingService.check_window(
+                "EXPERT_REVIEW_WINDOW",
+                timezone.now().date(),
+                batch=review.project.batch,
+            )
+            if not ok:
+                return Response(
+                    {"code": 400, "message": msg},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         ok, msg = SystemSettingService.check_review_window(
             review.review_type,
@@ -333,6 +357,15 @@ class ReviewViewSet(viewsets.ModelViewSet):
             if not self.check_review_permission(review, request.user):
                 failed.append({"id": review.id, "reason": "无权限"})
                 continue
+            if request.user.role == "EXPERT":
+                ok, msg = SystemSettingService.check_window(
+                    "EXPERT_REVIEW_WINDOW",
+                    timezone.now().date(),
+                    batch=review.project.batch,
+                )
+                if not ok:
+                    failed.append({"id": review.id, "reason": msg or "不在评审时间范围内"})
+                    continue
             ok, msg = SystemSettingService.check_review_window(
                 review.review_type,
                 review.review_level,

@@ -7,7 +7,7 @@
              <span class="header-title">批次管理</span>
            </div>
            <div class="header-actions">
-            <el-select
+           <el-select
               v-model="statusFilter"
               placeholder="状态筛选"
               size="default"
@@ -22,6 +22,11 @@
                 :value="option.value"
               />
             </el-select>
+            <el-switch
+              v-model="showArchived"
+              active-text="显示归档/回收站"
+              @change="handleFilterChange"
+            />
             <el-button type="primary" @click="openBatchDialog">
               <el-icon class="mr-1"><Plus /></el-icon>新建批次
             </el-button>
@@ -39,6 +44,11 @@
         <el-table-column prop="name" label="批次名称" min-width="160" />
         <el-table-column prop="year" label="年度" width="100" />
         <el-table-column prop="code" label="编码" min-width="120" />
+        <el-table-column label="项目级别" min-width="120">
+          <template #default="{ row }">
+            {{ getProjectLevelLabel(row.project_level) }}
+          </template>
+        </el-table-column>
         <el-table-column label="状态" width="120">
           <template #default="{ row }">
             <el-tag :type="getStatusTagType(row.status)" effect="light">
@@ -48,7 +58,7 @@
         </el-table-column>
         <el-table-column label="当前" width="100" align="center">
           <template #default="{ row }">
-            <el-tag v-if="row.status === 'running'" type="success" effect="light">
+            <el-tag v-if="row.status === 'active'" type="success" effect="light">
               进行中
             </el-tag>
             <span v-else>-</span>
@@ -65,10 +75,18 @@
             <el-button
               type="warning"
               link
-              :disabled="row.status === 'running'"
+              :disabled="row.status === 'active'"
               @click="setRunning(row)"
             >
               设为进行中
+            </el-button>
+            <el-button
+              v-if="row.status === 'archived' || row.is_deleted"
+              type="success"
+              link
+              @click="restoreBatch(row)"
+            >
+              恢复
             </el-button>
             <el-button type="info" link @click="openStatusDialog(row)">更改状态</el-button>
           </template>
@@ -94,6 +112,16 @@
               :key="option.value"
               :label="option.label"
               :value="option.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="项目级别">
+          <el-select v-model="batchForm.project_level" placeholder="选择项目级别" style="width: 100%">
+            <el-option
+              v-for="item in projectLevelOptions"
+              :key="item.id"
+              :label="item.label"
+              :value="item.id"
             />
           </el-select>
         </el-form-item>
@@ -142,12 +170,16 @@ import {
   listProjectBatches,
   createProjectBatch,
   updateProjectBatch,
+  restoreProjectBatch,
 } from "@/api/project-batches";
+import { getDictionaryByCode, DICT_CODES } from "@/api/dictionary";
 
 const router = useRouter();
 const batchLoading = ref(false);
 const batches = ref<any[]>([]);
 const statusFilter = ref("");
+const showArchived = ref(false);
+const projectLevelOptions = ref<any[]>([]);
 
 const batchDialogVisible = ref(false);
 const batchSaving = ref(false);
@@ -156,6 +188,7 @@ const batchForm = reactive({
   year: new Date().getFullYear(),
   code: "",
   status: "draft",
+  project_level: null as number | null,
 });
 
 const statusDialogVisible = ref(false);
@@ -167,8 +200,9 @@ const statusForm = reactive({
 
 const batchStatusOptions = [
   { value: "draft", label: "草稿" },
-  { value: "published", label: "已发布" },
-  { value: "running", label: "进行中" },
+  { value: "active", label: "进行中" },
+  { value: "reviewing", label: "评审中" },
+  { value: "finished", label: "已结束" },
   { value: "archived", label: "已归档" },
 ];
 
@@ -179,10 +213,12 @@ const getStatusLabel = (status?: string) => {
 
 const getStatusTagType = (status?: string) => {
   switch (status) {
-    case "running":
+    case "active":
       return "success";
-    case "published":
+    case "reviewing":
       return "warning";
+    case "finished":
+      return "info";
     case "archived":
       return "info";
     default:
@@ -207,10 +243,19 @@ const formatDate = (value?: string) => {
   return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
 };
 
+const getProjectLevelLabel = (value?: number | null) => {
+  if (!value) return "-";
+  const match = projectLevelOptions.value.find((item) => item.id === value);
+  return match ? match.label : "-";
+};
+
 const loadBatches = async () => {
   batchLoading.value = true;
   try {
-    const res: any = await listProjectBatches();
+    const res: any = await listProjectBatches({
+      include_archived: showArchived.value ? 1 : 0,
+      include_deleted: showArchived.value ? 1 : 0,
+    });
     const data = res.data || res;
     batches.value = Array.isArray(data) ? data : [];
   } catch (error) {
@@ -222,7 +267,7 @@ const loadBatches = async () => {
 };
 
 const handleFilterChange = () => {
-  // no-op for now; computed handles filtering.
+  loadBatches();
 };
 
 const openBatchDialog = () => {
@@ -230,6 +275,7 @@ const openBatchDialog = () => {
   batchForm.year = new Date().getFullYear();
   batchForm.code = "";
   batchForm.status = "draft";
+  batchForm.project_level = null;
   batchDialogVisible.value = true;
 };
 
@@ -269,12 +315,32 @@ const setRunning = async (row: any) => {
     return;
   }
   try {
-    await updateProjectBatch(row.id, { status: "running" });
+    await updateProjectBatch(row.id, { status: "active" });
     ElMessage.success("已设为进行中");
     await loadBatches();
   } catch (error) {
     console.error(error);
     ElMessage.error("设置失败");
+  }
+};
+
+const restoreBatch = async (row: any) => {
+  try {
+    await ElMessageBox.confirm("确认恢复该批次并移出归档？", "确认操作", {
+      type: "warning",
+      confirmButtonText: "继续",
+      cancelButtonText: "取消",
+    });
+  } catch {
+    return;
+  }
+  try {
+    await restoreProjectBatch(row.id);
+    ElMessage.success("批次已恢复");
+    await loadBatches();
+  } catch (error) {
+    console.error(error);
+    ElMessage.error("恢复失败");
   }
 };
 
@@ -287,13 +353,15 @@ const openStatusDialog = (row: any) => {
 const submitStatusChange = async () => {
   if (!statusForm.id) return;
   const status = statusForm.status;
-  const shouldConfirm = status === "running" || status === "archived";
+  const shouldConfirm = status === "active" || status === "archived" || status === "finished";
   if (shouldConfirm) {
     try {
       const message =
-        status === "running"
+        status === "active"
           ? "切换为进行中会变更当前批次，是否继续？"
-          : "归档后该批次将进入只读状态，是否继续？";
+          : status === "finished"
+            ? "该操作将使批次进入只读状态，是否继续？"
+            : "归档后该批次将进入只读状态，是否继续？";
       await ElMessageBox.confirm(message, "确认操作", {
         type: "warning",
         confirmButtonText: "继续",
@@ -318,10 +386,18 @@ const submitStatusChange = async () => {
 };
 
 onMounted(async () => {
+  try {
+    const res: any = await getDictionaryByCode(DICT_CODES.PROJECT_LEVEL);
+    const data = res.data || res;
+    projectLevelOptions.value = data?.items || [];
+  } catch (error) {
+    console.error(error);
+  }
   await loadBatches();
 });
 </script>
 
+<style scoped lang="scss">
 @use "@/styles/variables.scss" as *;
 
 .batch-page {
@@ -359,4 +435,5 @@ onMounted(async () => {
 }
     
 .mr-1 { margin-right: 4px; }
-
+.ml-6 { margin-left: 6px; }
+</style>

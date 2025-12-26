@@ -5,6 +5,7 @@
 from rest_framework import serializers
 
 from .models import SystemSetting, CertificateSetting, ProjectBatch
+from apps.dictionaries.models import DictionaryItem
 
 
 class SystemSettingSerializer(serializers.ModelSerializer):
@@ -31,6 +32,12 @@ class SystemSettingSerializer(serializers.ModelSerializer):
 
 
 class ProjectBatchSerializer(serializers.ModelSerializer):
+    project_level = serializers.PrimaryKeyRelatedField(
+        queryset=DictionaryItem.objects.filter(dict_type__code="project_level"),
+        allow_null=True,
+        required=False,
+    )
+
     class Meta:
         model = ProjectBatch
         fields = [
@@ -38,13 +45,15 @@ class ProjectBatchSerializer(serializers.ModelSerializer):
             "name",
             "year",
             "code",
+            "project_level",
             "status",
             "is_current",
             "is_active",
+            "is_deleted",
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "updated_at", "is_deleted"]
 
 
 class CertificateSettingSerializer(serializers.ModelSerializer):

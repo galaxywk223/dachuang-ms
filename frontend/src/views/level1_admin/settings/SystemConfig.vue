@@ -14,7 +14,7 @@
           <el-button
             type="primary"
             :loading="savingAll"
-            :disabled="!batchId || isArchived"
+            :disabled="!batchId || isReadOnly"
             @click="saveAll"
           >
             保存全部
@@ -28,7 +28,7 @@
       <template v-else>
         <el-alert class="config-tip" type="info" :closable="false" show-icon>
           <template #default>
-            当前配置仅对本批次生效；进行中仅允许调整日期窗口，归档后为只读。
+            当前配置仅对本批次生效；进行中/评审中仅允许调整日期窗口，已结束或归档为只读。
           </template>
         </el-alert>
 
@@ -37,7 +37,7 @@
             <el-form label-width="160px" class="config-form">
               <el-divider content-position="left">申报/中期/结题提交时间</el-divider>
               <el-form-item label="项目申报时间">
-                <el-switch v-model="applicationWindow.enabled" class="mr-2" :disabled="isArchived" />
+                <el-switch v-model="applicationWindow.enabled" class="mr-2" :disabled="isReadOnly" />
                 <el-date-picker
                   v-model="applicationWindow.range"
                   type="daterange"
@@ -45,13 +45,13 @@
                   start-placeholder="开始日期"
                   end-placeholder="截止日期"
                   value-format="YYYY-MM-DD"
-                  :disabled="isArchived"
+                  :disabled="isReadOnly"
                 />
                 <div class="form-hint">开启后该批次仅在所选时间范围内允许申报。</div>
               </el-form-item>
 
               <el-form-item label="中期提交时间">
-                <el-switch v-model="midtermWindow.enabled" class="mr-2" :disabled="isArchived" />
+                <el-switch v-model="midtermWindow.enabled" class="mr-2" :disabled="isReadOnly" />
                 <el-date-picker
                   v-model="midtermWindow.range"
                   type="daterange"
@@ -59,13 +59,13 @@
                   start-placeholder="开始日期"
                   end-placeholder="截止日期"
                   value-format="YYYY-MM-DD"
-                  :disabled="isArchived"
+                  :disabled="isReadOnly"
                 />
                 <div class="form-hint">开启后该批次仅在所选时间范围内允许提交中期。</div>
               </el-form-item>
 
               <el-form-item label="结题提交时间">
-                <el-switch v-model="closureWindow.enabled" class="mr-2" :disabled="isArchived" />
+                <el-switch v-model="closureWindow.enabled" class="mr-2" :disabled="isReadOnly" />
                 <el-date-picker
                   v-model="closureWindow.range"
                   type="daterange"
@@ -73,15 +73,30 @@
                   start-placeholder="开始日期"
                   end-placeholder="截止日期"
                   value-format="YYYY-MM-DD"
-                  :disabled="isArchived"
+                  :disabled="isReadOnly"
                 />
                 <div class="form-hint">开启后该批次仅在所选时间范围内允许提交结题。</div>
+              </el-form-item>
+
+              <el-divider content-position="left">专家评审时间</el-divider>
+              <el-form-item label="专家评审时间">
+                <el-switch v-model="expertReviewWindow.enabled" class="mr-2" :disabled="isReadOnly" />
+                <el-date-picker
+                  v-model="expertReviewWindow.range"
+                  type="daterange"
+                  range-separator="至"
+                  start-placeholder="开始日期"
+                  end-placeholder="截止日期"
+                  value-format="YYYY-MM-DD"
+                  :disabled="isReadOnly"
+                />
+                <div class="form-hint">开启后仅在该时间段允许专家组评审。</div>
               </el-form-item>
 
               <el-divider content-position="left">各角色审核时间</el-divider>
               <el-divider content-position="left">申报审核</el-divider>
               <el-form-item label="导师审核时间">
-                <el-switch v-model="reviewWindow.application.teacher.enabled" class="mr-2" :disabled="isArchived" />
+                <el-switch v-model="reviewWindow.application.teacher.enabled" class="mr-2" :disabled="isReadOnly" />
                 <el-date-picker
                   v-model="reviewWindow.application.teacher.range"
                   type="daterange"
@@ -89,12 +104,12 @@
                   start-placeholder="开始日期"
                   end-placeholder="截止日期"
                   value-format="YYYY-MM-DD"
-                  :disabled="isArchived"
+                  :disabled="isReadOnly"
                 />
                 <div class="form-hint">开启后仅在该时间段允许导师审核申报。</div>
               </el-form-item>
               <el-form-item label="学院审核时间">
-                <el-switch v-model="reviewWindow.application.level2.enabled" class="mr-2" :disabled="isArchived" />
+                <el-switch v-model="reviewWindow.application.level2.enabled" class="mr-2" :disabled="isReadOnly" />
                 <el-date-picker
                   v-model="reviewWindow.application.level2.range"
                   type="daterange"
@@ -102,12 +117,12 @@
                   start-placeholder="开始日期"
                   end-placeholder="截止日期"
                   value-format="YYYY-MM-DD"
-                  :disabled="isArchived"
+                  :disabled="isReadOnly"
                 />
                 <div class="form-hint">开启后仅在该时间段允许学院审核申报。</div>
               </el-form-item>
               <el-form-item label="校级审核时间">
-                <el-switch v-model="reviewWindow.application.level1.enabled" class="mr-2" :disabled="isArchived" />
+                <el-switch v-model="reviewWindow.application.level1.enabled" class="mr-2" :disabled="isReadOnly" />
                 <el-date-picker
                   v-model="reviewWindow.application.level1.range"
                   type="daterange"
@@ -115,14 +130,14 @@
                   start-placeholder="开始日期"
                   end-placeholder="截止日期"
                   value-format="YYYY-MM-DD"
-                  :disabled="isArchived"
+                  :disabled="isReadOnly"
                 />
                 <div class="form-hint">开启后仅在该时间段允许校级审核申报。</div>
               </el-form-item>
 
               <el-divider content-position="left">中期审核</el-divider>
               <el-form-item label="导师审核时间">
-                <el-switch v-model="reviewWindow.midterm.teacher.enabled" class="mr-2" :disabled="isArchived" />
+                <el-switch v-model="reviewWindow.midterm.teacher.enabled" class="mr-2" :disabled="isReadOnly" />
                 <el-date-picker
                   v-model="reviewWindow.midterm.teacher.range"
                   type="daterange"
@@ -130,12 +145,12 @@
                   start-placeholder="开始日期"
                   end-placeholder="截止日期"
                   value-format="YYYY-MM-DD"
-                  :disabled="isArchived"
+                  :disabled="isReadOnly"
                 />
                 <div class="form-hint">开启后仅在该时间段允许导师审核中期。</div>
               </el-form-item>
               <el-form-item label="学院审核时间">
-                <el-switch v-model="reviewWindow.midterm.level2.enabled" class="mr-2" :disabled="isArchived" />
+                <el-switch v-model="reviewWindow.midterm.level2.enabled" class="mr-2" :disabled="isReadOnly" />
                 <el-date-picker
                   v-model="reviewWindow.midterm.level2.range"
                   type="daterange"
@@ -143,14 +158,14 @@
                   start-placeholder="开始日期"
                   end-placeholder="截止日期"
                   value-format="YYYY-MM-DD"
-                  :disabled="isArchived"
+                  :disabled="isReadOnly"
                 />
                 <div class="form-hint">开启后仅在该时间段允许学院审核中期。</div>
               </el-form-item>
 
               <el-divider content-position="left">结题审核</el-divider>
               <el-form-item label="导师审核时间">
-                <el-switch v-model="reviewWindow.closure.teacher.enabled" class="mr-2" :disabled="isArchived" />
+                <el-switch v-model="reviewWindow.closure.teacher.enabled" class="mr-2" :disabled="isReadOnly" />
                 <el-date-picker
                   v-model="reviewWindow.closure.teacher.range"
                   type="daterange"
@@ -158,12 +173,12 @@
                   start-placeholder="开始日期"
                   end-placeholder="截止日期"
                   value-format="YYYY-MM-DD"
-                  :disabled="isArchived"
+                  :disabled="isReadOnly"
                 />
                 <div class="form-hint">开启后仅在该时间段允许导师审核结题。</div>
               </el-form-item>
               <el-form-item label="学院审核时间">
-                <el-switch v-model="reviewWindow.closure.level2.enabled" class="mr-2" :disabled="isArchived" />
+                <el-switch v-model="reviewWindow.closure.level2.enabled" class="mr-2" :disabled="isReadOnly" />
                 <el-date-picker
                   v-model="reviewWindow.closure.level2.range"
                   type="daterange"
@@ -171,12 +186,12 @@
                   start-placeholder="开始日期"
                   end-placeholder="截止日期"
                   value-format="YYYY-MM-DD"
-                  :disabled="isArchived"
+                  :disabled="isReadOnly"
                 />
                 <div class="form-hint">开启后仅在该时间段允许学院审核结题。</div>
               </el-form-item>
               <el-form-item label="校级审核时间">
-                <el-switch v-model="reviewWindow.closure.level1.enabled" class="mr-2" :disabled="isArchived" />
+                <el-switch v-model="reviewWindow.closure.level1.enabled" class="mr-2" :disabled="isReadOnly" />
                 <el-date-picker
                   v-model="reviewWindow.closure.level1.range"
                   type="daterange"
@@ -184,7 +199,7 @@
                   start-placeholder="开始日期"
                   end-placeholder="截止日期"
                   value-format="YYYY-MM-DD"
-                  :disabled="isArchived"
+                  :disabled="isReadOnly"
                 />
                 <div class="form-hint">开启后仅在该时间段允许校级审核结题。</div>
               </el-form-item>
@@ -194,28 +209,28 @@
           <el-tab-pane label="限制与校验" name="limits">
             <el-form label-width="200px" class="config-form">
               <el-form-item label="指导教师最大数量">
-                <el-input-number v-model="limitRules.max_advisors" :min="0" :disabled="isArchived" />
+                <el-input-number v-model="limitRules.max_advisors" :min="0" :disabled="isProcessLocked" />
               </el-form-item>
               <el-form-item label="项目成员最大数量">
-                <el-input-number v-model="limitRules.max_members" :min="0" :disabled="isArchived" />
+                <el-input-number v-model="limitRules.max_members" :min="0" :disabled="isProcessLocked" />
               </el-form-item>
               <el-form-item label="导师在研项目上限">
-                <el-input-number v-model="limitRules.max_teacher_active" :min="0" :disabled="isArchived" />
+                <el-input-number v-model="limitRules.max_teacher_active" :min="0" :disabled="isProcessLocked" />
               </el-form-item>
               <el-form-item label="学生作为负责人上限">
-                <el-input-number v-model="limitRules.max_student_active" :min="0" :disabled="isArchived" />
+                <el-input-number v-model="limitRules.max_student_active" :min="0" :disabled="isProcessLocked" />
               </el-form-item>
               <el-form-item label="学生作为成员上限">
-                <el-input-number v-model="limitRules.max_student_member" :min="0" :disabled="isArchived" />
+                <el-input-number v-model="limitRules.max_student_member" :min="0" :disabled="isProcessLocked" />
               </el-form-item>
               <el-form-item label="优秀结题加成数">
-                <el-input-number v-model="limitRules.teacher_excellent_bonus" :min="0" :disabled="isArchived" />
+                <el-input-number v-model="limitRules.teacher_excellent_bonus" :min="0" :disabled="isProcessLocked" />
               </el-form-item>
               <el-form-item label="项目名称查重">
-                <el-switch v-model="limitRules.dedupe_title" :disabled="isArchived" />
+                <el-switch v-model="limitRules.dedupe_title" :disabled="isProcessLocked" />
               </el-form-item>
               <el-form-item label="指导教师职称必填">
-                <el-switch v-model="limitRules.advisor_title_required" :disabled="isArchived" />
+                <el-switch v-model="limitRules.advisor_title_required" :disabled="isProcessLocked" />
               </el-form-item>
               <el-form-item label="学院名额配置(JSON)">
                 <el-input
@@ -223,7 +238,7 @@
                   type="textarea"
                   :rows="4"
                   placeholder='{"CS": 30, "EE": 20}'
-                  :disabled="isArchived"
+                  :disabled="isProcessLocked"
                 />
               </el-form-item>
             </el-form>
@@ -279,8 +294,9 @@ const batchId = computed(() => {
 
 const batchStatusOptions = [
   { value: "draft", label: "草稿" },
-  { value: "published", label: "已发布" },
-  { value: "running", label: "进行中" },
+  { value: "active", label: "进行中" },
+  { value: "reviewing", label: "评审中" },
+  { value: "finished", label: "已结束" },
   { value: "archived", label: "已归档" },
 ];
 
@@ -291,10 +307,12 @@ const getStatusLabel = (status?: string) => {
 
 const getStatusTagType = (status?: string) => {
   switch (status) {
-    case "running":
+    case "active":
       return "success";
-    case "published":
+    case "reviewing":
       return "warning";
+    case "finished":
+      return "info";
     case "archived":
       return "info";
     default:
@@ -312,12 +330,16 @@ const batchStatusLabel = computed(() =>
 );
 const batchStatusType = computed(() => getStatusTagType(batchInfo.value?.status));
 const isArchived = computed(() => batchInfo.value?.status === "archived");
-const isRunning = computed(() => batchInfo.value?.status === "running");
-const isProcessLocked = computed(() => isArchived.value || isRunning.value);
+const isFinished = computed(() => batchInfo.value?.status === "finished");
+const isActive = computed(() => batchInfo.value?.status === "active");
+const isReviewing = computed(() => batchInfo.value?.status === "reviewing");
+const isReadOnly = computed(() => isArchived.value || isFinished.value);
+const isProcessLocked = computed(() => isReadOnly.value || isActive.value || isReviewing.value);
 
 const applicationWindow = reactive({ enabled: false, range: [] as string[] });
 const midtermWindow = reactive({ enabled: false, range: [] as string[] });
 const closureWindow = reactive({ enabled: false, range: [] as string[] });
+const expertReviewWindow = reactive({ enabled: false, range: [] as string[] });
 
 const reviewWindow = reactive({
   application: {
@@ -399,6 +421,10 @@ const loadSettings = async () => {
     const clo = data.CLOSURE_WINDOW || {};
     closureWindow.enabled = !!clo.enabled;
     fillRange(closureWindow, clo);
+
+    const expert = data.EXPERT_REVIEW_WINDOW || {};
+    expertReviewWindow.enabled = !!expert.enabled;
+    fillRange(expertReviewWindow, expert);
 
     const review = data.REVIEW_WINDOW || {};
     const appReview = review.application || {};
@@ -496,6 +522,14 @@ const saveAll = async () => {
         {
           name: "结题提交时间设置",
           data: toWindowPayload(closureWindow),
+        },
+        batchId.value
+      ),
+      updateSettingByCode(
+        "EXPERT_REVIEW_WINDOW",
+        {
+          name: "专家评审时间设置",
+          data: toWindowPayload(expertReviewWindow),
         },
         batchId.value
       ),
