@@ -545,4 +545,4 @@ onMounted(async () => {
 });
 </script>
 
-<style scoped lang="scss" src="../../level1_admin/users/TeacherManagement.scss"></style>
+<style scoped lang="scss" src="../../level1/users/TeacherManagement.scss"></style>

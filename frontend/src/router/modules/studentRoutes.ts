@@ -115,7 +115,7 @@ export const studentRoutes: RouteRecordRaw[] = [
       {
         path: "help",
         name: "help",
-        component: () => import("@/views/Help.vue"),
+        component: () => import("@/views/common/Help.vue"),
         meta: { title: "使用帮助" },
       },
     ],

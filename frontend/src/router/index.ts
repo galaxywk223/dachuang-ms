@@ -21,7 +21,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/login",
     name: "login",
-    component: () => import("@/views/Login.vue"),
+    component: () => import("@/views/common/Login.vue"),
     meta: { requiresAuth: false },
   },
   ...adminRoutes,
@@ -70,7 +70,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: "funds",
         name: "teacher-funds",
-        component: () => import("@/views/admin/Funds.vue"),
+        component: () => import("@/views/admin/shared/Funds.vue"),
         meta: { title: "经费管理" },
       },
     ],
@@ -78,7 +78,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/:pathMatch(.*)*",
     name: "not-found",
-    component: () => import("@/views/NotFound.vue"),
+    component: () => import("@/views/common/NotFound.vue"),
   },
 ];
 
