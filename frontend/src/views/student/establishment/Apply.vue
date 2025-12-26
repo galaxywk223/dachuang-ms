@@ -5,7 +5,6 @@
         <div class="card-header">
           <div class="header-left">
              <span class="header-title">基本信息填报</span>
-             <el-tag size="small" type="primary" effect="plain" round class="ml-3">项目申报</el-tag>
           </div>
           <div class="header-actions">
              <el-button @click="handleReset">重置</el-button>
@@ -30,29 +29,37 @@
           <div class="section-header">
               <span class="section-title">基本信息</span>
           </div>
-          <el-row :gutter="32">
-            <el-col :span="8">
+          <el-row :gutter="24">
+            <!-- Full Width Title for prominence -->
+            <el-col :span="24">
+               <el-form-item label="项目名称" prop="title">
+                 <el-input v-model="formData.title" placeholder="请输入项目全称" />
+               </el-form-item>
+            </el-col>
+            
+            <el-col :span="12">
               <el-form-item label="项目来源" prop="source">
                 <el-select v-model="formData.source" placeholder="请选择" class="w-full">
                   <el-option v-for="item in sourceOptions" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
               </el-form-item>
             </el-col>
-            <el-col :span="8">
+            <el-col :span="12">
               <el-form-item label="项目级别" prop="level">
                 <el-select v-model="formData.level" placeholder="请选择" class="w-full">
                   <el-option v-for="item in levelOptions" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
               </el-form-item>
             </el-col>
-            <el-col :span="8">
+            
+            <el-col :span="12">
               <el-form-item label="项目类别" prop="category">
                 <el-select v-model="formData.category" placeholder="请选择" class="w-full">
                   <el-option v-for="item in categoryOptions" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
               </el-form-item>
             </el-col>
-            <el-col :span="8">
+            <el-col :span="12">
               <el-form-item label="重点领域" prop="is_key_field">
                  <el-cascader
                     v-model="keyFieldCascaderValue"
@@ -64,12 +71,23 @@
                  />
               </el-form-item>
             </el-col>
-            <el-col :span="8">
-               <el-form-item label="项目名称" prop="title">
-                 <el-input v-model="formData.title" placeholder="请输入项目全称" />
-               </el-form-item>
+
+            <el-col :span="12">
+              <el-form-item label="所属学院" prop="college">
+                <el-select v-model="formData.college" placeholder="请选择" class="w-full">
+                  <el-option v-for="item in collegeOptions" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+              </el-form-item>
             </el-col>
-             <el-col :span="8">
+            <el-col :span="12">
+              <el-form-item label="所属专业" prop="major_code">
+                <el-select v-model="formData.major_code" placeholder="请选择" class="w-full" filterable>
+                  <el-option v-for="item in majorOptions" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+
+             <el-col :span="12">
                <el-form-item label="经费预算" prop="budget">
                  <el-input-number 
                    v-model="formData.budget" 
@@ -78,22 +96,9 @@
                    controls-position="right"
                    disabled 
                    placeholder="自动生成"
+                   style="width: 100%"
                  />
                </el-form-item>
-            </el-col>
-            <el-col :span="8">
-              <el-form-item label="所属学院" prop="college">
-                <el-select v-model="formData.college" placeholder="请选择" class="w-full">
-                  <el-option v-for="item in collegeOptions" :key="item.value" :label="item.label" :value="item.value" />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="8">
-              <el-form-item label="所属专业" prop="major_code">
-                <el-select v-model="formData.major_code" placeholder="请选择" class="w-full" filterable>
-                  <el-option v-for="item in majorOptions" :key="item.value" :label="item.label" :value="item.value" />
-                </el-select>
-              </el-form-item>
             </el-col>
           </el-row>
         </div>
@@ -103,26 +108,23 @@
           <div class="section-header">
               <span class="section-title">负责人信息</span>
           </div>
-          <el-row :gutter="32">
-            <el-col :span="8">
+          <el-row :gutter="24">
+            <el-col :span="12">
               <el-form-item label="负责人姓名">
                 <el-input v-model="currentUser.name" disabled class="is-disabled-soft" />
               </el-form-item>
             </el-col>
-            <el-col :span="8">
+            <el-col :span="12">
               <el-form-item label="负责人学号">
                 <el-input v-model="currentUser.student_id" disabled class="is-disabled-soft" />
               </el-form-item>
             </el-col>
-            <el-col :span="8">
-               <!-- Empty for alignment -->
-            </el-col>
-            <el-col :span="8">
+            <el-col :span="12">
               <el-form-item label="联系电话" prop="leader_contact">
                 <el-input v-model="formData.leader_contact" placeholder="手机号" />
               </el-form-item>
             </el-col>
-            <el-col :span="8">
+            <el-col :span="12">
               <el-form-item label="电子邮箱" prop="leader_email">
                 <el-input v-model="formData.leader_email" placeholder="邮箱" />
               </el-form-item>
@@ -136,14 +138,14 @@
               <span class="section-title">指导教师</span>
           </div>
           <div class="dynamic-input-row">
-            <el-row :gutter="12">
-               <el-col :span="3">
-                 <el-select v-model="newAdvisor.order" placeholder="次序" style="width: 100%">
+            <el-row :gutter="16" class="mb-3">
+               <el-col :span="4">
+                 <el-select v-model="newAdvisor.order" placeholder="指导次序" style="width: 100%">
                    <el-option label="第一指导老师" :value="1" />
                    <el-option label="第二指导老师" :value="2" />
                  </el-select>
                </el-col>
-               <el-col :span="5">
+               <el-col :span="8">
                  <el-input 
                     v-model="newAdvisor.job_number" 
                     placeholder="工号 (回车查询)" 
@@ -155,18 +157,25 @@
                     </template>
                  </el-input>
                </el-col>
-               <el-col :span="4">
+               <el-col :span="6">
                  <el-input v-model="newAdvisor.name" placeholder="姓名" disabled />
                </el-col>
-               <el-col :span="4">
+               <el-col :span="6">
                   <!-- Display Title Label if possible, or just code -->
                  <el-input v-model="newAdvisor.title" placeholder="职称" disabled />
                </el-col>
-               <el-col :span="6">
-                 <el-input v-model="newAdvisor.email" placeholder="邮箱" />
+            </el-row>
+            <el-row :gutter="16">
+               <el-col :span="10">
+                 <el-input v-model="newAdvisor.email" placeholder="电子邮箱" />
                </el-col>
-               <el-col :span="2">
-                 <el-button type="primary" plain @click="handleAddNewAdvisor" style="width: 100%">添加</el-button>
+               <el-col :span="10">
+                 <el-input v-model="newAdvisor.contact" placeholder="联系电话 (选填)" />
+               </el-col>
+               <el-col :span="4">
+                 <el-button type="primary" plain @click="handleAddNewAdvisor" style="width: 100%">
+                    <el-icon class="mr-1"><Plus /></el-icon> 添加
+                 </el-button>
                </el-col>
             </el-row>
           </div>
@@ -210,8 +219,8 @@
               <span class="section-title">项目成员</span>
           </div>
            <div class="dynamic-input-row">
-            <el-row :gutter="12">
-               <el-col :span="8">
+            <el-row :gutter="16">
+               <el-col :span="10">
                  <el-input 
                     v-model="newMember.student_id" 
                     placeholder="成员学号 (回车查询)" 
@@ -223,11 +232,13 @@
                     </template>
                  </el-input>
                </el-col>
-               <el-col :span="8">
+               <el-col :span="10">
                  <el-input v-model="newMember.name" placeholder="成员姓名" disabled />
                </el-col>
-               <el-col :span="8">
-                 <el-button type="primary" plain @click="handleAddNewMember" style="width: 100%">添加成员</el-button>
+               <el-col :span="4">
+                 <el-button type="primary" plain @click="handleAddNewMember" style="width: 100%">
+                    <el-icon class="mr-1"><Plus /></el-icon> 添加成员
+                 </el-button>
                </el-col>
             </el-row>
           </div>
@@ -291,7 +302,7 @@
                       class="expected-count"
                     />
                     <el-button type="primary" plain @click="addExpectedResult">
-                      添加
+                      <el-icon class="mr-1"><Plus /></el-icon> 添加
                     </el-button>
                   </div>
                   <el-table
@@ -380,7 +391,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from "vue";
 import { ElMessage, type FormInstance, type UploadUserFile } from "element-plus";
-import { Download, Search, Upload } from "@element-plus/icons-vue";
+import { Download, Search, Upload, Plus } from "@element-plus/icons-vue";
 import { getUsers } from "@/api/user-admin";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionary";
@@ -977,166 +988,5 @@ watch(() => userStore.user, (newUser) => {
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables.scss" as *;
-
-.form-container {
-  background: white;
-  border-radius: $radius-lg;
-  box-shadow: $shadow-sm;
-  border: 1px solid $color-border-light;
-  overflow: hidden;
-}
-
-.page-header {
-  padding: 16px 24px;
-  border-bottom: 1px solid $slate-100;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  
-  .title-bar {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      
-      .title {
-          font-size: 16px;
-          font-weight: 600;
-          color: $slate-800;
-          position: relative;
-          padding-left: 14px;
-          
-          &::before {
-              content: '';
-              position: absolute;
-              left: 0;
-              top: 50%;
-              transform: translateY(-50%);
-              width: 4px;
-              height: 16px;
-              background: $primary-600;
-              border-radius: 2px;
-          }
-      }
-  }
-}
-
-.main-form {
-    padding: 32px;
-}
-
-.form-section {
-  margin-bottom: 40px;
-  
-  &:last-child {
-    margin-bottom: 0;
-  }
-  
-  .section-header {
-      margin-bottom: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px dashed $slate-200;
-      padding-bottom: 8px;
-      
-      .section-title {
-          font-size: 15px;
-          font-weight: 600;
-          color: $slate-700;
-      }
-  }
-}
-
-.w-full { width: 100%; }
-
-.expected-grid {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.expected-select {
-  width: 260px;
-}
-
-.expected-count {
-  width: 140px;
-}
-
-.dynamic-input-row {
-  background: $slate-50;
-  padding: 16px;
-  border-radius: $radius-md;
-  border: 1px dashed $slate-200;
-  margin-bottom: 12px;
-}
-
-.empty-text {
-  color: $slate-400;
-  font-size: 13px;
-  text-align: center;
-  padding: 8px 0;
-}
-
-.link-download {
-  color: $primary-600;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  text-decoration: none;
-  font-weight: 500;
-  font-size: 14px;
-  
-  &:hover { text-decoration: underline; }
-}
-
-.upload-wrapper {
-    display: flex;
-    align-items: flex-start;
-    gap: 24px;
-}
-
-.upload-inline {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-.upl.form-tip {
-  font-size: 12px;
-  color: #909399;
-  margin-top: 4px;
-}
-
-.attachment-container {
-    display: flex;
-    flex-direction: column;
-    
-    .actions-row {
-        display: flex;
-        align-items: center;
-        margin-bottom: 8px;
-        
-        .upload-demo {
-            margin-right: 16px;
-        }
-        
-        .download-section {
-            display: flex;
-            align-items: center;
-        }
-    }
-}
-.upload-tip {
-    font-size: 12px;
-    color: $slate-400;
-    margin-top: 8px;
-    line-height: 1.4;
-}
-
-.download-trigger {
-    padding-top: 6px; // Slightly offset to align with button text baseline roughly if needed, or keeping top aligned
-}
-
+@use "./Apply.scss";
 </style>

@@ -1,18 +1,6 @@
 @use "@/styles/variables.scss" as *;
 
-.apply-page {
-    padding: 20px;
-}
-
-.main-card {
-    border-radius: 8px;
-
-    :deep(.el-card__header) {
-        padding: 16px 20px;
-        font-weight: 600;
-        border-bottom: 1px solid $color-border-light;
-    }
-}
+// Removed global style overrides handled by index.scss
 
 .card-header {
     display: flex;
@@ -23,11 +11,6 @@
 .header-left {
     display: flex;
     align-items: center;
-}
-
-.header-title {
-    font-size: 16px;
-    color: $slate-800;
 }
 
 .header-actions {
@@ -42,21 +25,36 @@
 // Form specific styles
 .form-section {
     padding: 24px 0;
-    border-bottom: 1px dashed $slate-200;
+    // border-bottom: 1px dashed $slate-200; // Remove dashed border between sections for cleaner look, or keep it subtle?
+    // Let's keep a subtle divider but maybe not dashed?
+    border-bottom: 1px solid $slate-100;
 
     &.no-border {
         border-bottom: none;
     }
 
     .section-header {
-        margin-bottom: 24px;
-        padding-left: 12px;
-        border-left: 4px solid $primary-500;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
 
         .section-title {
-            font-size: 16px;
+            font-size: 15px; // Slightly smaller than main title
             font-weight: 600;
             color: $slate-800;
+            position: relative;
+            padding-right: 12px;
+
+            // Optional: No side bar, just text
+        }
+
+        // Optional: Add a line after the title
+        &::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background-color: $slate-200;
+            margin-left: 12px;
         }
     }
 }
