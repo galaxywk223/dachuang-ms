@@ -353,6 +353,7 @@
                             action="#" 
                             :auto-upload="false"
                             :on-change="handleFileChange"
+                            :on-remove="handleFileRemove"
                             :limit="1"
                             v-model:file-list="fileList"
                             accept=".pdf"
@@ -442,7 +443,7 @@ interface FormDataState {
   level: string;
   category: string;
   is_key_field: boolean | string;
-  key_field_code: string;
+  key_domain_code: string;
   college: string;
   budget: number;
   major_code: string;
@@ -463,7 +464,7 @@ const formData = reactive<FormDataState>({
   level: "",
   category: "",
   is_key_field: false,
-  key_field_code: "",
+  key_domain_code: "",
   college: "",
   budget: 0,
   major_code: "",
@@ -528,7 +529,18 @@ const rules = {
   major_code: [{ required: true, message: "必选项", trigger: "change" }],
   expected_results: [{ required: true, message: "必填项", trigger: "blur" }],
   description: [{ required: true, message: "必填项", trigger: "blur" }],
-  attachment_file: [{ required: true, message: "请上传申请书", trigger: "change" }]
+  attachment_file: [
+    {
+      validator: (_rule: any, _value: any, callback: any) => {
+        if (fileList.value.length > 0) {
+          callback();
+        } else {
+          callback(new Error("请上传申请书"));
+        }
+      },
+      trigger: "change",
+    },
+  ],
 };
 
 // Dicts
@@ -550,7 +562,6 @@ const keyFieldCascaderOptions = computed(() => {
     label: opt.label
   }));
 
-  // Fix: If no children, add a disabled placeholder so the submenu still appears
   if (keyChildren.length === 0) {
       keyChildren = [{
           value: '',
@@ -575,19 +586,17 @@ const keyFieldCascaderOptions = computed(() => {
 const keyFieldCascaderValue = computed({
   get: () => {
     if (!formData.is_key_field) return ['GENERAL'];
-    // If it's a key field project but no code selected yet, return just ['KEY'] (although cascader usually wants full path)
-    return formData.key_field_code ? ['KEY', formData.key_field_code] : ['KEY'];
+    return formData.key_domain_code ? ['KEY', formData.key_domain_code] : ['KEY'];
   },
   set: (val: string[]) => {
     if (!val || val.length === 0) return;
     if (val[0] === 'GENERAL') {
       formData.is_key_field = false;
-      formData.key_field_code = ''; 
+      formData.key_domain_code = ''; 
     } else if (val[0] === 'KEY') {
       formData.is_key_field = true;
-      // If user selected a child, it will be in val[1]
       if (val.length > 1) {
-        formData.key_field_code = val[1];
+        formData.key_domain_code = val[1];
       }
     }
   }
@@ -760,6 +769,10 @@ const handleFileChange = (file: any) => {
   formRef.value?.validateField('attachment_file');
 };
 
+const handleFileRemove = () => {
+  formData.attachment_file = null;
+};
+
 // Submit Logic
 const handleSaveOrSubmit = async (isDraft: boolean) => {
     if (!formRef.value) return;
@@ -930,6 +943,13 @@ const loadData = async (id: number) => {
             
             // Handle Boolean Key Field
             formData.is_key_field = !!data.is_key_field;
+            formData.key_domain_code = data.key_domain_code || data.key_field_code || "";
+
+            const proposalUrl = data.proposal_file_url || data.attachment_file_url || "";
+            const proposalName = data.proposal_file_name || data.attachment_file_name || "申请书.pdf";
+            fileList.value = proposalUrl
+              ? [{ name: proposalName, url: proposalUrl, status: "success", uid: "existing" }]
+              : [];
 
             if (Array.isArray(data.advisors_info) && data.advisors_info.length > 0) {
                 formData.advisors = data.advisors_info.map((adh: any, index: number) => ({

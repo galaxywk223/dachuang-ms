@@ -302,14 +302,26 @@ const routes: RouteRecordRaw[] = [
       {
         path: "midterm",
         name: "midterm",
-        redirect: "/midterm/apply",
+        redirect: "/midterm/list",
         meta: { title: "中期检查" },
         children: [
+          {
+            path: "list",
+            name: "midterm-list",
+            component: () => import("@/views/student/midterm/List.vue"),
+            meta: { title: "提交报告" },
+          },
           {
             path: "apply",
             name: "midterm-apply",
             component: () => import("@/views/student/midterm/Apply.vue"),
-            meta: { title: "提交报告" },
+            meta: { title: "中期报告" },
+          },
+          {
+            path: "drafts",
+            name: "midterm-drafts",
+            component: () => import("@/views/student/midterm/Drafts.vue"),
+            meta: { title: "草稿箱" },
           },
         ],
       },

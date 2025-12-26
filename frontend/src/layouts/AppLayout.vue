@@ -68,6 +68,16 @@
                </el-breadcrumb-item>
             </template>
           </el-breadcrumb>
+          <div class="current-batch">
+            <span class="batch-label">当前批次</span>
+            <el-tag
+              :type="currentBatch ? 'success' : 'info'"
+              effect="light"
+              size="small"
+            >
+              {{ currentBatch ? currentBatchLabel : "暂无进行中批次" }}
+            </el-tag>
+          </div>
         </div>
 
         <div class="header-right">
@@ -163,7 +173,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, reactive, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user';
 import { ElMessageBox, ElMessage } from 'element-plus';
@@ -172,8 +182,8 @@ import {
 	  QuestionFilled, Bell, ArrowDown, 
 	  SwitchButton,
 	  Expand, Fold, Lock, Setting, Folder, User
-	} from '@element-plus/icons-vue';
-import { reactive } from 'vue';
+} from '@element-plus/icons-vue';
+import { getCurrentBatch } from '@/api/project-batches';
 
 const route = useRoute();
 const router = useRouter();
@@ -186,6 +196,14 @@ const hasUnread = ref(false);
 const userRole = computed(() => String(userStore.user?.role || localStorage.getItem('user_role') || 'student').toLowerCase());
 const userName = computed(() => userStore.user?.real_name || (userRole.value === 'student' ? '学生用户' : '管理员'));
 const userInitials = computed(() => userName.value?.[0] || 'U');
+
+const currentBatch = ref<any | null>(null);
+const currentBatchLabel = computed(() => {
+    if (!currentBatch.value) return '';
+    const name = currentBatch.value.name || '';
+    const year = currentBatch.value.year ? `(${currentBatch.value.year})` : '';
+    return `${name}${year}`;
+});
 
 // Role-based helper classes
 const roleClass = computed(() => {
@@ -219,6 +237,20 @@ const breadcrumbs = computed(() => {
   return route.matched.filter(item => item.meta && item.meta.title && item.path !== '/' && item.path !== '/admin' && item.path !== '/level1-admin');
 });
 
+const loadCurrentBatch = async () => {
+  try {
+    const res: any = await getCurrentBatch();
+    const data = res.data || res;
+    if (data && data.status === 'active') {
+      currentBatch.value = data;
+      return;
+    }
+  } catch (error) {
+    console.error("加载当前批次失败", error);
+  }
+  currentBatch.value = null;
+};
+
 // Definition of Menus
 const currentMenus = computed(() => {
     switch (userRole.value) {
@@ -239,7 +271,8 @@ const currentMenus = computed(() => {
                     title: '中期检查',
                     icon: DocumentChecked,
                     children: [
-                        { index: '/midterm/apply', title: '提交报告' }
+                        { index: '/midterm/list', title: '提交报告' },
+                        { index: '/midterm/drafts', title: '草稿箱' }
                     ]
                 },
                 {
@@ -512,6 +545,17 @@ const resetPasswordForm = () => {
         passwordFormRef.value.resetFields();
     }
 };
+
+onMounted(async () => {
+  await loadCurrentBatch();
+});
+
+watch(
+  () => route.path,
+  async () => {
+    await loadCurrentBatch();
+  }
+);
 </script>
 
 <style scoped lang="scss" src="./AppLayout.scss"></style>

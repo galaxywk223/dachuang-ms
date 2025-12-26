@@ -148,6 +148,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        if review.review_level == Review.ReviewLevel.TEACHER:
+            score = None
+
         # 执行审核
         if action_type == "approve":
             result = ReviewService.approve_review(
@@ -569,4 +572,3 @@ class ReviewAssignmentViewSet(viewsets.ViewSet):
             "message": f"Successfully assigned {len(created)} review tasks.",
             "count": len(created)
         })
-

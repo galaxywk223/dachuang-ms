@@ -107,6 +107,7 @@
 
     .expected-select {
         flex: 1;
+        min-width: 300px; // Prevent shrinking too small for long text
     }
 
     .expected-count {

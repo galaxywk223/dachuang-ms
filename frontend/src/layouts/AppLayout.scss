@@ -152,6 +152,20 @@
         }
       }
     }
+
+    .current-batch {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-left: 8px;
+      border-left: 1px dashed $slate-200;
+      color: $slate-500;
+      font-size: 13px;
+
+      .batch-label {
+        white-space: nowrap;
+      }
+    }
   }
 
   .header-right {
@@ -239,4 +253,3 @@
   opacity: 0;
   transform: translateY(-10px);
 }
-

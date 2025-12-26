@@ -28,6 +28,7 @@ from .serializers_midterm import ProjectMidTermSerializer
 from .services import ProjectService
 from .certificates import render_certificate_html
 from apps.reviews.services import ReviewService
+from apps.reviews.models import Review
 from apps.system_settings.services import SystemSettingService
 
 
@@ -111,6 +112,17 @@ class ProjectViewSet(viewsets.ModelViewSet):
         if status_in:
             status_list = [s.strip() for s in status_in.split(",") if s.strip()]
             queryset = queryset.filter(status__in=status_list)
+
+        exclude_review_type = self.request.query_params.get("exclude_assigned_review_type")
+        exclude_review_level = self.request.query_params.get("exclude_assigned_review_level")
+        if exclude_review_type:
+            review_qs = Review.objects.filter(
+                review_type=exclude_review_type, reviewer__isnull=False
+            )
+            if exclude_review_level:
+                review_qs = review_qs.filter(review_level=exclude_review_level)
+            assigned_project_ids = review_qs.values_list("project_id", flat=True)
+            queryset = queryset.exclude(id__in=assigned_project_ids)
 
         return queryset
 

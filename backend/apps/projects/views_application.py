@@ -269,7 +269,9 @@ def create_project_application(request):
             members_data = _normalize_list(request.data.get("members", []))
             expected_results_data = request.data.get("expected_results_data")
             if expected_results_data is not None:
-                data["expected_results_data"] = _normalize_list(expected_results_data)
+                data["expected_results_data"] = json.dumps(
+                    _normalize_list(expected_results_data)
+                )
 
             ok, msg = _validate_limits(
                 user, advisors_data, members_data, batch=current_batch
@@ -464,7 +466,9 @@ def update_project_application(request, pk):
             members_data = _normalize_list(request.data.get("members", []))
             expected_results_data = request.data.get("expected_results_data")
             if expected_results_data is not None:
-                data["expected_results_data"] = _normalize_list(expected_results_data)
+                data["expected_results_data"] = json.dumps(
+                    _normalize_list(expected_results_data)
+                )
 
             ok, msg = _validate_limits(
                 user, advisors_data, members_data, project, batch=current_batch

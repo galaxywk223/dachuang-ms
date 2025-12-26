@@ -86,23 +86,39 @@
   min-height: 600px;
   border-radius: $radius-lg;
 
-  .items-header {
+  .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
 
-    .left-panel {
-      .type-title {
+    .header-left {
+      display: flex;
+      align-items: center;
+
+      .header-title {
         font-size: 18px;
         font-weight: 600;
         color: $slate-800;
-        margin-right: 12px;
+        display: flex;
+        align-items: center;
+
+        &::before {
+          content: "";
+          display: inline-block;
+          width: 4px;
+          height: 18px;
+          background: $primary-600;
+          border-radius: 2px;
+          margin-right: 12px;
+        }
       }
 
-      .type-desc {
-        color: $slate-500;
+      .header-desc {
+        margin-left: 16px;
         font-size: 13px;
-        margin-top: 4px;
+        color: $slate-500;
+        font-weight: 400;
+        margin-top: 2px;
       }
     }
   }
@@ -120,4 +136,3 @@
   align-items: center;
   height: 500px;
 }
-

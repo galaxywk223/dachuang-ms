@@ -45,7 +45,7 @@
                   <span class="header-title">{{
                     currentType?.name || "请选择左侧参数类型"
                   }}</span>
-                  <span class="text-gray-400 text-sm ml-2" v-if="currentType">{{
+                  <span class="header-desc" v-if="currentType">{{
                     currentType.description
                   }}</span>
                 </div>

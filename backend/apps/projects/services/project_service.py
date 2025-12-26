@@ -240,8 +240,13 @@ class ProjectService:
         """
         申请项目中期检查
         """
-        if project.status != Project.ProjectStatus.IN_PROGRESS:
-            raise ValueError("只有进行中的项目才能申请中期检查")
+        allowed_statuses = {
+            Project.ProjectStatus.IN_PROGRESS,
+            Project.ProjectStatus.MID_TERM_DRAFT,
+            Project.ProjectStatus.MID_TERM_REJECTED,
+        }
+        if project.status not in allowed_statuses:
+            raise ValueError("当前项目状态不允许提交中期检查")
 
         # 更新中期报告
         project.mid_term_report = mid_term_report

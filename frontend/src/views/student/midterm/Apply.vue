@@ -17,7 +17,7 @@
       </div>
 
       <div v-else-if="!project" class="empty-container">
-        <el-empty description="您当前没有正在进行的项目需提交中期检查" />
+        <el-empty :description="emptyMessage" />
       </div>
 
       <div v-else class="content-container">
@@ -65,6 +65,7 @@
                 :limit="1"
                 accept=".pdf"
                 :file-list="fileList"
+                :disabled="!canSubmit"
               >
                 <el-icon class="el-icon--upload"><upload-filled /></el-icon>
                 <div class="el-upload__text">
@@ -110,10 +111,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { UploadFilled } from '@element-plus/icons-vue'
 import { ElMessage, type FormInstance, type UploadUserFile, type UploadFile } from 'element-plus'
 import request from '@/utils/request'
+import { getProjectDetail } from '@/api/project'
 
 interface Project {
   id: number
@@ -134,6 +137,7 @@ const saving = ref(false)
 const project = ref<Project | null>(null)
 const formRef = ref<FormInstance>()
 const fileList = ref<UploadUserFile[]>([])
+const route = useRoute()
 
 const form = ref({
   mid_term_report: null as File | null
@@ -150,6 +154,12 @@ const canSubmit = computed(() => {
   const status = project.value.status
   return ['IN_PROGRESS', 'MID_TERM_DRAFT', 'MID_TERM_REJECTED'].includes(status)
 })
+
+const projectId = computed(() => Number(route.query.projectId))
+const hasProjectId = computed(() => Number.isFinite(projectId.value) && projectId.value > 0)
+const emptyMessage = computed(() =>
+  hasProjectId.value ? '未找到项目或无权限' : '请从列表选择需要提交中期检查的项目'
+)
 
 const getStatusType = (status: string) => {
   const map: Record<string, string> = {
@@ -177,18 +187,22 @@ const getStatusText = (status: string) => {
 
 const fetchProject = async () => {
   try {
+    if (!hasProjectId.value) {
+      project.value = null
+      fileList.value = []
+      form.value.mid_term_report = null
+      loading.value = false
+      return
+    }
+
     loading.value = true
-    // 获取当前用户的第一个进行中项目 (简化逻辑，实际应列表选择)
-    const { data } = await request.get('/projects/', {
-      params: { status_in: 'IN_PROGRESS,MID_TERM_DRAFT,MID_TERM_SUBMITTED,MID_TERM_REVIEWING,MID_TERM_APPROVED,MID_TERM_REJECTED' }
-    })
-    
-    if (data && data.results && data.results.length > 0) {
-      // 优先找需要在做中期的项目
-      project.value = data.results[0]
-      // Fetch details to get URLs
-      const detailRes = await request.get(`/projects/${project.value?.id}/`)
-      project.value = detailRes.data
+    const res: any = await getProjectDetail(projectId.value)
+    if (res?.code === 200) {
+      project.value = res.data
+      fileList.value = []
+      form.value.mid_term_report = null
+    } else {
+      project.value = null
     }
   } catch (error) {
     console.error('Failed to fetch project', error)
@@ -197,16 +211,18 @@ const fetchProject = async () => {
   }
 }
 
-const handleFileChange = (uploadFile: UploadFile) => {
+const handleFileChange = (uploadFile: UploadFile, uploadFiles: UploadUserFile[]) => {
   if (uploadFile.raw) {
     form.value.mid_term_report = uploadFile.raw
     // Clear validation
     formRef.value?.clearValidate('mid_term_report')
   }
+  fileList.value = uploadFiles.slice(-1)
 }
 
 const handleFileRemove = () => {
   form.value.mid_term_report = null
+  fileList.value = []
 }
 
 const submitForm = async (isDraft: boolean) => {
@@ -254,6 +270,13 @@ const submitForm = async (isDraft: boolean) => {
 onMounted(() => {
   fetchProject()
 })
+
+watch(
+  () => route.query.projectId,
+  () => {
+    fetchProject()
+  }
+)
 </script>
 
 <style scoped lang="scss">
@@ -318,4 +341,3 @@ onMounted(() => {
     margin-right: 8px;
 }
 </style>
-

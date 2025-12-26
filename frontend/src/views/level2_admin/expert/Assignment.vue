@@ -90,6 +90,7 @@ import { useRoute } from 'vue-router';
 import { Search } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import request from '@/utils/request';
+import { useUserStore } from '@/stores/user';
 
 const loading = ref(false);
 const assigning = ref(false);
@@ -100,6 +101,13 @@ const currentPage = ref(1);
 const pageSize = ref(20);
 const route = useRoute();
 const pageTitle = computed(() => (route.meta.title as string) || "专家评审分配");
+const userStore = useUserStore();
+const userRole = computed(() =>
+    String(userStore.user?.role || localStorage.getItem('user_role') || '').toLowerCase()
+);
+const assignedReviewLevel = computed(() =>
+    userRole.value === 'level1_admin' ? 'LEVEL1' : 'LEVEL2'
+);
 
 // Filters and Selections
 const searchQuery = ref("");
@@ -108,10 +116,17 @@ const selectedGroup = ref<number | null>(null);
 const reviewType = ref("APPLICATION");
 const selectedProjects = ref<any[]>([]);
 
+const resolveList = (payload: any) => {
+    if (Array.isArray(payload)) return payload;
+    if (payload?.results) return payload.results;
+    if (payload?.data?.results) return payload.data.results;
+    return payload?.data || [];
+};
+
 const fetchGroups = async () => {
     try {
-        const { data } = await request.get('/reviews/groups/');
-        groups.value = data.results || data;
+        const res: any = await request.get('/reviews/groups/');
+        groups.value = resolveList(res);
     } catch (e) {
         console.error(e);
     }
@@ -124,6 +139,8 @@ const fetchProjects = async () => {
             page: currentPage.value,
             page_size: pageSize.value,
             search: searchQuery.value,
+            exclude_assigned_review_type: reviewType.value,
+            exclude_assigned_review_level: assignedReviewLevel.value,
         };
         if (statusFilter.value) {
             params.status = statusFilter.value;
@@ -132,12 +149,16 @@ const fetchProjects = async () => {
         // Optionally filter by projects needing review?
         // Usually review assignment happens when project is SUBMITTED or similar status.
         
-        const { data } = await request.get('/projects/', { params });
-        projects.value = data.results;
-        total.value = data.count;
+        const projectRes: any = await request.get('/projects/', { params });
+        const rows = resolveList(projectRes);
+        projects.value = rows || [];
+        total.value =
+            projectRes?.data?.count ??
+            projectRes?.count ??
+            (rows ? rows.length : 0);
     } catch (e) {
         console.error(e);
-        ElMessage.error("获失败");
+        ElMessage.error("获取项目失败");
     } finally {
         loading.value = false;
     }
@@ -158,16 +179,16 @@ const handleAssign = () => {
         assigning.value = true;
         try {
             const projectIds = selectedProjects.value.map(p => p.id);
-            const { data } = await request.post('/reviews/assignments/assign_batch/', {
+            const res: any = await request.post('/reviews/assignments/assign_batch/', {
                 project_ids: projectIds,
                 group_id: selectedGroup.value,
                 review_type: reviewType.value
             });
-            ElMessage.success(data.message || "分配成功");
+            ElMessage.success(res?.message || res?.data?.message || "分配成功");
             // Clear selection?
         } catch (error: any) {
             console.error(error);
-            ElMessage.error(error.response?.data?.message || "分配失败");
+            ElMessage.error(error.response?.data?.message || error.message || "分配失败");
         } finally {
             assigning.value = false;
         }
@@ -228,4 +249,3 @@ onMounted(() => {
     justify-content: flex-end;
 }
 </style>
-

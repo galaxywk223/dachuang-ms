@@ -433,7 +433,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         )
 
         if next_is_key_field:
-            if not next_key_domain_code:
+            if not is_draft and not next_key_domain_code:
                 raise serializers.ValidationError(
                     {"key_domain_code": "重点项目必须选择重点领域代码"}
                 )

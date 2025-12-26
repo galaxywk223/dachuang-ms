@@ -73,7 +73,11 @@ class ReviewActionSerializer(serializers.Serializer):
         required=False, allow_blank=True, help_text="审核意见"
     )
     score = serializers.IntegerField(
-        required=False, min_value=0, max_value=100, help_text="评分（0-100）"
+        required=False,
+        allow_null=True,
+        min_value=0,
+        max_value=100,
+        help_text="评分（0-100）",
     )
     closure_rating = serializers.ChoiceField(
         choices=Review.ClosureRating.choices,

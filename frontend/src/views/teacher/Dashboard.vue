@@ -151,7 +151,6 @@ const formRef = ref<FormInstance>();
 const form = reactive({
     action: "approve",
     comments: "",
-    score: null // Teachers might not score, just approve? Or score 0-100?
 });
 
 const rules = reactive<FormRules>({

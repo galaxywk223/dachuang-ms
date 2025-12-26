@@ -140,11 +140,18 @@ const dialogTitle = computed(() => isEdit.value ? "编辑专家组" : "新建专
 const pageTitle = computed(() => (route.meta.title as string) || "专家组管理");
 
 // Fetch Data
+const resolveList = (payload: any) => {
+    if (Array.isArray(payload)) return payload;
+    if (payload?.results) return payload.results;
+    if (payload?.data?.results) return payload.data.results;
+    return payload?.data || [];
+};
+
 const fetchGroups = async () => {
     loading.value = true;
     try {
-        const { data } = await request.get('/reviews/groups/');
-        groups.value = data.results || data; 
+        const res: any = await request.get('/reviews/groups/');
+        groups.value = resolveList(res);
     } catch (error) {
         console.error(error);
         ElMessage.error("获取专家组列表失败");
@@ -157,8 +164,8 @@ const fetchExperts = async () => {
     try {
         const userRole = userStore.user?.role || localStorage.getItem('user_role');
         const expertScope = (userRole === 'level1_admin' || userRole === 'admin') ? 'SCHOOL' : 'COLLEGE';
-        const { data } = await request.get('/users/', { params: { role: 'EXPERT', expert_scope: expertScope } });
-        expertList.value = data.results || data;
+        const res: any = await request.get('/auth/users/', { params: { role: 'EXPERT', expert_scope: expertScope } });
+        expertList.value = resolveList(res);
     } catch (error) {
         console.error(error);
         ElMessage.error("获取专家列表失败");
@@ -288,4 +295,3 @@ onMounted(async () => {
 .mr-1 { margin-right: 4px; }
 .mb-1 { margin-bottom: 4px; }
 </style>
-
