@@ -37,295 +37,32 @@
         <el-tabs v-model="activeTab">
 
           <el-tab-pane label="日期配置" name="dates">
-            <el-form label-width="120px" class="config-form" label-position="top">
-              
-              <div class="section-block batch-opt-bar">
-                 <span class="label">一键设置所有时间：</span>
-                 <el-date-picker
-                    v-model="globalDateRange"
-                    type="daterange"
-                    range-separator="至"
-                    start-placeholder="开始日期"
-                    end-placeholder="截止日期"
-                    value-format="YYYY-MM-DD"
-                    size="default"
-                    class="mr-2"
-                    style="width: 260px"
-                    :disabled="isReadOnly"
-                  />
-                  <el-button type="primary" plain @click="applyBatchDates" :disabled="!globalDateRange || isReadOnly">应用</el-button>
-                  <span class="tip ml-2 text-gray text-xs">注：将批量设置下方所有时间段</span>
-              </div>
-
-              <div class="section-block">
-                <div class="block-title">提交窗口设置</div>
-                <el-row :gutter="24">
-                  <el-col :span="12">
-                     <el-card shadow="never" class="sub-card">
-                       <template #header><span class="sub-title">项目申报提交</span></template>
-                       <div class="card-body">
-                         <div class="flex-row">
-                           <el-switch v-model="applicationWindow.enabled" active-text="开启" :disabled="isReadOnly" />
-                         </div>
-                         <el-date-picker
-                            v-model="applicationWindow.range"
-                            type="daterange"
-                            range-separator="至"
-                            start-placeholder="开始"
-                            end-placeholder="截止"
-                            value-format="YYYY-MM-DD"
-                            :disabled="isReadOnly"
-                            style="width: 100%; margin-top: 12px"
-                          />
-                       </div>
-                     </el-card>
-                  </el-col>
-                  <el-col :span="12">
-                     <el-card shadow="never" class="sub-card">
-                       <template #header><span class="sub-title">专家评审时间</span></template>
-                       <div class="card-body">
-                         <div class="flex-row">
-                           <el-switch v-model="expertReviewWindow.enabled" active-text="开启" :disabled="isReadOnly" />
-                         </div>
-                         <el-date-picker
-                            v-model="expertReviewWindow.range"
-                            type="daterange"
-                            range-separator="至"
-                            start-placeholder="开始"
-                            end-placeholder="截止"
-                            value-format="YYYY-MM-DD"
-                            :disabled="isReadOnly"
-                            style="width: 100%; margin-top: 12px"
-                          />
-                       </div>
-                     </el-card>
-                  </el-col>
-                  <el-col :span="12" class="mt-4">
-                     <el-card shadow="never" class="sub-card">
-                       <template #header><span class="sub-title">中期检查提交</span></template>
-                       <div class="card-body">
-                         <div class="flex-row">
-                           <el-switch v-model="midtermWindow.enabled" active-text="开启" :disabled="isReadOnly" />
-                         </div>
-                         <el-date-picker
-                            v-model="midtermWindow.range"
-                            type="daterange"
-                            range-separator="至"
-                            start-placeholder="开始"
-                            end-placeholder="截止"
-                            value-format="YYYY-MM-DD"
-                            :disabled="isReadOnly"
-                            style="width: 100%; margin-top: 12px"
-                          />
-                       </div>
-                     </el-card>
-                  </el-col>
-                  <el-col :span="12" class="mt-4">
-                     <el-card shadow="never" class="sub-card">
-                       <template #header><span class="sub-title">结题报告提交</span></template>
-                       <div class="card-body">
-                         <div class="flex-row">
-                           <el-switch v-model="closureWindow.enabled" active-text="开启" :disabled="isReadOnly" />
-                         </div>
-                         <el-date-picker
-                            v-model="closureWindow.range"
-                            type="daterange"
-                            range-separator="至"
-                            start-placeholder="开始"
-                            end-placeholder="截止"
-                            value-format="YYYY-MM-DD"
-                            :disabled="isReadOnly"
-                            style="width: 100%; margin-top: 12px"
-                          />
-                       </div>
-                     </el-card>
-                  </el-col>
-                </el-row>
-              </div>
-
-              <div class="section-block mt-6">
-                <div class="block-title">各级审核时间配置</div>
-                <div class="review-matrix">
-                   <div class="matrix-header">
-                      <div class="col-phase">阶段</div>
-                      <div class="col-role">指导教师审核</div>
-                      <div class="col-role">学院审核</div>
-                      <div class="col-role">校级审核</div>
-                   </div>
-                   <!-- Application Row -->
-                   <div class="matrix-row">
-                      <div class="col-phase">申报审核</div>
-                      <div class="col-role">
-                         <el-switch v-model="reviewWindow.application.teacher.enabled" size="small" :disabled="isReadOnly" />
-                         <el-date-picker 
-                            v-model="reviewWindow.application.teacher.range" 
-                            type="daterange" 
-                            size="small" 
-                            style="width: 200px; margin-top: 4px" 
-                            value-format="YYYY-MM-DD"
-                            range-separator="-"
-                            :disabled="isReadOnly"
-                         />
-                      </div>
-                      <div class="col-role">
-                         <el-switch v-model="reviewWindow.application.level2.enabled" size="small" :disabled="isReadOnly" />
-                         <el-date-picker 
-                            v-model="reviewWindow.application.level2.range" 
-                            type="daterange" 
-                            size="small" 
-                            style="width: 200px; margin-top: 4px" 
-                            value-format="YYYY-MM-DD"
-                            range-separator="-"
-                            :disabled="isReadOnly"
-                         />
-                      </div>
-                       <div class="col-role">
-                         <el-switch v-model="reviewWindow.application.level1.enabled" size="small" :disabled="isReadOnly" />
-                         <el-date-picker 
-                            v-model="reviewWindow.application.level1.range" 
-                            type="daterange" 
-                            size="small" 
-                            style="width: 200px; margin-top: 4px" 
-                            value-format="YYYY-MM-DD"
-                            range-separator="-"
-                            :disabled="isReadOnly"
-                         />
-                      </div>
-                   </div>
-                   <!-- Midterm Row -->
-                   <div class="matrix-row">
-                      <div class="col-phase">中期审核</div>
-                      <div class="col-role">
-                         <el-switch v-model="reviewWindow.midterm.teacher.enabled" size="small" :disabled="isReadOnly" />
-                         <el-date-picker 
-                            v-model="reviewWindow.midterm.teacher.range" 
-                            type="daterange" 
-                            size="small" 
-                            style="width: 200px; margin-top: 4px" 
-                            value-format="YYYY-MM-DD"
-                            range-separator="-"
-                            :disabled="isReadOnly"
-                         />
-                      </div>
-                      <div class="col-role">
-                         <el-switch v-model="reviewWindow.midterm.level2.enabled" size="small" :disabled="isReadOnly" />
-                         <el-date-picker 
-                            v-model="reviewWindow.midterm.level2.range" 
-                            type="daterange" 
-                            size="small" 
-                            style="width: 200px; margin-top: 4px" 
-                            value-format="YYYY-MM-DD"
-                            range-separator="-"
-                            :disabled="isReadOnly"
-                         />
-                      </div>
-                      <div class="col-role bg-gray">
-                         <span class="text-xs text-gray">无需校级审核</span>
-                      </div>
-                   </div>
-                   <!-- Closure Row -->
-                   <div class="matrix-row">
-                      <div class="col-phase">结题审核</div>
-                      <div class="col-role">
-                         <el-switch v-model="reviewWindow.closure.teacher.enabled" size="small" :disabled="isReadOnly" />
-                         <el-date-picker 
-                            v-model="reviewWindow.closure.teacher.range" 
-                            type="daterange" 
-                            size="small" 
-                            style="width: 200px; margin-top: 4px" 
-                            value-format="YYYY-MM-DD"
-                            range-separator="-"
-                            :disabled="isReadOnly"
-                         />
-                      </div>
-                      <div class="col-role">
-                         <el-switch v-model="reviewWindow.closure.level2.enabled" size="small" :disabled="isReadOnly" />
-                         <el-date-picker 
-                            v-model="reviewWindow.closure.level2.range" 
-                            type="daterange" 
-                            size="small" 
-                            style="width: 200px; margin-top: 4px" 
-                            value-format="YYYY-MM-DD"
-                            range-separator="-"
-                            :disabled="isReadOnly"
-                         />
-                      </div>
-                       <div class="col-role">
-                         <el-switch v-model="reviewWindow.closure.level1.enabled" size="small" :disabled="isReadOnly" />
-                         <el-date-picker 
-                            v-model="reviewWindow.closure.level1.range" 
-                            type="daterange" 
-                            size="small" 
-                            style="width: 200px; margin-top: 4px" 
-                            value-format="YYYY-MM-DD"
-                            range-separator="-"
-                            :disabled="isReadOnly"
-                         />
-                      </div>
-                   </div>
-                </div>
-              </div>
-
-            </el-form>
+            <SystemConfigDatesTab
+              v-model:global-date-range="globalDateRange"
+              :apply-batch-dates="applyBatchDates"
+              :is-read-only="isReadOnly"
+              :application-window="applicationWindow"
+              :midterm-window="midtermWindow"
+              :closure-window="closureWindow"
+              :expert-review-window="expertReviewWindow"
+              :review-window="reviewWindow"
+            />
           </el-tab-pane>
 
           <el-tab-pane label="限制与校验" name="limits">
-            <el-form label-width="200px" class="config-form">
-              <el-form-item label="指导教师最大数量">
-                <el-input-number v-model="limitRules.max_advisors" :min="0" :disabled="isProcessLocked" />
-              </el-form-item>
-              <el-form-item label="项目成员最大数量">
-                <el-input-number v-model="limitRules.max_members" :min="0" :disabled="isProcessLocked" />
-              </el-form-item>
-              <el-form-item label="导师在研项目上限">
-                <el-input-number v-model="limitRules.max_teacher_active" :min="0" :disabled="isProcessLocked" />
-              </el-form-item>
-              <el-form-item label="学生作为负责人上限">
-                <el-input-number v-model="limitRules.max_student_active" :min="0" :disabled="isProcessLocked" />
-              </el-form-item>
-              <el-form-item label="学生作为成员上限">
-                <el-input-number v-model="limitRules.max_student_member" :min="0" :disabled="isProcessLocked" />
-              </el-form-item>
-              <el-form-item label="优秀结题加成数">
-                <el-input-number v-model="limitRules.teacher_excellent_bonus" :min="0" :disabled="isProcessLocked" />
-              </el-form-item>
-              <el-form-item label="项目名称查重">
-                <el-switch v-model="limitRules.dedupe_title" :disabled="isProcessLocked" />
-              </el-form-item>
-              <el-form-item label="指导教师职称必填">
-                <el-switch v-model="limitRules.advisor_title_required" :disabled="isProcessLocked" />
-              </el-form-item>
-              <el-form-item label="学院名额配置(JSON)">
-                <el-input
-                  v-model="collegeQuotaText"
-                  type="textarea"
-                  :rows="4"
-                  placeholder='{"CS": 30, "EE": 20}'
-                  :disabled="isProcessLocked"
-                />
-              </el-form-item>
-            </el-form>
+            <SystemConfigLimitsTab
+              :limit-rules="limitRules"
+              v-model:college-quota-text="collegeQuotaText"
+              :is-process-locked="isProcessLocked"
+            />
           </el-tab-pane>
 
           <el-tab-pane label="流程配置" name="process">
-            <el-form label-width="200px" class="config-form">
-              <el-form-item label="在研项目允许继续申报">
-                <el-switch v-model="processRules.allow_active_reapply" :disabled="isProcessLocked" />
-                <div class="form-hint">开启后，已有在研项目的学生仍可提交新申报。</div>
-              </el-form-item>
-              <el-form-item label="审核退回上一级">
-                <el-switch v-model="processRules.reject_to_previous" :disabled="isProcessLocked" />
-                <div class="form-hint">开启后，退回会返回到上一级角色重新审核。</div>
-              </el-form-item>
-              <el-form-item label="结题评审可见立项材料">
-                <el-switch v-model="processRules.show_material_in_closure_review" :disabled="isProcessLocked" />
-                <div class="form-hint">开启后，结题评审可查看立项阶段材料。</div>
-              </el-form-item>
-              <el-form-item label="导师审核意见最少字数">
-                <el-input-number v-model="reviewRules.teacher_application_comment_min" :min="0" :disabled="isProcessLocked" />
-                <div class="form-hint">设置为 0 表示不限制字数。</div>
-              </el-form-item>
-            </el-form>
+            <SystemConfigProcessTab
+              :process-rules="processRules"
+              :review-rules="reviewRules"
+              :is-process-locked="isProcessLocked"
+            />
           </el-tab-pane>
         </el-tabs>
       </template>
@@ -339,6 +76,9 @@ import { useRouter, useRoute } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { getEffectiveSettings, updateSettingByCode } from "@/api/system-settings";
 import { getProjectBatch } from "@/api/project-batches";
+import SystemConfigDatesTab from "./components/SystemConfigDatesTab.vue";
+import SystemConfigLimitsTab from "./components/SystemConfigLimitsTab.vue";
+import SystemConfigProcessTab from "./components/SystemConfigProcessTab.vue";
 
 const route = useRoute();
 const router = useRouter();

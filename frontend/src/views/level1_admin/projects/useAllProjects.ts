@@ -4,25 +4,53 @@ import { useRouter } from "vue-router";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionary";
 import {
-  batchDownloadAttachments,
-  batchExportCertificates,
-  batchExportDocs,
-  batchExportNotices,
   batchUpdateProjectStatus,
   deleteProjectById,
-  exportProjects,
-  getAllProjects,
 } from "@/api/admin";
 import { pushProjectToExternal } from "@/api/project";
 import { batchSendNotifications } from "@/api/notifications";
+import { useProjectExport } from "./useProjectExport";
+import { useProjectSearch } from "./useProjectSearch";
+import { useProjectTable } from "./useProjectTable";
 
 export function useAllProjects() {
   const router = useRouter();
   const { loadDictionaries, getOptions } = useDictionary();
 
-  const loading = ref(false);
-  const projects = ref<any[]>([]);
-  const selectedRows = ref<any[]>([]);
+  const filters = reactive({
+    search: "",
+    level: "",
+    category: "",
+    status: "",
+  });
+
+  const {
+    loading,
+    projects,
+    selectedRows,
+    currentPage,
+    pageSize,
+    total,
+    fetchProjects,
+    handlePageChange,
+    handleSizeChange,
+    handleSelectionChange,
+  } = useProjectTable(filters);
+
+  const { handleSearch, handleReset } = useProjectSearch(
+    filters,
+    fetchProjects,
+    currentPage
+  );
+
+  const {
+    handleBatchExport,
+    handleBatchDownload,
+    handleBatchExportDocs,
+    handleBatchExportNotices,
+    handleBatchExportCertificates,
+  } = useProjectExport(filters, selectedRows);
+
   const batchStatusDialogVisible = ref(false);
   const batchNotifyDialogVisible = ref(false);
   const batchStatusLoading = ref(false);
@@ -32,70 +60,10 @@ export function useAllProjects() {
     title: "",
     content: "",
   });
-  const currentPage = ref(1);
-  const pageSize = ref(10);
-  const total = ref(0);
-
-  const filters = reactive({
-    search: "",
-    level: "",
-    category: "",
-    status: "",
-  });
 
   const levelOptions = computed(() => getOptions(DICT_CODES.PROJECT_LEVEL));
   const categoryOptions = computed(() => getOptions(DICT_CODES.PROJECT_CATEGORY));
   const statusOptions = computed(() => getOptions(DICT_CODES.PROJECT_STATUS));
-
-  const fetchProjects = async () => {
-    loading.value = true;
-    try {
-      const params = {
-        page: currentPage.value,
-        page_size: pageSize.value,
-        search: filters.search,
-        level: filters.level,
-        category: filters.category,
-        status: filters.status,
-      };
-
-      const res: any = await getAllProjects(params);
-      if (res.results) {
-        projects.value = res.results;
-        total.value = res.count;
-      } else if (res.data && res.data.results) {
-        projects.value = res.data.results;
-        total.value = res.data.count;
-      } else {
-        projects.value = Array.isArray(res) ? res : [];
-        total.value = projects.value.length;
-      }
-    } catch {
-      ElMessage.error("获取项目列表失败");
-    } finally {
-      loading.value = false;
-    }
-  };
-
-  const handleSearch = () => {
-    currentPage.value = 1;
-    fetchProjects();
-  };
-
-  const handleReset = () => {
-    filters.search = "";
-    filters.level = "";
-    filters.category = "";
-    filters.status = "";
-    currentPage.value = 1;
-    fetchProjects();
-  };
-
-  const handlePageChange = () => fetchProjects();
-  const handleSizeChange = () => {
-    currentPage.value = 1;
-    fetchProjects();
-  };
 
   const handleView = (row: any) => {
     router.push({
@@ -116,7 +84,7 @@ export function useAllProjects() {
   const handleDelete = async (row: any) => {
     try {
       await ElMessageBox.confirm(
-        `确定要删除项目\"${row.title}\"吗？此操作不可恢复！`,
+        `确定要删除项目"${row.title}"吗？此操作不可恢复！`,
         "警告",
         {
           confirmButtonText: "确定删除",
@@ -132,115 +100,12 @@ export function useAllProjects() {
     }
   };
 
-  const handleSelectionChange = (val: any[]) => {
-    selectedRows.value = val;
-  };
-
   const ensureSelection = () => {
     if (selectedRows.value.length === 0) {
       ElMessage.warning("请先勾选项目");
       return false;
     }
     return true;
-  };
-
-  const downloadFile = (blob: Blob, filename: string) => {
-    const url = window.URL.createObjectURL(new Blob([blob]));
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", filename);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const handleBatchExport = async () => {
-    try {
-      ElMessage.info("正在生成导出文件，请稍候...");
-      const params: any = {};
-
-      if (selectedRows.value.length > 0) {
-        params.ids = selectedRows.value.map((row) => row.id).join(",");
-      } else {
-        params.search = filters.search;
-        params.level = filters.level;
-        params.category = filters.category;
-        params.status = filters.status;
-      }
-
-      const res: any = await exportProjects(params);
-      downloadFile(res, "项目数据.xlsx");
-      ElMessage.success("导出成功");
-    } catch {
-      ElMessage.error("导出失败");
-    }
-  };
-
-  const handleBatchDownload = async () => {
-    try {
-      ElMessage.info("正在打包附件，请稍候...");
-      const params: any = {};
-
-      if (selectedRows.value.length > 0) {
-        params.ids = selectedRows.value.map((row) => row.id).join(",");
-      } else {
-        params.search = filters.search;
-        params.level = filters.level;
-        params.category = filters.category;
-        params.status = filters.status;
-      }
-
-      const res: any = await batchDownloadAttachments(params);
-      if (res.type === "application/json") {
-        const text = await res.text();
-        const json = JSON.parse(text);
-        ElMessage.error(json.message || "下载失败");
-        return;
-      }
-      downloadFile(res, "项目附件.zip");
-      ElMessage.success("下载成功");
-    } catch {
-      ElMessage.error("下载失败，可能没有可下载的附件");
-    }
-  };
-
-  const handleBatchExportDocs = async () => {
-    if (!ensureSelection()) return;
-    try {
-      ElMessage.info("正在生成申报书，请稍候...");
-      const ids = selectedRows.value.map((row) => row.id).join(",");
-      const res: any = await batchExportDocs({ ids });
-      downloadFile(res, "项目申报书.zip");
-      ElMessage.success("导出成功");
-    } catch {
-      ElMessage.error("导出失败");
-    }
-  };
-
-  const handleBatchExportNotices = async () => {
-    if (!ensureSelection()) return;
-    try {
-      ElMessage.info("正在生成立项通知书，请稍候...");
-      const ids = selectedRows.value.map((row) => row.id).join(",");
-      const res: any = await batchExportNotices({ ids });
-      downloadFile(res, "立项通知书.zip");
-      ElMessage.success("生成成功");
-    } catch {
-      ElMessage.error("生成失败");
-    }
-  };
-
-  const handleBatchExportCertificates = async () => {
-    if (!ensureSelection()) return;
-    try {
-      ElMessage.info("正在生成结题证书，请稍候...");
-      const ids = selectedRows.value.map((row) => row.id).join(",");
-      const res: any = await batchExportCertificates({ ids });
-      downloadFile(res, "结题证书.zip");
-      ElMessage.success("生成成功");
-    } catch {
-      ElMessage.error("生成失败");
-    }
   };
 
   const handlePushToExternal = async () => {
@@ -258,7 +123,10 @@ export function useAllProjects() {
 
       loading.value = true;
       const ids = selectedRows.value.map((row) => row.id);
-      const res: any = await pushProjectToExternal({ project_ids: ids, target: "PROVINCIAL_PLATFORM" });
+      const res: any = await pushProjectToExternal({
+        project_ids: ids,
+        target: "PROVINCIAL_PLATFORM",
+      });
 
       if (res.code === 200) {
         ElMessage.success(res.message || "推送完成");
@@ -349,7 +217,11 @@ export function useAllProjects() {
   const getStatusClass = (status: string) => {
     if (status.includes("APPROVED")) return "dot-success";
     if (status.includes("REJECTED")) return "dot-danger";
-    if (status.includes("REVIEWING") || status.includes("AUDITING") || status === "SUBMITTED")
+    if (
+      status.includes("REVIEWING") ||
+      status.includes("AUDITING") ||
+      status === "SUBMITTED"
+    )
       return "dot-warning";
     return "dot-info";
   };
