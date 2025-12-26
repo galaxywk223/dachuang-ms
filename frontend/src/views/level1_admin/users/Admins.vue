@@ -196,10 +196,10 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue';
 import { Search, Plus } from '@element-plus/icons-vue';
-import { getUsers, toggleUserStatus, createUser, deleteUser } from '@/api/user-admin';
+import { getUsers, toggleUserStatus, createUser, deleteUser } from '@/api/users/admin';
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus';
 import { useDictionary } from '@/composables/useDictionary';
-import { DICT_CODES } from '@/api/dictionary';
+import { DICT_CODES } from '@/api/dictionaries';
 
 const loading = ref(false);
 const tableData = ref<any[]>([]);

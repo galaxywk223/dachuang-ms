@@ -172,7 +172,7 @@ import {
   getArchives,
   exportProjectNumbers,
   getDuplicateProjectNumbers,
-} from "@/api/admin";
+} from "@/api/projects/admin";
 import dayjs from "dayjs";
 
 const activeTab = ref("import");

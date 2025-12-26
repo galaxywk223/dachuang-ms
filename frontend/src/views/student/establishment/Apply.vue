@@ -84,7 +84,7 @@ import ApplyAdvisorSection from "./components/ApplyAdvisorSection.vue";
 import ApplyMemberSection from "./components/ApplyMemberSection.vue";
 import ApplyContentSection from "./components/ApplyContentSection.vue";
 import ApplyAttachmentSection from "./components/ApplyAttachmentSection.vue";
-import { useProjectApplication } from "./useProjectApplication";
+import { useProjectApplication } from "./hooks/useProjectApplication";
 
 const {
   formRef,

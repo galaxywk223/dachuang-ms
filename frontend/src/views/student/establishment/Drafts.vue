@@ -128,10 +128,10 @@
 import { ref, reactive, onMounted, computed } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { Search, RefreshLeft, Plus } from "@element-plus/icons-vue";
-import { getMyDrafts, deleteProject } from "@/api/project";
+import { getMyDrafts, deleteProject } from "@/api/projects";
 import { useRouter } from "vue-router";
 import { useDictionary } from "@/composables/useDictionary";
-import { DICT_CODES } from "@/api/dictionary";
+import { DICT_CODES } from "@/api/dictionaries";
 
 const router = useRouter();
 const { loadDictionaries, getOptions } = useDictionary();

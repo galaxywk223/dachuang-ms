@@ -302,9 +302,9 @@ import { ref, reactive, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage, type FormInstance, type UploadFile } from "element-plus";
 import { UploadFilled, Plus } from "@element-plus/icons-vue";
-import { getProjectDetail, createClosureApplication } from "@/api/project";
+import { getProjectDetail, createClosureApplication } from "@/api/projects";
 import { useDictionary } from "@/composables/useDictionary";
-import { DICT_CODES } from "@/api/dictionary";
+import { DICT_CODES } from "@/api/dictionaries";
 
 const route = useRoute();
 const router = useRouter();

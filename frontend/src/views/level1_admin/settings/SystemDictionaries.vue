@@ -195,7 +195,7 @@
 <script setup lang="ts">
 import { useRoute } from "vue-router";
 import { Plus, Collection, ArrowRight } from "@element-plus/icons-vue";
-import { useSystemDictionaries } from "./useSystemDictionaries";
+import { useSystemDictionaries } from "./hooks/useSystemDictionaries";
 
 const route = useRoute();
 const {

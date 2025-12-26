@@ -312,9 +312,9 @@ import { ref, reactive, computed, onMounted } from "vue";
 import dayjs from "dayjs";
 import { ElMessage, ElMessageBox, type FormInstance, type UploadFile } from "element-plus";
 import { UploadFilled } from "@element-plus/icons-vue";
-import { getMyProjects, getProjectAchievementList, addProjectAchievement, removeProjectAchievement } from "@/api/project";
+import { getMyProjects, getProjectAchievementList, addProjectAchievement, removeProjectAchievement } from "@/api/projects";
 import { useDictionary } from "@/composables/useDictionary";
-import { DICT_CODES } from "@/api/dictionary";
+import { DICT_CODES } from "@/api/dictionaries";
 
 const loading = ref(false);
 const listLoading = ref(false);

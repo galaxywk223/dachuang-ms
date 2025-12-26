@@ -344,7 +344,7 @@
 </template>
 
 <script setup lang="ts">
-import { useProjectDetail } from "./useProjectDetail";
+import { useProjectDetail } from "./hooks/useProjectDetail";
 
 const {
   router,

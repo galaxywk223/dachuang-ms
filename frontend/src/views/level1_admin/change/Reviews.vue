@@ -117,7 +117,7 @@
 import { ref, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import { Search } from "@element-plus/icons-vue";
-import { getChangeRequests, reviewChangeRequest } from "@/api/change-requests";
+import { getChangeRequests, reviewChangeRequest } from "@/api/projects/change-requests";
 import dayjs from "dayjs";
 
 const loading = ref(false);

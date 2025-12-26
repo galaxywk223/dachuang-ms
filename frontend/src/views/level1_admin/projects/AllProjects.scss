@@ -76,36 +76,6 @@
   color: $slate-600;
 }
 
-.status-dot {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-size: 13px;
-
-  .dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-
-    &.dot-success {
-      background: $success;
-      box-shadow: 0 0 0 2px rgba($success, 0.2);
-    }
-    &.dot-warning {
-      background: $warning;
-      box-shadow: 0 0 0 2px rgba($warning, 0.2);
-    }
-    &.dot-danger {
-      background: $danger;
-      box-shadow: 0 0 0 2px rgba($danger, 0.2);
-    }
-    &.dot-info {
-      background: $slate-400;
-    }
-  }
-}
-
 .ml-3 {
     margin-left: 12px;
 }

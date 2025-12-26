@@ -177,7 +177,7 @@
 import { ref, reactive, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { useRouter } from "vue-router";
-import { getAppliedClosureProjects, getProjectCertificate, revokeClosureApplication } from "@/api/project";
+import { getAppliedClosureProjects, getProjectCertificate, revokeClosureApplication } from "@/api/projects";
 
 const router = useRouter();
 

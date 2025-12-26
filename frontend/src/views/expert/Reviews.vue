@@ -144,7 +144,7 @@ import type { FormInstance, FormRules } from "element-plus";
 import request from "@/utils/request";
 import dayjs from "dayjs";
 import { useDictionary } from "@/composables/useDictionary";
-import { DICT_CODES } from "@/api/dictionary";
+import { DICT_CODES } from "@/api/dictionaries";
 
 const loading = ref(false);
 const submitting = ref(false);

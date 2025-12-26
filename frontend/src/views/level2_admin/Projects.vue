@@ -259,10 +259,7 @@
 
         <el-table-column label="审核节点" width="140" align="center" fixed="right">
           <template #default="{ row }">
-            <div class="status-dot">
-              <span class="dot" :class="getStatusClass(row.status)"></span>
-              <span>{{ row.status_display }}</span>
-            </div>
+            <ProjectStatusBadge :status="row.status" :label="row.status_display" />
           </template>
         </el-table-column>
 
@@ -338,8 +335,8 @@ import { ref, reactive, onMounted, computed } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { Search, Plus, RefreshLeft, Download, ArrowDown } from "@element-plus/icons-vue";
 import { useDictionary } from "@/composables/useDictionary";
-import { DICT_CODES } from "@/api/dictionary";
-import { getProjects, deleteProject } from "@/api/project";
+import { DICT_CODES } from "@/api/dictionaries";
+import { getProjects, deleteProject } from "@/api/projects";
 import {
   exportProjects,
   batchDownloadAttachments,
@@ -347,8 +344,9 @@ import {
   batchExportNotices,
   batchExportCertificates,
   batchUpdateProjectStatus,
-} from "@/api/admin";
+} from "@/api/projects/admin";
 import { batchSendNotifications } from "@/api/notifications";
+import ProjectStatusBadge from "@/components/business/project/StatusBadge.vue";
 
 const { loadDictionaries, getOptions } = useDictionary();
 
@@ -646,14 +644,6 @@ const getLevelType = (level: string) => {
 const getLabel = (options: any[], value: string) => {
   const found = options.find((opt) => opt.value === value);
   return found ? found.label : value;
-};
-
-const getStatusClass = (status: string) => {
-  if (status.includes("APPROVED")) return "dot-success";
-  if (status.includes("REJECTED")) return "dot-danger";
-  if (status.includes("REVIEWING") || status.includes("AUDITING") || status === "SUBMITTED")
-    return "dot-warning";
-  return "dot-info";
 };
 
 onMounted(() => {

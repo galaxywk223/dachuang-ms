@@ -153,10 +153,7 @@
 
         <el-table-column label="审核节点" width="120" align="center">
           <template #default="{ row }">
-            <div class="status-dot">
-              <span class="dot" :class="getStatusClass(row.status)"></span>
-              <span>{{ row.status_display }}</span>
-            </div>
+            <ProjectStatusBadge :status="row.status" :label="row.status_display" />
           </template>
         </el-table-column>
 
@@ -306,7 +303,8 @@ import {
   View,
   EditPen,
 } from "@element-plus/icons-vue";
-import { getReviewProjects, approveProject, rejectProject } from "@/api/admin";
+import { getReviewProjects, approveProject, rejectProject } from "@/api/projects/admin";
+import ProjectStatusBadge from "@/components/business/project/StatusBadge.vue";
 import request from "@/utils/request";
 
 const loading = ref(false);
@@ -459,16 +457,6 @@ const submitBatchReview = async () => {
     batchSubmitting.value = false;
   }
 };
-
-const getStatusClass = (status: string) => {
-  if (status.includes("APPROVED")) return "dot-success";
-  if (status.includes("REJECTED")) return "dot-danger";
-  if (status.includes("REVIEWING") || status.includes("AUDITING") || status === "SUBMITTED")
-    return "dot-warning";
-  return "dot-info";
-};
-
-
 
 onMounted(() => {
   fetchProjects();

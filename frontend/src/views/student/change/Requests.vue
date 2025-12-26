@@ -96,7 +96,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from "vue";
 import { ElMessage, type UploadFile, type UploadUserFile } from "element-plus";
-import { getChangeRequests, createChangeRequest, updateChangeRequest, submitChangeRequest } from "@/api/change-requests";
+import { getChangeRequests, createChangeRequest, updateChangeRequest, submitChangeRequest } from "@/api/projects/change-requests";
 import request from "@/utils/request";
 
 const loading = ref(false);

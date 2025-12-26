@@ -42,7 +42,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { ElMessage } from "element-plus";
-import { getChangeRequests, reviewChangeRequest } from "@/api/change-requests";
+import { getChangeRequests, reviewChangeRequest } from "@/api/projects/change-requests";
 
 const loading = ref(false);
 const reviewing = ref(false);

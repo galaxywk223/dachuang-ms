@@ -4,15 +4,24 @@
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ProjectViewSet, ProjectProgressViewSet, ProjectAchievementViewSet, ProjectExpenditureViewSet
-from .views_application import (
+from .views import (
+    ProjectViewSet,
+    ProjectProgressViewSet,
+    ProjectAchievementViewSet,
+    ProjectExpenditureViewSet,
+    ProjectReviewViewSet,
+    ProjectManagementViewSet,
+    AchievementManagementViewSet,
+    ProjectChangeRequestViewSet,
+)
+from .views.application import (
     create_project_application,
     update_project_application,
     withdraw_project_application,
     get_my_projects,
     get_my_drafts,
 )
-from .views_closure import (
+from .views.closure import (
     get_pending_closure_projects,
     get_applied_closure_projects,
     get_closure_drafts,
@@ -21,9 +30,6 @@ from .views_closure import (
     delete_closure_draft,
     get_project_achievements,
 )
-from .views_review import ProjectReviewViewSet
-from .views_management import ProjectManagementViewSet, AchievementManagementViewSet
-from .views_changes import ProjectChangeRequestViewSet
 
 router = DefaultRouter()
 router.register(r"", ProjectViewSet, basename="project")

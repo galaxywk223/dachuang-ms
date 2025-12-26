@@ -148,7 +148,7 @@ import {
   updateProjectBatch,
   restoreProjectBatch,
   deleteProjectBatch,
-} from "@/api/project-batches";
+} from "@/api/system-settings/batches";
 
 
 const router = useRouter();

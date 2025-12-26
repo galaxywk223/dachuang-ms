@@ -112,10 +112,7 @@
         </el-table-column>
         <el-table-column label="审核节点" width="120" align="center">
           <template #default="{ row }">
-            <div class="status-dot">
-              <span class="dot" :class="getStatusClass(row.status)"></span>
-              <span>{{ row.status_display }}</span>
-            </div>
+            <ProjectStatusBadge :status="row.status" :label="row.status_display" />
           </template>
         </el-table-column>
 
@@ -261,7 +258,8 @@ import {
   Close,
   ArrowDown,
 } from "@element-plus/icons-vue";
-import { getReviewProjects, approveProject, rejectProject } from "@/api/admin";
+import { getReviewProjects, approveProject, rejectProject } from "@/api/projects/admin";
+import ProjectStatusBadge from "@/components/business/project/StatusBadge.vue";
 import request from "@/utils/request";
 
 const loading = ref(false);
@@ -422,14 +420,6 @@ const submitBatchReject = async () => {
   }
 };
 
-const getStatusClass = (status: string) => {
-  if (status.includes("APPROVED")) return "dot-success";
-  if (status.includes("REJECTED")) return "dot-danger";
-  if (status.includes("REVIEWING") || status.includes("AUDITING") || status === "SUBMITTED")
-    return "dot-warning";
-  return "dot-info";
-};
-
 onMounted(() => {
   fetchProjects();
 });
@@ -486,33 +476,4 @@ onMounted(() => {
 .mb-4 { margin-bottom: 16px; }
 .mt-4 { margin-top: 16px; }
 
-.status-dot {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-size: 13px;
-
-  .dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-
-    &.dot-success {
-      background: $success;
-      box-shadow: 0 0 0 2px rgba($success, 0.2);
-    }
-    &.dot-warning {
-      background: $warning;
-      box-shadow: 0 0 0 2px rgba($warning, 0.2);
-    }
-    &.dot-danger {
-      background: $danger;
-      box-shadow: 0 0 0 2px rgba($danger, 0.2);
-    }
-    &.dot-info {
-      background: $slate-400;
-    }
-  }
-}
 </style>

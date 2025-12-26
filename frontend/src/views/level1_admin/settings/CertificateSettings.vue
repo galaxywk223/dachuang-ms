@@ -93,7 +93,7 @@
 <script setup lang="ts">
 import { reactive, ref, onMounted } from "vue";
 import { ElMessage, type UploadUserFile, type UploadFile } from "element-plus";
-import { getDictionaryByCode } from "@/api/dictionary";
+import { getDictionaryByCode } from "@/api/dictionaries";
 import {
   getCertificateSettings,
   createCertificateSetting,

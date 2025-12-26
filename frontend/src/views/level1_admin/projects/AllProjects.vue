@@ -279,10 +279,7 @@
 
         <el-table-column label="审核节点" width="140" align="center" fixed="right">
           <template #default="{ row }">
-            <div class="status-dot">
-              <span class="dot" :class="getStatusClass(row.status)"></span>
-              <span>{{ row.status_display }}</span>
-            </div>
+            <ProjectStatusBadge :status="row.status" :label="row.status_display" />
           </template>
         </el-table-column>
 
@@ -355,7 +352,8 @@
 
 <script setup lang="ts">
 import { Search, RefreshLeft, Download, ArrowDown } from "@element-plus/icons-vue";
-import { useAllProjects } from "./useAllProjects";
+import { useAllProjects } from "./hooks/useAllProjects";
+import ProjectStatusBadge from "@/components/business/project/StatusBadge.vue";
 
 const {
   loading,
@@ -393,7 +391,6 @@ const {
   batchNotifyForm,
   getLevelType,
   getLabel,
-  getStatusClass,
 } = useAllProjects();
 
 const handleBatchCommand = (command: string) => {

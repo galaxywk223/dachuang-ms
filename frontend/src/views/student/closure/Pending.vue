@@ -134,7 +134,7 @@
 import { ref, reactive, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import { useRouter } from "vue-router";
-import { getPendingClosureProjects } from "@/api/project";
+import { getPendingClosureProjects } from "@/api/projects";
 
 const router = useRouter();
 

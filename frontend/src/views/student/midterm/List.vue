@@ -66,7 +66,7 @@
 import { ref, reactive, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import { useRouter } from "vue-router";
-import { getProjects } from "@/api/project";
+import { getProjects } from "@/api/projects";
 
 const router = useRouter();
 

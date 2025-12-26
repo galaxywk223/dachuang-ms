@@ -5,7 +5,7 @@ import {
     getDictionaryByCode,
     type DictionaryItem,
     type DictionaryBatchResponse,
-} from "@/api/dictionary";
+} from "@/api/dictionaries";
 
 /**
  * 字典缓存

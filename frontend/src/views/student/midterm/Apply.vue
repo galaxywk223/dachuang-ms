@@ -116,7 +116,7 @@ import { useRoute } from 'vue-router'
 import { UploadFilled } from '@element-plus/icons-vue'
 import { ElMessage, type FormInstance, type UploadUserFile, type UploadFile } from 'element-plus'
 import request from '@/utils/request'
-import { getProjectDetail } from '@/api/project'
+import { getProjectDetail } from '@/api/projects'
 
 interface Project {
   id: number

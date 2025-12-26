@@ -75,7 +75,7 @@ import { reactive, ref, computed, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { getEffectiveSettings, updateSettingByCode } from "@/api/system-settings";
-import { getProjectBatch } from "@/api/project-batches";
+import { getProjectBatch } from "@/api/system-settings/batches";
 import SystemConfigDatesTab from "./components/SystemConfigDatesTab.vue";
 import SystemConfigLimitsTab from "./components/SystemConfigLimitsTab.vue";
 import SystemConfigProcessTab from "./components/SystemConfigProcessTab.vue";

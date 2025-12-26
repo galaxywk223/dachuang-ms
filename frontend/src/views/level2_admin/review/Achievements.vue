@@ -101,7 +101,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
-import { getAchievements, exportAchievements } from '@/api/admin';
+import { getAchievements, exportAchievements } from '@/api/projects/admin';
 
 const loading = ref(false);
 const tableData = ref([]);

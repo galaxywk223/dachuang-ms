@@ -152,7 +152,7 @@ import {
   getClosureDrafts,
   updateClosureApplication,
   deleteClosureDraft,
-} from "@/api/project";
+} from "@/api/projects";
 
 const router = useRouter();
 

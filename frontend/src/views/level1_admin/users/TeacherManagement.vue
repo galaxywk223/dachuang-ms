@@ -262,10 +262,10 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue';
 import { Search, Plus, Upload, UploadFilled } from '@element-plus/icons-vue';
-import { getUsers, toggleUserStatus, createUser, updateUser, deleteUser } from '@/api/user-admin';
+import { getUsers, toggleUserStatus, createUser, updateUser, deleteUser } from '@/api/users/admin';
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus';
 import { useDictionary } from '@/composables/useDictionary';
-import { DICT_CODES } from '@/api/dictionary';
+import { DICT_CODES } from '@/api/dictionaries';
 
 const loading = ref(false);
 const tableData = ref<any[]>([]);
@@ -512,7 +512,7 @@ const handleImportSubmit = async () => {
         formData.append('file', importFile.value);
         formData.append('role', 'TEACHER'); 
         
-        const { importUsers } = await import('@/api/user-admin');
+        const { importUsers } = await import('@/api/users/admin');
         const res = await importUsers(formData);
         
         if (res.code === 200) {

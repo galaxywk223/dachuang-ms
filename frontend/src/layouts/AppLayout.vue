@@ -183,7 +183,7 @@ import {
 	  SwitchButton,
 	  Expand, Fold, Lock, Setting, Folder, User
 } from '@element-plus/icons-vue';
-import { getCurrentBatch } from '@/api/project-batches';
+import { getCurrentBatch } from '@/api/system-settings/batches';
 
 const route = useRoute();
 const router = useRouter();

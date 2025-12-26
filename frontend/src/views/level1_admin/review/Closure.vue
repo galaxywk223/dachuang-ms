@@ -91,10 +91,7 @@
 
         <el-table-column label="审核节点" width="120" align="center">
           <template #default="{ row }">
-            <div class="status-dot">
-              <span class="dot" :class="getStatusClass(row.status)"></span>
-              <span>{{ row.status_display }}</span>
-            </div>
+            <ProjectStatusBadge :status="row.status" :label="row.status_display" />
           </template>
         </el-table-column>
         <el-table-column label="操作" width="180" align="center" fixed="right">
@@ -210,10 +207,11 @@ import {
   approveProject,
   rejectProject,
   batchDownloadAttachments,
-} from "@/api/admin";
+} from "@/api/projects/admin";
+import ProjectStatusBadge from "@/components/business/project/StatusBadge.vue";
 import request from "@/utils/request";
 import { useDictionary } from "@/composables/useDictionary";
-import { DICT_CODES } from "@/api/dictionary";
+import { DICT_CODES } from "@/api/dictionaries";
 
 const loading = ref(false);
 const projects = ref<any[]>([]);
@@ -427,14 +425,6 @@ const downloadFile = (blob: Blob, filename: string) => {
   document.body.removeChild(link);
 };
 
-const getStatusClass = (status: string) => {
-  if (status.includes("APPROVED")) return "dot-success";
-  if (status.includes("REJECTED")) return "dot-danger";
-  if (status.includes("REVIEWING") || status === "SUBMITTED")
-    return "dot-warning";
-  return "dot-info";
-};
-
 onMounted(() => {
   loadDictionaries([DICT_CODES.CLOSURE_RATING]);
   fetchProjects();
@@ -498,33 +488,4 @@ onMounted(() => {
   font-size: 14px;
 }
 
-.status-dot {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-size: 13px;
-
-  .dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-
-    &.dot-success {
-      background: $success;
-      box-shadow: 0 0 0 2px rgba($success, 0.2);
-    }
-    &.dot-warning {
-      background: $warning;
-      box-shadow: 0 0 0 2px rgba($warning, 0.2);
-    }
-    &.dot-danger {
-      background: $danger;
-      box-shadow: 0 0 0 2px rgba($danger, 0.2);
-    }
-    &.dot-info {
-      background: $slate-400;
-    }
-  }
-}
 </style>
