@@ -1,8 +1,14 @@
 <template>
-  <div class="page-container">
-
-    <el-card class="content-card" shadow="never">
-       <el-empty description="此模块正在开发中..." />
+  <div class="colleges-page">
+    <el-card class="main-card" shadow="never">
+      <template #header>
+         <div class="card-header">
+           <div class="header-left">
+             <span class="header-title">学院管理</span>
+           </div>
+         </div>
+      </template>
+      <el-empty description="此模块正在开发中..." />
     </el-card>
   </div>
 </template>
@@ -10,22 +16,32 @@
 <style scoped lang="scss">
 @use "@/styles/variables.scss" as *;
 
-.page-container {
-  padding: 0;
+.colleges-page {
+  padding: 20px;
 }
 
-.page-header {
-  margin-bottom: 24px;
-  h1 {
-    font-size: 24px;
-    font-weight: 600;
-    color: $slate-800;
-    margin: 0 0 8px 0;
+.main-card {
+  border-radius: 8px;
+  :deep(.el-card__header) {
+      padding: 16px 20px;
+      font-weight: 600;
+      border-bottom: 1px solid $color-border-light;
   }
 }
 
-.subtitle {
-  color: $slate-500;
-  margin: 0;
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.header-title {
+    font-size: 16px;
+    color: $slate-800;
 }
 </style>

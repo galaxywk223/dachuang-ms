@@ -1,18 +1,19 @@
 <template>
   <div class="apply-page">
-    <div class="form-container">
-      <!-- Header -->
-      <div class="page-header">
-        <div class="title-bar">
-           <span class="title">结题申请</span>
-           <el-tag size="small" type="success" effect="plain" round>项目结题</el-tag>
+    <el-card class="main-card" shadow="never">
+      <template #header>
+        <div class="card-header">
+          <div class="header-left">
+            <span class="header-title">结题申请</span>
+            <el-tag size="small" type="success" effect="plain" round class="ml-3">项目结题</el-tag>
+          </div>
+          <div class="header-actions">
+             <el-button @click="router.back()">返回</el-button>
+             <el-button type="info" plain @click="saveAsDraft">保存草稿</el-button>
+             <el-button type="primary" @click="submitForm">提交申请</el-button>
+          </div>
         </div>
-        <div class="actions">
-           <el-button @click="router.back()">返回</el-button>
-           <el-button type="info" plain @click="saveAsDraft">保存草稿</el-button>
-           <el-button type="primary" @click="submitForm">提交申请</el-button>
-        </div>
-      </div>
+      </template>
 
       <el-form
         ref="formRef"
@@ -292,7 +293,7 @@
             <el-button type="primary" @click="confirmAchievement">确定</el-button>
         </template>
       </el-dialog>
-    </div>
+    </el-card>
   </div>
 </template>
 
@@ -569,106 +570,5 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables.scss" as *;
-
-.form-container {
-  background: white;
-  border-radius: $radius-lg;
-  box-shadow: $shadow-sm;
-  border: 1px solid $color-border-light;
-  overflow: hidden;
-  max-width: 1200px; /* Optional: limit width for better readability */
-  margin: 0 auto;
-}
-
-.page-header {
-  padding: 16px 24px;
-  border-bottom: 1px solid $slate-100;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  
-  .title-bar {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      
-      .title {
-        font-size: 18px;
-        font-weight: 600;
-        color: $slate-800;
-      }
-  }
-}
-
-.main-form {
-  padding: 24px 32px;
-}
-
-.form-section {
-  margin-bottom: 32px;
-  
-  &:last-child {
-      margin-bottom: 0;
-  }
-
-  .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 20px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid $slate-100;
-      
-      .section-title {
-          font-size: 16px;
-          font-weight: 600;
-          color: $slate-800;
-          display: flex;
-          align-items: center;
-          
-          &::before {
-              content: '';
-              display: inline-block;
-              width: 4px;
-              height: 16px;
-              background-color: $primary-500;
-              margin-right: 8px;
-              border-radius: 2px;
-          }
-      }
-  }
-}
-
-.upload-demo {
-  :deep(.el-upload-dragger) {
-    width: 100%;
-    background-color: $slate-50;
-    border-color: $slate-200;
-    
-    &:hover {
-        border-color: $primary-500;
-        background-color: white;
-    }
-  }
-}
-
-.is-disabled-soft {
-    :deep(.el-input__wrapper) {
-        background-color: $slate-50 !important;
-        box-shadow: none !important;
-        border: 1px solid $slate-200;
-        
-        .el-input__inner {
-            color: $slate-600;
-            -webkit-text-fill-color: $slate-600;
-        }
-    }
-}
-
-.empty-text {
-    color: $slate-400;
-    padding: 20px 0;
-    text-align: center;
-}
+@use "./Apply.scss";
 </style>

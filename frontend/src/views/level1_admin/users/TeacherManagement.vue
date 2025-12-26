@@ -1,125 +1,131 @@
 <template>
-  <div>
-    <div class="page-container">
-      <!-- Filter Bar -->
-      <el-card class="filter-card" shadow="never">
-        <el-form :inline="true" :model="filters" class="filter-form">
-          <el-form-item label="搜索">
-            <el-input 
-              v-model="filters.search" 
-              placeholder="姓名 / 工号" 
-              clearable
-              @keyup.enter="handleSearch"
+  <div class="teacher-management-page">
+      <!-- Main Card -->
+      <el-card class="main-card" shadow="never">
+        <template #header>
+           <div class="card-header">
+              <div class="header-left">
+                  <span class="header-title">指导教师管理</span>
+                  <el-tag type="info" size="small" effect="plain" round class="count-tag ml-3">共 {{ total }} 项</el-tag>
+              </div>
+              <div class="header-actions">
+                <el-button type="primary" @click="openCreateDialog">
+                  <el-icon class="mr-1"><Plus /></el-icon>添加教师
+                </el-button>
+                <el-button @click="handleImportClick">
+                    <el-icon class="mr-1"><Upload /></el-icon>批量导入
+                </el-button>
+              </div>
+           </div>
+        </template>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <el-form :inline="true" :model="filters" class="filter-form">
+              <el-form-item label="搜索">
+                <el-input 
+                  v-model="filters.search" 
+                  placeholder="姓名 / 工号" 
+                  clearable
+                  :prefix-icon="Search"
+                  style="width: 200px"
+                  @keyup.enter="handleSearch"
+                />
+              </el-form-item>
+              
+              <el-form-item label="学院">
+                <el-select
+                  v-model="filters.college"
+                  placeholder="选择学院"
+                  clearable
+                  filterable
+                  style="width: 180px"
+                >
+                  <el-option
+                    v-for="item in collegeOptions"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+              </el-form-item>
+    
+              <el-form-item>
+                <el-button type="primary" @click="handleSearch">查询</el-button>
+                <el-button @click="resetFilters">重置</el-button>
+              </el-form-item>
+            </el-form>
+        </div>
+
+        <!-- Table Section -->
+        <div class="table-section">
+            <el-table
+              v-loading="loading"
+              :data="tableData"
+              style="width: 100%"
+              stripe
+              header-cell-class-name="table-header-cell"
             >
-               <template #prefix><el-icon><Search /></el-icon></template>
-            </el-input>
-          </el-form-item>
-          
-          <el-form-item label="学院">
-            <el-select
-              v-model="filters.college"
-              placeholder="选择学院"
-              clearable
-              filterable
-              style="width: 180px"
-            >
-              <el-option
-                v-for="item in collegeOptions"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
+              <el-table-column prop="employee_id" label="工号" width="120" sortable />
+              <el-table-column prop="real_name" label="姓名" width="120" />
+              <el-table-column prop="title" label="职称" width="120">
+                 <template #default="{ row }">
+                     {{ getLabel(DICT_CODES.ADVISOR_TITLE, row.title) }}
+                 </template>
+              </el-table-column>
+              <el-table-column prop="college" label="所属学院" width="180">
+                  <template #default="{ row }">
+                      {{ getLabel(DICT_CODES.COLLEGE, row.college) }}
+                  </template>
+              </el-table-column>
+              <el-table-column prop="phone" label="手机号" width="130" />
+              <el-table-column prop="email" label="邮箱" min-width="180" />
+              <el-table-column label="状态" width="100">
+                 <template #default="scope">
+                    <el-tag :type="scope.row.is_active ? 'success' : 'danger'" size="small">
+                       {{ scope.row.is_active ? '正常' : '禁用' }}
+                    </el-tag>
+                 </template>
+              </el-table-column>
+              <el-table-column label="操作" fixed="right" width="180">
+                <template #default="scope">
+                  <el-button link type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
+                  <el-button 
+                      link 
+                      type="danger" 
+                      size="small" 
+                      @click="handleToggleStatus(scope.row)"
+                  >
+                      {{ scope.row.is_active ? '禁用' : '激活' }}
+                  </el-button>
+                  <el-button 
+                      link 
+                      type="danger" 
+                      size="small" 
+                      @click="handleDelete(scope.row)"
+                  >
+                      删除
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+    
+            <!-- Pagination -->
+            <div class="pagination-footer">
+              <el-pagination
+                v-model:current-page="currentPage"
+                v-model:page-size="pageSize"
+                :page-sizes="[10, 20, 50]"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="total"
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                background
+                size="small"
               />
-            </el-select>
-          </el-form-item>
-
-          <el-form-item>
-            <el-button type="primary" @click="handleSearch">查询</el-button>
-            <el-button @click="resetFilters">重置</el-button>
-          </el-form-item>
-        </el-form>
-      </el-card>
-
-      <!-- Table -->
-      <el-card class="table-card" shadow="never">
-        <div class="table-header">
-          <div class="title-bar">
-            <span class="title">指导教师管理</span>
-             <el-tag type="info" size="small" effect="plain" round class="count-tag">共 {{ total }} 项</el-tag>
-          </div>
-          <div class="actions">
-            <el-button type="primary" @click="openCreateDialog">
-              <el-icon><Plus /></el-icon>添加教师
-            </el-button>
-            <el-button @click="handleImportClick">
-                <el-icon><Upload /></el-icon>批量导入
-            </el-button>
-          </div>
-        </div>
-
-        <el-table
-          v-loading="loading"
-          :data="tableData"
-          style="width: 100%"
-          stripe
-        >
-          <el-table-column prop="employee_id" label="工号" width="120" sortable />
-          <el-table-column prop="real_name" label="姓名" width="120" />
-          <el-table-column prop="title" label="职称" width="120">
-             <template #default="{ row }">
-                 {{ getLabel(DICT_CODES.ADVISOR_TITLE, row.title) }}
-             </template>
-          </el-table-column>
-          <el-table-column prop="college" label="所属学院" width="180">
-              <template #default="{ row }">
-                  {{ getLabel(DICT_CODES.COLLEGE, row.college) }}
-              </template>
-          </el-table-column>
-          <el-table-column prop="phone" label="手机号" width="130" />
-          <el-table-column prop="email" label="邮箱" min-width="180" />
-          <el-table-column label="状态" width="100">
-             <template #default="scope">
-                <el-tag :type="scope.row.is_active ? 'success' : 'danger'" size="small">
-                   {{ scope.row.is_active ? '正常' : '禁用' }}
-                </el-tag>
-             </template>
-          </el-table-column>
-          <el-table-column label="操作" fixed="right" width="150">
-            <template #default="scope">
-              <el-button link type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
-              <el-button 
-                  link 
-                  type="danger" 
-                  size="small" 
-                  @click="handleToggleStatus(scope.row)"
-              >
-                  {{ scope.row.is_active ? '禁用' : '激活' }}
-              </el-button>
-              <el-button 
-                  link 
-                  type="danger" 
-                  size="small" 
-                  @click="handleDelete(scope.row)"
-              >
-                  删除
-              </el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-
-        <!-- Pagination -->
-        <div class="pagination-container">
-          <el-pagination
-            v-model:current-page="currentPage"
-            v-model:page-size="pageSize"
-            :page-sizes="[10, 20, 50]"
-            layout="total, sizes, prev, pager, next, jumper"
-            :total="total"
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
-          />
+            </div>
         </div>
       </el-card>
-    </div>
 
     <el-dialog
       v-model="addDialogVisible"

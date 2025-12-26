@@ -1,30 +1,31 @@
 <template>
   <div class="funds-manage-container">
-    <el-card class="box-card" v-loading="loading">
+    <el-card class="main-card" shadow="never" v-loading="loading">
       <template #header>
         <div class="card-header">
-          <div class="title-group">
-            <span class="title">经费管理</span>
-            <el-tag v-if="activeProject" size="small" effect="plain">{{ activeProject.title }}</el-tag>
-          </div>
-          <div class="header-actions">
-            <el-select
-              v-model="activeProjectId"
-              placeholder="选择项目"
-              filterable
-              clearable
-              style="width: 260px"
-              @change="handleProjectChange"
-            >
-              <el-option
-                v-for="item in projects"
-                :key="item.id"
-                :label="`${item.project_no || ''} ${item.title}`"
-                :value="item.id"
-              />
-            </el-select>
-            <el-button type="primary" :disabled="!activeProjectId" @click="showAddDialog">录入支出</el-button>
-          </div>
+           <div class="header-left">
+             <span class="header-title">经费管理</span>
+             <el-tag v-if="activeProject" size="small" effect="plain" class="ml-2">{{ activeProject.title }}</el-tag>
+           </div>
+           <div class="header-actions">
+             <el-select
+               v-model="activeProjectId"
+               placeholder="选择项目"
+               filterable
+               clearable
+               style="width: 260px"
+               class="mr-2"
+               @change="handleProjectChange"
+             >
+               <el-option
+                 v-for="item in projects"
+                 :key="item.id"
+                 :label="`${item.project_no || ''} ${item.title}`"
+                 :value="item.id"
+               />
+             </el-select>
+             <el-button type="primary" :disabled="!activeProjectId" @click="showAddDialog">录入支出</el-button>
+           </div>
         </div>
       </template>
 
@@ -224,38 +225,48 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
+@use "@/styles/variables.scss" as *;
+
 .funds-manage-container {
   padding: 20px;
+}
 
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    .title-group {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-
-      .title {
-        font-size: 18px;
-        font-weight: bold;
-      }
-    }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-  }
-
-  .stats-panel {
-    margin-top: 8px;
-  }
-
-  .mb-4 {
-    margin-bottom: 16px;
+.main-card {
+  border-radius: 8px;
+  :deep(.el-card__header) {
+      padding: 16px 20px;
+      font-weight: 600;
+      border-bottom: 1px solid $color-border-light;
   }
 }
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.header-title {
+    font-size: 16px;
+    color: $slate-800;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+}
+
+.stats-panel {
+  margin-top: 8px;
+}
+  
+.ml-2 { margin-left: 8px; }
+.mr-2 { margin-right: 8px; }
+.mb-4 { margin-bottom: 16px; }
 </style>
+

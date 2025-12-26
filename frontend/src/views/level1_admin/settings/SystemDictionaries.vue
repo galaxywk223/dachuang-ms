@@ -38,18 +38,18 @@
 
         <!-- Dictionary Items Management -->
         <el-col :span="18">
-          <el-card class="items-card" shadow="never">
+          <el-card class="items-card main-card" shadow="never">
             <template #header>
-              <div class="items-header">
-                <div class="left-panel">
-                  <span class="type-title">{{
+              <div class="card-header">
+                <div class="header-left">
+                  <span class="header-title">{{
                     currentType?.name || "请选择左侧参数类型"
                   }}</span>
-                  <span class="type-desc" v-if="currentType">{{
+                  <span class="text-gray-400 text-sm ml-2" v-if="currentType">{{
                     currentType.description
                   }}</span>
                 </div>
-                <div class="right-panel" v-if="currentType">
+                <div class="header-actions" v-if="currentType">
                   <el-button type="primary" @click="openAddDialog">
                     <el-icon><Plus /></el-icon> 添加条目
                   </el-button>

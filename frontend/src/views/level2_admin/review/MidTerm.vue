@@ -1,9 +1,11 @@
 <template>
   <div class="midterm-review-container">
-    <el-card>
+    <el-card class="main-card" shadow="never">
       <template #header>
         <div class="card-header">
-          <span>中期检查审核</span>
+          <div class="header-left">
+             <span class="header-title">中期检查审核</span>
+          </div>
           <div class="header-actions">
             <el-button type="primary" plain @click="openBatchDialog">批量审核</el-button>
           </div>
@@ -300,17 +302,49 @@ const submitBatchReview = async () => {
 
 </script>
 
-<style scoped>
-.mb-4 { margin-bottom: 16px; }
-.mt-4 { margin-top: 16px; }
-.mr-2 { margin-right: 8px; }
-.pagination-container {
-  display: flex;
-  justify-content: flex-end;
+<style scoped lang="scss">
+@use "@/styles/variables.scss" as *;
+
+.midterm-review-container {
+  padding: 20px;
 }
+
+.main-card {
+  border-radius: 8px;
+  :deep(.el-card__header) {
+      padding: 16px 20px;
+      font-weight: 600;
+      border-bottom: 1px solid $color-border-light;
+  }
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.header-title {
+    font-size: 16px;
+    color: $slate-800;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+}
+
+.mb-4 { margin-bottom: 16px; }
+.mt-4 { margin-top: 16px; }
+.mr-2 { margin-right: 8px; }
+
+.pagination-container {
+  display: flex;
+  justify-content: flex-end;
 }
 </style>

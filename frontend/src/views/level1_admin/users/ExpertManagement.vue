@@ -1,18 +1,35 @@
 <template>
-  <div>
-    <div class="page-container">
-      <!-- Filter Bar -->
-      <el-card class="filter-card" shadow="never">
+  <div class="teacher-management-page"> <!-- Reuse SCSS class for padding -->
+    <el-card class="main-card" shadow="never">
+      <template #header>
+         <div class="card-header">
+            <div class="header-left">
+              <span class="header-title">专家库管理</span>
+              <el-tag type="info" size="small" effect="plain" round class="count-tag ml-3">共 {{ total }} 项</el-tag>
+            </div>
+            <div class="header-actions">
+              <el-button type="primary" @click="openCreateDialog">
+                <el-icon class="mr-1"><Plus /></el-icon>添加专家
+              </el-button>
+              <el-button @click="handleImportClick">
+                  <el-icon class="mr-1"><Upload /></el-icon>批量导入
+              </el-button>
+            </div>
+         </div>
+      </template>
+
+      <!-- Filter Section -->
+      <div class="filter-section">
         <el-form :inline="true" :model="filters" class="filter-form">
           <el-form-item label="搜索">
             <el-input 
               v-model="filters.search" 
               placeholder="姓名 / 工号" 
               clearable
+              :prefix-icon="Search"
+              style="width: 200px"
               @keyup.enter="handleSearch"
-            >
-               <template #prefix><el-icon><Search /></el-icon></template>
-            </el-input>
+            />
           </el-form-item>
           
           <el-form-item label="学院">
@@ -53,25 +70,10 @@
             <el-button @click="resetFilters">重置</el-button>
           </el-form-item>
         </el-form>
-      </el-card>
+      </div>
 
-      <!-- Table -->
-      <el-card class="table-card" shadow="never">
-        <div class="table-header">
-          <div class="title-bar">
-            <span class="title">专家库管理</span>
-             <el-tag type="info" size="small" effect="plain" round class="count-tag">共 {{ total }} 项</el-tag>
-          </div>
-          <div class="actions">
-            <el-button type="primary" @click="openCreateDialog">
-              <el-icon><Plus /></el-icon>添加专家
-            </el-button>
-            <el-button @click="handleImportClick">
-                <el-icon><Upload /></el-icon>批量导入
-            </el-button>
-          </div>
-        </div>
-
+      <!-- Table Section -->
+      <div class="table-section">
         <el-table
           v-loading="loading"
           :data="tableData"
@@ -106,7 +108,7 @@
                 </el-tag>
              </template>
           </el-table-column>
-          <el-table-column label="操作" fixed="right" width="150">
+          <el-table-column label="操作" fixed="right" width="180">
             <template #default="scope">
               <el-button link type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
               <el-button 
@@ -130,7 +132,7 @@
         </el-table>
 
         <!-- Pagination -->
-        <div class="pagination-container">
+        <div class="pagination-footer">
           <el-pagination
             v-model:current-page="currentPage"
             v-model:page-size="pageSize"
@@ -139,10 +141,12 @@
             :total="total"
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
+            background
+            size="small"
           />
         </div>
-      </el-card>
-    </div>
+      </div>
+    </el-card>
 
     <el-dialog
       v-model="addDialogVisible"
@@ -591,11 +595,11 @@ const handleImportSubmit = async () => {
     const { importUsers } = await import('@/api/user-admin');
     const res = await importUsers(formData);
         
-        if (res.code === 200) {
-            ElMessage.success(res.message);
-            importDialogVisible.value = false;
-            loadData();
-        }
+    if (res.code === 200) {
+        ElMessage.success(res.message);
+        importDialogVisible.value = false;
+        loadData();
+    }
     } catch (error: any) {
         console.error(error);
         ElMessage.error(error.response?.data?.message || "导入失败");

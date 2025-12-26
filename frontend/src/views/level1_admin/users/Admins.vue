@@ -1,11 +1,21 @@
-```html
 <template>
-  <div>
-    <div class="page-container">
-      <!-- Filter Bar -->
+  <div class="admins-page">
+    <el-card class="main-card" shadow="never">
+      <template #header>
+        <div class="card-header">
+           <div class="header-left">
+             <span class="header-title">二级管理员管理</span>
+             <el-tag type="info" size="small" effect="plain" round class="ml-2">共 {{ total }} 项</el-tag>
+           </div>
+           <div class="header-actions">
+             <el-button type="primary" @click="openCreateDialog">
+               <el-icon><Plus /></el-icon>添加管理员
+             </el-button>
+           </div>
+        </div>
+      </template>
 
-      <!-- Filter Bar -->
-      <el-card class="filter-card" shadow="never">
+      <div class="filter-section mb-4">
         <el-form :inline="true" :model="filters" class="filter-form">
           <el-form-item label="搜索">
             <el-input 
@@ -40,81 +50,66 @@
             <el-button @click="resetFilters">重置</el-button>
           </el-form-item>
         </el-form>
-      </el-card>
+      </div>
 
-      <!-- Table -->
-      <el-card class="table-card" shadow="never">
-        <div class="table-header">
-          <div class="title-bar">
-            <span class="title">二级管理员管理</span>
-             <el-tag type="info" size="small" effect="plain" round class="count-tag">共 {{ total }} 项</el-tag>
-          </div>
-          <div class="actions">
-            <el-button type="primary" @click="openCreateDialog">
-              <el-icon><Plus /></el-icon>添加管理员
-            </el-button>
-          </div>
-        </div>
-
-        <el-table
-          v-loading="loading"
-          :data="tableData"
-          style="width: 100%"
-          stripe
-        >
-          <el-table-column prop="employee_id" label="工号" width="120" sortable />
-          <el-table-column prop="real_name" label="姓名" width="120" />
-          <el-table-column prop="college" label="所属学院" width="180">
-             <template #default="{ row }">
-                 {{ getLabel(DICT_CODES.COLLEGE, row.college) }}
-             </template>
-          </el-table-column>
-          <el-table-column prop="phone" label="手机号" width="120" />
-          <el-table-column prop="email" label="邮箱" width="180" />
-          <el-table-column label="状态" width="100">
-             <template #default="scope">
-                <el-tag :type="scope.row.is_active ? 'success' : 'danger'" size="small">
-                   {{ scope.row.is_active ? '正常' : '禁用' }}
-                </el-tag>
-             </template>
-          </el-table-column>
-          <el-table-column label="操作" fixed="right" min-width="150">
-            <template #default="scope">
-              <el-button link type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
-              <el-button 
-                  link 
-                  type="danger" 
-                  size="small" 
-                  @click="handleToggleStatus(scope.row)"
-              >
-                  {{ scope.row.is_active ? '禁用' : '激活' }}
-              </el-button>
-              <el-button 
-                  link 
-                  type="danger" 
-                  size="small" 
-                  @click="handleDelete(scope.row)"
-              >
-                  删除
-              </el-button>
+      <el-table
+        v-loading="loading"
+        :data="tableData"
+        style="width: 100%"
+        stripe
+        border
+      >
+        <el-table-column prop="employee_id" label="工号" width="120" sortable />
+        <el-table-column prop="real_name" label="姓名" width="120" />
+        <el-table-column prop="college" label="所属学院" width="180">
+            <template #default="{ row }">
+                {{ getLabel(DICT_CODES.COLLEGE, row.college) }}
             </template>
-          </el-table-column>
-        </el-table>
+        </el-table-column>
+        <el-table-column prop="phone" label="手机号" width="120" />
+        <el-table-column prop="email" label="邮箱" width="180" />
+        <el-table-column label="状态" width="100">
+            <template #default="scope">
+                <el-tag :type="scope.row.is_active ? 'success' : 'danger'" size="small">
+                    {{ scope.row.is_active ? '正常' : '禁用' }}
+                </el-tag>
+            </template>
+        </el-table-column>
+        <el-table-column label="操作" fixed="right" min-width="150" align="center">
+            <template #default="scope">
+                <el-button link type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
+                <el-button 
+                    link 
+                    type="danger" 
+                    size="small" 
+                    @click="handleToggleStatus(scope.row)"
+                >
+                    {{ scope.row.is_active ? '禁用' : '激活' }}
+                </el-button>
+                <el-button 
+                    link 
+                    type="danger" 
+                    size="small" 
+                    @click="handleDelete(scope.row)"
+                >
+                    删除
+                </el-button>
+            </template>
+        </el-table-column>
+      </el-table>
 
-        <!-- Pagination -->
-        <div class="pagination-container">
-          <el-pagination
-            v-model:current-page="currentPage"
-            v-model:page-size="pageSize"
-            :page-sizes="[10, 20, 50]"
-            layout="total, sizes, prev, pager, next, jumper"
-            :total="total"
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
-          />
-        </div>
-      </el-card>
-    </div>
+      <div class="pagination-container mt-4">
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :page-sizes="[10, 20, 50]"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
+    </el-card>
 
     <el-dialog
       v-model="addDialogVisible"
@@ -407,63 +402,41 @@ onMounted(() => {
 <style scoped lang="scss">
 @use "@/styles/variables.scss" as *;
 
-.page-container {
-  padding: 0;
+.admins-page {
+  padding: 20px;
 }
 
-.page-header {
-  display: none;
+.main-card {
+  border-radius: 8px;
+  :deep(.el-card__header) {
+      padding: 16px 20px;
+      font-weight: 600;
+      border-bottom: 1px solid $color-border-light;
+  }
 }
 
-.table-header {
-  padding: 16px 24px;
-  border-bottom: 1px solid $slate-100;
+.card-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-
-  .title-bar {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      
-      .title {
-          font-size: 16px;
-          font-weight: 600;
-          color: $slate-800;
-          position: relative;
-          padding-left: 14px;
-          
-          &::before {
-              content: '';
-              position: absolute;
-              left: 0;
-              top: 50%;
-              transform: translateY(-50%);
-              width: 4px;
-              height: 16px;
-              background: $primary-600;
-              border-radius: 2px;
-          }
-      }
-  }
+  align-items: center;
 }
 
-.filter-card {
-  margin-bottom: 16px;
-  :deep(.el-card__body) {
-      padding: 18px 20px;
-  }
+.header-left {
+    display: flex;
+    align-items: center;
 }
 
-.table-card {
-    :deep(.el-card__body) {
-        padding: 0;
-    }
+.header-title {
+    font-size: 16px;
+    color: $slate-800;
 }
 
+.header-actions {
+    display: flex;
+    align-items: center;
+}
+    
 .pagination-container {
-    padding: 16px;
     display: flex;
     justify-content: flex-end;
 }
@@ -477,4 +450,8 @@ onMounted(() => {
   justify-content: flex-end;
   gap: 8px;
 }
+    
+.ml-2 { margin-left: 8px; }
+.mb-4 { margin-bottom: 16px; }
+.mt-4 { margin-top: 16px; }
 </style>

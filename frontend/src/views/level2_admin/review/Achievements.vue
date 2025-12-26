@@ -2,27 +2,34 @@
   <div class="achievements-page">
 
 
-    <!-- Filter/Search -->
-    <el-card class="search-card">
-      <el-form :inline="true" :model="searchForm" class="search-form">
-        <el-form-item label="项目年份">
-           <el-input v-model="searchForm.year" placeholder="如: 2024" clearable />
-        </el-form-item>
-        <el-form-item label="关键词">
-          <el-input v-model="searchForm.keyword" placeholder="项目名称/成果名称" clearable />
-        </el-form-item>
-         <el-form-item label="学院">
-           <el-input v-model="searchForm.college" placeholder="学院名称" clearable />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleSearch">查询</el-button>
-          <el-button @click="resetSearch">重置</el-button>
-          <el-button type="success" plain @click="handleExport">导出表格</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+    <el-card class="main-card" shadow="never">
+      <template #header>
+        <div class="card-header">
+           <div class="header-left">
+             <span class="header-title">结题成果查看</span>
+           </div>
+        </div>
+      </template>
 
-    <div class="page-content">
+      <div class="filter-section mb-4">
+        <el-form :inline="true" :model="searchForm" class="search-form">
+          <el-form-item label="项目年份">
+             <el-input v-model="searchForm.year" placeholder="如: 2024" clearable style="width: 140px"/>
+          </el-form-item>
+          <el-form-item label="关键词">
+            <el-input v-model="searchForm.keyword" placeholder="项目名称/成果名称" clearable style="width: 200px"/>
+          </el-form-item>
+           <el-form-item label="学院">
+             <el-input v-model="searchForm.college" placeholder="学院名称" clearable style="width: 160px"/>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="handleSearch">查询</el-button>
+            <el-button @click="resetSearch">重置</el-button>
+            <el-button type="success" plain @click="handleExport">导出表格</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+
       <el-table
         v-loading="loading"
         :data="tableData"
@@ -76,7 +83,7 @@
         </el-table-column>
       </el-table>
       
-      <div class="pagination-container">
+      <div class="pagination-container mt-4">
         <el-pagination
           v-model:current-page="pagination.page"
           v-model:page-size="pagination.pageSize"
@@ -87,7 +94,7 @@
           @current-change="handleCurrentChange"
         />
       </div>
-    </div>
+    </el-card>
   </div>
 </template>
 
@@ -207,50 +214,48 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-@use '@/styles/variables.scss' as *;
+@use "@/styles/variables.scss" as *;
 
 .achievements-page {
-  .page-header {
-      background: #ffffff;
-      padding: 24px;
-      border-radius: 8px;
-      margin-bottom: 24px;
-      box-shadow: 0 1px 4px rgba(0,21,41,0.08);
+  padding: 20px;
+}
 
-      h2 {
-        margin: 0 0 8px 0;
-        font-size: 20px;
-        color: #1f2937;
-      }
-
-      p {
-        margin: 0;
-        color: #6b7280;
-        font-size: 14px;
-      }
-  }
-
-  .search-card {
-      margin-bottom: 24px;
-      border: none;
-      box-shadow: 0 1px 4px rgba(0,21,41,0.08) !important;
-      
-      :deep(.el-card__body) {
-          padding: 24px 24px 0 24px;
-      }
-  }
-
-  .page-content {
-      background: #ffffff;
-      padding: 24px;
-      border-radius: 8px;
-      box-shadow: 0 1px 4px rgba(0,21,41,0.08);
-      
-      .pagination-container {
-         margin-top: 20px;
-         display: flex;
-         justify-content: flex-end;
-      }
+.main-card {
+  border-radius: 8px;
+  :deep(.el-card__header) {
+      padding: 16px 20px;
+      font-weight: 600;
+      border-bottom: 1px solid $color-border-light;
   }
 }
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.header-title {
+    font-size: 16px;
+    color: $slate-800;
+}
+
+.mb-4 {
+    margin-bottom: 16px;
+}
+
+.mt-4 {
+    margin-top: 16px;
+}
+  
+.pagination-container {
+    display: flex;
+    justify-content: flex-end;
+}
 </style>
+

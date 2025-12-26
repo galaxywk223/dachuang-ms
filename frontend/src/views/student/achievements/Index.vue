@@ -1,15 +1,15 @@
 <template>
   <div class="achievements-page">
-    <el-card class="box-card" v-loading="loading">
+    <el-card class="main-card" shadow="never" v-loading="loading">
       <template #header>
         <div class="card-header">
-          <div class="title-group">
-            <span class="title">成果管理</span>
-            <el-tag v-if="activeProject" size="small" effect="plain" type="info">
+          <div class="header-left">
+            <span class="header-title">成果管理</span>
+            <el-tag v-if="activeProject" size="small" effect="plain" type="info" class="ml-3">
               {{ activeProject.title }}
             </el-tag>
           </div>
-          <div class="actions">
+          <div class="header-actions">
             <el-select
               v-model="activeProjectId"
               placeholder="选择项目"
@@ -629,47 +629,62 @@ onMounted(async () => {
 });
 </script>
 
-<style scoped lang="scss">
+@use "@/styles/variables.scss" as *;
+
 .achievements-page {
   padding: 20px;
+}
 
-  .card-header {
+.main-card {
+  border-radius: 8px;
+  :deep(.el-card__header) {
+      padding: 16px 20px;
+      font-weight: 600;
+      border-bottom: 1px solid $color-border-light;
+  }
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.header-left {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+}
 
-    .title-group {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+.header-title {
+    font-size: 16px;
+    color: $slate-800;
+}
 
-      .title {
-        font-size: 18px;
-        font-weight: bold;
-      }
-    }
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
 
-    .actions {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-  }
+.ml-3 {
+    margin-left: 12px;
+}
 
-  .mb-4 {
+.mb-4 {
     margin-bottom: 16px;
-  }
+}
 
-  .mt-4 {
+.mt-4 {
     margin-top: 16px;
-  }
+}
 
-  .extra-data {
+.extra-data {
     margin: 0;
     white-space: pre-wrap;
     word-break: break-word;
     font-size: 12px;
     color: #64748b;
-  }
 }
-</style>
+

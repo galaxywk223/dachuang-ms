@@ -1,48 +1,50 @@
 <template>
   <div class="help-page">
     <div class="page-content">
-      <el-card class="help-card">
+      <el-card class="main-card" shadow="never">
         <template #header>
           <div class="card-header">
-            <el-icon><InfoFilled /></el-icon>
-            <span>系统使用说明</span>
+            <span class="header-title">帮助中心</span>
           </div>
         </template>
+        
         <div class="help-content">
+          <h3 class="section-title">常见问题</h3>
           <el-collapse>
             <el-collapse-item title="如何申报项目？" name="1">
-              <p>1. 点击左侧菜单的"立项管理"</p>
-              <p>2. 点击"新建项目"按钮</p>
-              <p>3. 填写项目基本信息</p>
-              <p>4. 提交申报材料</p>
+              <div class="faq-content">
+                请在"立项申报"菜单中点击"申请立项"按钮，如实填写项目信息并提交。提交后请关注审核状态。
+              </div>
             </el-collapse-item>
-            <el-collapse-item title="如何查看项目审核进度？" name="2">
-              <p>1. 进入"项目管理"页面</p>
-              <p>2. 查看项目状态列</p>
-              <p>3. 点击项目可查看详细信息</p>
+            <el-collapse-item title="审核流程是怎样的？" name="2">
+              <div class="faq-content">
+                项目申报提交后，会依次经过指导老师审核、学院(二级)审核、学校(一级)审核。您可以在项目列表中查看当前状态。
+              </div>
             </el-collapse-item>
-
-            <el-collapse-item title="如何申请结题？" name="4">
-              <p>1. 进入"结题管理"页面</p>
-              <p>2. 选择已完成的项目</p>
-              <p>3. 提交结题报告和相关材料</p>
-              <p>4. 等待审核</p>
+            <el-collapse-item title="经费如何报销？" name="3">
+              <div class="faq-content">
+                请在"经费管理"中录入支出记录，并上传相关发票凭证。经审核通过后即可报销。
+              </div>
+            </el-collapse-item>
+            <el-collapse-item title="忘记密码怎么办？" name="4">
+              <div class="faq-content">
+                请联系系统管理员或所在学院的教学秘书重置密码。
+              </div>
             </el-collapse-item>
           </el-collapse>
-        </div>
-      </el-card>
 
-      <el-card class="contact-card">
-        <template #header>
-          <div class="card-header">
-            <el-icon><Phone /></el-icon>
-            <span>联系我们</span>
+          <el-divider content-position="left">联系我们</el-divider>
+
+          <div class="contact-info">
+            <div class="contact-item">
+              <el-icon><Message /></el-icon>
+              <span>技术支持邮箱：support@example.com</span>
+            </div>
+            <div class="contact-item">
+              <el-icon><Location /></el-icon>
+              <span>办公地点：行政楼 305 室</span>
+            </div>
           </div>
-        </template>
-        <div class="contact-content">
-          <p><strong>技术支持邮箱：</strong> support@example.com</p>
-          <p><strong>联系电话：</strong> 0000-00000000</p>
-          <p><strong>工作时间：</strong> 周一至周五 9:00-17:00</p>
         </div>
       </el-card>
     </div>
@@ -50,74 +52,58 @@
 </template>
 
 <script setup lang="ts">
-import { InfoFilled, Phone } from "@element-plus/icons-vue";
+import { Message, Location } from '@element-plus/icons-vue'
 </script>
 
 <style scoped lang="scss">
+@use "@/styles/variables.scss" as *;
+
 .help-page {
-  .page-header {
-    background: #ffffff;
-    padding: 24px;
-    border-radius: 8px;
-    margin-bottom: 24px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-
-    h2 {
-      margin: 0 0 8px 0;
-      font-size: 24px;
-      color: #262626;
-    }
-
-    p {
-      margin: 0;
-      color: #8c8c8c;
-      font-size: 14px;
-    }
-  }
-
+  padding: 20px;
   .page-content {
-    .help-card,
-    .contact-card {
-      margin-bottom: 24px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      max-width: 1200px;
+      margin: 0 auto;
+  }
+}
 
-      .card-header {
+.main-card {
+  border-radius: 8px;
+  :deep(.el-card__header) {
+      padding: 16px 20px;
+      font-weight: 600;
+      border-bottom: 1px solid $color-border-light;
+  }
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: $slate-800;
+}
+
+.faq-content {
+    color: $slate-600;
+    line-height: 1.6;
+    padding: 10px 0;
+}
+
+.contact-info {
+    display: flex;
+    gap: 40px;
+    margin-top: 20px;
+    
+    .contact-item {
         display: flex;
         align-items: center;
         gap: 8px;
-        font-size: 16px;
-        font-weight: 500;
-
+        color: $slate-700;
+        font-size: 15px;
+        
         .el-icon {
-          color: #409eff;
+            font-size: 18px;
+            color: $primary-color;
         }
-      }
-
-      .help-content {
-        :deep(.el-collapse-item__header) {
-          font-size: 14px;
-          font-weight: 500;
-        }
-
-        p {
-          margin: 8px 0;
-          color: #606266;
-          line-height: 1.6;
-        }
-      }
-
-      .contact-content {
-        p {
-          margin: 12px 0;
-          color: #606266;
-          line-height: 1.8;
-
-          strong {
-            color: #262626;
-          }
-        }
-      }
     }
-  }
 }
 </style>

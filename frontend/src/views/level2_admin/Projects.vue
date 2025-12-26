@@ -1,5 +1,52 @@
 <template>
   <div class="projects-page">
+    <el-card class="main-card" shadow="never">
+      <template #header>
+        <div class="card-header">
+           <div class="header-left">
+              <span class="header-title">项目管理</span>
+              <el-tag type="info" size="small" effect="plain" round class="count-tag ml-3">共 {{ total }} 项</el-tag>
+           </div>
+           
+           <div class="header-actions">
+              <el-button
+                type="success"
+                plain
+                :icon="Download"
+                @click="handleBatchExport"
+              >
+                导出数据
+              </el-button>
+              <el-button
+                type="warning"
+                plain
+                :icon="Download"
+                @click="handleBatchDownload"
+              >
+                下载附件
+              </el-button>
+              <el-dropdown @command="handleBatchCommand">
+                <el-button type="primary" plain>
+                  批量操作
+                  <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+                </el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item command="status">批量状态变更</el-dropdown-item>
+                    <el-dropdown-item command="docs">批量导出申报书</el-dropdown-item>
+                    <el-dropdown-item command="notices">批量生成立项通知书</el-dropdown-item>
+                    <el-dropdown-item command="certs">批量生成结题证书</el-dropdown-item>
+                    <el-dropdown-item command="notify">批量通知</el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+              <el-button type="primary" :icon="Plus" @click="handleCreate">
+                申报项目
+              </el-button>
+           </div>
+        </div>
+      </template>
+
     <!-- 筛选区域 -->
     <div class="filter-section">
       <el-form :inline="true" :model="filters" class="filter-form">
@@ -71,57 +118,7 @@
     </div>
 
     <!-- 表格区域 -->
-    <div class="table-container">
-      <div class="table-header">
-        <div class="title-bar">
-          <span class="title">项目管理</span>
-          <el-tag
-            type="info"
-            size="small"
-            effect="plain"
-            round
-            class="count-tag"
-            >共 {{ total }} 项</el-tag
-          >
-        </div>
-        <div class="actions">
-          <el-button
-            type="success"
-            plain
-            :icon="Download"
-            @click="handleBatchExport"
-          >
-            导出数据
-          </el-button>
-          <el-button
-            type="warning"
-            plain
-            :icon="Download"
-            @click="handleBatchDownload"
-          >
-            下载附件
-          </el-button>
-          <el-dropdown @command="handleBatchCommand">
-            <el-button type="primary" plain>
-              批量操作
-              <el-icon class="el-icon--right"><ArrowDown /></el-icon>
-            </el-button>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item command="status">批量状态变更</el-dropdown-item>
-                <el-dropdown-item command="docs">批量导出申报书</el-dropdown-item>
-                <el-dropdown-item command="notices">批量生成立项通知书</el-dropdown-item>
-                <el-dropdown-item command="certs">批量生成结题证书</el-dropdown-item>
-                <el-dropdown-item command="notify">批量通知</el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-          <el-button type="primary" :icon="Plus" @click="handleCreate">
-            申报项目
-          </el-button>
-        </div>
-      </div>
-
+    <div class="table-section">
       <el-table
         v-loading="loading"
         :data="projects"
@@ -134,6 +131,7 @@
         }"
         :cell-style="{ color: '#334155', height: '48px' }"
         @selection-change="handleSelectionChange"
+        stripe
       >
         <el-table-column type="selection" width="55" align="center" />
 
@@ -298,6 +296,7 @@
         />
       </div>
     </div>
+    </el-card>
 
     <el-dialog v-model="batchStatusDialogVisible" title="批量状态变更" width="480px">
       <el-form label-position="top">

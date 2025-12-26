@@ -1,74 +1,75 @@
 <template>
   <div>
     <div class="page-container">
-      <!-- Filter Bar -->
-      <el-card class="filter-card" shadow="never">
-        <el-form :inline="true" :model="filters" class="filter-form">
-          <el-form-item label="搜索">
-            <el-input
-              v-model="filters.search"
-              placeholder="姓名 / 工号"
-              clearable
-              @keyup.enter="handleSearch"
-            >
-              <template #prefix><el-icon><Search /></el-icon></template>
-            </el-input>
-          </el-form-item>
-
-          <el-form-item label="学院">
-            <el-select
-              v-model="filters.college"
-              placeholder="本院"
-              disabled
-              style="width: 180px"
-            >
-              <el-option
-                v-for="item in collegeOptions"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              />
-            </el-select>
-          </el-form-item>
-
-          <el-form-item label="级别">
-            <el-select v-model="filters.expert_scope" placeholder="院级专家" disabled style="width: 160px">
-              <el-option
-                v-for="item in expertScopeOptions"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              />
-            </el-select>
-          </el-form-item>
-
-          <el-form-item>
-            <el-button type="primary" @click="handleSearch">查询</el-button>
-            <el-button @click="resetFilters">重置</el-button>
-          </el-form-item>
-        </el-form>
-      </el-card>
-
-      <!-- Table -->
-      <el-card class="table-card" shadow="never">
-        <div class="table-header">
-          <div class="title-bar">
-            <span class="title">院级专家库管理</span>
-            <el-tag type="info" size="small" effect="plain" round class="count-tag">
-              共 {{ total }} 项
-            </el-tag>
+      <el-card class="main-card" shadow="never">
+        <template #header>
+          <div class="card-header">
+            <div class="header-left">
+              <span class="header-title">院级专家库管理</span>
+              <el-tag type="info" size="small" effect="plain" round class="ml-2">
+                共 {{ total }} 项
+              </el-tag>
+            </div>
+            <div class="header-actions">
+              <el-button type="primary" @click="openCreateDialog">
+                <el-icon class="mr-1"><Plus /></el-icon>添加专家
+              </el-button>
+              <el-button @click="handleImportClick">
+                <el-icon class="mr-1"><Upload /></el-icon>批量导入
+              </el-button>
+            </div>
           </div>
-          <div class="actions">
-            <el-button type="primary" @click="openCreateDialog">
-              <el-icon><Plus /></el-icon>添加专家
-            </el-button>
-            <el-button @click="handleImportClick">
-              <el-icon><Upload /></el-icon>批量导入
-            </el-button>
-          </div>
+        </template>
+
+        <div class="filter-section mb-4">
+          <el-form :inline="true" :model="filters" class="filter-form">
+            <el-form-item label="搜索">
+              <el-input
+                v-model="filters.search"
+                placeholder="姓名 / 工号"
+                clearable
+                @keyup.enter="handleSearch"
+                style="width: 200px"
+              >
+                <template #prefix><el-icon><Search /></el-icon></template>
+              </el-input>
+            </el-form-item>
+
+            <el-form-item label="学院">
+              <el-select
+                v-model="filters.college"
+                placeholder="本院"
+                disabled
+                style="width: 180px"
+              >
+                <el-option
+                  v-for="item in collegeOptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
+            </el-form-item>
+
+            <el-form-item label="级别">
+              <el-select v-model="filters.expert_scope" placeholder="院级专家" disabled style="width: 160px">
+                <el-option
+                  v-for="item in expertScopeOptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
+            </el-form-item>
+
+            <el-form-item>
+              <el-button type="primary" @click="handleSearch">查询</el-button>
+              <el-button @click="resetFilters">重置</el-button>
+            </el-form-item>
+          </el-form>
         </div>
 
-        <el-table v-loading="loading" :data="tableData" style="width: 100%" stripe>
+        <el-table v-loading="loading" :data="tableData" style="width: 100%" stripe border>
           <el-table-column prop="employee_id" label="工号" width="120" sortable />
           <el-table-column prop="real_name" label="姓名" width="120" />
           <el-table-column prop="title" label="职称" width="120">
@@ -112,8 +113,7 @@
           </el-table-column>
         </el-table>
 
-        <!-- Pagination -->
-        <div class="pagination-container">
+        <div class="pagination-container mt-4">
           <el-pagination
             v-model:current-page="currentPage"
             v-model:page-size="pageSize"

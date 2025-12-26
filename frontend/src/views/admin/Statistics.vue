@@ -1,39 +1,45 @@
 <template>
   <div class="statistics-page">
-    <el-card class="summary-card">
+    <el-card class="main-card" shadow="never">
       <template #header>
         <div class="card-header">
-          <span class="title">统计概览</span>
-          <el-button type="primary" plain @click="refreshAll">刷新数据</el-button>
+          <div class="header-left">
+            <span class="header-title">统计概览</span>
+          </div>
+          <div class="header-actions">
+            <el-button type="primary" plain @click="refreshAll">刷新数据</el-button>
+          </div>
         </div>
       </template>
-      <el-row :gutter="20">
-        <el-col :span="8">
-          <StatCard
-            :icon="Folder"
-            icon-bg="linear-gradient(135deg, #60a5fa 0%, #2563eb 100%)"
-            :value="stats.total_projects"
-            label="项目总数"
-          />
-        </el-col>
-        <el-col :span="8">
-          <StatCard
-            :icon="Check"
-            icon-bg="linear-gradient(135deg, #34d399 0%, #059669 100%)"
-            :value="stats.approved_projects"
-            label="已立项/完成"
-          />
-        </el-col>
-        <el-col :span="8">
-          <StatCard
-            :icon="Clock"
-            icon-bg="linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
-            :value="stats.pending_review"
-            label="待审核"
-          />
-        </el-col>
-      </el-row>
-    </el-card>
+
+      <div class="stats-summary mb-4">
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <StatCard
+              :icon="Folder"
+              icon-bg="linear-gradient(135deg, #60a5fa 0%, #2563eb 100%)"
+              :value="stats.total_projects"
+              label="项目总数"
+            />
+          </el-col>
+          <el-col :span="8">
+            <StatCard
+              :icon="Check"
+              icon-bg="linear-gradient(135deg, #34d399 0%, #059669 100%)"
+              :value="stats.approved_projects"
+              label="已立项/完成"
+            />
+          </el-col>
+          <el-col :span="8">
+            <StatCard
+              :icon="Clock"
+              icon-bg="linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
+              :value="stats.pending_review"
+              label="待审核"
+            />
+          </el-col>
+        </el-row>
+      </div>
 
     <el-tabs v-model="activeTab" class="mt-4">
       <el-tab-pane label="导入与归档" name="import">
@@ -148,6 +154,7 @@
         </el-card>
       </el-tab-pane>
     </el-tabs>
+    </el-card>
   </div>
 </template>
 
@@ -360,44 +367,62 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
+@use "@/styles/variables.scss" as *;
+
 .statistics-page {
   padding: 20px;
+}
 
-  .summary-card {
-    margin-bottom: 24px;
+.main-card {
+  border-radius: 8px;
+  :deep(.el-card__header) {
+      padding: 16px 20px;
+      font-weight: 600;
+      border-bottom: 1px solid $color-border-light;
   }
+}
 
-  .card-header {
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-  }
+}
 
-  .title {
-    font-weight: 600;
-  }
+.header-title {
+    font-size: 16px;
+    color: $slate-800;
+}
 
-  .tool-card {
+.header-actions {
+    display: flex;
+    align-items: center;
+}
+
+.stats-summary {
+    margin-bottom: 24px;
+}
+
+.tool-card {
     margin-top: 12px;
-  }
+}
 
-  .tool-row {
+.tool-row {
     display: flex;
     align-items: center;
     gap: 16px;
-  }
+}
 
-  .actions {
+.actions {
     display: flex;
     gap: 12px;
-  }
-
-  .mt-2 {
-    margin-top: 8px;
-  }
-
-  .mt-4 {
-    margin-top: 16px;
-  }
 }
+
+.mt-2 { margin-top: 8px; }
+.mb-4 { margin-bottom: 16px; }
+.mt-4 { margin-top: 16px; }
 </style>

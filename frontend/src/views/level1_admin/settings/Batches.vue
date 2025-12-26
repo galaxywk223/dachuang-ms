@@ -1,17 +1,17 @@
 <template>
   <div class="batch-page">
-    <el-card class="batch-card">
+    <el-card class="main-card" shadow="never">
       <template #header>
         <div class="card-header">
-          <div class="header-left">
-            <span class="title">批次管理</span>
-          </div>
-          <div class="header-actions">
+           <div class="header-left">
+             <span class="header-title">批次管理</span>
+           </div>
+           <div class="header-actions">
             <el-select
               v-model="statusFilter"
               placeholder="状态筛选"
-              size="small"
-              style="width: 140px"
+              size="default"
+              style="width: 140px; margin-right: 12px"
               @change="handleFilterChange"
             >
               <el-option label="全部状态" value="" />
@@ -22,14 +22,20 @@
                 :value="option.value"
               />
             </el-select>
-            <el-button type="primary" size="small" @click="openBatchDialog">
-              新建批次
+            <el-button type="primary" @click="openBatchDialog">
+              <el-icon class="mr-1"><Plus /></el-icon>新建批次
             </el-button>
-          </div>
+           </div>
         </div>
       </template>
 
-      <el-table :data="filteredBatches" v-loading="batchLoading" border>
+      <el-table 
+        :data="filteredBatches" 
+        v-loading="batchLoading" 
+        border 
+        stripe 
+        style="width: 100%"
+      >
         <el-table-column prop="name" label="批次名称" min-width="160" />
         <el-table-column prop="year" label="年度" width="100" />
         <el-table-column prop="code" label="编码" min-width="120" />
@@ -53,7 +59,7 @@
             {{ formatDate(row.updated_at) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="220" fixed="right">
+        <el-table-column label="操作" width="220" fixed="right" align="center">
           <template #default="{ row }">
             <el-button type="primary" link @click="openSettings(row)">配置</el-button>
             <el-button
@@ -130,6 +136,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
+import { Plus } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import {
   listProjectBatches,
@@ -315,34 +322,41 @@ onMounted(async () => {
 });
 </script>
 
-<style scoped>
+@use "@/styles/variables.scss" as *;
+
 .batch-page {
   padding: 20px;
 }
-.batch-card {
-  border-radius: 10px;
+
+.main-card {
+  border-radius: 8px;
+  :deep(.el-card__header) {
+      padding: 16px 20px;
+      font-weight: 600;
+      border-bottom: 1px solid $color-border-light;
+  }
 }
+
 .card-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
+  align-items: center;
 }
+
 .header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+    display: flex;
+    align-items: center;
 }
+
+.header-title {
+    font-size: 16px;
+    color: $slate-800;
+}
+
 .header-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+    display: flex;
+    align-items: center;
 }
-.title {
-  font-size: 16px;
-  font-weight: 600;
-}
-</style>
+    
+.mr-1 { margin-right: 4px; }
+

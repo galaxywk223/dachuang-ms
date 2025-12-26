@@ -1,56 +1,47 @@
 <template>
   <div class="review-page">
-    <div class="filter-section">
-      <el-form :inline="true" class="filter-form">
-        <el-form-item label="项目名称">
-          <el-input
-            v-model="searchQuery"
-            placeholder="请输入项目名称"
-            style="width: 240px"
-            clearable
-            :prefix-icon="Search"
-            @clear="handleSearch"
-            @keyup.enter="handleSearch"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleSearch" :icon="Search">
-            查询
-          </el-button>
-          <el-button @click="handleReset" :icon="RefreshLeft"> 重置 </el-button>
-        </el-form-item>
-      </el-form>
-    </div>
+    <el-card class="main-card" shadow="never">
+      <template #header>
+        <div class="card-header">
+           <div class="header-left">
+             <span class="header-title">校级立项审核</span>
+             <el-tag type="info" size="small" effect="plain" round class="ml-2">共 {{ total }} 项</el-tag>
+           </div>
+           <div class="header-actions">
+           </div>
+        </div>
+      </template>
 
-    <div class="table-container">
-      <div class="table-header">
-        <div class="title-bar">
-          <span class="title">校级立项审核</span>
-          <el-tag
-            type="info"
-            size="small"
-            effect="plain"
-            round
-            class="count-tag"
-            >共 {{ total }} 项</el-tag
-          >
-        </div>
-        <div class="actions">
+      <div class="filter-section mb-4">
+        <el-form :inline="true" class="filter-form">
+          <el-form-item label="项目名称">
+            <el-input
+              v-model="searchQuery"
+              placeholder="请输入项目名称"
+              style="width: 240px"
+              clearable
+              :prefix-icon="Search"
+              @clear="handleSearch"
+              @keyup.enter="handleSearch"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="handleSearch">查询</el-button>
+            <el-button @click="handleReset">重置</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+
+      <div class="action-bar mb-4">
           <el-button type="danger" plain @click="openBatchDialog">批量驳回</el-button>
-        </div>
       </div>
 
       <el-table
         v-loading="loading"
         :data="projects"
         style="width: 100%"
-        :header-cell-style="{
-          background: '#f8fafc',
-          color: '#475569',
-          fontWeight: '600',
-          height: '48px',
-        }"
-        :cell-style="{ color: '#334155', height: '48px' }"
+        border
+        stripe
         @selection-change="handleSelectionChange"
       >
         <el-table-column type="selection" width="55" align="center" />
@@ -135,7 +126,6 @@
                 type="primary"
                 link
                 size="small"
-                :icon="View"
                 @click="handleViewDetail(row)"
               >
                 详情
@@ -144,7 +134,7 @@
                 trigger="click"
                 @command="(cmd: string) => handleCommand(cmd, row)"
               >
-                <el-button type="primary" link size="small" :icon="EditPen">
+                <el-button type="primary" link size="small">
                   审核<el-icon class="el-icon--right"><arrow-down /></el-icon>
                 </el-button>
                 <template #dropdown>
@@ -181,7 +171,7 @@
         </el-table-column>
       </el-table>
 
-      <div class="pagination-footer">
+      <div class="pagination-container mt-4">
         <el-pagination
           v-model:current-page="currentPage"
           v-model:page-size="pageSize"
@@ -190,12 +180,9 @@
           layout="total, sizes, prev, pager, next, jumper"
           @size-change="handleSizeChange"
           @current-change="handlePageChange"
-          background
-          size="small"
-          class="custom-pagination"
         />
       </div>
-    </div>
+    </el-card>
 
     <el-dialog
       v-model="reviewDialogVisible"
@@ -272,10 +259,7 @@ import {
   Search,
   Check,
   Close,
-  RefreshLeft,
   ArrowDown,
-  View,
-  EditPen,
 } from "@element-plus/icons-vue";
 import { getReviewProjects, approveProject, rejectProject } from "@/api/admin";
 import request from "@/utils/request";
@@ -451,4 +435,84 @@ onMounted(() => {
 });
 </script>
 
-<style scoped lang="scss" src="@/views/level2_admin/review/Establishment.scss"></style>
+<style scoped lang="scss">
+@use "@/styles/variables.scss" as *;
+
+.review-page {
+  padding: 20px;
+}
+
+.main-card {
+  border-radius: 8px;
+  :deep(.el-card__header) {
+      padding: 16px 20px;
+      font-weight: 600;
+      border-bottom: 1px solid $color-border-light;
+  }
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.header-title {
+    font-size: 16px;
+    color: $slate-800;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+}
+
+.action-bar {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.pagination-container {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.ml-2 { margin-left: 8px; }
+.mb-4 { margin-bottom: 16px; }
+.mt-4 { margin-top: 16px; }
+
+.status-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+
+    &.dot-success {
+      background: $success;
+      box-shadow: 0 0 0 2px rgba($success, 0.2);
+    }
+    &.dot-warning {
+      background: $warning;
+      box-shadow: 0 0 0 2px rgba($warning, 0.2);
+    }
+    &.dot-danger {
+      background: $danger;
+      box-shadow: 0 0 0 2px rgba($danger, 0.2);
+    }
+    &.dot-info {
+      background: $slate-400;
+    }
+  }
+}
+</style>

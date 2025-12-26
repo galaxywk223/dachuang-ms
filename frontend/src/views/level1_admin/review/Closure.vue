@@ -1,68 +1,48 @@
 <template>
   <div class="review-page">
-    <!-- Filter Section -->
-    <div class="filter-section">
-      <el-form :inline="true" class="filter-form">
-        <el-form-item label="项目名称">
-          <el-input
-            v-model="searchQuery"
-            placeholder="搜索项目名称"
-            style="width: 240px"
-            clearable
-            :prefix-icon="Search"
-            @clear="handleSearch"
-            @keyup.enter="handleSearch"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleSearch" :icon="Search">
-            查询
-          </el-button>
-          <el-button @click="handleReset" :icon="RefreshLeft"> 重置 </el-button>
-        </el-form-item>
-      </el-form>
-    </div>
+    <el-card class="main-card" shadow="never">
+      <template #header>
+        <div class="card-header">
+           <div class="header-left">
+             <span class="header-title">校级结题审核列表</span>
+             <el-tag type="info" size="small" effect="plain" round class="ml-2">共 {{ total }} 项</el-tag>
+           </div>
+           <div class="header-actions">
+           </div>
+        </div>
+      </template>
 
-    <!-- Table Section -->
-    <div class="table-container">
-      <div class="table-header">
-        <div class="title-bar">
-          <span class="title">校级结题审核列表</span>
-          <el-tag
-            type="info"
-            size="small"
-            effect="plain"
-            round
-            class="count-tag"
-            >共 {{ total }} 项</el-tag
-          >
-        </div>
-        <div class="actions">
-          <el-button type="primary" plain @click="openBatchDialog">
-            批量审核
-          </el-button>
-          <el-button
-            type="warning"
-            plain
-            :icon="Download"
-            @click="handleBatchDownload"
-          >
-            下载附件
-          </el-button>
-        </div>
+      <div class="filter-section mb-4">
+        <el-form :inline="true" class="filter-form">
+          <el-form-item label="项目名称">
+            <el-input
+              v-model="searchQuery"
+              placeholder="搜索项目名称"
+              style="width: 240px"
+              clearable
+              :prefix-icon="Search"
+              @clear="handleSearch"
+              @keyup.enter="handleSearch"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="handleSearch">查询</el-button>
+            <el-button @click="handleReset">重置</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+      
+      <div class="action-bar mb-4">
+          <el-button type="primary" plain @click="openBatchDialog">批量审核</el-button>
+          <el-button type="warning" plain :icon="Download" @click="handleBatchDownload">下载附件</el-button>
       </div>
 
       <el-table
         v-loading="loading"
         :data="projects"
         style="width: 100%"
-        :header-cell-style="{
-          background: '#f8fafc',
-          color: '#475569',
-          fontWeight: '600',
-          height: '48px',
-        }"
-        :cell-style="{ color: '#334155', height: '48px' }"
+        border
+        stripe
         @selection-change="handleSelectionChange"
       >
         <el-table-column type="selection" width="55" align="center" />
@@ -129,7 +109,7 @@
         </el-table-column>
       </el-table>
 
-      <div class="pagination-footer">
+      <div class="pagination-container mt-4">
         <el-pagination
           v-model:current-page="currentPage"
           v-model:page-size="pageSize"
@@ -138,12 +118,9 @@
           layout="total, sizes, prev, pager, next, jumper"
           @size-change="handleSizeChange"
           @current-change="handlePageChange"
-          background
-          size="small"
-          class="custom-pagination"
         />
       </div>
-    </div>
+    </el-card>
 
     <!-- 审核对话框 -->
     <el-dialog
@@ -227,7 +204,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
 import { ElMessage } from "element-plus";
-import { Search, RefreshLeft, Download } from "@element-plus/icons-vue";
+import { Search, Download } from "@element-plus/icons-vue";
 import {
   getReviewProjects,
   approveProject,
@@ -467,78 +444,58 @@ onMounted(() => {
 <style scoped lang="scss">
 @use "@/styles/variables.scss" as *;
 
-.filter-section {
-  background: white;
-  padding: 20px 24px 0 24px;
-  border-radius: $radius-lg;
-  margin-bottom: 16px;
-  box-shadow: $shadow-sm;
-  border: 1px solid $color-border-light;
+.review-page {
+  padding: 20px;
+}
 
-  .filter-form {
-    display: flex;
-    gap: 16px;
+.main-card {
+  border-radius: 8px;
+  :deep(.el-card__header) {
+      padding: 16px 20px;
+      font-weight: 600;
+      border-bottom: 1px solid $color-border-light;
   }
 }
 
-.table-container {
-  background: white;
-  border-radius: $radius-lg;
-  box-shadow: $shadow-sm;
-  border: 1px solid $color-border-light;
-  overflow: hidden;
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
-  .table-header {
-    padding: 16px 24px;
-    border-bottom: 1px solid $slate-100;
+.header-left {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-
-    .title-bar {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-
-      .title {
-        font-size: 16px;
-        font-weight: 600;
-        color: $slate-800;
-        position: relative;
-        padding-left: 14px;
-
-        &::before {
-          content: "";
-          position: absolute;
-          left: 0;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 4px;
-          height: 16px;
-          background: $primary-600;
-          border-radius: 2px;
-        }
-      }
-    }
-  }
 }
 
-.pagination-footer {
-  padding: 16px 24px;
-  border-top: 1px solid $slate-100; // Consistent footer border
-  display: flex;
-  justify-content: flex-end;
+.header-title {
+    font-size: 16px;
+    color: $slate-800;
 }
+
+.header-actions {
+    display: flex;
+    align-items: center;
+}
+
+.action-bar {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.pagination-container {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.ml-2 { margin-left: 8px; }
+.mb-4 { margin-bottom: 16px; }
+.mt-4 { margin-top: 16px; }
 
 .project-title {
   font-weight: 500;
   color: $slate-800;
   font-size: 14px;
-}
-
-.date-text {
-  color: $slate-500;
-  font-size: 13px;
 }
 
 .status-dot {

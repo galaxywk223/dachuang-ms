@@ -1,12 +1,14 @@
 <template>
   <div class="midterm-apply-container">
-    <el-card class="box-card">
+    <el-card class="main-card" shadow="never">
       <template #header>
         <div class="card-header">
-          <span class="title">中期检查报告提交</span>
-          <el-tag v-if="project" :type="getStatusType(project.status)">
-            {{ getStatusText(project.status) }}
-          </el-tag>
+          <div class="header-left">
+            <span class="header-title">中期检查报告提交</span>
+            <el-tag v-if="project" :type="getStatusType(project.status)" class="ml-3">
+              {{ getStatusText(project.status) }}
+            </el-tag>
+          </div>
         </div>
       </template>
 
@@ -254,43 +256,64 @@ onMounted(() => {
 })
 </script>
 
-<style scoped lang="scss">
+@use "@/styles/variables.scss" as *;
+
 .midterm-apply-container {
   padding: 20px;
+}
 
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    
-    .title {
-      font-size: 18px;
-      font-weight: bold;
-    }
+.main-card {
+  border-radius: 8px;
+  :deep(.el-card__header) {
+      padding: 16px 20px;
+      font-weight: 600;
+      border-bottom: 1px solid $color-border-light;
   }
+}
 
-  .content-container {
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.header-title {
+    font-size: 16px;
+    color: $slate-800;
+}
+
+.content-container {
     .form-section {
       margin-top: 30px;
       
       h3 {
         margin-bottom: 20px;
         padding-left: 10px;
-        border-left: 4px solid var(--el-color-primary);
+        border-left: 4px solid $primary-500;
+        font-size: 16px;
+        color: $slate-800;
       }
     }
-  }
-
-  .mt-4 {
-    margin-top: 16px;
-  }
-  
-  .mb-4 {
-    margin-bottom: 16px;
-  }
-  
-  .mr-2 {
-    margin-right: 8px;
-  }
 }
-</style>
+
+.ml-3 {
+    margin-left: 12px;
+}
+  
+.mt-4 {
+    margin-top: 16px;
+}
+  
+.mb-4 {
+    margin-bottom: 16px;
+}
+  
+.mr-2 {
+    margin-right: 8px;
+}
+

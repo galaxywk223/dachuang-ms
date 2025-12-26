@@ -1,8 +1,19 @@
 <template>
   <div class="my-projects-page">
-    <div class="page-container">
+    <el-card class="main-card" shadow="never">
+      <template #header>
+        <div class="card-header">
+            <span class="header-title">我的项目</span>
+            <div class="header-actions">
+                <el-button type="primary" @click="$router.push('/establishment/apply')">
+                   <el-icon class="mr-1"><Plus /></el-icon> 申请新项目
+                </el-button>
+            </div>
+        </div>
+      </template>
+
       <!-- 筛选区域 -->
-      <div class="filter-container">
+      <div class="filter-section">
         <el-form :inline="true" :model="filterForm" class="filter-form">
           <el-form-item label="名称">
             <el-input
@@ -11,6 +22,7 @@
               clearable
               :prefix-icon="SearchIcon"
               style="width: 200px"
+              @keyup.enter="handleSearch"
             />
           </el-form-item>
 
@@ -44,18 +56,19 @@
       </div>
 
       <!-- 表格区域 -->
-      <div class="table-container">
-        <div class="status-tabs-wrapper">
-             <div class="table-header-title">
-                <span class="title-text">我的项目列表</span>
-                <el-tag type="info" size="small" effect="plain" round class="count-tag">{{ pagination.total }}</el-tag>
-             </div>
-             <div class="header-actions">
-                <el-button type="primary" @click="$router.push('/establishment/apply')">
-                   <el-icon class="el-icon--left"><Plus /></el-icon> 申请新项目
-                </el-button>
-             </div>
-        </div>
+      <div class="table-section">
+         <div class="table-info-bar">
+             <el-alert
+                type="info"
+                :closable="false"
+                show-icon
+                class="mb-4"
+             >
+                <template #default>
+                   共查询到 {{ pagination.total }} 个项目。
+                </template>
+             </el-alert>
+         </div>
 
         <el-table
           v-loading="loading"
@@ -63,7 +76,7 @@
           style="width: 100%"
           :header-cell-style="{ background: '#f8fafc', color: '#475569', fontWeight: '600', fontSize: '13px', height: '48px' }"
           :cell-style="{ color: '#334155', fontSize: '14px', padding: '8px 0' }"
-          border
+          stripe
         >
           <el-table-column prop="title" label="项目名称" min-width="200" show-overflow-tooltip fixed="left">
              <template #default="{ row }">
@@ -169,7 +182,7 @@
           />
         </div>
       </div>
-    </div>
+    </el-card>
   </div>
 </template>
 
@@ -336,14 +349,34 @@ const handleDelete = async (row: any) => {
 <style scoped lang="scss">
 @use "@/styles/variables.scss" as *;
 
-.filter-container {
-  background: white;
-  padding: 24px;
-  padding-bottom: 0;
-  border-radius: $radius-md;
-  box-shadow: $shadow-sm;
-  margin-bottom: 24px;
-  border: 1px solid $color-border-light;
+.my-projects-page {
+  padding: 20px;
+}
+
+.main-card {
+  border-radius: 8px;
+  :deep(.el-card__header) {
+      padding: 16px 20px;
+      font-weight: 600;
+      border-bottom: 1px solid $color-border-light;
+  }
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-title {
+    font-size: 16px;
+    color: $slate-800;
+}
+
+.filter-section {
+  padding-bottom: 20px;
+  border-bottom: 1px dashed $color-border-light;
+  margin-bottom: 20px;
 }
 
 .filter-form {
@@ -352,58 +385,9 @@ const handleDelete = async (row: any) => {
     gap: 16px;
     
     :deep(.el-form-item) {
-      margin-bottom: 24px;
+      margin-bottom: 0px;
       margin-right: 0;
     }
-}
-
-.table-container {
-  background: white;
-  padding: 24px;
-  border-radius: $radius-md;
-  box-shadow: $shadow-sm;
-  border: 1px solid $color-border-light;
-  min-height: 500px;
-}
-
-.status-tabs-wrapper {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 16px;
-  border-bottom: 1px solid $slate-100;
-  margin-bottom: 16px;
-}
-
-.table-header-title {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  
-  .title-text {
-      font-size: 16px;
-      font-weight: 600;
-      color: $slate-800;
-      position: relative;
-      padding-left: 14px;
-      
-      &::before {
-          content: '';
-          position: absolute;
-          left: 0;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 4px;
-          height: 16px;
-          background: $primary-600;
-          border-radius: 2px;
-      }
-  }
-}
-
-.count-tag {
-    font-weight: normal;
-    color: $slate-500;
 }
 
 .link-text {
@@ -421,5 +405,12 @@ const handleDelete = async (row: any) => {
   padding-top: 24px;
   display: flex;
   justify-content: flex-end;
+}
+
+.mb-4 {
+    margin-bottom: 16px;
+}
+.mr-1 {
+    margin-right: 4px;
 }
 </style>

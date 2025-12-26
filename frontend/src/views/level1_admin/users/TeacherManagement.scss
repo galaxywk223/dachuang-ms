@@ -1,69 +1,78 @@
 @use "@/styles/variables.scss" as *;
 
-.page-container {
-  padding: 0;
+.teacher-management-page {
+  padding: 20px;
 }
 
-.table-header {
-  padding: 16px 24px;
-  border-bottom: 1px solid $slate-100;
+.main-card {
+  border-radius: 8px;
+
+  :deep(.el-card__header) {
+    padding: 16px 20px;
+    font-weight: 600;
+    border-bottom: 1px solid $color-border-light;
+  }
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.header-left {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+}
 
-  .title-bar {
+.header-title {
+  font-size: 16px;
+  color: $slate-800;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.filter-section {
+  padding-bottom: 20px;
+  border-bottom: 1px dashed $color-border-light;
+  margin-bottom: 20px;
+
+  .filter-form {
     display: flex;
-    align-items: center;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 16px;
 
-    .title {
-      font-size: 16px;
-      font-weight: 600;
-      color: $slate-800;
-      position: relative;
-      padding-left: 14px;
-
-      &::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 4px;
-        height: 16px;
-        background: $primary-600;
-        border-radius: 2px;
-      }
+    :deep(.el-form-item) {
+      margin-bottom: 0;
+      margin-right: 0;
     }
   }
 }
 
-.filter-card {
-  margin-bottom: 16px;
-  :deep(.el-card__body) {
-    padding: 18px 20px;
-  }
+.table-section {
+  // Custom table styles if needed
 }
 
-.table-card {
-  :deep(.el-card__body) {
-    padding: 0;
-  }
-}
-
-.pagination-container {
-  padding: 16px;
+.pagination-footer {
+  padding-top: 24px;
   display: flex;
   justify-content: flex-end;
 }
 
+.mr-1 {
+  margin-right: 4px;
+}
+
+.ml-3 {
+  margin-left: 12px;
+}
+
+// Dialog styles
 .admin-form {
-  margin-top: 4px;
+  padding: 0 20px;
 }
-
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-

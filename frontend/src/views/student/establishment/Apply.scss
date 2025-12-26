@@ -1,0 +1,119 @@
+@use "@/styles/variables.scss" as *;
+
+.apply-page {
+    padding: 20px;
+}
+
+.main-card {
+    border-radius: 8px;
+
+    :deep(.el-card__header) {
+        padding: 16px 20px;
+        font-weight: 600;
+        border-bottom: 1px solid $color-border-light;
+    }
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.header-title {
+    font-size: 16px;
+    color: $slate-800;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.ml-3 {
+    margin-left: 12px;
+}
+
+// Form specific styles
+.form-section {
+    padding: 24px 0;
+    border-bottom: 1px dashed $slate-200;
+
+    &.no-border {
+        border-bottom: none;
+    }
+
+    .section-header {
+        margin-bottom: 24px;
+        padding-left: 12px;
+        border-left: 4px solid $primary-500;
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: $slate-800;
+        }
+    }
+}
+
+.w-full {
+    width: 100%;
+}
+
+.mr-1 {
+    margin-right: 4px;
+}
+
+// Table headers
+:deep(.el-table__header) {
+    th {
+        background-color: $slate-50;
+        color: $slate-600;
+        font-weight: 600;
+    }
+}
+
+.dynamic-input-row {
+    background-color: $slate-50;
+    padding: 16px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+}
+
+.attachment-container {
+    width: 100%;
+
+    .actions-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .form-tip {
+        font-size: 12px;
+        color: $slate-400;
+    }
+}
+
+.expected-grid {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 12px;
+
+    .expected-select {
+        flex: 1;
+    }
+
+    .expected-count {
+        width: 120px;
+    }
+}

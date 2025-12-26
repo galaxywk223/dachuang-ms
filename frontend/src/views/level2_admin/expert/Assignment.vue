@@ -1,10 +1,12 @@
 <template>
   <div class="expert-assignment-container">
-    <el-card class="box-card">
+    <el-card class="main-card" shadow="never">
       <template #header>
         <div class="card-header">
-          <span class="title">{{ pageTitle }}</span>
-          <div class="header-actions">
+           <div class="header-left">
+             <span class="header-title">{{ pageTitle }}</span>
+           </div>
+           <div class="header-actions">
               <el-select v-model="selectedGroup" placeholder="选择专家组" style="width: 200px" class="mr-2">
                  <el-option
                     v-for="group in groups"
@@ -26,7 +28,7 @@
               >
                  批量分配 ({{ selectedProjects.length }})
               </el-button>
-          </div>
+           </div>
         </div>
       </template>
       
@@ -180,28 +182,50 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
+@use "@/styles/variables.scss" as *;
+
 .expert-assignment-container {
     padding: 20px;
+}
+
+.main-card {
+  border-radius: 8px;
+  :deep(.el-card__header) {
+      padding: 16px 20px;
+      font-weight: 600;
+      border-bottom: 1px solid $color-border-light;
+  }
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.header-title {
+    font-size: 16px;
+    color: $slate-800;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+}
     
-    .card-header {
-       display: flex;
-       justify-content: space-between;
-       align-items: center;
-       
-       .header-actions {
-           display: flex;
-           align-items: center;
-       }
-    }
+.mr-2 { margin-right: 10px; }
+.ml-2 { margin-left: 10px; }
+.mt-4 { margin-top: 16px; }
+.mb-4 { margin-bottom: 16px; }
     
-    .mr-2 { margin-right: 10px; }
-    .ml-2 { margin-left: 10px; }
-    .mt-4 { margin-top: 16px; }
-    .mb-4 { margin-bottom: 16px; }
-    
-    .pagination-container {
-        display: flex;
-        justify-content: flex-end;
-    }
+.pagination-container {
+    display: flex;
+    justify-content: flex-end;
 }
 </style>
+

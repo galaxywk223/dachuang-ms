@@ -235,9 +235,11 @@ export function useProjectDetail() {
         expected_results: form.expected_results,
         description: form.description,
       };
+      let payload: any;
       const hasFiles = !!(form.contract_file || form.task_book_file);
-      const payload = hasFiles ? new FormData() : basePayload;
+
       if (hasFiles) {
+        payload = new FormData();
         Object.entries(basePayload).forEach(([key, value]) => {
           if (value === null || value === undefined || value === "") {
             return;
@@ -250,6 +252,8 @@ export function useProjectDetail() {
         if (form.task_book_file) {
           payload.append("task_book_file", form.task_book_file);
         }
+      } else {
+        payload = basePayload;
       }
       try {
         await updateProjectInfo(form.id, payload);

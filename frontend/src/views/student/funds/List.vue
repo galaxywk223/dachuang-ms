@@ -1,10 +1,14 @@
 <template>
   <div class="funds-list-container">
-    <el-card class="box-card" v-loading="loading">
+    <el-card class="main-card" shadow="never" v-loading="loading">
       <template #header>
         <div class="card-header">
-          <span class="title">经费管理</span>
-          <el-button type="primary" @click="showAddDialog">录入支出</el-button>
+          <div class="header-left">
+            <span class="header-title">经费管理</span>
+          </div>
+          <div class="header-actions">
+             <el-button type="primary" @click="showAddDialog">录入支出</el-button>
+          </div>
         </div>
       </template>
 
@@ -37,7 +41,7 @@
         <el-divider />
 
         <!-- 支出列表 -->
-        <el-table :data="expenditures" style="width: 100%" stripe border>
+        <el-table :data="expenditures" style="width: 100%" stripe header-cell-class-name="table-header-cell">
           <el-table-column prop="expenditure_date" label="日期" width="120" sortable />
           <el-table-column prop="title" label="支出事项" min-width="180" />
           <el-table-column prop="category_name" label="类别" width="120">
@@ -209,29 +213,53 @@ onMounted(() => {
 
 </script>
 
-<style scoped lang="scss">
 .funds-list-container {
     padding: 20px;
-    
-    .card-header {
-       display: flex;
-       justify-content: space-between;
-       align-items: center;
-       .title { font-size: 18px; font-weight: bold; }
-    }
-
-    .statistic-title {
-        font-size: 12px; 
-        color: var(--el-text-color-secondary); 
-        margin-bottom: 4px;
-    }
-    
-    .mb-4 {
-        margin-bottom: 20px;
-    }
-    
-    .text-gray-400 {
-        color: #9ca3af;
-    }
 }
-</style>
+
+.main-card {
+  border-radius: 8px;
+  :deep(.el-card__header) {
+      padding: 16px 20px;
+      font-weight: 600;
+      border-bottom: 1px solid $color-border-light;
+  }
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.header-title {
+    font-size: 16px;
+    color: $slate-800;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.statistic-title {
+    font-size: 12px; 
+    color: var(--el-text-color-secondary); 
+    margin-bottom: 4px;
+}
+
+.mb-4 {
+    margin-bottom: 20px;
+}
+
+.text-gray-400 {
+    color: #9ca3af;
+}
+

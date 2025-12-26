@@ -1,15 +1,16 @@
 <template>
   <div class="applied-page">
-
-
-    <div class="page-content">
-      <!-- 表格区域 -->
-      <div class="status-tabs-wrapper">
-           <div class="table-header-title">
-              <span class="title-text">已申请结题项目</span>
-              <el-tag type="info" size="small" effect="plain" round class="count-tag">{{ pagination.total }}</el-tag>
+    <el-card class="main-card" shadow="never">
+      <template #header>
+        <div class="card-header">
+           <div class="header-left">
+             <span class="header-title">已申请结题项目</span>
+             <el-tag type="info" size="small" effect="plain" round class="ml-2">{{ pagination.total }}</el-tag>
            </div>
-      </div>
+           <div class="header-actions">
+           </div>
+        </div>
+      </template>
 
       <el-table
         v-loading="loading"
@@ -17,7 +18,6 @@
         stripe
         border
         style="width: 100%"
-        :header-cell-style="{ background: '#f5f7fa', color: '#606266' }"
       >
         <el-table-column
           prop="project_no"
@@ -169,7 +169,7 @@
         description="暂无已申请结题项目"
         :image-size="200"
       />
-    </div>
+    </el-card>
   </div>
 </template>
 
@@ -292,81 +292,6 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables.scss" as *;
-
-.applied-page {
-  .page-header {
-    background: #ffffff;
-    padding: 24px;
-    border-radius: 8px;
-    margin-bottom: 24px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-
-    h2 {
-      margin: 0 0 8px 0;
-      font-size: 24px;
-      color: #262626;
-    }
-
-    p {
-      margin: 0;
-      color: #8c8c8c;
-      font-size: 14px;
-    }
-  }
-
-  .page-content {
-    background: #ffffff;
-    padding: 24px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    min-height: 500px;
-
-    .pagination-container {
-      margin-top: 20px;
-      display: flex;
-      justify-content: flex-end;
-    }
-  }
-}
-
-.status-tabs-wrapper {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 16px;
-  border-bottom: 1px solid $slate-100;
-  margin-bottom: 16px;
-}
-
-.table-header-title {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  
-  .title-text {
-      font-size: 16px;
-      font-weight: 600;
-      color: $slate-800;
-      position: relative;
-      padding-left: 14px;
-      
-      &::before {
-          content: '';
-          position: absolute;
-          left: 0;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 4px;
-          height: 16px;
-          background: $primary-600;
-          border-radius: 2px;
-      }
-  }
-}
-
-.count-tag {
-    font-weight: normal;
-    color: $slate-500;
-}
+@use "./Applied.scss";
 </style>
+```

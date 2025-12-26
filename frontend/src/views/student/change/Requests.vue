@@ -1,10 +1,14 @@
 <template>
   <div class="change-requests-page">
-    <el-card>
+    <el-card class="main-card" shadow="never">
       <template #header>
         <div class="card-header">
-          <span class="title">项目异动申请</span>
-          <el-button type="primary" @click="openDialog">新建申请</el-button>
+          <div class="header-left">
+             <span class="header-title">项目异动申请</span>
+          </div>
+          <div class="header-actions">
+             <el-button type="primary" @click="openDialog">新建申请</el-button>
+          </div>
         </div>
       </template>
 
@@ -222,17 +226,39 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
+@use "@/styles/variables.scss" as *;
+
 .change-requests-page {
   padding: 20px;
 }
+
+.main-card {
+  border-radius: 8px;
+  :deep(.el-card__header) {
+      padding: 16px 20px;
+      font-weight: 600;
+      border-bottom: 1px solid $color-border-light;
+  }
+}
+
 .card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-.title {
-  font-size: 16px;
-  font-weight: 600;
+
+.header-left {
+    display: flex;
+    align-items: center;
 }
-</style>
+
+.header-title {
+    font-size: 16px;
+    color: $slate-800;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+

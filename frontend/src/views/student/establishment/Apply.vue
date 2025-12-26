@@ -1,18 +1,19 @@
 <template>
   <div class="apply-page">
-    <div class="form-container">
-      <!-- Header -->
-      <div class="page-header">
-        <div class="title-bar">
-           <span class="title">基本信息填报</span>
-           <el-tag size="small" type="primary" effect="plain" round>项目申报</el-tag>
+    <el-card class="main-card" shadow="never">
+      <template #header>
+        <div class="card-header">
+          <div class="header-left">
+             <span class="header-title">基本信息填报</span>
+             <el-tag size="small" type="primary" effect="plain" round class="ml-3">项目申报</el-tag>
+          </div>
+          <div class="header-actions">
+             <el-button @click="handleReset">重置</el-button>
+             <el-button type="info" plain @click="saveAsDraft">保存草稿</el-button>
+             <el-button type="primary" @click="submitForm">提交申请</el-button>
+          </div>
         </div>
-        <div class="actions">
-           <el-button @click="handleReset">重置</el-button>
-           <el-button type="info" plain @click="saveAsDraft">保存草稿</el-button>
-           <el-button type="primary" @click="submitForm">提交申请</el-button>
-        </div>
-      </div>
+      </template>
 
       <el-form
         ref="formRef"
@@ -372,7 +373,7 @@
         </div>
 
       </el-form>
-    </div>
+    </el-card>
   </div>
 </template>
 

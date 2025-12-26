@@ -1,12 +1,16 @@
 <template>
   <div class="certificate-page">
-    <el-card>
+    <el-card class="main-card" shadow="never">
       <template #header>
         <div class="card-header">
-          <span class="title">结题证书设置</span>
-          <el-button type="primary" :loading="saving" @click="saveConfig">
-            保存配置
-          </el-button>
+           <div class="header-left">
+             <span class="header-title">结题证书设置</span>
+           </div>
+           <div class="header-actions">
+            <el-button type="primary" :loading="saving" @click="saveConfig">
+              保存配置
+            </el-button>
+           </div>
         </div>
       </template>
 
@@ -219,21 +223,46 @@ onMounted(async () => {
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use "@/styles/variables.scss" as *;
+
 .certificate-page {
   padding: 20px;
 }
+
+.main-card {
+  border-radius: 8px;
+  :deep(.el-card__header) {
+      padding: 16px 20px;
+      font-weight: 600;
+      border-bottom: 1px solid $color-border-light;
+  }
+}
+
 .card-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
 }
-.title {
-  font-size: 16px;
-  font-weight: 600;
+
+.header-left {
+    display: flex;
+    align-items: center;
 }
+
+.header-title {
+    font-size: 16px;
+    color: $slate-800;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+}
+
 .config-form {
   max-width: 760px;
+  margin-top: 16px;
 }
 .ml-2 {
   margin-left: 8px;
