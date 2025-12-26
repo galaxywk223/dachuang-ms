@@ -313,11 +313,20 @@ class ProjectService:
         """
         获取项目经费统计
         """
+        from decimal import Decimal
+
         expenditures = project.expenditures.all()
-        total_budget = project.budget or 0
-        used_amount = sum([exp.amount for exp in expenditures])
+        if project.budget is None:
+            total_budget = Decimal("0")
+        else:
+            total_budget = (
+                project.budget
+                if isinstance(project.budget, Decimal)
+                else Decimal(str(project.budget))
+            )
+        used_amount = sum([exp.amount for exp in expenditures], Decimal("0"))
         remaining_amount = total_budget - used_amount
-        usage_rate = (used_amount / total_budget * 100) if total_budget else 0
+        usage_rate = float(used_amount / total_budget * 100) if total_budget else 0
 
         return {
             "total_budget": total_budget,
@@ -331,6 +340,11 @@ class ProjectService:
         """
         添加经费支出
         """
+        stats = ProjectService.get_budget_stats(project)
+        if amount > stats["remaining_amount"]:
+            raise ValueError(
+                f"余额不足！当前剩余经费：{stats['remaining_amount']}元，本次申请：{amount}元"
+            )
         return ProjectExpenditure.objects.create(
             project=project,
             title=title,

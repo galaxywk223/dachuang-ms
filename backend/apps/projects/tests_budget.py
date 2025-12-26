@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from apps.projects.models import Project, ProjectExpenditure
 from apps.dictionaries.models import DictionaryItem, DictionaryType
 from apps.projects.services import ProjectService
+from decimal import Decimal
 import datetime
 
 User = get_user_model()
@@ -28,41 +29,44 @@ class BudgetTestCase(TestCase):
 
     def test_budget_stats(self):
         stats = ProjectService.get_budget_stats(self.project)
-        self.assertEqual(stats['total_budget'], 1000.00)
+        self.assertEqual(stats['total_budget'], Decimal("1000.00"))
         self.assertEqual(stats['used_amount'], 0)
-        self.assertEqual(stats['remaining_amount'], 1000.00)
+        self.assertEqual(stats['remaining_amount'], Decimal("1000.00"))
 
     def test_add_expenditure_success(self):
         ProjectService.add_expenditure(
             self.project, 
-            self.student, 
             "Server", 
             500.00, 
             datetime.date.today(), 
-            self.category
+            self.category,
+            None,
+            self.student,
         )
         stats = ProjectService.get_budget_stats(self.project)
-        self.assertEqual(stats['used_amount'], 500.00)
-        self.assertEqual(stats['remaining_amount'], 500.00)
+        self.assertEqual(stats['used_amount'], Decimal("500.00"))
+        self.assertEqual(stats['remaining_amount'], Decimal("500.00"))
         self.assertEqual(stats['usage_rate'], 50.0)
 
     def test_add_expenditure_failure_over_budget(self):
         # First 500
         ProjectService.add_expenditure(
             self.project, 
-            self.student, 
             "Server", 
             500.00, 
             datetime.date.today(), 
-            self.category
+            self.category,
+            None,
+            self.student,
         )
         # Try add 600 > 500 remaining
         with self.assertRaises(ValueError):
             ProjectService.add_expenditure(
                 self.project, 
-                self.student, 
                 "GPU", 
                 600.00, 
                 datetime.date.today(), 
-                self.category
+                self.category,
+                None,
+                self.student,
             )

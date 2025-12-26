@@ -24,365 +24,53 @@
         size="default"
         class="main-form"
       >
-        <!-- 1. 基本信息 -->
-        <div class="form-section">
-          <div class="section-header">
-              <span class="section-title">基本信息</span>
-          </div>
-          <el-row :gutter="24">
-            <!-- Full Width Title for prominence -->
-            <el-col :span="24">
-               <el-form-item label="项目名称" prop="title">
-                 <el-input v-model="formData.title" placeholder="请输入项目全称" />
-               </el-form-item>
-            </el-col>
-            
-            <el-col :span="12">
-              <el-form-item label="项目来源" prop="source">
-                <el-select v-model="formData.source" placeholder="请选择" class="w-full">
-                  <el-option v-for="item in sourceOptions" :key="item.value" :label="item.label" :value="item.value" />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="项目级别" prop="level">
-                <el-select v-model="formData.level" placeholder="请选择" class="w-full">
-                  <el-option v-for="item in levelOptions" :key="item.value" :label="item.label" :value="item.value" />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            
-            <el-col :span="12">
-              <el-form-item label="项目类别" prop="category">
-                <el-select v-model="formData.category" placeholder="请选择" class="w-full">
-                  <el-option v-for="item in categoryOptions" :key="item.value" :label="item.label" :value="item.value" />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="重点领域" prop="is_key_field">
-                 <el-cascader
-                    v-model="keyFieldCascaderValue"
-                    :options="keyFieldCascaderOptions"
-                    placeholder="请选择"
-                    class="w-full"
-                    style="width: 100%"
-                    :props="{ expandTrigger: 'hover' }"
-                 />
-              </el-form-item>
-            </el-col>
+        <ApplyBasicInfoSection
+          :form-data="formData"
+          :source-options="sourceOptions"
+          :level-options="levelOptions"
+          :category-options="categoryOptions"
+          :key-field-cascader-options="keyFieldCascaderOptions"
+          :college-options="collegeOptions"
+          :major-options="majorOptions"
+          v-model:key-field-cascader-value="keyFieldCascaderValue"
+        />
 
-            <el-col :span="12">
-              <el-form-item label="所属学院" prop="college">
-                <el-select v-model="formData.college" placeholder="请选择" class="w-full">
-                  <el-option v-for="item in collegeOptions" :key="item.value" :label="item.label" :value="item.value" />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="所属专业" prop="major_code">
-                <el-select v-model="formData.major_code" placeholder="请选择" class="w-full" filterable>
-                  <el-option v-for="item in majorOptions" :key="item.value" :label="item.label" :value="item.value" />
-                </el-select>
-              </el-form-item>
-            </el-col>
+        <ApplyLeaderSection :form-data="formData" :current-user="currentUser" />
 
-             <el-col :span="12">
-               <el-form-item label="经费预算" prop="budget">
-                 <el-input-number 
-                   v-model="formData.budget" 
-                   :min="0" 
-                   class="w-full" 
-                   controls-position="right"
-                   disabled 
-                   placeholder="自动生成"
-                   style="width: 100%"
-                 />
-               </el-form-item>
-            </el-col>
-          </el-row>
-        </div>
+        <ApplyAdvisorSection
+          :form-data="formData"
+          :new-advisor="newAdvisor"
+          :advisor-title-options="advisorTitleOptions"
+          :get-label="getLabel"
+          :handle-search-new-advisor="handleSearchNewAdvisor"
+          :handle-add-new-advisor="handleAddNewAdvisor"
+          :remove-advisor="removeAdvisor"
+        />
 
-        <!-- 2. 团队信息 -->
-        <div class="form-section">
-          <div class="section-header">
-              <span class="section-title">负责人信息</span>
-          </div>
-          <el-row :gutter="24">
-            <el-col :span="12">
-              <el-form-item label="负责人姓名">
-                <el-input v-model="currentUser.name" disabled class="is-disabled-soft" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="负责人学号">
-                <el-input v-model="currentUser.student_id" disabled class="is-disabled-soft" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="联系电话" prop="leader_contact">
-                <el-input v-model="formData.leader_contact" placeholder="手机号" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="电子邮箱" prop="leader_email">
-                <el-input v-model="formData.leader_email" placeholder="邮箱" />
-              </el-form-item>
-            </el-col>
-          </el-row>
-        </div>
+        <ApplyMemberSection
+          :form-data="formData"
+          :new-member="newMember"
+          :handle-search-new-member="handleSearchNewMember"
+          :handle-add-new-member="handleAddNewMember"
+          :remove-member="removeMember"
+        />
 
-        <!-- 3. 指导教师 (Dynamic Table) -->
-        <div class="form-section">
-          <div class="section-header">
-              <span class="section-title">指导教师</span>
-          </div>
-          <div class="dynamic-input-row">
-            <el-row :gutter="16" class="mb-3">
-               <el-col :span="4">
-                 <el-select v-model="newAdvisor.order" placeholder="指导次序" style="width: 100%">
-                   <el-option label="第一指导老师" :value="1" />
-                   <el-option label="第二指导老师" :value="2" />
-                 </el-select>
-               </el-col>
-               <el-col :span="8">
-                 <el-input 
-                    v-model="newAdvisor.job_number" 
-                    placeholder="工号 (回车查询)" 
-                    @blur="handleSearchNewAdvisor"
-                    @keyup.enter="handleSearchNewAdvisor"
-                 >
-                    <template #append>
-                        <el-button :icon="Search" @click="handleSearchNewAdvisor" />
-                    </template>
-                 </el-input>
-               </el-col>
-               <el-col :span="6">
-                 <el-input v-model="newAdvisor.name" placeholder="姓名" disabled />
-               </el-col>
-               <el-col :span="6">
-                  <!-- Display Title Label if possible, or just code -->
-                 <el-input v-model="newAdvisor.title" placeholder="职称" disabled />
-               </el-col>
-            </el-row>
-            <el-row :gutter="16">
-               <el-col :span="10">
-                 <el-input v-model="newAdvisor.email" placeholder="电子邮箱" />
-               </el-col>
-               <el-col :span="10">
-                 <el-input v-model="newAdvisor.contact" placeholder="联系电话 (选填)" />
-               </el-col>
-               <el-col :span="4">
-                 <el-button type="primary" plain @click="handleAddNewAdvisor" style="width: 100%">
-                    <el-icon class="mr-1"><Plus /></el-icon> 添加
-                 </el-button>
-               </el-col>
-            </el-row>
-          </div>
-          
-          <el-table 
-            :data="formData.advisors" 
-            style="width: 100%; margin-top: 12px;" 
-            border
-            :header-cell-style="{ background: '#f8fafc', color: '#475569' }"
-          >
-             <el-table-column label="次序" width="120">
-               <template #default="scope">
-                 <el-tag :type="scope.row.order === 1 ? 'primary' : 'success'" effect="plain">
-                   {{ scope.row.order === 1 ? '第一指导老师' : '第二指导老师' }}
-                 </el-tag>
-               </template>
-             </el-table-column>
-             <el-table-column prop="job_number" label="工号" width="120" />
-             <el-table-column prop="name" label="姓名" width="100" />
-             <el-table-column prop="title" label="职称" width="100">
-                <template #default="scope">
-                   {{ getLabel(advisorTitleOptions, scope.row.title) }}
-                </template>
-             </el-table-column>
-             <el-table-column prop="contact" label="电话" />
-             <el-table-column prop="email" label="邮箱" />
-             <el-table-column label="操作" width="80" align="center">
-                <template #default="scope">
-                   <el-button link type="danger" size="small" @click="removeAdvisor(scope.$index)">删除</el-button>
-                </template>
-             </el-table-column>
-             <template #empty>
-                <div class="empty-text">暂无指导教师，请在上方添加</div>
-             </template>
-          </el-table>
-        </div>
+        <ApplyContentSection
+          :form-data="formData"
+          :expected-form="expectedForm"
+          :achievement-type-options="achievementTypeOptions"
+          :get-label="getLabel"
+          :add-expected-result="addExpectedResult"
+          :remove-expected-result="removeExpectedResult"
+        />
 
-        <!-- 4. 项目成员 (Dynamic Table) -->
-        <div class="form-section">
-          <div class="section-header">
-              <span class="section-title">项目成员</span>
-          </div>
-           <div class="dynamic-input-row">
-            <el-row :gutter="16">
-               <el-col :span="10">
-                 <el-input 
-                    v-model="newMember.student_id" 
-                    placeholder="成员学号 (回车查询)" 
-                    @blur="handleSearchNewMember"
-                    @keyup.enter="handleSearchNewMember"
-                 >
-                    <template #append>
-                        <el-button :icon="Search" @click="handleSearchNewMember" />
-                    </template>
-                 </el-input>
-               </el-col>
-               <el-col :span="10">
-                 <el-input v-model="newMember.name" placeholder="成员姓名" disabled />
-               </el-col>
-               <el-col :span="4">
-                 <el-button type="primary" plain @click="handleAddNewMember" style="width: 100%">
-                    <el-icon class="mr-1"><Plus /></el-icon> 添加成员
-                 </el-button>
-               </el-col>
-            </el-row>
-          </div>
-
-          <el-table 
-            :data="formData.members" 
-            style="width: 100%; margin-top: 12px;" 
-            border 
-            :header-cell-style="{ background: '#f8fafc', color: '#475569' }"
-          >
-             <el-table-column prop="student_id" label="学号" width="180" />
-             <el-table-column prop="name" label="姓名" />
-             <el-table-column label="操作" width="80" align="center">
-                <template #default="scope">
-                   <el-button link type="danger" size="small" @click="removeMember(scope.$index)">删除</el-button>
-                </template>
-             </el-table-column>
-             <template #empty>
-                <div class="empty-text">暂无成员，请在上方添加</div>
-             </template>
-          </el-table>
-        </div>
-
-        <!-- 5. 申报内容 -->
-        <div class="form-section">
-          <div class="section-header">
-              <span class="section-title">申报内容</span>
-          </div>
-          <el-row>
-             <el-col :span="24">
-                <el-form-item label="预期成果" prop="expected_results">
-                   <el-input 
-                     v-model="formData.expected_results" 
-                     type="textarea" 
-                     :rows="3" 
-                     maxlength="200"
-                     show-word-limit
-                     placeholder="请列出具体成果形式，如：发表论文1篇、软件著作权1项等"
-                   />
-                </el-form-item>
-             </el-col>
-             <el-col :span="24">
-                <el-form-item label="预期成果清单">
-                  <div class="expected-grid">
-                    <el-select
-                      v-model="expectedForm.achievement_type"
-                      placeholder="成果类型"
-                      class="expected-select"
-                    >
-                      <el-option
-                        v-for="item in achievementTypeOptions"
-                        :key="item.value"
-                        :label="item.label"
-                        :value="item.value"
-                      />
-                    </el-select>
-                    <el-input-number
-                      v-model="expectedForm.expected_count"
-                      :min="1"
-                      controls-position="right"
-                      class="expected-count"
-                    />
-                    <el-button type="primary" plain @click="addExpectedResult">
-                      <el-icon class="mr-1"><Plus /></el-icon> 添加
-                    </el-button>
-                  </div>
-                  <el-table
-                    v-if="formData.expected_results_data.length"
-                    :data="formData.expected_results_data"
-                    border
-                    style="width: 100%; margin-top: 12px;"
-                    :header-cell-style="{ background: '#f8fafc', color: '#475569' }"
-                  >
-                    <el-table-column label="成果类型">
-                      <template #default="{ row }">
-                        {{ getLabel(achievementTypeOptions, row.achievement_type) }}
-                      </template>
-                    </el-table-column>
-                    <el-table-column prop="expected_count" label="数量" width="120" />
-                    <el-table-column label="操作" width="100" align="center">
-                      <template #default="{ $index }">
-                        <el-button link type="danger" @click="removeExpectedResult($index)">删除</el-button>
-                      </template>
-                    </el-table-column>
-                  </el-table>
-                </el-form-item>
-             </el-col>
-             <el-col :span="24">
-                <el-form-item label="项目简介" prop="description">
-                   <el-input 
-                     v-model="formData.description" 
-                     type="textarea" 
-                     :rows="6" 
-                     maxlength="500"
-                     show-word-limit
-                     placeholder="请简要介绍项目背景、创新点及研究内容"
-                   />
-                </el-form-item>
-             </el-col>
-          </el-row>
-        </div>
-
-        <!-- 6. 附件 -->
-        <div class="form-section no-border">
-           <div class="section-header">
-              <span class="section-title">附件上传</span>
-          </div>
-           <el-form-item label="申请书" prop="attachment_file">
-                <div class="attachment-container">
-                    <div class="actions-row">
-                        <el-upload
-                            action="#" 
-                            :auto-upload="false"
-                            :on-change="handleFileChange"
-                            :on-remove="handleFileRemove"
-                            :limit="1"
-                            v-model:file-list="fileList"
-                            accept=".pdf"
-                            class="upload-demo"
-                        >
-                            <el-button type="primary" plain>
-                                <el-icon class="mr-1"><Upload /></el-icon> 上传申请书 (PDF)
-                            </el-button>
-                        </el-upload>
-                        
-                        <div class="download-section">
-                            <el-button 
-                                v-if="currentTemplateUrl" 
-                                link 
-                                type="primary" 
-                                @click="handleDownloadTemplate"
-                            >
-                                <el-icon class="mr-1"><Download /></el-icon> 下载申请书模板
-                            </el-button>
-                            <el-tag v-else type="info" size="small" effect="plain">
-                                暂无申请书模板
-                            </el-tag>
-                        </div>
-                    </div>
-                    
-                    <div class="form-tip">只能上传pdf文件，且不超过2MB</div>
-                </div>
-           </el-form-item>
-        </div>
+        <ApplyAttachmentSection
+          v-model:file-list="fileList"
+          :current-template-url="currentTemplateUrl"
+          :handle-download-template="handleDownloadTemplate"
+          :handle-file-change="handleFileChange"
+          :handle-file-remove="handleFileRemove"
+        />
 
       </el-form>
     </el-card>
@@ -392,13 +80,18 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from "vue";
 import { ElMessage, type FormInstance, type UploadUserFile } from "element-plus";
-import { Download, Search, Upload, Plus } from "@element-plus/icons-vue";
 import { getUsers } from "@/api/user-admin";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionary";
 import { useUserStore } from "@/stores/user";
 import { createProjectApplication, updateProjectApplication, getProjectDetail } from "@/api/project";
 import { useRouter, useRoute } from "vue-router";
+import ApplyBasicInfoSection from "./components/ApplyBasicInfoSection.vue";
+import ApplyLeaderSection from "./components/ApplyLeaderSection.vue";
+import ApplyAdvisorSection from "./components/ApplyAdvisorSection.vue";
+import ApplyMemberSection from "./components/ApplyMemberSection.vue";
+import ApplyContentSection from "./components/ApplyContentSection.vue";
+import ApplyAttachmentSection from "./components/ApplyAttachmentSection.vue";
 
 // --- Logic Reuse ---
 const userStore = useUserStore();
@@ -948,7 +641,7 @@ const loadData = async (id: number) => {
             const proposalUrl = data.proposal_file_url || data.attachment_file_url || "";
             const proposalName = data.proposal_file_name || data.attachment_file_name || "申请书.pdf";
             fileList.value = proposalUrl
-              ? [{ name: proposalName, url: proposalUrl, status: "success", uid: "existing" }]
+              ? [{ name: proposalName, url: proposalUrl, status: "success", uid: Date.now() }]
               : [];
 
             if (Array.isArray(data.advisors_info) && data.advisors_info.length > 0) {
