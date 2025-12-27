@@ -33,6 +33,13 @@
         </el-form-item>
       </el-col>
       <el-col :span="12">
+        <el-form-item label="学科分类" prop="discipline">
+          <el-select v-model="formData.discipline" placeholder="请选择" class="w-full" filterable>
+            <el-option v-for="item in disciplineOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+      </el-col>
+      <el-col :span="12">
         <el-form-item label="重点领域" prop="is_key_field">
           <el-cascader
             v-model="localKeyFieldCascaderValue"
@@ -85,6 +92,7 @@ const props = defineProps<{
   sourceOptions: any[];
   levelOptions: any[];
   categoryOptions: any[];
+  disciplineOptions: any[];
   keyFieldCascaderOptions: any[];
   keyFieldCascaderValue: string[];
   collegeOptions: any[];

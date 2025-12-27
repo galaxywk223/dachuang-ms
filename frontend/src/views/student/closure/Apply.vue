@@ -11,6 +11,9 @@
              <el-button @click="router.back()">返回</el-button>
              <el-button type="info" plain @click="saveAsDraft">保存草稿</el-button>
              <el-button type="primary" @click="submitForm">提交申请</el-button>
+             <el-button type="danger" plain :disabled="!canDeleteSubmission" @click="handleDeleteSubmission">
+               删除提交
+             </el-button>
           </div>
         </div>
       </template>
@@ -330,6 +333,8 @@ const {
   rules,
   saveAsDraft,
   submitForm,
+  canDeleteSubmission,
+  handleDeleteSubmission,
   confirmAchievement,
   removeAchievement,
 } = useClosureApply();

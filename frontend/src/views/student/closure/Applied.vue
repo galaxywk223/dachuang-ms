@@ -138,6 +138,15 @@
               撤回申请
             </el-button>
             <el-button
+              v-if="canDeleteSubmission(row)"
+              type="danger"
+              size="small"
+              link
+              @click="handleDeleteSubmission(row)"
+            >
+              删除提交
+            </el-button>
+            <el-button
               v-if="row.status === 'CLOSED'"
               type="success"
               size="small"
@@ -177,7 +186,7 @@
 import { ref, reactive, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { useRouter } from "vue-router";
-import { getAppliedClosureProjects, getProjectCertificate, revokeClosureApplication } from "@/api/projects";
+import { getAppliedClosureProjects, getProjectCertificate, revokeClosureApplication, deleteClosureSubmission } from "@/api/projects";
 
 const router = useRouter();
 
@@ -233,6 +242,17 @@ const fetchAppliedProjects = async () => {
   }
 };
 
+const canDeleteSubmission = (row: any) => {
+  return [
+    "CLOSURE_SUBMITTED",
+    "CLOSURE_LEVEL2_REVIEWING",
+    "CLOSURE_LEVEL2_REJECTED",
+    "CLOSURE_LEVEL1_REVIEWING",
+    "CLOSURE_LEVEL1_REJECTED",
+    "CLOSURE_RETURNED",
+  ].includes(row.status);
+};
+
 // 分页大小改变
 const handleSizeChange = (size: number) => {
   pagination.pageSize = size;
@@ -266,6 +286,23 @@ const handleRevoke = async (row: any) => {
     if (response.code === 200) {
       ElMessage.success("已撤回结题申请");
       fetchAppliedProjects();
+    }
+  } catch {
+    // cancel
+  }
+};
+
+const handleDeleteSubmission = async (row: any) => {
+  try {
+    await ElMessageBox.confirm("确定删除该结题提交吗？删除后可在回收站恢复。", "提示", {
+      type: "warning",
+    });
+    const res: any = await deleteClosureSubmission(row.id);
+    if (res?.code === 200) {
+      ElMessage.success("已移入回收站");
+      fetchAppliedProjects();
+    } else {
+      ElMessage.error(res?.message || "删除失败");
     }
   } catch {
     // cancel

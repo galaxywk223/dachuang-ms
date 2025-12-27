@@ -2,7 +2,7 @@
 项目管理相关视图（管理员）
 """
 
-from django.db.models import Q
+from django.db.models import Q, Count
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -224,7 +224,6 @@ class ProjectManagementViewSet(
                             project=instance,
                             user_id=user_id,
                             role=ProjectMember.MemberRole.MEMBER,
-                            order=idx,
                             contribution=member_data.get("contribution", ""),
                         )
 
@@ -272,6 +271,51 @@ class ProjectManagementViewSet(
                     "total_projects": total_projects,
                     "approved_projects": approved_projects,
                     "pending_review": pending_review,
+                },
+            }
+        )
+
+    @action(methods=["get"], detail=False, url_path="statistics-report")
+    def statistics_report(self, request):
+        """
+        获取项目统计报表（按状态/学院/级别/类别）
+        """
+        queryset = self.get_queryset()
+        year = request.query_params.get("year")
+        college = request.query_params.get("college")
+        status_in = request.query_params.get("status_in")
+
+        if year:
+            queryset = queryset.filter(year=year)
+        if college:
+            queryset = queryset.filter(leader__college=college)
+        if status_in:
+            status_list = [s.strip() for s in status_in.split(",") if s.strip()]
+            queryset = queryset.filter(status__in=status_list)
+
+        by_status = list(
+            queryset.values("status").annotate(count=Count("id")).order_by("-count")
+        )
+        by_college = list(
+            queryset.values("leader__college").annotate(count=Count("id")).order_by("-count")
+        )
+        by_level = list(
+            queryset.values("level__label").annotate(count=Count("id")).order_by("-count")
+        )
+        by_category = list(
+            queryset.values("category__label").annotate(count=Count("id")).order_by("-count")
+        )
+
+        return Response(
+            {
+                "code": 200,
+                "message": "获取成功",
+                "data": {
+                    "total": queryset.count(),
+                    "by_status": by_status,
+                    "by_college": by_college,
+                    "by_level": by_level,
+                    "by_category": by_category,
                 },
             }
         )

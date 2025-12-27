@@ -1,9 +1,10 @@
 import { computed, onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { ElMessage, type FormInstance, type UploadFile } from "element-plus";
+import { ElMessage, ElMessageBox, type FormInstance, type UploadFile } from "element-plus";
 
 import {
   createClosureApplication,
+  deleteClosureSubmission,
   getProjectAchievements,
   getProjectDetail,
   updateClosureApplication,
@@ -384,6 +385,37 @@ export function useClosureApply() {
   const submitForm = () => submit(false);
   const saveAsDraft = () => submit(true);
 
+  const canDeleteSubmission = computed(() => {
+    const status = projectInfo.status;
+    return [
+      "CLOSURE_DRAFT",
+      "CLOSURE_SUBMITTED",
+      "CLOSURE_LEVEL2_REVIEWING",
+      "CLOSURE_LEVEL2_REJECTED",
+      "CLOSURE_LEVEL1_REVIEWING",
+      "CLOSURE_LEVEL1_REJECTED",
+      "CLOSURE_RETURNED",
+    ].includes(status);
+  });
+
+  const handleDeleteSubmission = async () => {
+    if (!project.value) return;
+    try {
+      await ElMessageBox.confirm("确定删除该结题提交吗？删除后可在回收站恢复。", "提示", {
+        type: "warning",
+      });
+      const res: any = await deleteClosureSubmission(project.value.id);
+      if (res?.code === 200) {
+        ElMessage.success("已移入回收站");
+        fetchProjectInfo();
+      } else {
+        ElMessage.error(res?.message || "删除失败");
+      }
+    } catch {
+      // cancel
+    }
+  };
+
   onMounted(() => {
     loadDictionaries([
       DICT_CODES.ACHIEVEMENT_TYPE,
@@ -420,6 +452,8 @@ export function useClosureApply() {
     rules,
     saveAsDraft,
     submitForm,
+    canDeleteSubmission,
+    handleDeleteSubmission,
     confirmAchievement,
     removeAchievement,
   };

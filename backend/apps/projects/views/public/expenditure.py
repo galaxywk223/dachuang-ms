@@ -7,9 +7,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 
-from ...models import Project, ProjectExpenditure
+from ...models import Project, ProjectExpenditure, ProjectRecycleBin
 from ...serializers import ProjectExpenditureSerializer
-from ...services import ProjectService
+from ...services import ProjectService, ProjectRecycleService
 
 class ProjectExpenditureViewSet(viewsets.ModelViewSet):
     """
@@ -39,6 +39,7 @@ class ProjectExpenditureViewSet(viewsets.ModelViewSet):
             Project.ProjectStatus.MID_TERM_APPROVED,
             Project.ProjectStatus.READY_FOR_CLOSURE,
             Project.ProjectStatus.MID_TERM_REJECTED,
+            Project.ProjectStatus.MID_TERM_RETURNED,
             Project.ProjectStatus.CLOSURE_DRAFT,
             Project.ProjectStatus.CLOSURE_SUBMITTED,
             Project.ProjectStatus.CLOSURE_LEVEL2_REVIEWING,
@@ -47,6 +48,7 @@ class ProjectExpenditureViewSet(viewsets.ModelViewSet):
             Project.ProjectStatus.CLOSURE_LEVEL1_REVIEWING,
             Project.ProjectStatus.CLOSURE_LEVEL1_APPROVED,
             Project.ProjectStatus.CLOSURE_LEVEL1_REJECTED,
+            Project.ProjectStatus.CLOSURE_RETURNED,
         }
         return project.status in allowed_statuses
 
@@ -123,3 +125,25 @@ class ProjectExpenditureViewSet(viewsets.ModelViewSet):
                 project__leader__college=user.college
             )
         return ProjectExpenditure.objects.all()
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        project = instance.project
+        payload = {
+            "title": instance.title,
+            "amount": instance.amount,
+            "expenditure_date": instance.expenditure_date,
+            "category": instance.category_id,
+            "proof_file": instance.proof_file.name if instance.proof_file else "",
+            "created_by": instance.created_by_id,
+        }
+        ProjectRecycleService.add_item(
+            project=project,
+            resource_type=ProjectRecycleBin.ResourceType.EXPENDITURE,
+            resource_id=instance.id,
+            payload=payload,
+            attachments=[payload.get("proof_file")] if payload.get("proof_file") else [],
+            deleted_by=request.user,
+        )
+        self.perform_destroy(instance)
+        return Response({"code": 200, "message": "已移入回收站"})

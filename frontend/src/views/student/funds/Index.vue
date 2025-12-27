@@ -68,6 +68,11 @@
             </template>
           </el-table-column>
           <el-table-column prop="created_by_name" label="录入人" width="120" />
+          <el-table-column label="操作" width="120" align="center" fixed="right">
+            <template #default="scope">
+              <el-button link type="danger" size="small" @click="handleDelete(scope.row)">删除</el-button>
+            </template>
+          </el-table-column>
         </el-table>
       </div>
     </el-card>
@@ -86,7 +91,8 @@ import { ref, onMounted, reactive } from "vue";
 import { Document } from '@element-plus/icons-vue';
 import AddExpenseDialog from "./components/AddExpenseDialog.vue";
 import request from "@/utils/request";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { removeProjectExpenditure } from "@/api/projects";
 
 // 状态定义
 const loading = ref(false);
@@ -201,6 +207,23 @@ const showAddDialog = () => {
     dialogVisible.value = true;
 };
 
+const handleDelete = async (row: any) => {
+  try {
+    await ElMessageBox.confirm("确定删除该经费记录吗？删除后可在回收站恢复。", "提示", {
+      type: "warning",
+    });
+    const res: any = await removeProjectExpenditure(row.id);
+    if (res?.code === 200 || res?.status === 204) {
+      ElMessage.success("已移入回收站");
+      fetchData();
+    } else {
+      ElMessage.error(res?.message || "删除失败");
+    }
+  } catch {
+    // cancel
+  }
+};
+
 const getUsageStatus = (rate: number) => {
     if (rate >= 100) return 'exception';
     if (rate >= 80) return 'warning';
@@ -262,4 +285,3 @@ onMounted(() => {
 .text-gray-400 {
     color: #9ca3af;
 }
-

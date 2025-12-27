@@ -13,7 +13,11 @@ from .changes import (
     ProjectChangeRequestSerializer,
     ProjectChangeReviewActionSerializer,
 )
-from .archive import ProjectArchiveSerializer, ProjectPushRecordSerializer
+from .archive import (
+    ProjectArchiveSerializer,
+    ProjectPushRecordSerializer,
+    ProjectRecycleBinSerializer,
+)
 from .midterm import ProjectMidTermSerializer
 
 __all__ = [
@@ -31,5 +35,6 @@ __all__ = [
     "ProjectChangeReviewActionSerializer",
     "ProjectArchiveSerializer",
     "ProjectPushRecordSerializer",
+    "ProjectRecycleBinSerializer",
     "ProjectMidTermSerializer",
 ]

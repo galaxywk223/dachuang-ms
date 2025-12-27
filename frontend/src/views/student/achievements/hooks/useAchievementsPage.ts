@@ -323,14 +323,14 @@ export function useAchievementsPage() {
   const handleDelete = async (row: any) => {
     if (!activeProjectId.value) return;
     try {
-      await ElMessageBox.confirm("确认删除该成果记录？", "提示", {
+      await ElMessageBox.confirm("确认删除该成果记录？删除后可在回收站恢复。", "提示", {
         type: "warning",
         confirmButtonText: "删除",
         cancelButtonText: "取消",
       });
       const response: any = await removeProjectAchievement(activeProjectId.value, row.id);
       if (response.code === 200) {
-        ElMessage.success("删除成功");
+        ElMessage.success("已移入回收站");
         fetchAchievements();
       } else {
         ElMessage.error(response.message || "删除失败");

@@ -11,10 +11,12 @@ from rest_framework.response import Response
 from apps.projects.models import ProjectPhaseInstance
 from apps.projects.services.phase_service import ProjectPhaseService
 from apps.reviews.services import ReviewService
+from apps.notifications.services import NotificationService
 
 from ...certificates import render_certificate_html
 from ...models import Project
-from ...services import ProjectService
+from ...services import ProjectService, ProjectRecycleService
+from ...models import ProjectRecycleBin
 
 
 class ProjectCoreActionsMixin:
@@ -84,13 +86,62 @@ class ProjectCoreActionsMixin:
                 project,
                 ProjectPhaseInstance.Phase.APPLICATION,
                 created_by=request.user,
-                step="TEACHER_REVIEWING",
             )
 
         ReviewService.create_teacher_review(project)
 
         project.submitted_at = timezone.now()
         project.save(update_fields=["submitted_at"])
+        NotificationService.notify_project_submitted(project)
 
         return Response({"code": 200, "message": "项目提交成功，等待导师审核"})
 
+    @action(methods=["post"], detail=True, url_path="delete-application")
+    def delete_application(self, request, pk=None):
+        """
+        删除立项申报（进入回收站）
+        """
+        project = self.get_object()
+
+        if project.leader != request.user:
+            return Response(
+                {"code": 403, "message": "只有项目负责人可以删除申报"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        allowed_statuses = {
+            Project.ProjectStatus.SUBMITTED,
+            Project.ProjectStatus.TEACHER_AUDITING,
+            Project.ProjectStatus.TEACHER_REJECTED,
+            Project.ProjectStatus.APPLICATION_RETURNED,
+        }
+        if project.status not in allowed_statuses:
+            return Response(
+                {"code": 400, "message": "当前状态不允许删除申报"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        payload = ProjectRecycleService.snapshot_application(project)
+        ProjectRecycleService.add_item(
+            project=project,
+            resource_type=ProjectRecycleBin.ResourceType.APPLICATION,
+            payload=payload,
+            attachments=[
+                f for f in [payload.get("proposal_file"), payload.get("attachment_file")] if f
+            ],
+            deleted_by=request.user,
+        )
+        project.proposal_file = None
+        project.attachment_file = None
+        project.submitted_at = None
+        project.status = Project.ProjectStatus.DRAFT
+        project.save(
+            update_fields=[
+                "proposal_file",
+                "attachment_file",
+                "submitted_at",
+                "status",
+                "updated_at",
+            ]
+        )
+        return Response({"code": 200, "message": "已移入回收站"})

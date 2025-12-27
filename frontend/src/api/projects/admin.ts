@@ -89,6 +89,17 @@ export function getProjectStatistics() {
   });
 }
 
+/**
+ * 获取项目统计报表
+ */
+export function getProjectStatisticsReport(params?: any) {
+  return request({
+    url: "/projects/admin/manage/statistics-report/",
+    method: "get",
+    params,
+  });
+}
+
 // 成果管理相关接口
 
 /**

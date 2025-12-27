@@ -255,6 +255,21 @@
           </div>
           <el-row :gutter="24">
             <el-col :span="12">
+              <el-form-item label="学科分类" prop="discipline">
+                <template v-if="isViewMode">
+                  <span>{{ getLabel(disciplineOptions, form.discipline) }}</span>
+                </template>
+                <el-select v-else v-model="form.discipline" placeholder="请选择" class="w-full">
+                  <el-option
+                    v-for="item in disciplineOptions"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
               <el-form-item label="预期成果" prop="expected_results">
                 <el-input
                   type="textarea"
@@ -361,6 +376,7 @@ const {
   collegeOptions,
   majorOptions,
   advisorTitleOptions,
+  disciplineOptions,
   keyFieldCascaderOptions,
   keyFieldCascaderValue,
   getLabel,

@@ -82,7 +82,7 @@
 
         <div class="header-right">
           <!-- Notification Bell (Common) -->
-          <el-button circle text class="icon-btn">
+          <el-button circle text class="icon-btn" @click="goNotifications">
             <el-badge is-dot class="badge-dot" :hidden="!hasUnread">
               <el-icon :size="20"><Bell /></el-icon>
             </el-badge>
@@ -184,13 +184,14 @@ import {
 	  Expand, Fold, Lock, Setting, Folder, User
 } from '@element-plus/icons-vue';
 import { getCurrentBatch } from '@/api/system-settings/batches';
+import { getUnreadCount } from "@/api/notifications";
 
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
 
 const isCollapse = ref(false);
-const hasUnread = ref(false); 
+const hasUnread = ref(false);
 
 // User Info
 const userRole = computed(() => String(userStore.user?.role || localStorage.getItem('user_role') || 'student').toLowerCase());
@@ -296,9 +297,24 @@ const currentMenus = computed(() => {
                     icon: Folder,
                 },
                 {
+                    index: '/progress',
+                    title: '项目进度',
+                    icon: Folder,
+                },
+                {
                     index: '/change-requests',
                     title: '项目异动',
                     icon: DocumentAdd,
+                },
+                {
+                    index: '/notifications',
+                    title: '通知中心',
+                    icon: Bell,
+                },
+                {
+                    index: '/recycle-bin',
+                    title: '回收站',
+                    icon: Folder,
                 },
                 {
                     index: 'help',
@@ -362,6 +378,16 @@ const currentMenus = computed(() => {
                         { index: '/level2-admin/change/review', title: '异动审核' },
                     ]
                 },
+                {
+                    index: '/notifications',
+                    title: '通知中心',
+                    icon: Bell,
+                },
+                {
+                    index: '/recycle-bin',
+                    title: '回收站',
+                    icon: Folder,
+                },
             ];
         case 'level1_admin':
 	             return [
@@ -407,6 +433,16 @@ const currentMenus = computed(() => {
                         { index: '/level1-admin/expert/assignment', title: '校级评审分配' },
                   ],
                 },
+                {
+                  index: '/notifications',
+                  title: '通知中心',
+                  icon: Bell,
+                },
+                {
+                  index: '/recycle-bin',
+                  title: '回收站',
+                  icon: Folder,
+                },
 	                {
 	                  index: 'settings',
 	                  title: '系统配置',
@@ -414,6 +450,8 @@ const currentMenus = computed(() => {
 	                  children: [
                         { index: '/level1-admin/settings/batches', title: '批次管理' },
                         { index: '/level1-admin/settings/certificate', title: '结题证书' },
+                        { index: '/level1-admin/settings/workflows', title: '流程配置' },
+                        { index: '/level1-admin/settings/review-templates', title: '评审模板' },
 	                    { index: '/level1-admin/settings/project-dictionaries', title: '项目参数' },
 	                    { index: '/level1-admin/settings/org-dictionaries', title: '组织参数' },
 	                    { index: '/level1-admin/settings/achievement-dictionaries', title: '成果参数' },
@@ -438,6 +476,16 @@ const currentMenus = computed(() => {
                     title: '经费管理',
                     icon: Folder,
                 },
+                {
+                    index: '/notifications',
+                    title: '通知中心',
+                    icon: Bell,
+                },
+                {
+                    index: '/recycle-bin',
+                    title: '回收站',
+                    icon: Folder,
+                },
             ];
         case 'expert':
             return [
@@ -445,6 +493,16 @@ const currentMenus = computed(() => {
                     index: '/expert/reviews',
                     title: '评审任务',
                     icon: DocumentChecked,
+                },
+                {
+                    index: '/notifications',
+                    title: '通知中心',
+                    icon: Bell,
+                },
+                {
+                    index: '/recycle-bin',
+                    title: '回收站',
+                    icon: Folder,
                 },
             ];
         default:
@@ -455,6 +513,20 @@ const currentMenus = computed(() => {
 
 const toggleSidebar = () => {
   isCollapse.value = !isCollapse.value;
+};
+
+const refreshUnread = async () => {
+  try {
+    const res: any = await getUnreadCount();
+    const count = res?.data?.data?.count ?? res?.data?.count ?? 0;
+    hasUnread.value = count > 0;
+  } catch {
+    hasUnread.value = false;
+  }
+};
+
+const goNotifications = () => {
+  router.push("/notifications");
 };
 
 const handleCommand = async (command: string) => {
@@ -547,12 +619,14 @@ const resetPasswordForm = () => {
 
 onMounted(async () => {
   await loadCurrentBatch();
+  await refreshUnread();
 });
 
 watch(
   () => route.path,
   async () => {
     await loadCurrentBatch();
+    await refreshUnread();
   }
 );
 </script>

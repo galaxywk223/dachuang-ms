@@ -72,8 +72,30 @@
       </el-descriptions>
 
       <el-form ref="formRef" :model="form" :rules="rules" label-width="100px" v-if="!isViewMode">
-        <el-form-item label="分数" prop="score" v-if="needsScore">
+        <el-form-item label="分数" prop="score" v-if="needsScore && !hasTemplate">
            <el-input-number v-model="form.score" :min="0" :max="100" />
+        </el-form-item>
+        <el-form-item v-if="hasTemplate && currentReview?.template_info?.notice" label="注意事项">
+          <el-alert
+            :title="currentReview?.template_info?.notice"
+            type="info"
+            show-icon
+            :closable="false"
+          />
+        </el-form-item>
+        <el-form-item v-if="hasTemplate" label="评分项">
+          <div class="score-items">
+            <div v-for="item in scoreItems" :key="item.item_id" class="score-row">
+              <div class="score-title">
+                <span>{{ item.title }}</span>
+                <span class="score-meta">
+                  权重 {{ item.weight }} / 满分 {{ item.max_score }}
+                  <span v-if="item.is_required" class="required-flag">必填</span>
+                </span>
+              </div>
+              <el-input-number v-model="item.score" :min="0" :max="item.max_score" />
+            </div>
+          </div>
         </el-form-item>
         <el-form-item :label="isMidTerm ? '审核意见' : '评审意见'" prop="comments">
            <el-input 
@@ -92,6 +114,14 @@
       </el-form>
       
       <div v-else>
+          <div v-if="currentReview?.score_details?.length" class="score-view">
+            <p class="score-title"><strong>评分明细:</strong></p>
+            <ul>
+              <li v-for="detail in currentReview.score_details" :key="detail.item_id">
+                {{ detail.title }}：{{ detail.score }}（权重 {{ detail.weight }}，加权 {{ detail.weighted_score }}）
+              </li>
+            </ul>
+          </div>
           <p v-if="currentReview?.review_type !== 'MID_TERM'"><strong>分数:</strong> {{ currentReview?.score }}</p>
           <p><strong>意见:</strong> {{ currentReview?.comments }}</p>
           <p><strong>状态:</strong> {{ currentReview?.status_display }}</p>
@@ -164,15 +194,17 @@ const form = reactive({
     comments: "",
     action: "approve"
 });
+const scoreItems = ref<any[]>([]);
 
 const isMidTerm = computed(() => currentReview.value?.review_type === "MID_TERM");
 const needsScore = computed(() => currentReview.value?.review_type !== "MID_TERM");
+const hasTemplate = computed(() => !!currentReview.value?.template_info?.items?.length);
 
 const rules = reactive<FormRules>({
     score: [
       {
         validator: (_rule: any, value: any, callback: any) => {
-          if (!needsScore.value) return callback();
+          if (!needsScore.value || hasTemplate.value) return callback();
           if (value === null || value === undefined || value === "") {
             return callback(new Error("请输入分数"));
           }
@@ -262,6 +294,18 @@ const handleReview = (review: any) => {
     form.score = null;
     form.comments = "";
     form.action = "approve";
+    if (review.template_info?.items?.length) {
+        scoreItems.value = review.template_info.items.map((item: any) => ({
+            item_id: item.id,
+            title: item.title,
+            weight: item.weight,
+            max_score: item.max_score,
+            is_required: item.is_required,
+            score: 0,
+        }));
+    } else {
+        scoreItems.value = [];
+    }
     dialogVisible.value = true;
 };
 
@@ -277,12 +321,28 @@ const handleEdit = (review: any) => {
     form.score = review.score ?? null;
     form.comments = review.comments || "";
     form.action = review.status === "REJECTED" ? "reject" : "approve";
+    if (review.template_info?.items?.length) {
+        const detailMap = new Map(
+            (review.score_details || []).map((d: any) => [d.item_id, d.score])
+        );
+        scoreItems.value = review.template_info.items.map((item: any) => ({
+            item_id: item.id,
+            title: item.title,
+            weight: item.weight,
+            max_score: item.max_score,
+            is_required: item.is_required,
+            score: detailMap.get(item.id) ?? 0,
+        }));
+    } else {
+        scoreItems.value = [];
+    }
     dialogVisible.value = true;
 };
 
 const handleClose = () => {
     dialogVisible.value = false;
     formRef.value?.resetFields();
+    scoreItems.value = [];
 };
 
 const handleSubmit = async () => {
@@ -302,7 +362,24 @@ const handleSubmit = async () => {
                   payload.action = form.action;
                 } else {
                   payload.action = "approve";
-                  payload.score = form.score;
+                  if (!hasTemplate.value) {
+                    payload.score = form.score;
+                  }
+                }
+                if (hasTemplate.value) {
+                  const missing = scoreItems.value.find(
+                    (item) =>
+                      item.is_required && (item.score === null || item.score === undefined || item.score === "")
+                  );
+                  if (missing) {
+                    ElMessage.warning(`评分项“${missing.title}”为必填`);
+                    submitting.value = false;
+                    return;
+                  }
+                  payload.score_details = scoreItems.value.map((item) => ({
+                    item_id: item.item_id,
+                    score: item.score,
+                  }));
                 }
                 await request.post(endpoint, payload);
                 ElMessage.success(dialogMode.value === "edit" ? "评审已更新" : "评审提交成功");
@@ -336,6 +413,10 @@ const resetBatchForm = () => {
 const openBatchDialog = () => {
   if (selectedRows.value.length === 0) {
     ElMessage.warning("请先勾选评审任务");
+    return;
+  }
+  if (selectedRows.value.some((row) => row.template_info?.items?.length)) {
+    ElMessage.warning("包含评分模板的任务暂不支持批量评审，请单独评分");
     return;
   }
   resetBatchForm();
@@ -396,6 +477,44 @@ watch(
         display: flex;
         justify-content: center;
         gap: 8px;
+    }
+    .score-items {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+    }
+    .score-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 8px 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        background: #f8fafc;
+    }
+    .score-title {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-weight: 500;
+    }
+    .score-meta {
+        font-size: 12px;
+        color: #64748b;
+    }
+    .required-flag {
+        margin-left: 6px;
+        color: #ef4444;
+    }
+    .score-view {
+        margin-bottom: 12px;
+        ul {
+            margin: 6px 0 0;
+            padding-left: 16px;
+            color: #475569;
+        }
     }
 }
 </style>

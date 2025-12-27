@@ -7,13 +7,15 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from apps.projects.models import ProjectPhaseInstance
+from apps.projects.models import ProjectPhaseInstance, Project
 from apps.projects.services.phase_service import ProjectPhaseService
 from apps.reviews.services import ReviewService
+from apps.notifications.services import NotificationService
 from apps.system_settings.services import SystemSettingService
 
 from ...serializers.midterm import ProjectMidTermSerializer
-from ...services import ProjectService
+from ...services import ProjectService, ProjectRecycleService
+from ...models import ProjectRecycleBin
 
 
 class ProjectMidtermMixin:
@@ -61,9 +63,9 @@ class ProjectMidtermMixin:
                         project,
                         ProjectPhaseInstance.Phase.MID_TERM,
                         created_by=request.user,
-                        step="TEACHER_REVIEWING",
                     )
                 ReviewService.create_mid_term_teacher_review(project)
+                NotificationService.notify_midterm_submitted(project)
 
             return Response({"code": 200, "message": message})
         except ValueError as e:
@@ -104,9 +106,9 @@ class ProjectMidtermMixin:
                         project,
                         ProjectPhaseInstance.Phase.MID_TERM,
                         created_by=request.user,
-                        step="TEACHER_REVIEWING",
                     )
                 ReviewService.create_mid_term_teacher_review(project)
+                NotificationService.notify_midterm_submitted(project)
                 return Response({"code": 200, "message": "中期检查申请提交成功"})
 
             return Response(
@@ -119,3 +121,42 @@ class ProjectMidtermMixin:
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+    @action(methods=["post"], detail=True, url_path="delete-mid-term")
+    def delete_mid_term(self, request, pk=None):
+        """
+        删除中期提交（进入回收站）
+        """
+        project = self.get_object()
+
+        if project.leader != request.user:
+            return Response(
+                {"code": 403, "message": "只有项目负责人可以删除中期提交"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        allowed_statuses = {
+            Project.ProjectStatus.MID_TERM_DRAFT,
+            Project.ProjectStatus.MID_TERM_SUBMITTED,
+            Project.ProjectStatus.MID_TERM_REVIEWING,
+            Project.ProjectStatus.MID_TERM_RETURNED,
+            Project.ProjectStatus.MID_TERM_REJECTED,
+        }
+        if project.status not in allowed_statuses:
+            return Response(
+                {"code": 400, "message": "当前项目状态不允许删除中期提交"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        payload = ProjectRecycleService.snapshot_midterm(project)
+        ProjectRecycleService.add_item(
+            project=project,
+            resource_type=ProjectRecycleBin.ResourceType.MID_TERM,
+            payload=payload,
+            attachments=[payload.get("mid_term_report")] if payload.get("mid_term_report") else [],
+            deleted_by=request.user,
+        )
+        project.mid_term_report = None
+        project.mid_term_submitted_at = None
+        project.status = Project.ProjectStatus.IN_PROGRESS
+        project.save(update_fields=["mid_term_report", "mid_term_submitted_at", "status", "updated_at"])
+        return Response({"code": 200, "message": "已移入回收站"})

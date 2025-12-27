@@ -29,6 +29,7 @@
           :source-options="sourceOptions"
           :level-options="levelOptions"
           :category-options="categoryOptions"
+          :discipline-options="disciplineOptions"
           :key-field-cascader-options="keyFieldCascaderOptions"
           :college-options="collegeOptions"
           :major-options="majorOptions"
@@ -93,6 +94,7 @@ const {
   sourceOptions,
   levelOptions,
   categoryOptions,
+  disciplineOptions,
   keyFieldCascaderOptions,
   keyFieldCascaderValue,
   collegeOptions,

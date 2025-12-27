@@ -86,6 +86,7 @@ const statusFilters = [
   "MID_TERM_REVIEWING",
   "MID_TERM_APPROVED",
   "MID_TERM_REJECTED",
+  "MID_TERM_RETURNED",
 ];
 
 const getStatusText = (status: string) => {
@@ -96,6 +97,7 @@ const getStatusText = (status: string) => {
     MID_TERM_REVIEWING: "审核中",
     MID_TERM_APPROVED: "审核通过",
     MID_TERM_REJECTED: "审核不通过",
+    MID_TERM_RETURNED: "退回修改",
   };
   return map[status] || status;
 };
@@ -108,6 +110,7 @@ const getStatusType = (status: string) => {
     MID_TERM_REVIEWING: "warning",
     MID_TERM_APPROVED: "success",
     MID_TERM_REJECTED: "danger",
+    MID_TERM_RETURNED: "danger",
   };
   return map[status] || "info";
 };

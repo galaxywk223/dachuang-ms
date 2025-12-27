@@ -102,6 +102,14 @@
               >
                 保存草稿
               </el-button>
+              <el-button
+                type="danger"
+                plain
+                :disabled="!canDelete"
+                @click="handleDelete"
+              >
+                删除提交
+              </el-button>
             </el-form-item>
           </el-form>
         </div>
@@ -114,9 +122,9 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { UploadFilled } from '@element-plus/icons-vue'
-import { ElMessage, type FormInstance, type UploadUserFile, type UploadFile } from 'element-plus'
+import { ElMessage, ElMessageBox, type FormInstance, type UploadUserFile, type UploadFile } from 'element-plus'
 import request from '@/utils/request'
-import { getProjectDetail } from '@/api/projects'
+import { deleteMidTermSubmission, getProjectDetail } from '@/api/projects'
 
 interface Project {
   id: number
@@ -155,6 +163,18 @@ const canSubmit = computed(() => {
   return ['IN_PROGRESS', 'MID_TERM_DRAFT', 'MID_TERM_REJECTED'].includes(status)
 })
 
+const canDelete = computed(() => {
+  if (!project.value) return false
+  const status = project.value.status
+  return [
+    'MID_TERM_DRAFT',
+    'MID_TERM_SUBMITTED',
+    'MID_TERM_REVIEWING',
+    'MID_TERM_REJECTED',
+    'MID_TERM_RETURNED',
+  ].includes(status)
+})
+
 const projectId = computed(() => Number(route.query.projectId))
 const hasProjectId = computed(() => Number.isFinite(projectId.value) && projectId.value > 0)
 const emptyMessage = computed(() =>
@@ -168,7 +188,8 @@ const getStatusType = (status: string) => {
     'MID_TERM_SUBMITTED': 'warning',
     'MID_TERM_REVIEWING': 'warning',
     'MID_TERM_APPROVED': 'success',
-    'MID_TERM_REJECTED': 'danger'
+    'MID_TERM_REJECTED': 'danger',
+    'MID_TERM_RETURNED': 'danger'
   }
   return map[status] || 'info'
 }
@@ -180,7 +201,8 @@ const getStatusText = (status: string) => {
     'MID_TERM_SUBMITTED': '已提交',
     'MID_TERM_REVIEWING': '审核中',
     'MID_TERM_APPROVED': '审核通过',
-    'MID_TERM_REJECTED': '审核不通过'
+    'MID_TERM_REJECTED': '审核不通过',
+    'MID_TERM_RETURNED': '退回修改'
   }
   return map[status] || status
 }
@@ -223,6 +245,24 @@ const handleFileChange = (uploadFile: UploadFile, uploadFiles: UploadUserFile[])
 const handleFileRemove = () => {
   form.value.mid_term_report = null
   fileList.value = []
+}
+
+const handleDelete = async () => {
+  if (!project.value) return
+  try {
+    await ElMessageBox.confirm('确定删除中期提交吗？删除后可在回收站恢复。', '提示', {
+      type: 'warning',
+    })
+    const res: any = await deleteMidTermSubmission(project.value.id)
+    if (res?.code === 200) {
+      ElMessage.success('已移入回收站')
+      fetchProject()
+    } else {
+      ElMessage.error(res?.message || '删除失败')
+    }
+  } catch {
+    // cancel
+  }
 }
 
 const submitForm = async (isDraft: boolean) => {

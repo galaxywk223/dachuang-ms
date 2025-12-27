@@ -83,6 +83,11 @@
               </template>
             </el-table-column>
             <el-table-column prop="created_by_name" label="录入人" width="120" />
+            <el-table-column label="操作" width="120" align="center" fixed="right">
+              <template #default="scope">
+                <el-button link type="danger" size="small" @click="handleDelete(scope.row)">删除</el-button>
+              </template>
+            </el-table-column>
           </el-table>
         </div>
       </div>
@@ -99,9 +104,10 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from "vue";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import request from "@/utils/request";
 import AddExpenseDialog from "@/views/student/funds/components/AddExpenseDialog.vue";
+import { removeProjectExpenditure } from "@/api/projects";
 
 const loading = ref(false);
 const dialogVisible = ref(false);
@@ -161,6 +167,23 @@ const fetchExpenditures = async (projectId: number) => {
     expenditures.value = payload.results || payload.data?.results || payload.data || [];
   } catch (error) {
     console.error(error);
+  }
+};
+
+const handleDelete = async (row: any) => {
+  try {
+    await ElMessageBox.confirm("确定删除该经费记录吗？删除后可在回收站恢复。", "提示", {
+      type: "warning",
+    });
+    const res: any = await removeProjectExpenditure(row.id);
+    if (res?.code === 200 || res?.status === 204) {
+      ElMessage.success("已移入回收站");
+      refreshProjectData();
+    } else {
+      ElMessage.error(res?.message || "删除失败");
+    }
+  } catch {
+    // cancel
   }
 };
 
@@ -269,4 +292,3 @@ onMounted(async () => {
 .mr-2 { margin-right: 8px; }
 .mb-4 { margin-bottom: 16px; }
 </style>
-

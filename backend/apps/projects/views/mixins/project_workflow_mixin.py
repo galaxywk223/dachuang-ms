@@ -14,7 +14,9 @@ from rest_framework.response import Response
 
 from apps.projects.models import ProjectArchive, ProjectPhaseInstance
 from apps.projects.services.phase_service import ProjectPhaseService
+from apps.system_settings.services import WorkflowService
 from apps.reviews.models import Review
+from apps.reviews.services import ReviewService
 
 from ...models import Project
 
@@ -192,7 +194,13 @@ class ProjectWorkflowMixin:
 
         with transaction.atomic():
             if phase_instance:
-                phase_instance.step = "SCHOOL_EXPERT_SCORING"
+                school_node = WorkflowService.find_expert_node(
+                    ProjectPhaseInstance.Phase.APPLICATION,
+                    Review.ReviewLevel.LEVEL1,
+                    "SCHOOL",
+                    project.batch,
+                )
+                phase_instance.step = school_node.code if school_node else phase_instance.step
                 phase_instance.save(update_fields=["step", "updated_at"])
             project.status = Project.ProjectStatus.LEVEL1_AUDITING
             project.save(update_fields=["status", "updated_at"])
@@ -240,7 +248,13 @@ class ProjectWorkflowMixin:
             )
 
         with transaction.atomic():
-            phase_instance.step = "SCHOOL_EXPERT_SCORING"
+            school_node = WorkflowService.find_expert_node(
+                ProjectPhaseInstance.Phase.CLOSURE,
+                Review.ReviewLevel.LEVEL1,
+                "SCHOOL",
+                project.batch,
+            )
+            phase_instance.step = school_node.code if school_node else phase_instance.step
             phase_instance.save(update_fields=["step", "updated_at"])
             project.status = Project.ProjectStatus.CLOSURE_LEVEL1_REVIEWING
             project.save(update_fields=["status", "updated_at"])
@@ -362,7 +376,7 @@ class ProjectWorkflowMixin:
     def workflow_finalize_closure(self, request, pk=None):
         """
         结题阶段校级管理员最终处理（通过/退回）
-        body: { action: approve|return, reason?: str }
+        body: { action: approve|return, reason?: str, return_to?: student|teacher }
         """
         project = self.get_object()
         user = request.user
@@ -371,9 +385,15 @@ class ProjectWorkflowMixin:
 
         action_type = request.data.get("action")
         reason = request.data.get("reason", "")
+        return_to = (request.data.get("return_to") or "student").lower()
         if action_type not in ("approve", "return"):
             return Response(
                 {"code": 400, "message": "action必须为approve或return"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if action_type == "return" and return_to not in ("student", "teacher"):
+            return Response(
+                {"code": 400, "message": "return_to必须为student或teacher"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -421,12 +441,17 @@ class ProjectWorkflowMixin:
                 if phase_instance:
                     ProjectPhaseService.mark_completed(phase_instance, step="COMPLETED")
             else:
-                project.status = Project.ProjectStatus.CLOSURE_RETURNED
+                if return_to == "teacher":
+                    project.status = Project.ProjectStatus.CLOSURE_SUBMITTED
+                else:
+                    project.status = Project.ProjectStatus.CLOSURE_RETURNED
                 project.save(update_fields=["status", "updated_at"])
                 if phase_instance:
                     ProjectPhaseService.mark_returned(
                         phase_instance,
-                        return_to=ProjectPhaseInstance.ReturnTo.STUDENT,
+                        return_to=ProjectPhaseInstance.ReturnTo.TEACHER
+                        if return_to == "teacher"
+                        else ProjectPhaseInstance.ReturnTo.STUDENT,
                         reason=reason,
                     )
                     Review.objects.filter(
@@ -439,6 +464,7 @@ class ProjectWorkflowMixin:
                         comments="管理员退回，评审任务作废",
                         reviewed_at=timezone.now(),
                     )
+                if return_to == "teacher":
+                    ReviewService.create_closure_teacher_review(project)
 
         return Response({"code": 200, "message": "处理完成"})
-

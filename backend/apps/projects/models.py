@@ -87,6 +87,14 @@ class Project(models.Model):
         null=True,
         blank=True,
     )
+    discipline = models.ForeignKey(
+        DictionaryItem,
+        on_delete=models.PROTECT,
+        related_name="projects_discipline",
+        verbose_name="学科分类",
+        null=True,
+        blank=True,
+    )
 
     # 项目负责人信息
     leader = models.ForeignKey(
@@ -692,3 +700,58 @@ class ProjectPushRecord(models.Model):
 
     def __str__(self):
         return f"{self.project.project_no} -> {self.target}"
+
+
+class ProjectRecycleBin(models.Model):
+    """
+    项目回收站记录
+    """
+
+    class ResourceType(models.TextChoices):
+        APPLICATION = "APPLICATION", "立项申报"
+        MID_TERM = "MID_TERM", "中期提交"
+        CLOSURE = "CLOSURE", "结题提交"
+        ACHIEVEMENT = "ACHIEVEMENT", "成果"
+        EXPENDITURE = "EXPENDITURE", "经费支出"
+        PROGRESS = "PROGRESS", "进度记录"
+
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name="recycle_items",
+        verbose_name="项目",
+    )
+    resource_type = models.CharField(
+        max_length=20, choices=ResourceType.choices, verbose_name="资源类型"
+    )
+    resource_id = models.IntegerField(null=True, blank=True, verbose_name="原始记录ID")
+    payload = models.JSONField(default=dict, verbose_name="数据快照")
+    attachments = models.JSONField(default=list, verbose_name="附件清单")
+    deleted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="deleted_recycle_items",
+        verbose_name="删除人",
+    )
+    deleted_at = models.DateTimeField(auto_now_add=True, verbose_name="删除时间")
+    restored_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="restored_recycle_items",
+        verbose_name="恢复人",
+    )
+    restored_at = models.DateTimeField(null=True, blank=True, verbose_name="恢复时间")
+    is_restored = models.BooleanField(default=False, verbose_name="是否已恢复")
+
+    class Meta:
+        db_table = "project_recycle_bin"
+        verbose_name = "项目回收站"
+        verbose_name_plural = verbose_name
+        ordering = ["-deleted_at"]
+
+    def __str__(self):
+        return f"{self.project.project_no} - {self.get_resource_type_display()}"

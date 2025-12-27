@@ -37,6 +37,7 @@ export function useProjectDetail() {
     source: "",
     level: "",
     category: "",
+    discipline: "",
     is_key_field: false,
     key_field_code: "",
     title: "",
@@ -76,6 +77,7 @@ export function useProjectDetail() {
   const sourceOptions = computed(() => getOptions(DICT_CODES.PROJECT_SOURCE));
   const collegeOptions = computed(() => getOptions(DICT_CODES.COLLEGE));
   const majorOptions = computed(() => getOptions(DICT_CODES.MAJOR_CATEGORY));
+  const disciplineOptions = computed(() => getOptions(DICT_CODES.DISCIPLINE));
   const keyFieldOptions = computed(() => getOptions(DICT_CODES.KEY_FIELD_CODE));
   const advisorTitleOptions = computed(() => getOptions(DICT_CODES.ADVISOR_TITLE));
 
@@ -154,6 +156,7 @@ export function useProjectDetail() {
       form.source = data.source || "";
       form.level = data.level || "";
       form.category = data.category || "";
+      form.discipline = data.discipline || "";
       form.is_key_field = !!data.is_key_field;
       form.key_field_code = data.key_domain_code || data.key_field_code || "";
       form.title = data.title || "";
@@ -352,6 +355,7 @@ export function useProjectDetail() {
     rules,
     levelOptions,
     categoryOptions,
+    disciplineOptions,
     sourceOptions,
     collegeOptions,
     majorOptions,

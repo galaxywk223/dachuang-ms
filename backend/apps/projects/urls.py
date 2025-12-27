@@ -15,6 +15,7 @@ from .views import (
     ProjectChangeRequestViewSet,
     ProjectApplicationViewSet,
     ProjectClosureViewSet,
+    ProjectRecycleBinViewSet,
 )
 
 router = DefaultRouter()
@@ -28,6 +29,7 @@ router.register(r"expenditures", ProjectExpenditureViewSet, basename="expenditur
 router.register(r"change-requests", ProjectChangeRequestViewSet, basename="change-request")
 router.register(r"application", ProjectApplicationViewSet, basename="project-application")
 router.register(r"closure", ProjectClosureViewSet, basename="project-closure")
+router.register(r"recycle-bin", ProjectRecycleBinViewSet, basename="project-recycle-bin")
 
 urlpatterns = [
     path(

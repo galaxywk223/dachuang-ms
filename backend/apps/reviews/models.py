@@ -73,6 +73,9 @@ class Review(models.Model):
     # 审核意见
     comments = models.TextField(blank=True, verbose_name="审核意见")
     score = models.IntegerField(null=True, blank=True, verbose_name="评分")
+    score_details = models.JSONField(
+        default=list, blank=True, verbose_name="评分明细"
+    )
 
     # 结题审核专用字段
     closure_rating = models.CharField(
@@ -81,6 +84,15 @@ class Review(models.Model):
         null=True,
         blank=True,
         verbose_name="结题评价",
+    )
+
+    review_template = models.ForeignKey(
+        "system_settings.ReviewTemplate",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="reviews",
+        verbose_name="评审模板",
     )
 
     # 时间戳

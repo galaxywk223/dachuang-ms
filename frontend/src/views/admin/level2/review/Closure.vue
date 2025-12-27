@@ -260,7 +260,6 @@ const fetchProjects = async () => {
         search: searchQuery.value,
         status: "CLOSURE_LEVEL2_REVIEWING",
         phase: "CLOSURE",
-        phase_step: "COLLEGE_EXPERT_SCORING",
       },
     });
 

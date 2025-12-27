@@ -30,16 +30,96 @@ class NotificationService:
         )
 
     @staticmethod
+    def _notify_users(users, title, content, notification_type, related_project=None):
+        unique = {}
+        for user in users:
+            if user and user.id not in unique:
+                unique[user.id] = user
+        for user in unique.values():
+            NotificationService.create_notification(
+                recipient=user,
+                title=title,
+                content=content,
+                notification_type=notification_type,
+                related_project=related_project,
+            )
+
+    @staticmethod
     def notify_project_submitted(project):
         """
         通知：项目已提交
         """
-        # 通知项目负责人
-        NotificationService.create_notification(
-            recipient=project.leader,
+        NotificationService._notify_users(
+            [project.leader],
             title="项目提交成功",
             content=f"您的项目《{project.title}》已成功提交，等待审核。",
             notification_type=Notification.NotificationType.PROJECT,
+            related_project=project,
+        )
+        advisors = [advisor.user for advisor in project.advisors.select_related("user")]
+        NotificationService._notify_users(
+            advisors,
+            title="新的项目待审核",
+            content=f"项目《{project.title}》已提交，请及时处理审核。",
+            notification_type=Notification.NotificationType.REVIEW,
+            related_project=project,
+        )
+
+    @staticmethod
+    def notify_midterm_submitted(project):
+        """
+        通知：中期报告已提交
+        """
+        NotificationService._notify_users(
+            [project.leader],
+            title="中期报告提交成功",
+            content=f"项目《{project.title}》中期报告已提交，等待审核。",
+            notification_type=Notification.NotificationType.PROJECT,
+            related_project=project,
+        )
+        advisors = [advisor.user for advisor in project.advisors.select_related("user")]
+        NotificationService._notify_users(
+            advisors,
+            title="中期报告待审核",
+            content=f"项目《{project.title}》中期报告已提交，请及时审核。",
+            notification_type=Notification.NotificationType.REVIEW,
+            related_project=project,
+        )
+
+    @staticmethod
+    def notify_closure_submitted(project):
+        """
+        通知：结题报告已提交
+        """
+        NotificationService._notify_users(
+            [project.leader],
+            title="结题申请提交成功",
+            content=f"项目《{project.title}》结题申请已提交，等待审核。",
+            notification_type=Notification.NotificationType.PROJECT,
+            related_project=project,
+        )
+        advisors = [advisor.user for advisor in project.advisors.select_related("user")]
+        NotificationService._notify_users(
+            advisors,
+            title="结题申请待审核",
+            content=f"项目《{project.title}》结题申请已提交，请及时审核。",
+            notification_type=Notification.NotificationType.REVIEW,
+            related_project=project,
+        )
+
+    @staticmethod
+    def notify_review_assigned(review):
+        """
+        通知：评审任务分配
+        """
+        if not review or not review.reviewer:
+            return
+        project = review.project
+        NotificationService.create_notification(
+            recipient=review.reviewer,
+            title="新的评审任务",
+            content=f"项目《{project.title}》已分配给您评审，请及时处理。",
+            notification_type=Notification.NotificationType.REVIEW,
             related_project=project,
         )
 

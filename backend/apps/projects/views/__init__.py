@@ -8,6 +8,7 @@ from .public.review import ProjectReviewViewSet
 from .public.changes import ProjectChangeRequestViewSet
 from .public.application import ProjectApplicationViewSet
 from .public.closure import ProjectClosureViewSet
+from .public.recycle import ProjectRecycleBinViewSet
 from .admin.project import ProjectManagementViewSet
 from .admin.achievement import AchievementManagementViewSet
 
@@ -20,6 +21,7 @@ __all__ = [
     "ProjectChangeRequestViewSet",
     "ProjectApplicationViewSet",
     "ProjectClosureViewSet",
+    "ProjectRecycleBinViewSet",
     "ProjectManagementViewSet",
     "AchievementManagementViewSet",
 ]

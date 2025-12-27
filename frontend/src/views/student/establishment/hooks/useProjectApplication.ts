@@ -39,6 +39,7 @@ interface FormDataState {
   source: string;
   level: string;
   category: string;
+  discipline: string;
   is_key_field: boolean | string;
   key_domain_code: string;
   college: string;
@@ -75,6 +76,7 @@ export function useProjectApplication() {
     source: "",
     level: "",
     category: "",
+    discipline: "",
     is_key_field: false,
     key_domain_code: "",
     college: "",
@@ -145,6 +147,7 @@ export function useProjectApplication() {
     source: [{ required: true, message: "必选项", trigger: "change" }],
     level: [{ required: true, message: "必选项", trigger: "change" }],
     category: [{ required: true, message: "必选项", trigger: "change" }],
+    discipline: [{ required: false, message: "必选项", trigger: "change" }],
     title: [{ required: true, message: "必填项", trigger: "blur" }],
     leader_contact: [{ required: true, message: "必填项", trigger: "blur" }],
     leader_email: [{ required: true, message: "必填项", trigger: "blur" }],
@@ -174,6 +177,7 @@ export function useProjectApplication() {
   const levelOptions = computed(() => getOptions(DICT_CODES.PROJECT_LEVEL));
   const keyFieldOptions = computed(() => getOptions(DICT_CODES.KEY_FIELD_CODE));
   const categoryOptions = computed(() => getOptions(DICT_CODES.PROJECT_CATEGORY));
+  const disciplineOptions = computed(() => getOptions(DICT_CODES.DISCIPLINE));
   const achievementTypeOptions = computed(() => getOptions(DICT_CODES.ACHIEVEMENT_TYPE));
 
   const getDefaultLevel = () => levelOptions.value[0]?.value || "";
@@ -652,6 +656,7 @@ export function useProjectApplication() {
     sourceOptions,
     levelOptions,
     categoryOptions,
+    disciplineOptions,
     keyFieldCascaderOptions,
     keyFieldCascaderValue,
     collegeOptions,

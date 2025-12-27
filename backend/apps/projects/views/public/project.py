@@ -12,6 +12,7 @@ from ...serializers import (
     ProjectListSerializer,
 )
 from apps.projects.models import ProjectPhaseInstance
+from apps.reviews.models import Review
 
 from ..mixins import (
     ProjectAchievementsMixin,
@@ -77,6 +78,10 @@ class ProjectViewSet(
         # 指导教师只能看到自己指导的项目
         elif user.role == "TEACHER":
             queryset = queryset.filter(advisors__user=user).distinct()
+        elif user.role == "EXPERT":
+            queryset = queryset.none()
+        else:
+            queryset = queryset.none()
 
         status_in = self.request.query_params.get("status_in")
         if status_in:

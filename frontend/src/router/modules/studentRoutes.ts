@@ -75,6 +75,12 @@ export const studentRoutes: RouteRecordRaw[] = [
         meta: { title: "成果管理" },
       },
       {
+        path: "progress",
+        name: "student-progress",
+        component: () => import("@/views/student/progress/Index.vue"),
+        meta: { title: "项目进度" },
+      },
+      {
         path: "change-requests",
         name: "student-change-requests",
         component: () => import("@/views/student/change/Requests.vue"),

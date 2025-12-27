@@ -7,6 +7,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.projects.models import Project, ProjectPhaseInstance
+from apps.system_settings.services import WorkflowService
 
 
 @dataclass(frozen=True)
@@ -18,15 +19,15 @@ class PhaseContext:
 PHASE_CONTEXTS = {
     ProjectPhaseInstance.Phase.APPLICATION: PhaseContext(
         phase=ProjectPhaseInstance.Phase.APPLICATION,
-        initial_step="TEACHER_REVIEWING",
+        initial_step="TEACHER_REVIEW",
     ),
     ProjectPhaseInstance.Phase.MID_TERM: PhaseContext(
         phase=ProjectPhaseInstance.Phase.MID_TERM,
-        initial_step="TEACHER_REVIEWING",
+        initial_step="TEACHER_REVIEW",
     ),
     ProjectPhaseInstance.Phase.CLOSURE: PhaseContext(
         phase=ProjectPhaseInstance.Phase.CLOSURE,
-        initial_step="TEACHER_REVIEWING",
+        initial_step="TEACHER_REVIEW",
     ),
 }
 
@@ -56,6 +57,10 @@ class ProjectPhaseService:
         step: Optional[str] = None,
     ) -> ProjectPhaseInstance:
         context = ProjectPhaseService._get_context(phase)
+        if step is None:
+            initial_node = WorkflowService.get_initial_node(phase, project.batch)
+            if initial_node:
+                step = initial_node.code
         current = ProjectPhaseService.get_current(project, phase)
         if current:
             if step and current.step != step:
@@ -82,6 +87,10 @@ class ProjectPhaseService:
         step: Optional[str] = None,
     ) -> ProjectPhaseInstance:
         context = ProjectPhaseService._get_context(phase)
+        if step is None:
+            initial_node = WorkflowService.get_initial_node(phase, project.batch)
+            if initial_node:
+                step = initial_node.code
         current = ProjectPhaseService.get_current(project, phase)
         next_attempt = 1 if not current else int(current.attempt_no) + 1
         return ProjectPhaseInstance.objects.create(
@@ -124,4 +133,3 @@ class ProjectPhaseService:
             instance.step = step
         instance.save(update_fields=["state", "step", "updated_at"])
         return instance
-

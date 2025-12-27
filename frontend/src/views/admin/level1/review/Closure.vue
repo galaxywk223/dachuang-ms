@@ -143,6 +143,12 @@
             resize="none"
           />
         </el-form-item>
+        <el-form-item v-if="reviewType === 'reject'" label="退回到">
+          <el-radio-group v-model="reviewForm.return_to">
+            <el-radio label="student">退回学生</el-radio>
+            <el-radio label="teacher">退回导师</el-radio>
+          </el-radio-group>
+        </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
@@ -167,6 +173,12 @@
         </el-form-item>
         <el-form-item label="审核意见">
           <el-input v-model="batchForm.comments" type="textarea" :rows="4" placeholder="请输入审核意见" />
+        </el-form-item>
+        <el-form-item v-if="batchForm.action === 'reject'" label="退回到">
+          <el-radio-group v-model="batchForm.return_to">
+            <el-radio label="student">退回学生</el-radio>
+            <el-radio label="teacher">退回导师</el-radio>
+          </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -202,6 +214,7 @@ const reviewType = ref<"approve" | "reject">("approve");
 const reviewForm = ref({
   projectId: 0,
   comment: "",
+  return_to: "student",
 });
 
 const batchDialogVisible = ref(false);
@@ -209,6 +222,7 @@ const batchSubmitting = ref(false);
 const batchForm = ref({
   action: "approve",
   comments: "",
+  return_to: "student",
 });
 
 
@@ -237,7 +251,6 @@ const fetchProjects = async () => {
         search: searchQuery.value,
         status: "CLOSURE_LEVEL1_REVIEWING",
         phase: "CLOSURE",
-        phase_step: "SCHOOL_EXPERT_SCORING",
       },
     });
 
@@ -275,6 +288,7 @@ const handleApprove = (row: any) => {
   reviewType.value = "approve";
   reviewForm.value.projectId = row.id;
   reviewForm.value.comment = "";
+  reviewForm.value.return_to = "student";
   reviewDialogVisible.value = true;
 };
 
@@ -282,6 +296,7 @@ const handleReject = (row: any) => {
   reviewType.value = "reject";
   reviewForm.value.projectId = row.id;
   reviewForm.value.comment = "";
+  reviewForm.value.return_to = "student";
   reviewDialogVisible.value = true;
 };
 
@@ -306,10 +321,10 @@ const confirmReview = async () => {
     } else {
       const res: any = await request.post(
         `/projects/${reviewForm.value.projectId}/workflow/finalize-closure/`,
-        { action: "return", reason: reviewForm.value.comment }
+        { action: "return", reason: reviewForm.value.comment, return_to: reviewForm.value.return_to }
       );
       if (res?.code === 200) {
-        ElMessage.success("已退回学生修改");
+        ElMessage.success(reviewForm.value.return_to === "teacher" ? "已退回导师修改" : "已退回学生修改");
       } else {
         ElMessage.error(res?.message || "操作失败");
         return;
@@ -332,7 +347,7 @@ const openBatchDialog = () => {
     ElMessage.warning("请先勾选要审核的项目");
     return;
   }
-  batchForm.value = { action: "approve", comments: "" };
+  batchForm.value = { action: "approve", comments: "", return_to: "student" };
   batchDialogVisible.value = true;
 };
 
@@ -355,6 +370,7 @@ const submitBatchReview = async () => {
           const res: any = await request.post(`/projects/${row.id}/workflow/finalize-closure/`, {
             action: 'return',
             reason: batchForm.value.comments,
+            return_to: batchForm.value.return_to,
           });
           if (res?.code === 200) okCount += 1;
         }

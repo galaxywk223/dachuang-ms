@@ -26,6 +26,32 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/common/Login.vue"),
     meta: { requiresAuth: false },
   },
+  {
+    path: "/notifications",
+    component: () => import("@/layouts/AppLayout.vue"),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: "",
+        name: "notifications",
+        component: () => import("@/views/common/Notifications.vue"),
+        meta: { title: "通知中心" },
+      },
+    ],
+  },
+  {
+    path: "/recycle-bin",
+    component: () => import("@/layouts/AppLayout.vue"),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: "",
+        name: "recycle-bin",
+        component: () => import("@/views/common/RecycleBin.vue"),
+        meta: { title: "回收站" },
+      },
+    ],
+  },
   ...adminRoutes,
   ...level2Routes,
   ...studentRoutes,

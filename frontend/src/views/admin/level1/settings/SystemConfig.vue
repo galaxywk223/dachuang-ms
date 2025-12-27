@@ -52,7 +52,10 @@
           <el-tab-pane label="限制与校验" name="limits">
             <SystemConfigLimitsTab
               :limit-rules="limitRules"
+              :validation-rules="validationRules"
               v-model:college-quota-text="collegeQuotaText"
+              v-model:allowed-types-by-college-text="allowedTypesByCollegeText"
+              v-model:allowed-levels-by-college-text="allowedLevelsByCollegeText"
               :is-process-locked="isProcessLocked"
             />
           </el-tab-pane>
@@ -182,6 +185,18 @@ const reviewRules = reactive({
 });
 
 const collegeQuotaText = ref("{}");
+const allowedTypesByCollegeText = ref("{}");
+const allowedLevelsByCollegeText = ref("{}");
+
+const validationRules = reactive({
+  title_regex: "",
+  title_min_length: 0,
+  title_max_length: 200,
+  allowed_project_types: [] as string[],
+  allowed_project_types_by_college: {} as Record<string, string[]>,
+  allowed_levels_by_college: {} as Record<string, string[]>,
+  discipline_required: false,
+});
 
 const goBack = () => {
   router.push({ name: "level1-settings-batches" });
@@ -256,6 +271,17 @@ const loadSettings = async () => {
 
     Object.assign(processRules, data.PROCESS_RULES || {});
     Object.assign(reviewRules, data.REVIEW_RULES || {});
+    Object.assign(validationRules, data.VALIDATION_RULES || {});
+    allowedTypesByCollegeText.value = JSON.stringify(
+      validationRules.allowed_project_types_by_college || {},
+      null,
+      2
+    );
+    allowedLevelsByCollegeText.value = JSON.stringify(
+      validationRules.allowed_levels_by_college || {},
+      null,
+      2
+    );
   } catch (error) {
     console.error(error);
     ElMessage.error("加载配置失败");
@@ -298,6 +324,15 @@ const saveAll = async () => {
       quota = JSON.parse(collegeQuotaText.value || "{}");
     } catch {
       ElMessage.error("学院名额配置不是有效的JSON");
+      return;
+    }
+    let allowedTypesByCollege = {};
+    let allowedLevelsByCollege = {};
+    try {
+      allowedTypesByCollege = JSON.parse(allowedTypesByCollegeText.value || "{}");
+      allowedLevelsByCollege = JSON.parse(allowedLevelsByCollegeText.value || "{}");
+    } catch {
+      ElMessage.error("项目类型/级别限制配置不是有效的JSON");
       return;
     }
 
@@ -367,6 +402,18 @@ const saveAll = async () => {
           {
             name: "审核规则配置",
             data: { ...reviewRules },
+          },
+          batchId.value
+        ),
+        updateSettingByCode(
+          "VALIDATION_RULES",
+          {
+            name: "校验规则配置",
+            data: {
+              ...validationRules,
+              allowed_project_types_by_college: allowedTypesByCollege,
+              allowed_levels_by_college: allowedLevelsByCollege,
+            },
           },
           batchId.value
         )

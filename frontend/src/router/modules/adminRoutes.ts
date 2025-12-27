@@ -127,6 +127,18 @@ export const adminRoutes: RouteRecordRaw[] = [
             meta: { title: "结题证书" },
           },
           {
+            path: "workflows",
+            name: "level1-settings-workflows",
+            component: () => import("@/views/admin/level1/settings/WorkflowConfig.vue"),
+            meta: { title: "流程配置" },
+          },
+          {
+            path: "review-templates",
+            name: "level1-settings-review-templates",
+            component: () => import("@/views/admin/level1/settings/ReviewTemplates.vue"),
+            meta: { title: "评审模板" },
+          },
+          {
             path: "project-dictionaries",
             name: "level1-settings-project-dictionaries",
             component: () => import("@/views/admin/level1/settings/SystemDictionaries.vue"),

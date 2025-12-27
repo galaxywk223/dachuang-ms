@@ -6,9 +6,9 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from ...models import Project
-from ...models import ProjectAchievement
+from ...models import Project, ProjectAchievement, ProjectRecycleBin
 from ...serializers import ProjectAchievementSerializer
+from ...services import ProjectRecycleService
 
 
 class ProjectAchievementsMixin:
@@ -66,12 +66,41 @@ class ProjectAchievementsMixin:
             )
 
         try:
-            achievement = ProjectAchievement.objects.get(project=project, id=achievement_id)
-            achievement.delete()
-            return Response({"code": 200, "message": "成果删除成功"})
+            achievement = ProjectAchievement.objects.get(
+                project=project, id=achievement_id
+            )
         except ProjectAchievement.DoesNotExist:
             return Response(
                 {"code": 404, "message": "成果不存在"},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        payload = {
+            "achievement_type": achievement.achievement_type_id,
+            "title": achievement.title,
+            "description": achievement.description,
+            "authors": achievement.authors,
+            "journal": achievement.journal,
+            "publication_date": achievement.publication_date,
+            "doi": achievement.doi,
+            "patent_no": achievement.patent_no,
+            "patent_type": achievement.patent_type,
+            "applicant": achievement.applicant,
+            "copyright_no": achievement.copyright_no,
+            "copyright_owner": achievement.copyright_owner,
+            "competition_name": achievement.competition_name,
+            "award_level": achievement.award_level,
+            "award_date": achievement.award_date,
+            "extra_data": achievement.extra_data,
+            "attachment": achievement.attachment.name if achievement.attachment else "",
+        }
+        ProjectRecycleService.add_item(
+            project=project,
+            resource_type=ProjectRecycleBin.ResourceType.ACHIEVEMENT,
+            resource_id=achievement.id,
+            payload=payload,
+            attachments=[payload.get("attachment")] if payload.get("attachment") else [],
+            deleted_by=request.user,
+        )
+        achievement.delete()
+        return Response({"code": 200, "message": "已移入回收站"})

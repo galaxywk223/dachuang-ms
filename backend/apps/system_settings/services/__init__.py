@@ -5,6 +5,7 @@
 from datetime import datetime
 
 from ..models import SystemSetting, ProjectBatch
+from .workflow_service import WorkflowService
 
 
 DEFAULT_SETTINGS = {
@@ -62,6 +63,15 @@ DEFAULT_SETTINGS = {
     },
     "REVIEW_RULES": {
         "teacher_application_comment_min": 0,
+    },
+    "VALIDATION_RULES": {
+        "title_regex": "",
+        "title_min_length": 0,
+        "title_max_length": 200,
+        "allowed_project_types": [],
+        "allowed_project_types_by_college": {},
+        "allowed_levels_by_college": {},
+        "discipline_required": False,
     },
 }
 
@@ -161,3 +171,10 @@ class SystemSettingService:
         if end and now_date > end:
             return False, "当前已超过审核截止时间"
         return True, ""
+
+
+__all__ = [
+    "DEFAULT_SETTINGS",
+    "SystemSettingService",
+    "WorkflowService",
+]

@@ -11,13 +11,67 @@ from ..models import (
 from apps.projects.models import Project
 from apps.projects.models import ProjectPhaseInstance
 from apps.projects.services.phase_service import ProjectPhaseService
-from apps.system_settings.services import SystemSettingService
+from apps.system_settings.services import SystemSettingService, WorkflowService
+from apps.notifications.services import NotificationService
 
 
 class ReviewService:
     """
     审核服务类
     """
+
+    @staticmethod
+    def _normalize_score_details(review, score, score_details):
+        """
+        根据评审模板计算总分，并规范评分明细
+        """
+        if not review.review_template:
+            return score, []
+
+        items = list(review.review_template.items.all())
+        if not items:
+            return score, score_details or []
+
+        detail_map = {}
+        for item in score_details or []:
+            try:
+                item_id = int(item.get("item_id"))
+                detail_map[item_id] = item
+            except Exception:
+                continue
+
+        total = 0
+        normalized = []
+        for item in items:
+            detail = detail_map.get(item.id, {})
+            raw_score = detail.get("score")
+            if raw_score is None or raw_score == "":
+                if item.is_required:
+                    raise ValueError(f"评分项“{item.title}”不能为空")
+                raw_score = 0
+            try:
+                raw_score = int(raw_score)
+            except (TypeError, ValueError):
+                raise ValueError(f"评分项“{item.title}”分值格式错误")
+            if raw_score < 0 or raw_score > item.max_score:
+                raise ValueError(f"评分项“{item.title}”超出范围")
+
+            weighted = raw_score
+            if item.weight:
+                weighted = int(round(raw_score * float(item.weight) / 100))
+            total += weighted
+            normalized.append(
+                {
+                    "item_id": item.id,
+                    "title": item.title,
+                    "score": raw_score,
+                    "weight": float(item.weight),
+                    "weighted_score": weighted,
+                    "max_score": item.max_score,
+                }
+            )
+
+        return total, normalized
 
     @staticmethod
     @transaction.atomic
@@ -27,6 +81,7 @@ class ReviewService:
         review_level,
         *,
         phase_instance: ProjectPhaseInstance | None = None,
+        review_template_id=None,
     ):
         """
         创建审核记录
@@ -36,6 +91,7 @@ class ReviewService:
             phase_instance=phase_instance,
             review_type=review_type,
             review_level=review_level,
+            review_template_id=review_template_id,
             status=Review.ReviewStatus.PENDING,
         )
 
@@ -45,8 +101,18 @@ class ReviewService:
         """
         创建导师审核记录（申报审核）
         """
+        initial_node = WorkflowService.get_initial_node(
+            ProjectPhaseInstance.Phase.APPLICATION, project.batch
+        )
+        step = initial_node.code if initial_node else "TEACHER_REVIEW"
+        review_level = (
+            initial_node.review_level if initial_node else Review.ReviewLevel.TEACHER
+        )
+        template = None
+        if initial_node and initial_node.review_template_id:
+            template = initial_node.review_template_id
         phase_instance = ProjectPhaseService.ensure_current(
-            project, ProjectPhaseInstance.Phase.APPLICATION, step="TEACHER_REVIEWING"
+            project, ProjectPhaseInstance.Phase.APPLICATION, step=step
         )
         project.status = Project.ProjectStatus.TEACHER_AUDITING
         project.save(update_fields=["status"])
@@ -54,8 +120,9 @@ class ReviewService:
         return ReviewService.create_review(
             project=project,
             review_type=Review.ReviewType.APPLICATION,
-            review_level=Review.ReviewLevel.TEACHER,
+            review_level=review_level or Review.ReviewLevel.TEACHER,
             phase_instance=phase_instance,
+            review_template_id=template if template else None,
         )
 
     @staticmethod
@@ -70,14 +137,22 @@ class ReviewService:
         project.status = Project.ProjectStatus.COLLEGE_AUDITING
         project.save(update_fields=["status"])
 
+        node = WorkflowService.find_expert_node(
+            ProjectPhaseInstance.Phase.APPLICATION,
+            Review.ReviewLevel.LEVEL2,
+            "COLLEGE",
+            project.batch,
+        )
+        step = node.code if node else "COLLEGE_EXPERT"
         phase_instance = ProjectPhaseService.ensure_current(
-            project, ProjectPhaseInstance.Phase.APPLICATION, step="COLLEGE_EXPERT_SCORING"
+            project, ProjectPhaseInstance.Phase.APPLICATION, step=step
         )
         return ReviewService.create_review(
             project=project,
             review_type=Review.ReviewType.APPLICATION,
             review_level=Review.ReviewLevel.LEVEL2,
             phase_instance=phase_instance,
+            review_template_id=node.review_template_id if node else None,
         )
 
     @staticmethod
@@ -97,8 +172,15 @@ class ReviewService:
             project.save(update_fields=["status"])
             return existing
 
+        node = WorkflowService.find_expert_node(
+            ProjectPhaseInstance.Phase.APPLICATION,
+            Review.ReviewLevel.LEVEL1,
+            "SCHOOL",
+            project.batch,
+        )
+        step = node.code if node else "SCHOOL_EXPERT"
         phase_instance = ProjectPhaseService.ensure_current(
-            project, ProjectPhaseInstance.Phase.APPLICATION, step="SCHOOL_EXPERT_SCORING"
+            project, ProjectPhaseInstance.Phase.APPLICATION, step=step
         )
         project.status = Project.ProjectStatus.LEVEL1_AUDITING
         project.save(update_fields=["status"])
@@ -107,19 +189,31 @@ class ReviewService:
             review_type=Review.ReviewType.APPLICATION,
             review_level=Review.ReviewLevel.LEVEL1,
             phase_instance=phase_instance,
+            review_template_id=node.review_template_id if node else None,
         )
 
     @staticmethod
     @transaction.atomic
-    def approve_review(review, reviewer, comments="", score=None, closure_rating=None):
+    def approve_review(
+        review,
+        reviewer,
+        comments="",
+        score=None,
+        closure_rating=None,
+        score_details=None,
+    ):
         """
         审核通过
         """
         if reviewer.role == "EXPERT":
+            total_score, normalized_details = ReviewService._normalize_score_details(
+                review, score, score_details
+            )
             review.status = Review.ReviewStatus.APPROVED
             review.reviewer = reviewer
             review.comments = comments
-            review.score = score
+            review.score = total_score
+            review.score_details = normalized_details
             review.reviewed_at = timezone.now()
             if review.review_type == Review.ReviewType.CLOSURE and closure_rating:
                 review.closure_rating = closure_rating
@@ -129,7 +223,11 @@ class ReviewService:
         review.status = Review.ReviewStatus.APPROVED
         review.reviewer = reviewer
         review.comments = comments
-        review.score = score
+        total_score, normalized_details = ReviewService._normalize_score_details(
+            review, score, score_details
+        )
+        review.score = total_score
+        review.score_details = normalized_details
         review.reviewed_at = timezone.now()
 
         # 如果是结题审核，设置评价等级
@@ -170,8 +268,15 @@ class ReviewService:
                 # 导师通过后进入院级专家评审（由院级管理员分配专家任务）
                 project.status = Project.ProjectStatus.MID_TERM_REVIEWING
                 project.save(update_fields=["status"])
+                node = WorkflowService.find_expert_node(
+                    ProjectPhaseInstance.Phase.MID_TERM,
+                    Review.ReviewLevel.LEVEL2,
+                    "COLLEGE",
+                    project.batch,
+                )
+                step = node.code if node else "COLLEGE_EXPERT"
                 phase_instance = ProjectPhaseService.ensure_current(
-                    project, ProjectPhaseInstance.Phase.MID_TERM, step="COLLEGE_EXPERT_REVIEWING"
+                    project, ProjectPhaseInstance.Phase.MID_TERM, step=step
                 )
                 review.phase_instance = phase_instance
                 review.save(update_fields=["phase_instance"])
@@ -186,16 +291,30 @@ class ReviewService:
                 # 导师通过后进入院级专家评审（由院级管理员分配专家任务）
                 project.status = Project.ProjectStatus.CLOSURE_LEVEL2_REVIEWING
                 project.save(update_fields=["status"])
+                node = WorkflowService.find_expert_node(
+                    ProjectPhaseInstance.Phase.CLOSURE,
+                    Review.ReviewLevel.LEVEL2,
+                    "COLLEGE",
+                    project.batch,
+                )
+                step = node.code if node else "COLLEGE_EXPERT"
                 phase_instance = ProjectPhaseService.ensure_current(
-                    project, ProjectPhaseInstance.Phase.CLOSURE, step="COLLEGE_EXPERT_SCORING"
+                    project, ProjectPhaseInstance.Phase.CLOSURE, step=step
                 )
                 review.phase_instance = phase_instance
                 review.save(update_fields=["phase_instance"])
             elif review.review_level == Review.ReviewLevel.LEVEL2:
                 # 二级管理员确认后进入校级专家评审（legacy admin-review 路径）
                 project.status = Project.ProjectStatus.CLOSURE_LEVEL1_REVIEWING
+                node = WorkflowService.find_expert_node(
+                    ProjectPhaseInstance.Phase.CLOSURE,
+                    Review.ReviewLevel.LEVEL1,
+                    "SCHOOL",
+                    project.batch,
+                )
+                step = node.code if node else "SCHOOL_EXPERT"
                 phase_instance = ProjectPhaseService.ensure_current(
-                    project, ProjectPhaseInstance.Phase.CLOSURE, step="SCHOOL_EXPERT_SCORING"
+                    project, ProjectPhaseInstance.Phase.CLOSURE, step=step
                 )
                 review.phase_instance = phase_instance
                 review.save(update_fields=["phase_instance"])
@@ -244,56 +363,102 @@ class ReviewService:
         # 更新项目状态
         project = review.project
 
+        process_rules = SystemSettingService.get_setting(
+            "PROCESS_RULES", batch=project.batch
+        )
+        reject_to_previous = bool(process_rules.get("reject_to_previous", False))
+
         # 申报审核
         if review.review_type == Review.ReviewType.APPLICATION:
-            process_rules = SystemSettingService.get_setting(
-                "PROCESS_RULES", batch=project.batch
-            )
-            reject_to_previous = bool(process_rules.get("reject_to_previous", False))
-
             if review.review_level == Review.ReviewLevel.TEACHER:
                 project.status = Project.ProjectStatus.TEACHER_REJECTED
             elif review.review_level == Review.ReviewLevel.LEVEL2:
-                project.status = (
-                    Project.ProjectStatus.TEACHER_REJECTED
-                    if reject_to_previous
-                    else Project.ProjectStatus.APPLICATION_RETURNED
-                )
-                if not reject_to_previous and review.phase_instance:
-                    ProjectPhaseService.mark_returned(
-                        review.phase_instance,
-                        return_to=ProjectPhaseInstance.ReturnTo.STUDENT,
-                        reason=comments,
-                    )
+                if reject_to_previous:
+                    existing = Review.objects.filter(
+                        project=project,
+                        review_type=Review.ReviewType.APPLICATION,
+                        review_level=Review.ReviewLevel.TEACHER,
+                        status=Review.ReviewStatus.PENDING,
+                    ).exists()
+                    if not existing:
+                        ReviewService.create_teacher_review(project)
+                    project.status = Project.ProjectStatus.TEACHER_AUDITING
+                else:
+                    project.status = Project.ProjectStatus.APPLICATION_RETURNED
+                    if review.phase_instance:
+                        ProjectPhaseService.mark_returned(
+                            review.phase_instance,
+                            return_to=ProjectPhaseInstance.ReturnTo.STUDENT,
+                            reason=comments,
+                        )
             elif review.review_level == Review.ReviewLevel.LEVEL1:
-                project.status = (
-                    Project.ProjectStatus.TEACHER_REJECTED
-                    if reject_to_previous
-                    else Project.ProjectStatus.APPLICATION_RETURNED
-                )
-                if not reject_to_previous and review.phase_instance:
-                    ProjectPhaseService.mark_returned(
-                        review.phase_instance,
-                        return_to=ProjectPhaseInstance.ReturnTo.STUDENT,
-                        reason=comments,
-                    )
+                if reject_to_previous:
+                    existing = Review.objects.filter(
+                        project=project,
+                        review_type=Review.ReviewType.APPLICATION,
+                        review_level=Review.ReviewLevel.LEVEL2,
+                        status=Review.ReviewStatus.PENDING,
+                    ).exists()
+                    if not existing:
+                        ReviewService.create_level2_review(project)
+                    project.status = Project.ProjectStatus.COLLEGE_AUDITING
+                else:
+                    project.status = Project.ProjectStatus.APPLICATION_RETURNED
+                    if review.phase_instance:
+                        ProjectPhaseService.mark_returned(
+                            review.phase_instance,
+                            return_to=ProjectPhaseInstance.ReturnTo.STUDENT,
+                            reason=comments,
+                        )
 
         # 中期审核
         elif review.review_type == Review.ReviewType.MID_TERM:
-            project.status = Project.ProjectStatus.MID_TERM_REJECTED
+            if review.review_level == Review.ReviewLevel.LEVEL2 and reject_to_previous:
+                existing = Review.objects.filter(
+                    project=project,
+                    review_type=Review.ReviewType.MID_TERM,
+                    review_level=Review.ReviewLevel.TEACHER,
+                    status=Review.ReviewStatus.PENDING,
+                ).exists()
+                if not existing:
+                    ReviewService.create_mid_term_teacher_review(project)
+                project.status = Project.ProjectStatus.MID_TERM_SUBMITTED
+            else:
+                project.status = Project.ProjectStatus.MID_TERM_REJECTED
 
         # 结题审核
         elif review.review_type == Review.ReviewType.CLOSURE:
             if review.review_level == Review.ReviewLevel.TEACHER:
                 project.status = Project.ProjectStatus.CLOSURE_DRAFT
             elif review.review_level == Review.ReviewLevel.LEVEL2:
-                project.status = Project.ProjectStatus.CLOSURE_LEVEL2_REJECTED
+                if reject_to_previous:
+                    existing = Review.objects.filter(
+                        project=project,
+                        review_type=Review.ReviewType.CLOSURE,
+                        review_level=Review.ReviewLevel.TEACHER,
+                        status=Review.ReviewStatus.PENDING,
+                    ).exists()
+                    if not existing:
+                        ReviewService.create_closure_teacher_review(project)
+                    project.status = Project.ProjectStatus.CLOSURE_SUBMITTED
+                else:
+                    project.status = Project.ProjectStatus.CLOSURE_LEVEL2_REJECTED
             elif review.review_level == Review.ReviewLevel.LEVEL1:
                 if reject_to == "teacher":
                     project.status = Project.ProjectStatus.CLOSURE_SUBMITTED
                     ReviewService.create_closure_teacher_review(project)
                 elif reject_to == "student":
                     project.status = Project.ProjectStatus.CLOSURE_DRAFT
+                elif reject_to_previous:
+                    existing = Review.objects.filter(
+                        project=project,
+                        review_type=Review.ReviewType.CLOSURE,
+                        review_level=Review.ReviewLevel.LEVEL2,
+                        status=Review.ReviewStatus.PENDING,
+                    ).exists()
+                    if not existing:
+                        ReviewService.create_closure_level2_review(project)
+                    project.status = Project.ProjectStatus.CLOSURE_LEVEL2_REVIEWING
                 else:
                     project.status = Project.ProjectStatus.CLOSURE_LEVEL1_REJECTED
 
@@ -309,15 +474,22 @@ class ReviewService:
         # 更新项目状态
         project.status = Project.ProjectStatus.CLOSURE_LEVEL2_REVIEWING
         project.save()
-
+        node = WorkflowService.find_expert_node(
+            ProjectPhaseInstance.Phase.CLOSURE,
+            Review.ReviewLevel.LEVEL2,
+            "COLLEGE",
+            project.batch,
+        )
+        step = node.code if node else "COLLEGE_EXPERT"
         phase_instance = ProjectPhaseService.ensure_current(
-            project, ProjectPhaseInstance.Phase.CLOSURE, step="COLLEGE_EXPERT_SCORING"
+            project, ProjectPhaseInstance.Phase.CLOSURE, step=step
         )
         return ReviewService.create_review(
             project=project,
             review_type=Review.ReviewType.CLOSURE,
             review_level=Review.ReviewLevel.LEVEL2,
             phase_instance=phase_instance,
+            review_template_id=node.review_template_id if node else None,
         )
 
     @staticmethod
@@ -337,8 +509,15 @@ class ReviewService:
             project.save(update_fields=["status"])
             return existing
 
+        node = WorkflowService.find_expert_node(
+            ProjectPhaseInstance.Phase.CLOSURE,
+            Review.ReviewLevel.LEVEL1,
+            "SCHOOL",
+            project.batch,
+        )
+        step = node.code if node else "SCHOOL_EXPERT"
         phase_instance = ProjectPhaseService.ensure_current(
-            project, ProjectPhaseInstance.Phase.CLOSURE, step="SCHOOL_EXPERT_SCORING"
+            project, ProjectPhaseInstance.Phase.CLOSURE, step=step
         )
         # 更新项目状态
         project.status = Project.ProjectStatus.CLOSURE_LEVEL1_REVIEWING
@@ -349,6 +528,7 @@ class ReviewService:
             review_type=Review.ReviewType.CLOSURE,
             review_level=Review.ReviewLevel.LEVEL1,
             phase_instance=phase_instance,
+            review_template_id=node.review_template_id if node else None,
         )
 
     @staticmethod
@@ -361,8 +541,15 @@ class ReviewService:
         project.status = Project.ProjectStatus.MID_TERM_REVIEWING
         project.save(update_fields=["status"])
 
+        node = WorkflowService.find_expert_node(
+            ProjectPhaseInstance.Phase.MID_TERM,
+            Review.ReviewLevel.LEVEL2,
+            "COLLEGE",
+            project.batch,
+        )
+        step = node.code if node else "COLLEGE_EXPERT"
         phase_instance = ProjectPhaseService.ensure_current(
-            project, ProjectPhaseInstance.Phase.MID_TERM, step="COLLEGE_EXPERT_REVIEWING"
+            project, ProjectPhaseInstance.Phase.MID_TERM, step=step
         )
         return phase_instance
 
@@ -372,8 +559,12 @@ class ReviewService:
         """
         创建中期审核记录（导师审核）
         """
+        initial_node = WorkflowService.get_initial_node(
+            ProjectPhaseInstance.Phase.MID_TERM, project.batch
+        )
+        step = initial_node.code if initial_node else "TEACHER_REVIEW"
         phase_instance = ProjectPhaseService.ensure_current(
-            project, ProjectPhaseInstance.Phase.MID_TERM, step="TEACHER_REVIEWING"
+            project, ProjectPhaseInstance.Phase.MID_TERM, step=step
         )
         existing = Review.objects.filter(
             project=project,
@@ -389,6 +580,7 @@ class ReviewService:
             review_type=Review.ReviewType.MID_TERM,
             review_level=Review.ReviewLevel.TEACHER,
             phase_instance=phase_instance,
+            review_template_id=initial_node.review_template_id if initial_node else None,
         )
 
     @staticmethod
@@ -406,14 +598,19 @@ class ReviewService:
         if existing:
             return existing
 
+        initial_node = WorkflowService.get_initial_node(
+            ProjectPhaseInstance.Phase.CLOSURE, project.batch
+        )
+        step = initial_node.code if initial_node else "TEACHER_REVIEW"
         phase_instance = ProjectPhaseService.ensure_current(
-            project, ProjectPhaseInstance.Phase.CLOSURE, step="TEACHER_REVIEWING"
+            project, ProjectPhaseInstance.Phase.CLOSURE, step=step
         )
         return ReviewService.create_review(
             project=project,
             review_type=Review.ReviewType.CLOSURE,
             review_level=Review.ReviewLevel.TEACHER,
             phase_instance=phase_instance,
+            review_template_id=initial_node.review_template_id if initial_node else None,
         )
 
 
@@ -453,11 +650,11 @@ class ReviewService:
                 except Project.DoesNotExist:
                     continue
 
-                step = "COLLEGE_EXPERT_SCORING"
-                if review_type == Review.ReviewType.MID_TERM:
-                    step = "COLLEGE_EXPERT_REVIEWING"
-                if review_level == Review.ReviewLevel.LEVEL1:
-                    step = "SCHOOL_EXPERT_SCORING"
+                scope = "SCHOOL" if review_level == Review.ReviewLevel.LEVEL1 else "COLLEGE"
+                node = WorkflowService.find_expert_node(
+                    review_type, review_level, scope, project.batch
+                )
+                step = node.code if node else "COLLEGE_EXPERT"
 
                 phase_instance = ProjectPhaseService.ensure_current(
                     project,
@@ -481,9 +678,10 @@ class ReviewService:
                             review_type=review_type,
                             review_level=review_level,
                             reviewer=expert,
+                            review_template_id=node.review_template_id if node else None,
                             status=Review.ReviewStatus.PENDING
                         )
                         created_reviews.append(review)
+                        NotificationService.notify_review_assigned(review)
                         
         return created_reviews
-

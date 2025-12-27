@@ -46,6 +46,16 @@ export function withdrawProjectApplication(id: number) {
 }
 
 /**
+ * 删除已提交立项申请（进入回收站）
+ */
+export function deleteProjectApplication(id: number) {
+  return request({
+    url: `/projects/${id}/delete-application/`,
+    method: "post",
+  });
+}
+
+/**
  * 获取我的项目列表
  */
 export function getMyProjects(params?: any) {
@@ -199,6 +209,26 @@ export function deleteClosureDraft(id: number) {
 }
 
 /**
+ * 删除中期提交（进入回收站）
+ */
+export function deleteMidTermSubmission(id: number) {
+  return request({
+    url: `/projects/${id}/delete-mid-term/`,
+    method: "post",
+  });
+}
+
+/**
+ * 删除结题提交（进入回收站）
+ */
+export function deleteClosureSubmission(id: number) {
+  return request({
+    url: `/projects/${id}/delete-closure/`,
+    method: "post",
+  });
+}
+
+/**
  * 获取项目成果列表
  */
 export function getProjectAchievements(id: number) {
@@ -227,6 +257,71 @@ export function exportProjectDoc(id: number) {
     url: `/projects/${id}/export-doc/`,
     method: "get",
     responseType: "blob",
+  });
+}
+
+/**
+ * 获取回收站记录
+ */
+export function getRecycleBin(params?: any) {
+  return request({
+    url: "/projects/recycle-bin/",
+    method: "get",
+    params,
+  });
+}
+
+/**
+ * 恢复回收站记录
+ */
+export function restoreRecycleBin(id: number) {
+  return request({
+    url: `/projects/recycle-bin/${id}/restore/`,
+    method: "post",
+  });
+}
+
+/**
+ * 获取项目进度
+ */
+export function getProjectProgress(id: number) {
+  return request({
+    url: `/projects/${id}/progress/`,
+    method: "get",
+  });
+}
+
+/**
+ * 添加项目进度
+ */
+export function addProjectProgress(id: number, data: any) {
+  return request({
+    url: `/projects/${id}/add-progress/`,
+    method: "post",
+    data,
+    headers: {
+      "Content-Type": data instanceof FormData ? "multipart/form-data" : "application/json",
+    },
+  });
+}
+
+/**
+ * 删除项目进度（进入回收站）
+ */
+export function removeProjectProgress(projectId: number, progressId: number) {
+  return request({
+    url: `/projects/${projectId}/remove-progress/${progressId}/`,
+    method: "delete",
+  });
+}
+
+/**
+ * 删除经费记录（进入回收站）
+ */
+export function removeProjectExpenditure(id: number) {
+  return request({
+    url: `/projects/expenditures/${id}/`,
+    method: "delete",
   });
 }
 

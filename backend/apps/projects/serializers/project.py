@@ -85,6 +85,15 @@ class ProjectSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True,
     )
+    discipline = serializers.SlugRelatedField(
+        slug_field="value",
+        queryset=DictionaryItem.objects.filter(dict_type__code="discipline"),
+        required=False,
+        allow_null=True,
+    )
+    discipline_display = serializers.CharField(
+        source="discipline.label", read_only=True
+    )
     achievements_count = serializers.SerializerMethodField()
     batch_name = serializers.SerializerMethodField()
     batch_year = serializers.SerializerMethodField()
@@ -141,6 +150,8 @@ class ProjectSerializer(serializers.ModelSerializer):
             "category_display",
             "source",
             "source_display",
+            "discipline",
+            "discipline_display",
             "leader",
             "leader_name",
             "leader_student_id",
@@ -353,6 +364,9 @@ class ProjectSerializer(serializers.ModelSerializer):
                         )
 
         limits = SystemSettingService.get_setting("LIMIT_RULES", batch=batch)
+        validation_rules = SystemSettingService.get_setting(
+            "VALIDATION_RULES", batch=batch
+        )
         if not is_draft and limits.get("dedupe_title"):
             title = attrs.get("title")
             if title:
@@ -361,6 +375,18 @@ class ProjectSerializer(serializers.ModelSerializer):
                     queryset = queryset.exclude(id=self.instance.id)
                 if queryset.exists():
                     raise serializers.ValidationError("项目名称已存在，请勿重复申报")
+
+        if not is_draft:
+            title = attrs.get("title") or (self.instance.title if self.instance else "")
+            min_len = int(validation_rules.get("title_min_length", 0) or 0)
+            max_len = int(validation_rules.get("title_max_length", 200) or 200)
+            if title and (len(title) < min_len or len(title) > max_len):
+                raise serializers.ValidationError("项目名称长度不符合要求")
+            title_regex = validation_rules.get("title_regex") or ""
+            if title_regex:
+                import re
+                if title and not re.match(title_regex, title):
+                    raise serializers.ValidationError("项目名称格式不符合要求")
 
         if not is_draft:
             leader = attrs.get("leader") or (request.user if request else None)
@@ -382,6 +408,27 @@ class ProjectSerializer(serializers.ModelSerializer):
                         qs = qs.exclude(id=self.instance.id)
                     if qs.count() >= quota:
                         raise serializers.ValidationError("该学院本年度名额已满")
+
+        if not is_draft:
+            leader = attrs.get("leader") or (request.user if request else None)
+            college_code = leader.college if leader else ""
+            allowed_types = validation_rules.get("allowed_project_types") or []
+            allowed_by_college = validation_rules.get("allowed_project_types_by_college") or {}
+            allowed_levels_by_college = validation_rules.get("allowed_levels_by_college") or {}
+            if allowed_types and attrs.get("category") and attrs.get("category").value not in allowed_types:
+                raise serializers.ValidationError("项目类别不符合申报要求")
+            if college_code and allowed_by_college:
+                college_allowed = allowed_by_college.get(college_code) or []
+                if college_allowed and attrs.get("category") and attrs.get("category").value not in college_allowed:
+                    raise serializers.ValidationError("当前学院不允许申报该类别")
+            if college_code and allowed_levels_by_college:
+                level_allowed = allowed_levels_by_college.get(college_code) or []
+                if level_allowed and attrs.get("level") and attrs.get("level").value not in level_allowed:
+                    raise serializers.ValidationError("当前学院不允许申报该级别")
+            if validation_rules.get("discipline_required"):
+                discipline = attrs.get("discipline") or (self.instance.discipline if self.instance else None)
+                if not discipline:
+                    raise serializers.ValidationError({"discipline": "学科分类为必填项"})
 
         instance = getattr(self, "instance", None)
         next_is_key_field = attrs.get(
@@ -442,6 +489,7 @@ class ProjectListSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source="get_status_display", read_only=True)
     level_display = serializers.SerializerMethodField()
     category_display = serializers.SerializerMethodField()
+    discipline_display = serializers.CharField(source="discipline.label", read_only=True)
     proposal_file_url = serializers.SerializerMethodField()
     contract_file_url = serializers.SerializerMethodField()
     task_book_file_url = serializers.SerializerMethodField()
@@ -463,6 +511,8 @@ class ProjectListSerializer(serializers.ModelSerializer):
             "level_display",
             "category",
             "category_display",
+            "discipline",
+            "discipline_display",
             "leader",
             "leader_name",
             "leader_student_id",

@@ -162,6 +162,7 @@
               <template v-else>
                   <el-button type="primary" link size="small" @click="handleEdit(row)">查看</el-button>
                   <el-button type="warning" link size="small" @click="handleWithdraw(row)" v-if="canWithdraw(row)">撤回</el-button>
+                  <el-button type="danger" link size="small" @click="handleDeleteSubmission(row)" v-if="canDeleteSubmission(row)">删除提交</el-button>
               </template>
             </template>
           </el-table-column>
@@ -190,7 +191,7 @@
 import { ref, reactive, onMounted, computed } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { Search as SearchIcon, RefreshLeft, Plus } from "@element-plus/icons-vue";
-import { getMyProjects, deleteProject, withdrawProjectApplication } from "@/api/projects";
+import { getMyProjects, deleteProject, withdrawProjectApplication, deleteProjectApplication } from "@/api/projects";
 import { useRouter } from "vue-router";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionaries";
@@ -205,12 +206,13 @@ const categoryOptions = computed(() => getOptions(DICT_CODES.PROJECT_CATEGORY));
 const statusMap: Record<string, string> = {
     'DRAFT': '草稿',
     'SUBMITTED': '已提交',
-    'LEVEL1_REVIEWING': '学院审核中',
-    'LEVEL1_APPROVED': '学院审核通过',
-    'LEVEL1_REJECTED': '学院驳回',
-    'LEVEL2_REVIEWING': '学校审核中',
-    'LEVEL2_APPROVED': '立项成功',
-    'LEVEL2_REJECTED': '学校驳回'
+    'TEACHER_AUDITING': '导师审核中',
+    'TEACHER_APPROVED': '导师审核通过',
+    'TEACHER_REJECTED': '导师审核不通过',
+    'COLLEGE_AUDITING': '学院审核中',
+    'LEVEL1_AUDITING': '校级审核中',
+    'APPLICATION_RETURNED': '退回修改',
+    'IN_PROGRESS': '进行中',
 };
 
 const filterForm = reactive({
@@ -317,6 +319,15 @@ const canWithdraw = (row: any) => {
     return ['SUBMITTED', 'TEACHER_AUDITING'].includes(row.status); 
 };
 
+const canDeleteSubmission = (row: any) => {
+    return [
+      "SUBMITTED",
+      "TEACHER_AUDITING",
+      "TEACHER_REJECTED",
+      "APPLICATION_RETURNED",
+    ].includes(row.status);
+};
+
 const handleWithdraw = async (row: any) => {
     try {
       await ElMessageBox.confirm("确认撤回该项目申请吗？撤回后将进入草稿箱。", "提示", {
@@ -343,6 +354,23 @@ const handleDelete = async (row: any) => {
       fetchProjects();
     }
   } catch {}
+};
+
+const handleDeleteSubmission = async (row: any) => {
+  try {
+    await ElMessageBox.confirm("确定删除该申报提交吗？删除后可在回收站恢复。", "提示", {
+      type: "warning",
+    });
+    const response: any = await deleteProjectApplication(row.id);
+    if (response.code === 200) {
+      ElMessage.success("已移入回收站");
+      fetchProjects();
+    } else {
+      ElMessage.error(response.message || "删除失败");
+    }
+  } catch {
+    // cancel
+  }
 };
 </script>
 

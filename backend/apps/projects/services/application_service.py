@@ -94,8 +94,10 @@ def _validate_limits(user, advisors_data, members_data, project=None, batch=None
         return False, f"项目成员人数不能超过{max_members}人"
 
     active_projects = _get_active_projects_qs(batch=batch)
+    active_projects_all = _get_active_projects_qs(batch=None)
     if project:
         active_projects = active_projects.exclude(id=project.id)
+        active_projects_all = active_projects_all.exclude(id=project.id)
 
     if max_teacher_active:
         excellent_project_ids = []
@@ -116,6 +118,11 @@ def _validate_limits(user, advisors_data, members_data, project=None, batch=None
             count = (
                 active_projects.filter(advisors__user_id=advisor_id).distinct().count()
             )
+            historical_unfinished = active_projects_all.filter(
+                advisors__user_id=advisor_id
+            ).distinct().exists()
+            if historical_unfinished:
+                return False, "指导教师存在未结题项目，无法继续指导新项目"
             bonus = 0
             if teacher_excellent_bonus and excellent_project_ids:
                 bonus = (
@@ -145,6 +152,11 @@ def _validate_limits(user, advisors_data, members_data, project=None, batch=None
                 .distinct()
                 .count()
             )
+            historical_unfinished = active_projects_all.filter(
+                projectmember__user_id=member_id
+            ).distinct().exists()
+            if historical_unfinished:
+                return False, "成员存在未结题项目，无法继续参与新项目"
             if count >= max_student_member:
                 return False, "项目成员已参与项目数量达到上限"
 
@@ -317,7 +329,6 @@ class ProjectApplicationService:
                             project,
                             ProjectPhaseInstance.Phase.APPLICATION,
                             created_by=request.user,
-                            step="TEACHER_REVIEWING",
                         )
                     ReviewService.create_teacher_review(project)
 
@@ -517,7 +528,6 @@ class ProjectApplicationService:
                             project,
                             ProjectPhaseInstance.Phase.APPLICATION,
                             created_by=request.user,
-                            step="TEACHER_REVIEWING",
                         )
                     ReviewService.create_teacher_review(project)
 

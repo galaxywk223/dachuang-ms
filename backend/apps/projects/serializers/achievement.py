@@ -24,6 +24,17 @@ class ProjectAchievementSerializer(serializers.ModelSerializer):
     project_no = serializers.CharField(source="project.project_no", read_only=True)
     leader_name = serializers.CharField(source="project.leader.real_name", read_only=True)
     college = serializers.SerializerMethodField()
+    company_name = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    company_role = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    company_date = serializers.DateField(write_only=True, required=False, allow_null=True)
+    conference_name = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    conference_level = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    conference_date = serializers.DateField(write_only=True, required=False, allow_null=True)
+    report_title = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    report_type = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    media_title = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    media_format = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    media_link = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
     class Meta:
         model = ProjectAchievement
@@ -53,6 +64,17 @@ class ProjectAchievementSerializer(serializers.ModelSerializer):
             "award_date",
             "attachment",
             "extra_data",
+            "company_name",
+            "company_role",
+            "company_date",
+            "conference_name",
+            "conference_level",
+            "conference_date",
+            "report_title",
+            "report_type",
+            "media_title",
+            "media_format",
+            "media_link",
             "created_at",
             "updated_at",
         ]
@@ -94,3 +116,33 @@ class ProjectAchievementSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("竞赛成果需要填写竞赛名称和获奖等级")
 
         return attrs
+
+    def _extract_extra_data(self, validated_data):
+        extra_fields = [
+            "company_name",
+            "company_role",
+            "company_date",
+            "conference_name",
+            "conference_level",
+            "conference_date",
+            "report_title",
+            "report_type",
+            "media_title",
+            "media_format",
+            "media_link",
+        ]
+        extra_data = dict(validated_data.get("extra_data") or {})
+        for key in extra_fields:
+            if key in validated_data:
+                value = validated_data.pop(key)
+                if value not in (None, ""):
+                    extra_data[key] = value
+        validated_data["extra_data"] = extra_data
+
+    def create(self, validated_data):
+        self._extract_extra_data(validated_data)
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        self._extract_extra_data(validated_data)
+        return super().update(instance, validated_data)

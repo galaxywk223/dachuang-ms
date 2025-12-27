@@ -4,7 +4,15 @@
 
 from rest_framework import serializers
 
-from ..models import SystemSetting, CertificateSetting, ProjectBatch
+from ..models import (
+    SystemSetting,
+    CertificateSetting,
+    ProjectBatch,
+    WorkflowConfig,
+    WorkflowNode,
+    ReviewTemplate,
+    ReviewTemplateItem,
+)
 
 
 class SystemSettingSerializer(serializers.ModelSerializer):
@@ -117,3 +125,98 @@ class CertificateSettingSerializer(serializers.ModelSerializer):
 
     def get_seal_image_url(self, obj):
         return self._build_file_url(obj.seal_image)
+
+
+class ReviewTemplateItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReviewTemplateItem
+        fields = [
+            "id",
+            "template",
+            "title",
+            "description",
+            "weight",
+            "max_score",
+            "is_required",
+            "sort_order",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+
+class ReviewTemplateSerializer(serializers.ModelSerializer):
+    updated_by_name = serializers.CharField(
+        source="updated_by.real_name", read_only=True
+    )
+    items = ReviewTemplateItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ReviewTemplate
+        fields = [
+            "id",
+            "name",
+            "review_type",
+            "review_level",
+            "scope",
+            "batch",
+            "description",
+            "notice",
+            "is_active",
+            "is_locked",
+            "updated_by",
+            "updated_by_name",
+            "items",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at", "updated_by"]
+
+
+class WorkflowNodeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WorkflowNode
+        fields = [
+            "id",
+            "workflow",
+            "code",
+            "name",
+            "node_type",
+            "role",
+            "review_level",
+            "scope",
+            "return_policy",
+            "review_template",
+            "notice",
+            "sort_order",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+
+class WorkflowConfigSerializer(serializers.ModelSerializer):
+    updated_by_name = serializers.CharField(
+        source="updated_by.real_name", read_only=True
+    )
+    nodes = WorkflowNodeSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = WorkflowConfig
+        fields = [
+            "id",
+            "name",
+            "phase",
+            "batch",
+            "version",
+            "description",
+            "is_active",
+            "is_locked",
+            "updated_by",
+            "updated_by_name",
+            "nodes",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at", "updated_by"]

@@ -7,13 +7,15 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from apps.projects.models import ProjectPhaseInstance
+from apps.projects.models import ProjectPhaseInstance, Project
 from apps.projects.services.phase_service import ProjectPhaseService
 from apps.reviews.services import ReviewService
+from apps.notifications.services import NotificationService
 from apps.system_settings.services import SystemSettingService
 
 from ...serializers import ProjectClosureSerializer
-from ...services import ProjectService
+from ...services import ProjectService, ProjectRecycleService
+from ...models import ProjectRecycleBin
 
 
 class ProjectClosureMixin:
@@ -57,9 +59,9 @@ class ProjectClosureMixin:
                         project,
                         ProjectPhaseInstance.Phase.CLOSURE,
                         created_by=request.user,
-                        step="TEACHER_REVIEWING",
                     )
                 ReviewService.create_closure_teacher_review(project)
+                NotificationService.notify_closure_submitted(project)
 
             message = "结题申请已保存为草稿" if is_draft else "结题申请提交成功"
             return Response({"code": 200, "message": message})
@@ -101,9 +103,9 @@ class ProjectClosureMixin:
                         project,
                         ProjectPhaseInstance.Phase.CLOSURE,
                         created_by=request.user,
-                        step="TEACHER_REVIEWING",
                     )
                 ReviewService.create_closure_teacher_review(project)
+                NotificationService.notify_closure_submitted(project)
                 return Response({"code": 200, "message": "结题申请提交成功"})
 
             return Response(
@@ -137,3 +139,55 @@ class ProjectClosureMixin:
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    @action(methods=["post"], detail=True, url_path="delete-closure")
+    def delete_closure(self, request, pk=None):
+        """
+        删除结题提交（进入回收站）
+        """
+        project = self.get_object()
+
+        if project.leader != request.user:
+            return Response(
+                {"code": 403, "message": "只有项目负责人可以删除结题提交"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        allowed_statuses = {
+            Project.ProjectStatus.CLOSURE_DRAFT,
+            Project.ProjectStatus.CLOSURE_SUBMITTED,
+            Project.ProjectStatus.CLOSURE_LEVEL2_REVIEWING,
+            Project.ProjectStatus.CLOSURE_LEVEL2_REJECTED,
+            Project.ProjectStatus.CLOSURE_LEVEL1_REVIEWING,
+            Project.ProjectStatus.CLOSURE_LEVEL1_REJECTED,
+            Project.ProjectStatus.CLOSURE_RETURNED,
+        }
+        if project.status not in allowed_statuses:
+            return Response(
+                {"code": 400, "message": "当前项目状态不允许删除结题提交"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        payload = ProjectRecycleService.snapshot_closure(project)
+        ProjectRecycleService.add_item(
+            project=project,
+            resource_type=ProjectRecycleBin.ResourceType.CLOSURE,
+            payload=payload,
+            attachments=[
+                f for f in [payload.get("final_report"), payload.get("achievement_file")] if f
+            ],
+            deleted_by=request.user,
+        )
+        project.final_report = None
+        project.achievement_file = None
+        project.closure_applied_at = None
+        project.status = Project.ProjectStatus.READY_FOR_CLOSURE
+        project.save(
+            update_fields=[
+                "final_report",
+                "achievement_file",
+                "closure_applied_at",
+                "status",
+                "updated_at",
+            ]
+        )
+        return Response({"code": 200, "message": "已移入回收站"})

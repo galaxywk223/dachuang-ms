@@ -9,11 +9,23 @@ from rest_framework.response import Response
 
 from apps.users.permissions import IsLevel1Admin
 from apps.projects.models import Project
-from ..models import SystemSetting, CertificateSetting, ProjectBatch
+from ..models import (
+    SystemSetting,
+    CertificateSetting,
+    ProjectBatch,
+    WorkflowConfig,
+    WorkflowNode,
+    ReviewTemplate,
+    ReviewTemplateItem,
+)
 from ..serializers import (
     SystemSettingSerializer,
     CertificateSettingSerializer,
     ProjectBatchSerializer,
+    WorkflowConfigSerializer,
+    WorkflowNodeSerializer,
+    ReviewTemplateSerializer,
+    ReviewTemplateItemSerializer,
 )
 from ..services import DEFAULT_SETTINGS, SystemSettingService
 
@@ -315,3 +327,240 @@ class CertificateSettingViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save(updated_by=request.user)
         return Response({"code": 200, "message": "更新成功", "data": serializer.data})
+
+
+class WorkflowConfigViewSet(viewsets.ModelViewSet):
+    """
+    流程配置管理
+    """
+
+    queryset = WorkflowConfig.objects.all()
+    serializer_class = WorkflowConfigSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action in ["list", "retrieve"]:
+            return [IsAuthenticated()]
+        return [IsLevel1Admin()]
+
+    def _check_editable(self, instance):
+        if instance.is_locked:
+            return Response(
+                {"code": 400, "message": "该流程已锁定，无法修改"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if instance.batch and instance.batch.status != ProjectBatch.STATUS_DRAFT:
+            return Response(
+                {"code": 403, "message": "流程配置仅允许在批次草稿状态下修改"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return None
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        blocked = self._check_editable(instance)
+        if blocked is not None:
+            return blocked
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(updated_by=request.user)
+        return Response({"code": 200, "message": "更新成功", "data": serializer.data})
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(created_by=request.user, updated_by=request.user)
+        return Response(
+            {"code": 200, "message": "创建成功", "data": serializer.data},
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class WorkflowNodeViewSet(viewsets.ModelViewSet):
+    """
+    流程节点管理
+    """
+
+    queryset = WorkflowNode.objects.all()
+    serializer_class = WorkflowNodeSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action in ["list", "retrieve"]:
+            return [IsAuthenticated()]
+        return [IsLevel1Admin()]
+
+    def _check_editable(self, instance):
+        workflow = instance.workflow
+        if workflow.is_locked:
+            return Response(
+                {"code": 400, "message": "流程已锁定，无法修改节点"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if workflow.batch and workflow.batch.status != ProjectBatch.STATUS_DRAFT:
+            return Response(
+                {"code": 403, "message": "流程配置仅允许在批次草稿状态下修改"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return None
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        blocked = self._check_editable(instance)
+        if blocked is not None:
+            return blocked
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"code": 200, "message": "更新成功", "data": serializer.data})
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            {"code": 200, "message": "创建成功", "data": serializer.data},
+            status=status.HTTP_201_CREATED,
+        )
+
+    @action(detail=False, methods=["post"], url_path="reorder")
+    def reorder(self, request):
+        """
+        批量调整节点排序
+        body: { items: [{ id, sort_order }] }
+        """
+        items = request.data.get("items", [])
+        if not isinstance(items, list):
+            return Response(
+                {"code": 400, "message": "items必须为数组"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        ids = [item.get("id") for item in items if item.get("id")]
+        nodes = WorkflowNode.objects.filter(id__in=ids).select_related("workflow")
+        if nodes.exists():
+            workflow = nodes.first().workflow
+            if workflow.is_locked or (
+                workflow.batch and workflow.batch.status != ProjectBatch.STATUS_DRAFT
+            ):
+                return Response(
+                    {"code": 403, "message": "流程配置仅允许在批次草稿状态下修改"},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+        update_map = {int(item["id"]): int(item.get("sort_order", 0) or 0) for item in items if item.get("id")}
+        for node in nodes:
+            if node.id in update_map:
+                node.sort_order = update_map[node.id]
+                node.save(update_fields=["sort_order", "updated_at"])
+        return Response({"code": 200, "message": "更新成功"})
+
+
+class ReviewTemplateViewSet(viewsets.ModelViewSet):
+    """
+    评审模板管理
+    """
+
+    queryset = ReviewTemplate.objects.all()
+    serializer_class = ReviewTemplateSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action in ["list", "retrieve"]:
+            return [IsAuthenticated()]
+        return [IsLevel1Admin()]
+
+    def _check_editable(self, instance):
+        if instance.is_locked:
+            return Response(
+                {"code": 400, "message": "评审模板已锁定，无法修改"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if instance.batch and instance.batch.status != ProjectBatch.STATUS_DRAFT:
+            return Response(
+                {"code": 403, "message": "评审模板仅允许在批次草稿状态下修改"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return None
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(created_by=request.user, updated_by=request.user)
+        return Response(
+            {"code": 200, "message": "创建成功", "data": serializer.data},
+            status=status.HTTP_201_CREATED,
+        )
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        blocked = self._check_editable(instance)
+        if blocked is not None:
+            return blocked
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(updated_by=request.user)
+        return Response({"code": 200, "message": "更新成功", "data": serializer.data})
+
+
+class ReviewTemplateItemViewSet(viewsets.ModelViewSet):
+    """
+    评审模板评分项管理
+    """
+
+    queryset = ReviewTemplateItem.objects.all()
+    serializer_class = ReviewTemplateItemSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action in ["list", "retrieve"]:
+            return [IsAuthenticated()]
+        return [IsLevel1Admin()]
+
+    def _check_editable(self, instance):
+        template = instance.template
+        if template.is_locked:
+            return Response(
+                {"code": 400, "message": "评审模板已锁定，无法修改评分项"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if template.batch and template.batch.status != ProjectBatch.STATUS_DRAFT:
+            return Response(
+                {"code": 403, "message": "评审模板仅允许在批次草稿状态下修改"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return None
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        blocked = self._check_editable(instance)
+        if blocked is not None:
+            return blocked
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"code": 200, "message": "更新成功", "data": serializer.data})
+
+    @action(detail=False, methods=["post"], url_path="reorder")
+    def reorder(self, request):
+        items = request.data.get("items", [])
+        if not isinstance(items, list):
+            return Response(
+                {"code": 400, "message": "items必须为数组"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        ids = [item.get("id") for item in items if item.get("id")]
+        rows = ReviewTemplateItem.objects.filter(id__in=ids).select_related("template")
+        if rows.exists():
+            template = rows.first().template
+            if template.is_locked or (
+                template.batch and template.batch.status != ProjectBatch.STATUS_DRAFT
+            ):
+                return Response(
+                    {"code": 403, "message": "评审模板仅允许在批次草稿状态下修改"},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+        update_map = {int(item["id"]): int(item.get("sort_order", 0) or 0) for item in items if item.get("id")}
+        for row in rows:
+            if row.id in update_map:
+                row.sort_order = update_map[row.id]
+                row.save(update_fields=["sort_order", "updated_at"])
+        return Response({"code": 200, "message": "更新成功"})

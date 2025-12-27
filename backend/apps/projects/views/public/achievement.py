@@ -3,10 +3,12 @@
 """
 
 from rest_framework import viewsets
+from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from ...models import ProjectAchievement
+from ...models import ProjectAchievement, ProjectRecycleBin
 from ...serializers import ProjectAchievementSerializer
+from ...services import ProjectRecycleService
 
 class ProjectAchievementViewSet(viewsets.ModelViewSet):
     """
@@ -38,3 +40,36 @@ class ProjectAchievementViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(project__leader__college=user.college)
 
         return queryset
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        project = instance.project
+        payload = {
+            "achievement_type": instance.achievement_type_id,
+            "title": instance.title,
+            "description": instance.description,
+            "authors": instance.authors,
+            "journal": instance.journal,
+            "publication_date": instance.publication_date,
+            "doi": instance.doi,
+            "patent_no": instance.patent_no,
+            "patent_type": instance.patent_type,
+            "applicant": instance.applicant,
+            "copyright_no": instance.copyright_no,
+            "copyright_owner": instance.copyright_owner,
+            "competition_name": instance.competition_name,
+            "award_level": instance.award_level,
+            "award_date": instance.award_date,
+            "extra_data": instance.extra_data,
+            "attachment": instance.attachment.name if instance.attachment else "",
+        }
+        ProjectRecycleService.add_item(
+            project=project,
+            resource_type=ProjectRecycleBin.ResourceType.ACHIEVEMENT,
+            resource_id=instance.id,
+            payload=payload,
+            attachments=[payload.get("attachment")] if payload.get("attachment") else [],
+            deleted_by=request.user,
+        )
+        self.perform_destroy(instance)
+        return Response({"code": 200, "message": "已移入回收站"})

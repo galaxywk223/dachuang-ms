@@ -197,12 +197,12 @@ class ProjectReviewViewSet(viewsets.ViewSet):
             )
 
         comment = request.data.get("comment", "")
+        reject_to = request.data.get("reject_to")
         if review.review_type == Review.ReviewType.CLOSURE:
             return Response(
                 {"code": 400, "message": "结题流程需先分配专家评审，管理员不能直接审核"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
 
         if not comment:
             return Response(

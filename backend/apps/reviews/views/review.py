@@ -120,6 +120,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         action_type = serializer.validated_data["action"]
         comments = serializer.validated_data.get("comments", "")
         score = serializer.validated_data.get("score")
+        score_details = serializer.validated_data.get("score_details")
         closure_rating = serializer.validated_data.get("closure_rating")
         reject_to = serializer.validated_data.get("reject_to")
 
@@ -166,12 +167,18 @@ class ReviewViewSet(viewsets.ModelViewSet):
             score = None
 
         # 执行审核
-        if action_type == "approve":
-            result = ReviewService.approve_review(
-                review, user, comments, score, closure_rating
+        try:
+            if action_type == "approve":
+                result = ReviewService.approve_review(
+                    review, user, comments, score, closure_rating, score_details
+                )
+            else:
+                result = ReviewService.reject_review(review, user, comments, reject_to)
+        except ValueError as exc:
+            return Response(
+                {"code": 400, "message": str(exc)},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        else:
-            result = ReviewService.reject_review(review, user, comments, reject_to)
 
         if result:
             NotificationService.notify_review_result(review.project, action_type == "approve", comments)
@@ -238,6 +245,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         action_type = serializer.validated_data["action"]
         comments = serializer.validated_data.get("comments", "")
         score = serializer.validated_data.get("score")
+        score_details = serializer.validated_data.get("score_details")
         closure_rating = serializer.validated_data.get("closure_rating")
         reject_to = serializer.validated_data.get("reject_to")
 
@@ -262,7 +270,20 @@ class ReviewViewSet(viewsets.ModelViewSet):
             else Review.ReviewStatus.REJECTED
         )
         review.comments = comments
-        review.score = score
+        if score_details is not None:
+            try:
+                total_score, normalized_details = ReviewService._normalize_score_details(
+                    review, score, score_details
+                )
+            except ValueError as exc:
+                return Response(
+                    {"code": 400, "message": str(exc)},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            review.score = total_score
+            review.score_details = normalized_details
+        else:
+            review.score = score
         review.reviewer = user
         review.reviewed_at = timezone.now()
         if review.review_type == Review.ReviewType.CLOSURE:
@@ -354,6 +375,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         action_type = request.data.get("action")
         comments = request.data.get("comments", "")
         score = request.data.get("score")
+        score_details = request.data.get("score_details")
         closure_rating = request.data.get("closure_rating")
         reject_to = request.data.get("reject_to")
 
@@ -405,12 +427,16 @@ class ReviewViewSet(viewsets.ModelViewSet):
             if not ok:
                 failed.append({"id": review.id, "reason": msg or "不在审核时间范围内"})
                 continue
-            if action_type == "approve":
-                ReviewService.approve_review(
-                    review, request.user, comments, score, closure_rating
-                )
-            else:
-                ReviewService.reject_review(review, request.user, comments, reject_to)
+            try:
+                if action_type == "approve":
+                    ReviewService.approve_review(
+                        review, request.user, comments, score, closure_rating, score_details
+                    )
+                else:
+                    ReviewService.reject_review(review, request.user, comments, reject_to)
+            except ValueError as exc:
+                failed.append({"id": review.id, "reason": str(exc)})
+                continue
             NotificationService.notify_review_result(
                 review.project, action_type == "approve", comments
             )
@@ -478,5 +504,3 @@ class ReviewViewSet(viewsets.ModelViewSet):
             return Response(
                 {"code": 404, "message": "项目不存在"}, status=status.HTTP_404_NOT_FOUND
             )
-
-

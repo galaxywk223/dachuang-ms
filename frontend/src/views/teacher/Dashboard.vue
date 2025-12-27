@@ -183,15 +183,18 @@ const fetchMyProjects = async () => {
 
 const refreshStats = async () => {
     try {
-        const [pendingRes, projectsRes] = await Promise.all([
+        const [pendingRes, projectsRes, unreadRes] = await Promise.all([
             fetchPendingReviews(),
             fetchMyProjects(),
+            request.get("/notifications/unread_count/"),
         ]);
         statistics.pending = pendingRes.count;
         statistics.myProjects = projectsRes.count;
         statistics.inProgress = (projectsRes.results || []).filter(
             (item: any) => inProgressStatuses.has(item.status)
         ).length;
+        statistics.unreadNotifications =
+          unreadRes?.data?.data?.count ?? unreadRes?.data?.count ?? 0;
     } catch (error) {
         console.error(error);
     }

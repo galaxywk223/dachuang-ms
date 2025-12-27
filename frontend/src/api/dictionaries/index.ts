@@ -118,6 +118,7 @@ export const DICT_CODES = {
   PROJECT_SOURCE: "project_source",
   COLLEGE: "college",
   MAJOR_CATEGORY: "major_category", // Corrected
+  DISCIPLINE: "discipline",
   TITLE: "title",
   KEY_FIELD_CODE: "key_field_code",
   PROJECT_TYPE: "project_type",
