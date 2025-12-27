@@ -3,7 +3,7 @@ import { useRoute, useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionaries";
-import { getProjectDetail, updateProjectInfo } from "@/api/projects/admin";
+import { getAdminProjectDetail, updateProjectInfo } from "@/api/projects/admin";
 import { exportProjectDoc } from "@/api/projects";
 
 interface AdvisorInfo {
@@ -143,7 +143,7 @@ export function useProjectDetail() {
     }
     pageLoading.value = true;
     try {
-      const res: any = await getProjectDetail(id);
+      const res: any = await getAdminProjectDetail(id);
       const data = res.data || res;
       if (!data) {
         throw new Error("数据为空");

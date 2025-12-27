@@ -6,6 +6,8 @@ from .achievement import ProjectAchievementViewSet
 from .expenditure import ProjectExpenditureViewSet
 from .review import ProjectReviewViewSet
 from .changes import ProjectChangeRequestViewSet
+from .application import ProjectApplicationViewSet
+from .closure import ProjectClosureViewSet
 from .admin import ProjectManagementViewSet, AchievementManagementViewSet
 
 __all__ = [
@@ -15,6 +17,8 @@ __all__ = [
     "ProjectExpenditureViewSet",
     "ProjectReviewViewSet",
     "ProjectChangeRequestViewSet",
+    "ProjectApplicationViewSet",
+    "ProjectClosureViewSet",
     "ProjectManagementViewSet",
     "AchievementManagementViewSet",
 ]

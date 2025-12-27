@@ -13,22 +13,8 @@ from .views import (
     ProjectManagementViewSet,
     AchievementManagementViewSet,
     ProjectChangeRequestViewSet,
-)
-from .views.application import (
-    create_project_application,
-    update_project_application,
-    withdraw_project_application,
-    get_my_projects,
-    get_my_drafts,
-)
-from .views.closure import (
-    get_pending_closure_projects,
-    get_applied_closure_projects,
-    get_closure_drafts,
-    create_closure_application,
-    update_closure_application,
-    delete_closure_draft,
-    get_project_achievements,
+    ProjectApplicationViewSet,
+    ProjectClosureViewSet,
 )
 
 router = DefaultRouter()
@@ -40,54 +26,10 @@ router.register(r"admin/manage", ProjectManagementViewSet, basename="admin-manag
 router.register(r"achievements", ProjectAchievementViewSet, basename="achievement")
 router.register(r"expenditures", ProjectExpenditureViewSet, basename="expenditure")
 router.register(r"change-requests", ProjectChangeRequestViewSet, basename="change-request")
+router.register(r"application", ProjectApplicationViewSet, basename="project-application")
+router.register(r"closure", ProjectClosureViewSet, basename="project-closure")
 
 urlpatterns = [
-    # 立项管理
-    path("application/create/", create_project_application, name="create-application"),
-    path(
-        "application/<int:pk>/update/",
-        update_project_application,
-        name="update-application",
-    ),
-    path(
-        "application/<int:pk>/withdraw/",
-        withdraw_project_application,
-        name="withdraw-application",
-    ),
-    path("my-projects/", get_my_projects, name="my-projects"),
-    path("my-drafts/", get_my_drafts, name="my-drafts"),
-    # 结题管理
-    path(
-        "closure/pending/",
-        get_pending_closure_projects,
-        name="pending-closure-projects",
-    ),
-    path(
-        "closure/applied/",
-        get_applied_closure_projects,
-        name="applied-closure-projects",
-    ),
-    path("closure/drafts/", get_closure_drafts, name="closure-drafts"),
-    path(
-        "closure/<int:pk>/create/",
-        create_closure_application,
-        name="create-closure",
-    ),
-    path(
-        "closure/<int:pk>/update/",
-        update_closure_application,
-        name="update-closure",
-    ),
-    path(
-        "closure/<int:pk>/delete/",
-        delete_closure_draft,
-        name="delete-closure-draft",
-    ),
-    path(
-        "closure/<int:pk>/achievements/",
-        get_project_achievements,
-        name="project-achievements",
-    ),
     path(
         "admin/achievements/",
         AchievementManagementViewSet.as_view({"get": "list"}),

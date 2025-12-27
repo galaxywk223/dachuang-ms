@@ -51,7 +51,7 @@ export function getAllProjects(params: any) {
 /**
  * 获取项目详情
  */
-export function getProjectDetail(id: number) {
+export function getAdminProjectDetail(id: number) {
   return request({
     url: `/projects/admin/manage/${id}/`,
     method: "get",

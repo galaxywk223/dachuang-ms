@@ -1,26 +1,31 @@
 """
-项目申请相关视图
+项目申报相关视图（ViewSet）。
+
+保留原有 URL 结构：
+- POST   /projects/application/create/
+- PUT    /projects/application/{id}/update/
+- POST   /projects/application/{id}/withdraw/
 """
 
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
+import json
+
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils import timezone
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
-from ..models import Project, ProjectAdvisor, ProjectMember
-from ..services import ProjectService
-from ..models import ProjectPhaseInstance
-from ..services.phase_service import ProjectPhaseService
+from apps.dictionaries.models import DictionaryItem
 from apps.reviews.models import Review
 from apps.reviews.services import ReviewService
-from ..serializers import ProjectSerializer
-from apps.dictionaries.models import DictionaryItem
 from apps.system_settings.services import SystemSettingService
-from django.contrib.auth import get_user_model
-from django.utils import timezone
-import json
+
+from ..models import Project, ProjectAdvisor, ProjectMember, ProjectPhaseInstance
+from ..serializers import ProjectSerializer
+from ..services import ProjectService
+from ..services.phase_service import ProjectPhaseService
 
 
 def _generate_project_no(year, college_code=""):
@@ -100,12 +105,9 @@ def _validate_limits(user, advisors_data, members_data, project=None, batch=None
     if project:
         active_projects = active_projects.exclude(id=project.id)
 
-    # 指导教师数量限制
     if max_teacher_active:
         excellent_project_ids = []
         if teacher_excellent_bonus:
-            from apps.reviews.models import Review
-
             excellent_project_ids = list(
                 Review.objects.filter(
                     review_type=Review.ReviewType.CLOSURE,
@@ -116,14 +118,12 @@ def _validate_limits(user, advisors_data, members_data, project=None, batch=None
             )
 
         for advisor in advisors_data:
-            advisor_id = (
-                advisor.get("user")
-                or advisor.get("user_id")
-                or advisor.get("id")
-            )
+            advisor_id = advisor.get("user") or advisor.get("user_id") or advisor.get("id")
             if not advisor_id:
                 continue
-            count = active_projects.filter(advisors__user_id=advisor_id).distinct().count()
+            count = (
+                active_projects.filter(advisors__user_id=advisor_id).distinct().count()
+            )
             bonus = 0
             if teacher_excellent_bonus and excellent_project_ids:
                 bonus = (
@@ -137,34 +137,31 @@ def _validate_limits(user, advisors_data, members_data, project=None, batch=None
             if count >= (max_teacher_active + bonus):
                 return False, "指导教师在研项目数量已达上限"
 
-    # 指导教师职称校验
     if advisor_title_required:
         for advisor in advisors_data:
             title = advisor.get("title")
             if not title:
                 return False, "指导教师职称信息不能为空"
 
-    # 学生成员参与上限
     if max_student_member:
         for member in members_data:
-            member_id = (
-                member.get("user")
-                or member.get("user_id")
-                or member.get("id")
-            )
+            member_id = member.get("user") or member.get("user_id") or member.get("id")
             if not member_id:
                 continue
-            count = active_projects.filter(projectmember__user_id=member_id).distinct().count()
+            count = (
+                active_projects.filter(projectmember__user_id=member_id).distinct().count()
+            )
             if count >= max_student_member:
                 return False, "项目成员已参与项目数量达到上限"
 
     return True, ""
 
 
-def _get_or_create_user_by_identity(employee_id=None, name=None, role=None, phone=None, email=None, department=None):
+def _get_or_create_user_by_identity(
+    employee_id=None, name=None, role=None, phone=None, email=None, department=None
+):
     """
     依据工号/学号或姓名查找/创建用户，用于草稿保存需要回显指导教师/成员。
-    避免缺少用户导致草稿无法回显。
     """
     User = get_user_model()
     user = None
@@ -188,7 +185,6 @@ def _get_or_create_user_by_identity(employee_id=None, name=None, role=None, phon
             user.save(update_fields=updated_fields)
         return user.id
 
-    # Create placeholder user
     username = employee_id or f"temp_{int(timezone.now().timestamp())}"
     employee_id_val = employee_id or username
     real_name = name or employee_id_val
@@ -207,566 +203,436 @@ def _get_or_create_user_by_identity(employee_id=None, name=None, role=None, phon
     return user.id
 
 
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def create_project_application(request):
-    """
-    创建项目申请（草稿或提交）
-    """
-    user = request.user
-    data = request.data.copy()  # Use copy to be mutable
-    is_draft = _to_bool(data.get("is_draft", True))
+class ProjectApplicationViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
 
-    try:
-        with transaction.atomic():
-            current_batch = _get_current_batch()
-            if not is_draft:
-                ok, msg = _check_application_window(current_batch)
+    @action(detail=False, methods=["post"], url_path="create")
+    def create_application(self, request):
+        user = request.user
+        data = request.data.copy()
+        is_draft = _to_bool(data.get("is_draft", True))
+
+        try:
+            with transaction.atomic():
+                current_batch = _get_current_batch()
+                if not is_draft:
+                    ok, msg = _check_application_window(current_batch)
+                    if not ok:
+                        return Response(
+                            {"code": 400, "message": msg},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+
+                data["leader"] = user.id
+                data["status"] = (
+                    Project.ProjectStatus.DRAFT
+                    if is_draft
+                    else Project.ProjectStatus.SUBMITTED
+                )
+
+                leader_updates = []
+                if data.get("leader_contact"):
+                    user.phone = data.get("leader_contact")
+                    leader_updates.append("phone")
+                if data.get("leader_email"):
+                    user.email = data.get("leader_email")
+                    leader_updates.append("email")
+                if data.get("major_code"):
+                    user.major = data.get("major_code")
+                    leader_updates.append("major")
+                if leader_updates:
+                    user.save(update_fields=leader_updates)
+
+                if not data.get("level"):
+                    default_level = (
+                        DictionaryItem.objects.filter(dict_type__code="project_level")
+                        .order_by("sort_order", "id")
+                        .first()
+                    )
+                    if default_level:
+                        data["level"] = default_level.value
+                if not data.get("category"):
+                    default_category = (
+                        DictionaryItem.objects.filter(dict_type__code="project_type")
+                        .order_by("sort_order", "id")
+                        .first()
+                    )
+                    if default_category:
+                        data["category"] = default_category.value
+
+                advisors_data = _normalize_list(request.data.get("advisors", []))
+                members_data = _normalize_list(request.data.get("members", []))
+                expected_results_data = request.data.get("expected_results_data")
+                if expected_results_data is not None:
+                    data["expected_results_data"] = json.dumps(
+                        _normalize_list(expected_results_data)
+                    )
+
+                ok, msg = _validate_limits(
+                    user, advisors_data, members_data, batch=current_batch
+                )
                 if not ok:
                     return Response(
                         {"code": 400, "message": msg},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
 
-            # Override backend-controlled fields
-            data["leader"] = user.id
-            data["status"] = (
-                Project.ProjectStatus.DRAFT if is_draft else Project.ProjectStatus.SUBMITTED
-            )
-
-            # Sync leader contact info to User profile for draft echo
-            leader_updates = []
-            if data.get("leader_contact"):
-                user.phone = data.get("leader_contact")
-                leader_updates.append("phone")
-            if data.get("leader_email"):
-                user.email = data.get("leader_email")
-                leader_updates.append("email")
-            if data.get("major_code"):
-                user.major = data.get("major_code")
-                leader_updates.append("major")
-            if leader_updates:
-                user.save(update_fields=leader_updates)
-
-            # Ensure defaults for required fields if missing
-            # Note: We assume DictionaryItems for defaults exist. In a real app, handle DoesNotExist.
-            if not data.get("level"):
-                default_level = (
-                    DictionaryItem.objects.filter(dict_type__code="project_level")
-                    .order_by("sort_order", "id")
-                    .first()
+                serializer = ProjectSerializer(
+                    data=data, context={"request": request, "is_draft": is_draft}
                 )
-                if default_level:
-                    data["level"] = default_level.value
-            if not data.get("category"):
-                default_category = (
-                    DictionaryItem.objects.filter(dict_type__code="project_type")
-                    .order_by("sort_order", "id")
-                    .first()
-                )
-                if default_category:
-                    data["category"] = default_category.value
+                if not serializer.is_valid():
+                    return Response(
+                        {
+                            "code": 400,
+                            "message": "数据验证失败",
+                            "errors": serializer.errors,
+                        },
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
 
-            advisors_data = _normalize_list(request.data.get("advisors", []))
-            members_data = _normalize_list(request.data.get("members", []))
-            expected_results_data = request.data.get("expected_results_data")
-            if expected_results_data is not None:
-                data["expected_results_data"] = json.dumps(
-                    _normalize_list(expected_results_data)
-                )
+                project = serializer.save()
 
-            ok, msg = _validate_limits(
-                user, advisors_data, members_data, batch=current_batch
-            )
-            if not ok:
-                return Response(
-                    {"code": 400, "message": msg},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+                if current_batch and not project.batch:
+                    project.batch = current_batch
+                if project.batch:
+                    project.year = project.batch.year
 
-            # 序列化并验证
-            serializer = ProjectSerializer(
-                data=data, context={"request": request, "is_draft": is_draft}
-            )
-            if not serializer.is_valid():
-                print("Serializer Errors:", serializer.errors)  # Debug logging
+                if not is_draft:
+                    project.submitted_at = timezone.now()
+                    if not project.project_no:
+                        project.project_no = _generate_project_no(
+                            project.year or timezone.now().year, user.college
+                        )
+                project.save()
+
+                if (
+                    not is_draft
+                    and not Review.objects.filter(
+                        project=project,
+                        review_type=Review.ReviewType.APPLICATION,
+                        review_level=Review.ReviewLevel.TEACHER,
+                        status=Review.ReviewStatus.PENDING,
+                    ).exists()
+                ):
+                    current_phase = ProjectPhaseService.get_current(
+                        project, ProjectPhaseInstance.Phase.APPLICATION
+                    )
+                    if (
+                        current_phase
+                        and current_phase.state == ProjectPhaseInstance.State.RETURNED
+                    ):
+                        ProjectPhaseService.start_new_attempt(
+                            project,
+                            ProjectPhaseInstance.Phase.APPLICATION,
+                            created_by=request.user,
+                            step="TEACHER_REVIEWING",
+                        )
+                    ReviewService.create_teacher_review(project)
+
+                project.advisors.all().delete()
+                for idx, advisor_data in enumerate(advisors_data or []):
+                    user_id = (
+                        advisor_data.get("user")
+                        or advisor_data.get("user_id")
+                        or advisor_data.get("id")
+                    )
+                    job_number = advisor_data.get("job_number") or advisor_data.get(
+                        "employee_id"
+                    )
+                    name = advisor_data.get("name")
+                    contact = advisor_data.get("contact")
+                    email = advisor_data.get("email")
+                    title = advisor_data.get("title")
+
+                    if not user_id:
+                        user_id = _get_or_create_user_by_identity(
+                            employee_id=job_number,
+                            name=name,
+                            role=None,
+                            phone=contact,
+                            email=email,
+                            department=title,
+                        )
+
+                    if user_id:
+                        ProjectAdvisor.objects.create(
+                            project=project, user_id=user_id, order=idx
+                        )
+
+                ProjectMember.objects.filter(project=project).exclude(
+                    role=ProjectMember.MemberRole.LEADER
+                ).delete()
+
+                for member_data in members_data or []:
+                    member_user_id = (
+                        member_data.get("user")
+                        or member_data.get("user_id")
+                        or member_data.get("id")
+                    )
+                    student_id = member_data.get("student_id")
+                    name = member_data.get("name")
+                    if not member_user_id:
+                        member_user_id = _get_or_create_user_by_identity(
+                            employee_id=student_id, name=name, role=None
+                        )
+
+                    if not member_user_id or str(member_user_id) == str(user.id):
+                        continue
+
+                    ProjectMember.objects.get_or_create(
+                        project=project,
+                        user_id=member_user_id,
+                        defaults={
+                            "role": ProjectMember.MemberRole.MEMBER,
+                            "contribution": member_data.get("contribution", ""),
+                        },
+                    )
+
                 return Response(
                     {
-                        "code": 400,
-                        "message": "数据验证失败",
-                        "errors": serializer.errors,
+                        "code": 201,
+                        "message": "保存成功" if is_draft else "提交成功",
+                        "data": ProjectSerializer(project).data,
                     },
-                    status=status.HTTP_400_BAD_REQUEST,
+                    status=status.HTTP_201_CREATED,
                 )
-
-            # 保存项目
-            project = serializer.save()
-
-            if current_batch and not project.batch:
-                project.batch = current_batch
-            if project.batch:
-                project.year = project.batch.year
-
-            if not is_draft:
-                project.submitted_at = timezone.now()
-                if not project.project_no:
-                    project.project_no = _generate_project_no(
-                        project.year or timezone.now().year, user.college
-                    )
-            project.save()
-            # 创建导师审核记录（避免重复）
-            if not is_draft and not Review.objects.filter(
-                project=project,
-                review_type=Review.ReviewType.APPLICATION,
-                review_level=Review.ReviewLevel.TEACHER,
-                status=Review.ReviewStatus.PENDING,
-            ).exists():
-                current_phase = ProjectPhaseService.get_current(
-                    project, ProjectPhaseInstance.Phase.APPLICATION
-                )
-                if current_phase and current_phase.state == ProjectPhaseInstance.State.RETURNED:
-                    ProjectPhaseService.start_new_attempt(
-                        project,
-                        ProjectPhaseInstance.Phase.APPLICATION,
-                        created_by=request.user,
-                        step="TEACHER_REVIEWING",
-                    )
-                ReviewService.create_teacher_review(project)
-
-            # 添加指导教师
-            advisors_data = advisors_data or []
-            for idx, advisor_data in enumerate(advisors_data):
-                # Try to get user_id directly or by employee_id/name
-                user_id = advisor_data.get("user") or advisor_data.get("user_id") or advisor_data.get("id")
-                job_number = advisor_data.get("job_number") or advisor_data.get("employee_id")
-                name = advisor_data.get("name")
-                contact = advisor_data.get("contact")
-                email = advisor_data.get("email")
-                title = advisor_data.get("title")
-                
-                if not user_id:
-                    user_id = _get_or_create_user_by_identity(
-                        employee_id=job_number,
-                        name=name,
-                        role=None,
-                        phone=contact,
-                        email=email,
-                        department=title,
-                    )
-
-                if user_id:
-                     ProjectAdvisor.objects.create(
-                        project=project,
-                        user_id=user_id,
-                        order=idx,
-                     )
-
-            # 添加项目负责人为成员
-            ProjectMember.objects.create(
-                project=project,
-                user=user,
-                role=ProjectMember.MemberRole.LEADER,
-            )
-
-            # 添加其他成员
-            members_data = members_data or []
-            for member_data in members_data:
-                user_id = (
-                    member_data.get("user")
-                    or member_data.get("user_id")
-                    or member_data.get("id")
-                )
-                student_id = member_data.get("student_id")
-                name = member_data.get("name")
-                if not user_id:
-                    user_id = _get_or_create_user_by_identity(
-                        employee_id=student_id,
-                        name=name,
-                        role=None,
-                    )
-
-                if not user_id or str(user_id) == str(user.id):
-                    continue  # Skip invalid entries or duplicate leader
-
-                ProjectMember.objects.get_or_create(
-                    project=project,
-                    user_id=user_id,
-                    defaults={
-                        "role": ProjectMember.MemberRole.MEMBER,
-                        "contribution": member_data.get("contribution", ""),
-                    },
-                )
-
+        except Exception as e:
             return Response(
-                {
-                    "code": 200,
-                    "message": "保存成功" if is_draft else "提交成功",
-                    "data": ProjectSerializer(project).data,
-                },
-                status=status.HTTP_201_CREATED,
+                {"code": 500, "message": f"操作失败: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return Response(
-            {"code": 500, "message": f"操作失败: {str(e)}"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+    @action(detail=True, methods=["put"], url_path="update")
+    def update_application(self, request, pk=None):
+        user = request.user
 
+        try:
+            project = Project.objects.get(pk=pk, leader=user)
+        except Project.DoesNotExist:
+            return Response(
+                {"code": 404, "message": "项目不存在或无权限访问"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
-@api_view(["PUT"])
-@permission_classes([IsAuthenticated])
-def update_project_application(request, pk):
-    """
-    更新项目申请
-    """
-    user = request.user
+        if project.status not in [
+            Project.ProjectStatus.DRAFT,
+            Project.ProjectStatus.TEACHER_REJECTED,
+            Project.ProjectStatus.APPLICATION_RETURNED,
+        ]:
+            return Response(
+                {"code": 400, "message": "只能编辑草稿或退回修改的项目"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-    try:
-        project = Project.objects.get(pk=pk, leader=user)
-    except Project.DoesNotExist:
-        return Response(
-            {"code": 404, "message": "项目不存在或无权限访问"},
-            status=status.HTTP_404_NOT_FOUND,
-        )
+        data = request.data.copy()
+        is_draft = _to_bool(data.get("is_draft", True))
 
-    # 只能编辑草稿或导师退回的项目
-    if project.status not in [
-        Project.ProjectStatus.DRAFT,
-        Project.ProjectStatus.TEACHER_REJECTED,
-        Project.ProjectStatus.APPLICATION_RETURNED,
-    ]:
-        return Response(
-            {"code": 400, "message": "只能编辑草稿或退回修改的项目"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        try:
+            with transaction.atomic():
+                current_batch = _get_current_batch()
+                if not is_draft:
+                    ok, msg = _check_application_window(current_batch)
+                    if not ok:
+                        return Response(
+                            {"code": 400, "message": msg},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
 
-    data = request.data.copy()
-    is_draft = _to_bool(data.get("is_draft", True))
+                data["status"] = (
+                    Project.ProjectStatus.DRAFT
+                    if is_draft
+                    else Project.ProjectStatus.SUBMITTED
+                )
 
-    try:
-        with transaction.atomic():
-            current_batch = _get_current_batch()
-            if not is_draft:
-                ok, msg = _check_application_window(current_batch)
+                leader_updates = []
+                if data.get("leader_contact"):
+                    user.phone = data.get("leader_contact")
+                    leader_updates.append("phone")
+                if data.get("leader_email"):
+                    user.email = data.get("leader_email")
+                    leader_updates.append("email")
+                if data.get("major_code"):
+                    user.major = data.get("major_code")
+                    leader_updates.append("major")
+                if leader_updates:
+                    user.save(update_fields=leader_updates)
+
+                advisors_data = _normalize_list(request.data.get("advisors", []))
+                members_data = _normalize_list(request.data.get("members", []))
+                expected_results_data = request.data.get("expected_results_data")
+                if expected_results_data is not None:
+                    data["expected_results_data"] = json.dumps(
+                        _normalize_list(expected_results_data)
+                    )
+
+                ok, msg = _validate_limits(
+                    user, advisors_data, members_data, project, batch=current_batch
+                )
                 if not ok:
                     return Response(
                         {"code": 400, "message": msg},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
 
-            # Verify and update fields
-            data["status"] = (
-                Project.ProjectStatus.DRAFT if is_draft else Project.ProjectStatus.SUBMITTED
-            )
-
-            # Sync leader contact info to User profile for draft echo
-            leader_updates = []
-            if data.get("leader_contact"):
-                user.phone = data.get("leader_contact")
-                leader_updates.append("phone")
-            if data.get("leader_email"):
-                user.email = data.get("leader_email")
-                leader_updates.append("email")
-            if data.get("major_code"):
-                user.major = data.get("major_code")
-                leader_updates.append("major")
-            if leader_updates:
-                user.save(update_fields=leader_updates)
-            
-            advisors_data = _normalize_list(request.data.get("advisors", []))
-            members_data = _normalize_list(request.data.get("members", []))
-            expected_results_data = request.data.get("expected_results_data")
-            if expected_results_data is not None:
-                data["expected_results_data"] = json.dumps(
-                    _normalize_list(expected_results_data)
+                serializer = ProjectSerializer(
+                    project,
+                    data=data,
+                    partial=True,
+                    context={"request": request, "is_draft": is_draft},
                 )
+                if not serializer.is_valid():
+                    return Response(
+                        {
+                            "code": 400,
+                            "message": "数据验证失败",
+                            "errors": serializer.errors,
+                        },
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
 
-            ok, msg = _validate_limits(
-                user, advisors_data, members_data, project, batch=current_batch
-            )
-            if not ok:
-                return Response(
-                    {"code": 400, "message": msg},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+                project = serializer.save()
 
-            # Use partial update to respect existing fields if not provided
-            serializer = ProjectSerializer(
-                project,
-                data=data,
-                partial=True,
-                context={"request": request, "is_draft": is_draft},
-            )
-            if not serializer.is_valid():
-                print("Update Serializer Errors:", serializer.errors)
+                if current_batch and not project.batch:
+                    project.batch = current_batch
+                if project.batch:
+                    project.year = project.batch.year
+
+                if not is_draft:
+                    project.submitted_at = timezone.now()
+                    if not project.project_no:
+                        project.project_no = _generate_project_no(
+                            project.year or timezone.now().year, user.college
+                        )
+                project.save()
+
+                if (
+                    not is_draft
+                    and not Review.objects.filter(
+                        project=project,
+                        review_type=Review.ReviewType.APPLICATION,
+                        review_level=Review.ReviewLevel.TEACHER,
+                        status=Review.ReviewStatus.PENDING,
+                    ).exists()
+                ):
+                    current_phase = ProjectPhaseService.get_current(
+                        project, ProjectPhaseInstance.Phase.APPLICATION
+                    )
+                    if (
+                        current_phase
+                        and current_phase.state == ProjectPhaseInstance.State.RETURNED
+                    ):
+                        ProjectPhaseService.start_new_attempt(
+                            project,
+                            ProjectPhaseInstance.Phase.APPLICATION,
+                            created_by=request.user,
+                            step="TEACHER_REVIEWING",
+                        )
+                    ReviewService.create_teacher_review(project)
+
+                project.advisors.all().delete()
+                for idx, advisor_data in enumerate(advisors_data or []):
+                    advisor_user_id = (
+                        advisor_data.get("user")
+                        or advisor_data.get("user_id")
+                        or advisor_data.get("id")
+                    )
+                    job_number = advisor_data.get("job_number") or advisor_data.get(
+                        "employee_id"
+                    )
+                    name = advisor_data.get("name")
+                    contact = advisor_data.get("contact")
+                    email = advisor_data.get("email")
+                    title = advisor_data.get("title")
+
+                    if not advisor_user_id:
+                        advisor_user_id = _get_or_create_user_by_identity(
+                            employee_id=job_number,
+                            name=name,
+                            role=None,
+                            phone=contact,
+                            email=email,
+                            department=title,
+                        )
+
+                    if advisor_user_id:
+                        ProjectAdvisor.objects.create(
+                            project=project, user_id=advisor_user_id, order=idx
+                        )
+
+                ProjectMember.objects.filter(project=project).exclude(
+                    role=ProjectMember.MemberRole.LEADER
+                ).delete()
+
+                for member_data in members_data or []:
+                    member_user_id = (
+                        member_data.get("user")
+                        or member_data.get("user_id")
+                        or member_data.get("id")
+                    )
+                    student_id = member_data.get("student_id")
+                    name = member_data.get("name")
+                    if not member_user_id:
+                        member_user_id = _get_or_create_user_by_identity(
+                            employee_id=student_id, name=name, role=None
+                        )
+
+                    if not member_user_id or str(member_user_id) == str(user.id):
+                        continue
+
+                    ProjectMember.objects.get_or_create(
+                        project=project,
+                        user_id=member_user_id,
+                        defaults={
+                            "role": ProjectMember.MemberRole.MEMBER,
+                            "contribution": member_data.get("contribution", ""),
+                        },
+                    )
+
                 return Response(
                     {
-                        "code": 400,
-                        "message": "数据验证失败",
-                        "errors": serializer.errors,
+                        "code": 200,
+                        "message": "保存成功" if is_draft else "提交成功",
+                        "data": ProjectSerializer(project).data,
                     },
-                    status=status.HTTP_400_BAD_REQUEST,
+                    status=status.HTTP_200_OK,
                 )
+        except Exception as e:
+            return Response(
+                {"code": 500, "message": f"操作失败: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
-            project = serializer.save()
+    @action(detail=True, methods=["post"], url_path="withdraw")
+    def withdraw(self, request, pk=None):
+        user = request.user
 
-            if current_batch and not project.batch:
-                project.batch = current_batch
-            if project.batch:
-                project.year = project.batch.year
+        try:
+            project = Project.objects.get(pk=pk, leader=user)
+        except Project.DoesNotExist:
+            return Response(
+                {"code": 404, "message": "项目不存在或无权限访问"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
-            if not is_draft:
-                project.submitted_at = timezone.now()
-                if not project.project_no:
-                    project.project_no = _generate_project_no(
-                        project.year or timezone.now().year, user.college
-                    )
-            project.save()
-            # 创建导师审核记录（避免重复）
-            if not is_draft and not Review.objects.filter(
+        if project.status not in [
+            Project.ProjectStatus.SUBMITTED,
+            Project.ProjectStatus.TEACHER_AUDITING,
+        ]:
+            return Response(
+                {"code": 400, "message": "当前状态不允许撤回"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        with transaction.atomic():
+            Review.objects.filter(
                 project=project,
                 review_type=Review.ReviewType.APPLICATION,
-                review_level=Review.ReviewLevel.TEACHER,
                 status=Review.ReviewStatus.PENDING,
-            ).exists():
-                current_phase = ProjectPhaseService.get_current(
-                    project, ProjectPhaseInstance.Phase.APPLICATION
-                )
-                if current_phase and current_phase.state == ProjectPhaseInstance.State.RETURNED:
-                    ProjectPhaseService.start_new_attempt(
-                        project,
-                        ProjectPhaseInstance.Phase.APPLICATION,
-                        created_by=request.user,
-                        step="TEACHER_REVIEWING",
-                    )
-                ReviewService.create_teacher_review(project)
-
-            # 更新指导教师（先删除旧的）
-            project.advisors.all().delete()
-            advisors_data = advisors_data or []
-            for idx, advisor_data in enumerate(advisors_data):
-                # Try to get user_id directly or by employee_id/name
-                user_id = advisor_data.get("user") or advisor_data.get("user_id") or advisor_data.get("id")
-                job_number = advisor_data.get("job_number") or advisor_data.get("employee_id")
-                name = advisor_data.get("name")
-                contact = advisor_data.get("contact")
-                email = advisor_data.get("email")
-                title = advisor_data.get("title")
-                
-                if not user_id:
-                    user_id = _get_or_create_user_by_identity(
-                        employee_id=job_number,
-                        name=name,
-                        role=None,
-                        phone=contact,
-                        email=email,
-                        department=title,
-                    )
-
-                if user_id:
-                     ProjectAdvisor.objects.create(
-                        project=project,
-                        user_id=user_id,
-                        order=idx,
-                     )
-
-            # 更新项目成员（保留负责人，重建其余成员）
-            ProjectMember.objects.filter(project=project).exclude(
-                role=ProjectMember.MemberRole.LEADER
             ).delete()
 
-            members_data = members_data or []
-            for member_data in members_data:
-                user_id = (
-                    member_data.get("user")
-                    or member_data.get("user_id")
-                    or member_data.get("id")
-                )
-                student_id = member_data.get("student_id")
-                name = member_data.get("name")
-                if not user_id:
-                    user_id = _get_or_create_user_by_identity(
-                        employee_id=student_id,
-                        name=name,
-                        role=None,
-                    )
+            project.status = Project.ProjectStatus.DRAFT
+            project.submitted_at = None
+            project.save(update_fields=["status", "submitted_at", "updated_at"])
 
-                if not user_id or str(user_id) == str(user.id):
-                    continue  # Skip invalid entries or duplicate leader
+        return Response({"code": 200, "message": "撤回成功"})
 
-                ProjectMember.objects.get_or_create(
-                    project=project,
-                    user_id=user_id,
-                    defaults={
-                        "role": ProjectMember.MemberRole.MEMBER,
-                        "contribution": member_data.get("contribution", ""),
-                    },
-                )
-
-            return Response(
-                {
-                    "code": 200,
-                    "message": "保存成功" if is_draft else "提交成功",
-                    "data": ProjectSerializer(project).data,
-                },
-                status=status.HTTP_200_OK,
-            )
-
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return Response(
-            {"code": 500, "message": f"操作失败: {str(e)}"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
-
-
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def get_my_projects(request):
-    """
-    获取我的项目列表（支持分页和筛选）
-    """
-    user = request.user
-
-    # 获取筛选参数
-    title = request.query_params.get("title")
-    level = request.query_params.get("level")
-    category = request.query_params.get("category")
-    status_filter = request.query_params.get("status")
-
-    # 获取分页参数
-    page = int(request.query_params.get("page", 1))
-    page_size = int(request.query_params.get("page_size", 10))
-
-    # 构建查询
-    projects = Project.objects.filter(leader=user)
-
-    # 应用筛选
-    if title:
-        projects = projects.filter(title__icontains=title)
-    if level:
-        projects = projects.filter(level=level)
-    if category:
-        projects = projects.filter(category=category)
-    if status_filter:
-        projects = projects.filter(status=status_filter)
-
-    # 排序
-    projects = projects.order_by("-created_at")
-
-    # 总数
-    total = projects.count()
-
-    # 分页
-    start = (page - 1) * page_size
-    end = start + page_size
-    projects = projects[start:end]
-
-    # 序列化
-    serializer = ProjectSerializer(projects, many=True)
-
-    return Response(
-        {
-            "code": 200,
-            "message": "获取成功",
-            "data": serializer.data,
-            "total": total,
-            "page": page,
-            "page_size": page_size,
-        },
-        status=status.HTTP_200_OK,
-    )
-
-
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def withdraw_project_application(request, pk):
-    """
-    撤回项目申报（仅负责人、仅限已提交状态）
-    """
-    user = request.user
-
-    try:
-        project = Project.objects.get(pk=pk, leader=user)
-    except Project.DoesNotExist:
-        return Response(
-            {"code": 404, "message": "项目不存在或无权限访问"},
-            status=status.HTTP_404_NOT_FOUND,
-        )
-
-    if project.status not in [
-        Project.ProjectStatus.SUBMITTED,
-        Project.ProjectStatus.TEACHER_AUDITING,
-    ]:
-        return Response(
-            {"code": 400, "message": "当前状态不允许撤回"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    from apps.reviews.models import Review
-
-    with transaction.atomic():
-        # 删除未处理的申报审核记录
-        Review.objects.filter(
-            project=project,
-            review_type=Review.ReviewType.APPLICATION,
-            status=Review.ReviewStatus.PENDING,
-        ).delete()
-
-        project.status = Project.ProjectStatus.DRAFT
-        project.submitted_at = None
-        project.save(update_fields=["status", "submitted_at", "updated_at"])
-
-    return Response({"code": 200, "message": "撤回成功"})
-
-
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def get_my_drafts(request):
-    """
-    获取我的草稿箱（支持分页和筛选）
-    """
-    user = request.user
-
-    # 获取筛选参数
-    title = request.query_params.get("title")
-
-    # 获取分页参数
-    page = int(request.query_params.get("page", 1))
-    page_size = int(request.query_params.get("page_size", 10))
-
-    # 构建查询
-    drafts = Project.objects.filter(leader=user, status=Project.ProjectStatus.DRAFT)
-
-    # 应用筛选
-    if title:
-        drafts = drafts.filter(title__icontains=title)
-
-    # 排序
-    drafts = drafts.order_by("-updated_at")
-
-    # 总数
-    total = drafts.count()
-
-    # 分页
-    start = (page - 1) * page_size
-    end = start + page_size
-    drafts = drafts[start:end]
-
-    # 序列化
-    serializer = ProjectSerializer(drafts, many=True)
-
-    return Response(
-        {
-            "code": 200,
-            "message": "获取成功",
-            "data": serializer.data,
-            "total": total,
-            "page": page,
-            "page_size": page_size,
-        },
-        status=status.HTTP_200_OK,
-    )
