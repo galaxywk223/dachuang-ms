@@ -4,7 +4,7 @@ set -euo pipefail
 # Start the Django backend on 0.0.0.0:8000, creating the venv and installing
 # dependencies if they are missing.
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 BACKEND_DIR="$ROOT_DIR/backend"
 VENV_DIR="$BACKEND_DIR/venv"
 
