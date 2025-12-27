@@ -47,22 +47,38 @@
           <template #header>
             <span class="title">历史项目导入</span>
           </template>
-          <div class="tool-row">
-            <el-upload
-              ref="uploadRef"
-              :auto-upload="false"
-              :on-change="handleFileChange"
-              :on-remove="handleFileRemove"
-              :limit="1"
-              accept=".xlsx"
-            >
-              <el-button type="primary">选择Excel文件</el-button>
-              <template #tip>
-                <div class="el-upload__tip">仅支持xlsx格式</div>
-              </template>
-            </el-upload>
-            <el-button type="success" :loading="importing" @click="submitImport">开始导入</el-button>
-          </div>
+            <div class="import-container">
+              <div class="import-actions">
+                <el-upload
+                  ref="uploadRef"
+                  class="upload-demo"
+                  :auto-upload="false"
+                  :on-change="handleFileChange"
+                  :on-remove="handleFileRemove"
+                  :limit="1"
+                  :show-file-list="true"
+                  accept=".xlsx"
+                >
+                  <template #trigger>
+                    <el-button type="primary" plain>选择Excel文件</el-button>
+                  </template>
+                  <el-button 
+                    class="ml-3" 
+                    type="success" 
+                    :loading="importing" 
+                    :disabled="!importFile"
+                    @click="submitImport"
+                  >
+                    开始导入
+                  </el-button>
+                  <template #tip>
+                    <div class="el-upload__tip text-gray-400">
+                      仅支持 .xlsx 格式文件，请确保表头格式正确
+                    </div>
+                  </template>
+                </el-upload>
+              </div>
+            </div>
           <el-alert v-if="importResult" :title="importResult" type="info" show-icon class="mt-2" />
           <el-table v-if="importErrors.length > 0" :data="importErrorRows" border stripe class="mt-2">
             <el-table-column prop="message" label="导入错误提示" />
@@ -411,6 +427,26 @@ onMounted(() => {
     margin-top: 12px;
 }
 
+.import-container {
+  padding: 10px 0;
+}
+
+.import-actions {
+  display: flex;
+  align-items: flex-start;
+}
+
+.upload-demo {
+  :deep(.el-upload) {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 12px;
+  }
+  :deep(.el-upload-list) {
+    margin-top: 8px;
+  }
+}
+
 .tool-row {
     display: flex;
     align-items: center;
@@ -421,6 +457,9 @@ onMounted(() => {
     display: flex;
     gap: 12px;
 }
+
+.ml-3 { margin-left: 12px; }
+.text-gray-400 { color: #94a3b8; font-size: 13px; margin-top: 4px; }
 
 .mt-2 { margin-top: 8px; }
 .mb-4 { margin-bottom: 16px; }
