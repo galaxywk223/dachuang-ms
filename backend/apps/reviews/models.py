@@ -40,6 +40,14 @@ class Review(models.Model):
         related_name="reviews",
         verbose_name="项目",
     )
+    phase_instance = models.ForeignKey(
+        "projects.ProjectPhaseInstance",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="reviews",
+        verbose_name="关联阶段轮次",
+    )
     review_type = models.CharField(
         max_length=20, choices=ReviewType.choices, verbose_name="审核类型"
     )

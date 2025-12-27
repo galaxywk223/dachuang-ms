@@ -70,10 +70,10 @@
       </el-descriptions>
 
       <el-form ref="formRef" :model="form" :rules="rules" label-width="100px" v-if="!isViewMode">
-        <el-form-item label="分数" prop="score">
+        <el-form-item label="分数" prop="score" v-if="needsScore">
            <el-input-number v-model="form.score" :min="0" :max="100" />
         </el-form-item>
-        <el-form-item label="评审意见" prop="comments">
+        <el-form-item :label="isMidTerm ? '审核意见' : '评审意见'" prop="comments">
            <el-input 
               v-model="form.comments" 
               type="textarea" 
@@ -81,7 +81,7 @@
               placeholder="请输入评审意见"
            />
         </el-form-item>
-         <el-form-item label="评审结果" prop="action">
+         <el-form-item label="审核结果" prop="action" v-if="isMidTerm">
              <el-radio-group v-model="form.action">
                  <el-radio label="approve">通过</el-radio>
                  <el-radio label="reject">不通过</el-radio>
@@ -90,9 +90,9 @@
       </el-form>
       
       <div v-else>
-          <p><strong>分数:</strong> {{ currentReview?.score }}</p>
+          <p v-if="currentReview?.review_type !== 'MID_TERM'"><strong>分数:</strong> {{ currentReview?.score }}</p>
           <p><strong>意见:</strong> {{ currentReview?.comments }}</p>
-          <p><strong>结果:</strong> {{ currentReview?.status_display }}</p>
+          <p><strong>状态:</strong> {{ currentReview?.status_display }}</p>
       </div>
 
       <template #footer>
@@ -107,13 +107,13 @@
 
     <el-dialog v-model="batchDialogVisible" title="批量评审" width="520px" @close="resetBatchForm">
       <el-form ref="batchFormRef" :model="batchForm" label-width="100px">
-        <el-form-item label="评审结果">
+        <el-form-item label="审核结果" v-if="isBatchMidTerm">
           <el-radio-group v-model="batchForm.action">
             <el-radio label="approve">通过</el-radio>
             <el-radio label="reject">不通过</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="分数">
+        <el-form-item label="分数" v-if="!isBatchMidTerm">
           <el-input-number v-model="batchForm.score" :min="0" :max="100" />
         </el-form-item>
         <el-form-item label="评审意见">
@@ -163,10 +163,33 @@ const form = reactive({
     action: "approve"
 });
 
+const isMidTerm = computed(() => currentReview.value?.review_type === "MID_TERM");
+const needsScore = computed(() => currentReview.value?.review_type !== "MID_TERM");
+
 const rules = reactive<FormRules>({
-    score: [{ required: true, message: "请输入分数", trigger: "blur" }],
+    score: [
+      {
+        validator: (_rule: any, value: any, callback: any) => {
+          if (!needsScore.value) return callback();
+          if (value === null || value === undefined || value === "") {
+            return callback(new Error("请输入分数"));
+          }
+          return callback();
+        },
+        trigger: "blur",
+      },
+    ],
     comments: [{ required: true, message: "请输入评审意见", trigger: "blur" }],
-    action: [{ required: true, message: "请选择结果", trigger: "change" }],
+    action: [
+      {
+        validator: (_rule: any, value: any, callback: any) => {
+          if (!isMidTerm.value) return callback();
+          if (!value) return callback(new Error("请选择结果"));
+          return callback();
+        },
+        trigger: "change",
+      },
+    ],
 });
 
 const { loadDictionaries, getOptions } = useDictionary();
@@ -193,6 +216,11 @@ const fetchToken = ref(0);
 const isBatchClosure = computed(() => {
   if (selectedRows.value.length === 0) return false;
   return selectedRows.value.every((row) => row.review_type === "CLOSURE");
+});
+
+const isBatchMidTerm = computed(() => {
+  if (selectedRows.value.length === 0) return false;
+  return selectedRows.value.every((row) => row.review_type === "MID_TERM");
 });
 
 const fetchReviews = async () => {
@@ -265,7 +293,16 @@ const handleSubmit = async () => {
                   dialogMode.value === "edit"
                     ? `/reviews/${currentReview.value.id}/revise/`
                     : `/reviews/${currentReview.value.id}/review/`;
-                await request.post(endpoint, form);
+                const payload: any = {
+                  comments: form.comments,
+                };
+                if (currentReview.value?.review_type === "MID_TERM") {
+                  payload.action = form.action;
+                } else {
+                  payload.action = "approve";
+                  payload.score = form.score;
+                }
+                await request.post(endpoint, payload);
                 ElMessage.success(dialogMode.value === "edit" ? "评审已更新" : "评审提交成功");
                 dialogVisible.value = false;
                 if (dialogMode.value === "review") {
@@ -309,10 +346,10 @@ const submitBatchReview = async () => {
   try {
     const payload: any = {
       review_ids: selectedRows.value.map((row) => row.id),
-      action: batchForm.action,
+      action: isBatchMidTerm.value ? batchForm.action : "approve",
       comments: batchForm.comments,
     };
-    if (batchForm.score !== null && batchForm.score !== undefined) {
+    if (!isBatchMidTerm.value && batchForm.score !== null && batchForm.score !== undefined) {
       payload.score = batchForm.score;
     }
     if (isBatchClosure.value && batchForm.closure_rating) {

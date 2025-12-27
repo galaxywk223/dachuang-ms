@@ -43,10 +43,13 @@
          <el-select v-model="statusFilter" placeholder="项目状态" class="ml-2" @change="fetchProjects" clearable>
              <el-option label="待提交" value="DRAFT" />
              <el-option label="已提交" value="SUBMITTED" />
+             <el-option label="学院审核中" value="COLLEGE_AUDITING" />
+             <el-option label="校级审核中" value="LEVEL1_AUDITING" />
              <el-option label="进行中" value="IN_PROGRESS" />
              <el-option label="中期审核中" value="MID_TERM_REVIEWING" />
              <el-option label="中期已提交" value="MID_TERM_SUBMITTED" />
              <el-option label="结题二级审核中" value="CLOSURE_LEVEL2_REVIEWING" />
+             <el-option label="结题一级审核中" value="CLOSURE_LEVEL1_REVIEWING" />
          </el-select>
       </div>
 
@@ -117,11 +120,14 @@ const statusFilter = ref("");
 const selectedGroup = ref<number | null>(null);
 const reviewType = ref("APPLICATION");
 const selectedProjects = ref<any[]>([]);
-const defaultStatusByReviewType: Record<string, string> = {
-    APPLICATION: "COLLEGE_AUDITING",
-    MID_TERM: "MID_TERM_REVIEWING",
-    CLOSURE: "CLOSURE_LEVEL2_REVIEWING",
-};
+const defaultStatusByReviewType = computed<Record<string, string>>(() => {
+    const isSchoolScope = assignedReviewLevel.value === "LEVEL1";
+    return {
+        APPLICATION: isSchoolScope ? "LEVEL1_AUDITING" : "COLLEGE_AUDITING",
+        MID_TERM: "MID_TERM_REVIEWING",
+        CLOSURE: isSchoolScope ? "CLOSURE_LEVEL1_REVIEWING" : "CLOSURE_LEVEL2_REVIEWING",
+    };
+});
 
 const resolveList = (payload: any) => {
     if (Array.isArray(payload)) return payload;
@@ -146,44 +152,21 @@ const fetchProjects = async () => {
             page: currentPage.value,
             page_size: pageSize.value,
             search: searchQuery.value,
-            review_type: reviewType.value,
-            review_level: assignedReviewLevel.value,
-            status: "PENDING",
-            reviewer_isnull: "true",
+            exclude_assigned_review_type: reviewType.value,
+            exclude_assigned_review_level: assignedReviewLevel.value,
         };
         if (statusFilter.value) {
-            params["project__status"] = statusFilter.value;
-        } else if (defaultStatusByReviewType[reviewType.value]) {
-            params["project__status"] = defaultStatusByReviewType[reviewType.value];
+            params["status"] = statusFilter.value;
+        } else if (defaultStatusByReviewType.value[reviewType.value]) {
+            params["status"] = defaultStatusByReviewType.value[reviewType.value];
         }
 
-        const reviewRes: any = await request.get('/reviews/', { params });
-        const records = resolveList(reviewRes);
-        const rows = (records || []).map((item: any) => {
-            const projectInfo = item.project_info || {};
-            return {
-                ...projectInfo,
-                review_id: item.id,
-                review_type: item.review_type,
-                review_level: item.review_level,
-            };
-        });
-        const assignedRes: any = await request.get('/reviews/', {
-            params: {
-                review_type: reviewType.value,
-                review_level: assignedReviewLevel.value,
-                reviewer_isnull: "false",
-            },
-        });
-        const assignedRecords = resolveList(assignedRes) || [];
-        const assignedProjectIds = new Set(
-            assignedRecords.map((item: any) => item.project)
-        );
-        const filteredRows = (rows || []).filter(
-            (row: any) => !assignedProjectIds.has(row.id)
-        );
-        projects.value = filteredRows;
-        total.value = filteredRows.length;
+        const projectRes: any = await request.get('/projects/', { params });
+        const data = projectRes?.data ?? projectRes;
+        const rows = data?.results || data?.data?.results || data?.data || [];
+        const count = data?.count ?? data?.data?.count ?? rows.length;
+        projects.value = rows;
+        total.value = count;
     } catch (e) {
         console.error(e);
         ElMessage.error("获取项目失败");
@@ -193,7 +176,7 @@ const fetchProjects = async () => {
 };
 
 const handleReviewTypeChange = () => {
-    statusFilter.value = defaultStatusByReviewType[reviewType.value] || "";
+    statusFilter.value = defaultStatusByReviewType.value[reviewType.value] || "";
     selectedProjects.value = [];
     currentPage.value = 1;
     fetchProjects();
@@ -232,6 +215,7 @@ const handleAssign = () => {
 
 onMounted(() => {
     fetchGroups();
+    statusFilter.value = defaultStatusByReviewType.value[reviewType.value] || "";
     fetchProjects();
 });
 

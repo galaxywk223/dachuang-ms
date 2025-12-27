@@ -11,6 +11,8 @@ from django.utils import timezone
 
 from ..models import Project, ProjectAdvisor, ProjectMember
 from ..services import ProjectService
+from ..models import ProjectPhaseInstance
+from ..services.phase_service import ProjectPhaseService
 from apps.reviews.models import Review
 from apps.reviews.services import ReviewService
 from ..serializers import ProjectSerializer
@@ -319,6 +321,16 @@ def create_project_application(request):
                 review_level=Review.ReviewLevel.TEACHER,
                 status=Review.ReviewStatus.PENDING,
             ).exists():
+                current_phase = ProjectPhaseService.get_current(
+                    project, ProjectPhaseInstance.Phase.APPLICATION
+                )
+                if current_phase and current_phase.state == ProjectPhaseInstance.State.RETURNED:
+                    ProjectPhaseService.start_new_attempt(
+                        project,
+                        ProjectPhaseInstance.Phase.APPLICATION,
+                        created_by=request.user,
+                        step="TEACHER_REVIEWING",
+                    )
                 ReviewService.create_teacher_review(project)
 
             # 添加指导教师
@@ -423,9 +435,10 @@ def update_project_application(request, pk):
     if project.status not in [
         Project.ProjectStatus.DRAFT,
         Project.ProjectStatus.TEACHER_REJECTED,
+        Project.ProjectStatus.APPLICATION_RETURNED,
     ]:
         return Response(
-            {"code": 400, "message": "只能编辑草稿或导师退回的项目"},
+            {"code": 400, "message": "只能编辑草稿或退回修改的项目"},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -518,6 +531,16 @@ def update_project_application(request, pk):
                 review_level=Review.ReviewLevel.TEACHER,
                 status=Review.ReviewStatus.PENDING,
             ).exists():
+                current_phase = ProjectPhaseService.get_current(
+                    project, ProjectPhaseInstance.Phase.APPLICATION
+                )
+                if current_phase and current_phase.state == ProjectPhaseInstance.State.RETURNED:
+                    ProjectPhaseService.start_new_attempt(
+                        project,
+                        ProjectPhaseInstance.Phase.APPLICATION,
+                        created_by=request.user,
+                        step="TEACHER_REVIEWING",
+                    )
                 ReviewService.create_teacher_review(project)
 
             # 更新指导教师（先删除旧的）

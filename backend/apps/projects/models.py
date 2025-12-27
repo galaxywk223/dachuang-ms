@@ -21,6 +21,7 @@ class Project(models.Model):
         TEACHER_REJECTED = "TEACHER_REJECTED", "导师审核不通过"
         COLLEGE_AUDITING = "COLLEGE_AUDITING", "学院审核中" # Level 2
         LEVEL1_AUDITING = "LEVEL1_AUDITING", "校级审核中"
+        APPLICATION_RETURNED = "APPLICATION_RETURNED", "立项退回修改"
         # Original IN_PROGRESS was likely used for "Approved and running".
         # Let's keep IN_PROGRESS for "Established".
         
@@ -30,6 +31,7 @@ class Project(models.Model):
         MID_TERM_REVIEWING = "MID_TERM_REVIEWING", "中期审核中"
         MID_TERM_APPROVED = "MID_TERM_APPROVED", "中期审核通过"
         MID_TERM_REJECTED = "MID_TERM_REJECTED", "中期审核不通过"
+        MID_TERM_RETURNED = "MID_TERM_RETURNED", "中期退回修改"
         CLOSURE_DRAFT = "CLOSURE_DRAFT", "结题草稿"
         CLOSURE_SUBMITTED = "CLOSURE_SUBMITTED", "结题已提交"
         CLOSURE_LEVEL2_REVIEWING = "CLOSURE_LEVEL2_REVIEWING", "结题二级审核中"
@@ -38,6 +40,7 @@ class Project(models.Model):
         CLOSURE_LEVEL1_REVIEWING = "CLOSURE_LEVEL1_REVIEWING", "结题一级审核中"
         CLOSURE_LEVEL1_APPROVED = "CLOSURE_LEVEL1_APPROVED", "结题一级审核通过"
         CLOSURE_LEVEL1_REJECTED = "CLOSURE_LEVEL1_REJECTED", "结题一级审核不通过"
+        CLOSURE_RETURNED = "CLOSURE_RETURNED", "结题退回修改"
         COMPLETED = "COMPLETED", "已完成"
         CLOSED = "CLOSED", "已结题"
         TERMINATED = "TERMINATED", "已终止"
@@ -268,6 +271,76 @@ class ProjectMember(models.Model):
 
     def __str__(self):
         return f"{self.project.title} - {self.user.real_name}"
+
+
+class ProjectPhaseInstance(models.Model):
+    """
+    项目阶段实例（支持同一阶段多轮 attempt）
+    """
+
+    class Phase(models.TextChoices):
+        APPLICATION = "APPLICATION", "立项"
+        MID_TERM = "MID_TERM", "中期"
+        CLOSURE = "CLOSURE", "结题"
+
+    class State(models.TextChoices):
+        IN_PROGRESS = "IN_PROGRESS", "进行中"
+        RETURNED = "RETURNED", "已退回"
+        COMPLETED = "COMPLETED", "已完成"
+
+    class ReturnTo(models.TextChoices):
+        STUDENT = "STUDENT", "退回学生"
+        TEACHER = "TEACHER", "退回导师"
+
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name="phase_instances",
+        verbose_name="项目",
+    )
+    phase = models.CharField(
+        max_length=20, choices=Phase.choices, verbose_name="阶段"
+    )
+    attempt_no = models.PositiveIntegerField(default=1, verbose_name="轮次")
+    step = models.CharField(max_length=50, default="", verbose_name="当前环节")
+    state = models.CharField(
+        max_length=20, choices=State.choices, default=State.IN_PROGRESS, verbose_name="状态"
+    )
+    return_to = models.CharField(
+        max_length=20,
+        choices=ReturnTo.choices,
+        blank=True,
+        default="",
+        verbose_name="退回对象",
+    )
+    returned_reason = models.TextField(blank=True, default="", verbose_name="退回原因")
+    returned_at = models.DateTimeField(null=True, blank=True, verbose_name="退回时间")
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_phase_instances",
+        verbose_name="创建人",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+
+    class Meta:
+        db_table = "project_phase_instances"
+        verbose_name = "项目阶段实例"
+        verbose_name_plural = verbose_name
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "phase", "attempt_no"],
+                name="uniq_project_phase_attempt",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.project.project_no} {self.phase}#{self.attempt_no} {self.step}({self.state})"
 
 
 class ProjectProgress(models.Model):

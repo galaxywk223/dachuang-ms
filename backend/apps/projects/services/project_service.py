@@ -157,6 +157,7 @@ class ProjectService:
             Project.ProjectStatus.IN_PROGRESS,
             Project.ProjectStatus.CLOSURE_LEVEL2_REJECTED,
             Project.ProjectStatus.CLOSURE_LEVEL1_REJECTED,
+            Project.ProjectStatus.CLOSURE_RETURNED,
         ]:
             raise ValueError("当前项目状态无法申请结题")
 
@@ -244,6 +245,7 @@ class ProjectService:
             Project.ProjectStatus.IN_PROGRESS,
             Project.ProjectStatus.MID_TERM_DRAFT,
             Project.ProjectStatus.MID_TERM_REJECTED,
+            Project.ProjectStatus.MID_TERM_RETURNED,
         }
         if project.status not in allowed_statuses:
             raise ValueError("当前项目状态不允许提交中期检查")
