@@ -373,4 +373,4 @@ const {
 void formRef;
 </script>
 
-<style scoped lang="scss" src="./ProjectDetail.scss"></style>
+<style scoped lang="scss" src="./Detail.scss"></style>

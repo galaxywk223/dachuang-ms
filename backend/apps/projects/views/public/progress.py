@@ -5,8 +5,8 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
-from ..models import ProjectProgress
-from ..serializers import ProjectProgressSerializer
+from ...models import ProjectProgress
+from ...serializers import ProjectProgressSerializer
 
 class ProjectProgressViewSet(viewsets.ReadOnlyModelViewSet):
     """

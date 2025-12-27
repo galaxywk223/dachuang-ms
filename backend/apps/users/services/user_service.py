@@ -1,5 +1,5 @@
 """
-用户业务逻辑
+用户服务
 """
 
 from django.contrib.auth.hashers import check_password, make_password
@@ -7,9 +7,9 @@ from ..repositories.user_repository import UserRepository
 from ..serializers import UserSerializer, ChangePasswordSerializer
 
 
-class UserBusiness:
+class UserService:
     """
-    用户业务逻辑类
+    用户服务类
     """
 
     def __init__(self):

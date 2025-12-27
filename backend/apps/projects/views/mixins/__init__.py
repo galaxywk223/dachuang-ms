@@ -3,7 +3,7 @@
 from .project_achievements_mixin import ProjectAchievementsMixin
 from .project_closure_mixin import ProjectClosureMixin
 from .project_core_actions_mixin import ProjectCoreActionsMixin
-from .project_export_mixin import ProjectExportMixin
+from .project_level2_export_mixin import ProjectLevel2ExportMixin
 from .project_members_mixin import ProjectMembersMixin
 from .project_midterm_mixin import ProjectMidtermMixin
 from .project_progress_mixin import ProjectProgressMixin
@@ -15,7 +15,7 @@ __all__ = [
     "ProjectAchievementsMixin",
     "ProjectClosureMixin",
     "ProjectCoreActionsMixin",
-    "ProjectExportMixin",
+    "ProjectLevel2ExportMixin",
     "ProjectMembersMixin",
     "ProjectMidtermMixin",
     "ProjectProgressMixin",

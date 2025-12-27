@@ -1,14 +1,15 @@
 """Projects view package exports."""
 
-from .project import ProjectViewSet
-from .progress import ProjectProgressViewSet
-from .achievement import ProjectAchievementViewSet
-from .expenditure import ProjectExpenditureViewSet
-from .review import ProjectReviewViewSet
-from .changes import ProjectChangeRequestViewSet
-from .application import ProjectApplicationViewSet
-from .closure import ProjectClosureViewSet
-from .admin import ProjectManagementViewSet, AchievementManagementViewSet
+from .public.project import ProjectViewSet
+from .public.progress import ProjectProgressViewSet
+from .public.achievement import ProjectAchievementViewSet
+from .public.expenditure import ProjectExpenditureViewSet
+from .public.review import ProjectReviewViewSet
+from .public.changes import ProjectChangeRequestViewSet
+from .public.application import ProjectApplicationViewSet
+from .public.closure import ProjectClosureViewSet
+from .admin.project import ProjectManagementViewSet
+from .admin.achievement import AchievementManagementViewSet
 
 __all__ = [
     "ProjectViewSet",

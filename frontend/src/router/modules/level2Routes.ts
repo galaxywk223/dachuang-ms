@@ -37,13 +37,13 @@ export const level2Routes: RouteRecordRaw[] = [
           {
             path: "groups",
             name: "admin-expert-groups",
-            component: () => import("@/views/admin/level2/expert/Groups.vue"),
+            component: () => import("@/views/admin/shared/expert/Groups.vue"),
             meta: { title: "院系专家组管理" },
           },
           {
             path: "assignment",
             name: "admin-expert-assignment",
-            component: () => import("@/views/admin/level2/expert/Assignment.vue"),
+            component: () => import("@/views/admin/shared/expert/Assignment.vue"),
             meta: { title: "院系评审分配" },
           },
         ],
@@ -69,7 +69,7 @@ export const level2Routes: RouteRecordRaw[] = [
       {
         path: "projects",
         name: "admin-projects",
-        component: () => import("@/views/admin/level2/Projects.vue"),
+        component: () => import("@/views/admin/level2/projects/Index.vue"),
         meta: { title: "项目管理" },
       },
       {

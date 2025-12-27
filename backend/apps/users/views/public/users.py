@@ -1,5 +1,5 @@
 """
-用户管理控制器
+用户视图
 """
 
 from rest_framework import viewsets, status
@@ -7,22 +7,22 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from ..serializers import UserSerializer, UserCreateSerializer
-from ..models import User
-from ..business.user_business import UserBusiness
-from ..repositories.login_log_repository import LoginLogRepository
+from ...serializers import UserSerializer, UserCreateSerializer
+from ...models import User
+from ...services.user_service import UserService
+from ...repositories.login_log_repository import LoginLogRepository
 
 
-class UserManagementController(viewsets.ModelViewSet):
+class UserViewSet(viewsets.ModelViewSet):
     """
-    用户管理控制器
+    用户视图集
     """
 
     permission_classes = [IsAuthenticated]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.user_business = UserBusiness()
+        self.user_service = UserService()
         self.login_log_repository = LoginLogRepository()
 
     def get_serializer_class(self):
@@ -63,7 +63,7 @@ class UserManagementController(viewsets.ModelViewSet):
             else:
                 return User.objects.none()
 
-        return self.user_business.get_user_list(filters)
+        return self.user_service.get_user_list(filters)
 
     @action(methods=["post"], detail=True)
     def reset_password(self, request, pk=None):
@@ -71,7 +71,7 @@ class UserManagementController(viewsets.ModelViewSet):
         重置用户密码
         """
         user = self.get_object()
-        success = self.user_business.reset_password(user)
+        success = self.user_service.reset_password(user)
 
         if success:
             return Response({"message": "密码重置成功"}, status=status.HTTP_200_OK)
@@ -86,7 +86,7 @@ class UserManagementController(viewsets.ModelViewSet):
         切换用户激活状态
         """
         user = self.get_object()
-        new_status = self.user_business.toggle_user_active(user)
+        new_status = self.user_service.toggle_user_active(user)
 
         return Response(
             {
@@ -150,7 +150,7 @@ class UserManagementController(viewsets.ModelViewSet):
                 expert_scope = expert_scope or User.ExpertScope.COLLEGE
                 if expert_scope == User.ExpertScope.SCHOOL:
                     default_college = ""
-            result = self.user_business.import_users(
+            result = self.user_service.import_users(
                 file,
                 role,
                 expert_scope=expert_scope,

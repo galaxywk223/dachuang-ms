@@ -7,9 +7,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 
-from ..models import Project, ProjectExpenditure
-from ..serializers import ProjectExpenditureSerializer
-from ..services import ProjectService
+from ...models import Project, ProjectExpenditure
+from ...serializers import ProjectExpenditureSerializer
+from ...services import ProjectService
 
 class ProjectExpenditureViewSet(viewsets.ModelViewSet):
     """
@@ -123,4 +123,3 @@ class ProjectExpenditureViewSet(viewsets.ModelViewSet):
                 project__leader__college=user.college
             )
         return ProjectExpenditure.objects.all()
-

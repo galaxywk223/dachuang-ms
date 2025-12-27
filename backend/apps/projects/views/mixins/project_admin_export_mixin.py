@@ -16,7 +16,7 @@ from ...models import Project
 from ...services import DocumentService
 
 
-class ProjectExportMixin:
+class ProjectAdminExportMixin:
     def _render_project_doc(self, project, title):
         advisors = []
         for advisor in project.advisors.all():

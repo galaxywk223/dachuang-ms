@@ -1,5 +1,5 @@
 """
-用户认证控制器
+用户认证视图
 """
 
 from rest_framework import viewsets, status
@@ -9,12 +9,12 @@ from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from ..serializers import LoginSerializer
-from ..business.auth_business import AuthBusiness
-from ..business.user_business import UserBusiness
+from ...serializers import LoginSerializer
+from ...services.auth_service import AuthService
+from ...services.user_service import UserService
 
 
-class AuthController(viewsets.GenericViewSet):
+class AuthViewSet(viewsets.GenericViewSet):
     """
     认证控制器
     """
@@ -24,8 +24,8 @@ class AuthController(viewsets.GenericViewSet):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.auth_business = AuthBusiness()
-        self.user_business = UserBusiness()
+        self.auth_service = AuthService()
+        self.user_service = UserService()
 
     @action(methods=["post"], detail=False)
     def login(self, request):
@@ -46,7 +46,7 @@ class AuthController(viewsets.GenericViewSet):
         user = serializer.validated_data["user"]
 
         # 通过业务层处理登录逻辑
-        token_data = self.auth_business.handle_login(
+        token_data = self.auth_service.handle_login(
             user=user,
             ip_address=self._get_client_ip(request),
             user_agent=request.META.get("HTTP_USER_AGENT", ""),
@@ -66,7 +66,7 @@ class AuthController(viewsets.GenericViewSet):
         """
         获取用户信息
         """
-        user_data = self.user_business.get_user_profile(request.user)
+        user_data = self.user_service.get_user_profile(request.user)
         return Response(
             {"code": 200, "message": "获取成功", "data": user_data},
             status=status.HTTP_200_OK,
@@ -77,7 +77,7 @@ class AuthController(viewsets.GenericViewSet):
         """
         更新用户信息
         """
-        updated_user = self.user_business.update_user_profile(
+        updated_user = self.user_service.update_user_profile(
             request.user, request.data
         )
         return Response(
@@ -90,7 +90,7 @@ class AuthController(viewsets.GenericViewSet):
         """
         修改密码
         """
-        result = self.user_business.change_password(
+        result = self.user_service.change_password(
             user=request.user,
             old_password=request.data.get("old_password"),
             new_password=request.data.get("new_password"),

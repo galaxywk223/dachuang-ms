@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from ...models import Project
 
 
-class ProjectExportMixin:
+class ProjectLevel2ExportMixin:
     @action(methods=["get"], detail=False, url_path="export-excel")
     def export_excel(self, request):
         """
@@ -163,4 +163,3 @@ class ProjectExportMixin:
             f'attachment; filename="attachments_{user.college}.zip"'
         )
         return response
-

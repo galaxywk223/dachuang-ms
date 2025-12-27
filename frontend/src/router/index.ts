@@ -7,6 +7,8 @@ import { useUserStore } from "@/stores/user";
 import { adminRoutes } from "./modules/adminRoutes";
 import { level2Routes } from "./modules/level2Routes";
 import { studentRoutes } from "./modules/studentRoutes";
+import { teacherRoutes } from "./modules/teacherRoutes";
+import { expertRoutes } from "./modules/expertRoutes";
 
 declare module "vue-router" {
   interface RouteMeta {
@@ -27,54 +29,8 @@ const routes: RouteRecordRaw[] = [
   ...adminRoutes,
   ...level2Routes,
   ...studentRoutes,
-  // 专家路由
-  {
-    path: "/expert",
-    component: () => import("@/layouts/AppLayout.vue"),
-    meta: { requiresAuth: true, role: "expert" },
-    children: [
-      {
-        path: "",
-        redirect: "/expert/reviews",
-      },
-      {
-        path: "reviews",
-        name: "expert-reviews",
-        component: () => import("@/views/expert/Reviews.vue"),
-        meta: { title: "评审任务" },
-      },
-    ],
-  },
-  // 指导教师路由
-  {
-    path: "/teacher",
-    component: () => import("@/layouts/AppLayout.vue"),
-    meta: { requiresAuth: true, role: "teacher" },
-    children: [
-      {
-        path: "",
-        redirect: "/teacher/dashboard",
-      },
-      {
-        path: "dashboard",
-        name: "teacher-dashboard",
-        component: () => import("@/views/teacher/Dashboard.vue"),
-        meta: { title: "指导项目" },
-      },
-      {
-        path: "change-reviews",
-        name: "teacher-change-reviews",
-        component: () => import("@/views/teacher/ChangeReviews.vue"),
-        meta: { title: "项目异动审核" },
-      },
-      {
-        path: "funds",
-        name: "teacher-funds",
-        component: () => import("@/views/admin/shared/Funds.vue"),
-        meta: { title: "经费管理" },
-      },
-    ],
-  },
+  ...expertRoutes,
+  ...teacherRoutes,
   {
     path: "/:pathMatch(.*)*",
     name: "not-found",

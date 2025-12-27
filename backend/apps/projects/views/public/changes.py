@@ -7,12 +7,12 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ..models import Project, ProjectChangeRequest, ProjectChangeReview
-from ..serializers import (
+from ...models import Project, ProjectChangeRequest, ProjectChangeReview
+from ...serializers import (
     ProjectChangeRequestSerializer,
     ProjectChangeReviewActionSerializer,
 )
-from ..services import ProjectChangeService
+from ...services import ProjectChangeService
 from apps.notifications.services import NotificationService
 
 

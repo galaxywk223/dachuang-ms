@@ -22,10 +22,10 @@ from apps.reviews.models import Review
 from apps.reviews.services import ReviewService
 from apps.system_settings.services import SystemSettingService
 
-from ..models import Project, ProjectAdvisor, ProjectMember, ProjectPhaseInstance
-from ..serializers import ProjectSerializer
-from ..services import ProjectService
-from ..services.phase_service import ProjectPhaseService
+from ...models import Project, ProjectAdvisor, ProjectMember, ProjectPhaseInstance
+from ...serializers import ProjectSerializer
+from ...services import ProjectService
+from ...services.phase_service import ProjectPhaseService
 
 
 def _generate_project_no(year, college_code=""):
@@ -635,4 +635,3 @@ class ProjectApplicationViewSet(viewsets.ViewSet):
             project.save(update_fields=["status", "submitted_at", "updated_at"])
 
         return Response({"code": 200, "message": "撤回成功"})
-

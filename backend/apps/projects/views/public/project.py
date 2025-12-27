@@ -6,18 +6,18 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from ..models import Project, ProjectMember
-from ..serializers import (
+from ...models import Project, ProjectMember
+from ...serializers import (
     ProjectSerializer,
     ProjectListSerializer,
 )
 from apps.projects.models import ProjectPhaseInstance
 
-from .mixins import (
+from ..mixins import (
     ProjectAchievementsMixin,
     ProjectClosureMixin,
     ProjectCoreActionsMixin,
-    ProjectExportMixin,
+    ProjectLevel2ExportMixin,
     ProjectMembersMixin,
     ProjectMidtermMixin,
     ProjectProgressMixin,
@@ -29,7 +29,7 @@ from .mixins import (
 
 class ProjectViewSet(
     ProjectWorkflowMixin,
-    ProjectExportMixin,
+    ProjectLevel2ExportMixin,
     ProjectCoreActionsMixin,
     ProjectMembersMixin,
     ProjectProgressMixin,

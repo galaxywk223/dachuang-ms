@@ -10,12 +10,12 @@ from rest_framework.response import Response
 
 from ...models import Project
 from ...serializers import ProjectSerializer
-from ..mixins.batch_mixin import ProjectBatchMixin
-from ..mixins.export_mixin import ProjectExportMixin
+from ..mixins.project_batch_mixin import ProjectBatchMixin
+from ..mixins.project_admin_export_mixin import ProjectAdminExportMixin
 
 
 class ProjectManagementViewSet(
-    ProjectExportMixin, ProjectBatchMixin, viewsets.ModelViewSet
+    ProjectAdminExportMixin, ProjectBatchMixin, viewsets.ModelViewSet
 ):
     """
     项目管理视图集（管理员）

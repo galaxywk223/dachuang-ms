@@ -1,5 +1,5 @@
 """
-认证业务逻辑
+认证服务
 """
 
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -7,9 +7,9 @@ from ..repositories.user_repository import UserRepository
 from ..repositories.login_log_repository import LoginLogRepository
 
 
-class AuthBusiness:
+class AuthService:
     """
-    认证业务逻辑类
+    认证服务类
     """
 
     def __init__(self):

@@ -656,4 +656,4 @@ onMounted(() => {
 });
 </script>
 
-<style scoped lang="scss" src="./Projects.scss"></style>
+<style scoped lang="scss" src="./Index.scss"></style>

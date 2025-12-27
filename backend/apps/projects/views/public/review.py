@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from apps.reviews.models import Review
 from apps.reviews.services import ReviewService
-from ..serializers import ProjectSerializer
+from ...serializers import ProjectSerializer
 from apps.system_settings.services import SystemSettingService
 from django.utils import timezone
 

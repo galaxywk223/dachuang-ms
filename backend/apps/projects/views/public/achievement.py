@@ -5,8 +5,8 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
-from ..models import ProjectAchievement
-from ..serializers import ProjectAchievementSerializer
+from ...models import ProjectAchievement
+from ...serializers import ProjectAchievementSerializer
 
 class ProjectAchievementViewSet(viewsets.ModelViewSet):
     """

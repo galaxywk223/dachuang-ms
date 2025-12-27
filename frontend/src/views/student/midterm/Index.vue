@@ -160,5 +160,5 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-@use "./List.scss";
+@use "./Index.scss";
 </style>

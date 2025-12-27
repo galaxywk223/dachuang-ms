@@ -45,7 +45,7 @@ export const studentRoutes: RouteRecordRaw[] = [
           {
             path: "list",
             name: "midterm-list",
-            component: () => import("@/views/student/midterm/List.vue"),
+            component: () => import("@/views/student/midterm/Index.vue"),
             meta: { title: "提交报告" },
           },
           {
@@ -65,7 +65,7 @@ export const studentRoutes: RouteRecordRaw[] = [
       {
         path: "funds",
         name: "student-funds",
-        component: () => import("@/views/student/funds/List.vue"),
+        component: () => import("@/views/student/funds/Index.vue"),
         meta: { title: "经费管理" },
       },
       {

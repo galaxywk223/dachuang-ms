@@ -25,8 +25,8 @@ from apps.reviews.models import Review
 from apps.reviews.services import ReviewService
 from apps.system_settings.services import SystemSettingService
 
-from ..models import Project, ProjectAchievement
-from ..serializers import ProjectSerializer, ProjectAchievementSerializer
+from ...models import Project, ProjectAchievement
+from ...serializers import ProjectSerializer, ProjectAchievementSerializer
 
 
 def _parse_json_payload(value, default):
@@ -570,4 +570,3 @@ class ProjectClosureViewSet(viewsets.ViewSet):
             {"code": 200, "message": "获取成功", "data": serializer.data},
             status=status.HTTP_200_OK,
         )
-

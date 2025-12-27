@@ -403,4 +403,4 @@ const handleBatchCommand = (command: string) => {
 };
 </script>
 
-<style scoped lang="scss" src="./AllProjects.scss"></style>
+<style scoped lang="scss" src="./Index.scss"></style>
