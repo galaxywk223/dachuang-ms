@@ -33,7 +33,7 @@
       </template>
       
       <!-- Filters -->
-      <div class="filter-container mb-4">
+      <div class="filter-container">
          <el-input v-model="searchQuery" placeholder="搜索项目名称/编号" style="width: 300px" clearable @clear="fetchProjects" @keyup.enter="fetchProjects">
              <template #append>
                 <el-button @click="fetchProjects"><el-icon><Search /></el-icon></el-button>
@@ -274,10 +274,15 @@ onMounted(() => {
     align-items: center;
 }
     
+.filter-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
 .mr-2 { margin-right: 10px; }
 .ml-2 { margin-left: 10px; }
 .mt-4 { margin-top: 16px; }
-.mb-4 { margin-bottom: 16px; }
     
 .pagination-container {
     display: flex;

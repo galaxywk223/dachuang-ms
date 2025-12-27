@@ -12,7 +12,7 @@
         </div>
       </template>
       
-      <el-tabs v-model="activeTab" @tab-click="fetchReviews">
+      <el-tabs v-model="activeTab">
         <el-tab-pane label="待评审" name="pending"></el-tab-pane>
         <el-tab-pane label="已评审" name="reviewed"></el-tab-pane>
       </el-tabs>
@@ -138,7 +138,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive, computed } from "vue";
+import { ref, onMounted, reactive, computed, watch } from "vue";
 import { ElMessage } from "element-plus";
 import type { FormInstance, FormRules } from "element-plus";
 import request from "@/utils/request";
@@ -188,6 +188,7 @@ const batchForm = reactive({
   comments: "",
   closure_rating: "",
 });
+const fetchToken = ref(0);
 
 const isBatchClosure = computed(() => {
   if (selectedRows.value.length === 0) return false;
@@ -196,6 +197,7 @@ const isBatchClosure = computed(() => {
 
 const fetchReviews = async () => {
     loading.value = true;
+    const currentToken = ++fetchToken.value;
     try {
         const params: any = {};
         if (activeTab.value === 'pending') {
@@ -205,6 +207,7 @@ const fetchReviews = async () => {
         }
         
         const res: any = await request.get('/reviews/', { params });
+        if (currentToken !== fetchToken.value) return;
         const payload = res.data || res;
         const records = Array.isArray(payload) ? payload : (payload.results || payload.data?.results || payload.data || []);
         reviews.value = (records || []).map((r: any) => ({
@@ -217,7 +220,9 @@ const fetchReviews = async () => {
         console.error(error);
         ElMessage.error("获取评审任务失败");
     } finally {
-        loading.value = false;
+        if (currentToken === fetchToken.value) {
+          loading.value = false;
+        }
     }
 };
 
@@ -263,6 +268,9 @@ const handleSubmit = async () => {
                 await request.post(endpoint, form);
                 ElMessage.success(dialogMode.value === "edit" ? "评审已更新" : "评审提交成功");
                 dialogVisible.value = false;
+                if (dialogMode.value === "review") {
+                  activeTab.value = "reviewed";
+                }
                 fetchReviews();
             } catch (error: any) {
                 console.error(error);
@@ -330,6 +338,13 @@ onMounted(() => {
     loadDictionaries([DICT_CODES.CLOSURE_RATING]);
     fetchReviews();
 });
+
+watch(
+  () => activeTab.value,
+  () => {
+    fetchReviews();
+  }
+);
 </script>
 
 <style scoped lang="scss">

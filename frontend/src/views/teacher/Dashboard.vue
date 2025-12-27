@@ -275,6 +275,7 @@ const handleSubmit = async () => {
                 await request.post(`/reviews/${currentReviewId.value}/review/`, form);
                 ElMessage.success("审核提交成功");
                 dialogVisible.value = false;
+                activeTab.value = "my_projects";
                 fetchProjects();
                 refreshStats();
             } catch (error: any) {
