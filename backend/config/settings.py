@@ -8,6 +8,8 @@ from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = BASE_DIR.parent
+LOCAL_DATA_DIR = PROJECT_ROOT / ".local" / "backend"
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-your-secret-key-here-change-in-production"
@@ -115,7 +117,11 @@ STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+_media_root = os.environ.get("DJANGO_MEDIA_ROOT")
+if not _media_root:
+    _media_root = str(LOCAL_DATA_DIR / "media")
+MEDIA_ROOT = str(Path(_media_root))
+Path(MEDIA_ROOT).mkdir(parents=True, exist_ok=True)
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -158,8 +164,11 @@ CORS_ALLOW_CREDENTIALS = True
 
 # Logging
 # Ensure log directory exists
-LOG_DIR = BASE_DIR / "logs"
-LOG_DIR.mkdir(exist_ok=True)
+_log_dir = os.environ.get("DJANGO_LOG_DIR")
+if not _log_dir:
+    _log_dir = str(LOCAL_DATA_DIR / "logs")
+LOG_DIR = Path(_log_dir)
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 LOGGING = {
     "version": 1,

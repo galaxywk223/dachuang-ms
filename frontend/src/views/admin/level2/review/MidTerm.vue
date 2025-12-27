@@ -142,7 +142,8 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
-import request from '@/utils/request'
+import { getProjects } from '@/api/projects'
+import { finalizeMidterm, getProjectExpertSummary } from '@/api/projects/midterm'
 import dayjs from 'dayjs'
 
 const loading = ref(false)
@@ -181,15 +182,16 @@ const fetchData = async () => {
            phase: 'MID_TERM'
         }
         
-        const res = await request.get('/projects/', { params: projectParams })
+        const res = await getProjects(projectParams)
         const projectPayload = res.data || res
         const results = projectPayload.results || projectPayload.data?.results || []
         // Load expert summary for each project
         const enriched = await Promise.all(
           (results || []).map(async (item: any) => {
             try {
-              const s: any = await request.get(`/projects/${item.id}/expert-summary`, {
-                params: { review_type: 'MID_TERM', scope: 'COLLEGE' }
+              const s: any = await getProjectExpertSummary(item.id, {
+                review_type: 'MID_TERM',
+                scope: 'COLLEGE'
               })
               const sp = (s as any)?.data ?? s
               return { ...item, expert_summary: sp || null }
@@ -246,9 +248,9 @@ const submitFinalize = async (action: 'pass' | 'return') => {
   
   reviewing.value = true
   try {
-     await request.post(`/projects/${currentRow.value.id}/workflow/finalize-midterm/`, {
-        action,
-        reason: reviewComments.value
+     await finalizeMidterm(currentRow.value.id, {
+       action,
+       reason: reviewComments.value
      })
      ElMessage.success('操作完成')
      dialogVisible.value = false
@@ -294,8 +296,8 @@ const submitBatchReview = async () => {
 
     await Promise.all(
       readyRows.map((row: any) =>
-        request.post(`/projects/${row.id}/workflow/finalize-midterm/`, {
-          action: batchForm.value.action,
+        finalizeMidterm(row.id, {
+          action: batchForm.value.action as 'pass' | 'return',
           reason: batchForm.value.comments,
         })
       )

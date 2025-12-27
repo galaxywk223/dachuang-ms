@@ -33,10 +33,7 @@ request.interceptors.request.use(
 
 // 响应拦截器：把 AxiosResponse 统一转换为后端的业务响应结构 { code, message, data }
 request.interceptors.response.use(
-  (response: AxiosResponse<ApiResponse>) => {
-    // 用类型断言把业务数据封装成 Promise 以符合 axios 对返回值的兼容 (可以是 response 或 promise)
-    return response.data as unknown as AxiosResponse<ApiResponse>;
-  },
+  (response: AxiosResponse<ApiResponse>) => response.data as any,
   async (error: AxiosError<ApiResponse>) => {
     if (error.response) {
       switch (error.response.status) {
@@ -98,6 +95,6 @@ export default request;
 export function apiRequest<T = any>(
   config: AxiosRequestConfig
 ): Promise<ApiResponse<T>> {
-  // 由于响应拦截器已经把返回值从 AxiosResponse 转成 ApiResponse，这里做类型断言
+  // 响应拦截器已经把返回值从 AxiosResponse 转成 ApiResponse
   return request(config) as unknown as Promise<ApiResponse<T>>;
 }

@@ -47,6 +47,9 @@ yarn-error.log*
 # VSCode
 .vscode/
 
+# Local dev data
+.local/
+
 # System
 .DS_Store
 Thumbs.db
@@ -56,3 +59,6 @@ local_scripts/
 
 # VSCode Counter
 .VSCodeCounter/
+
+# Type check output
+frontend/type_check_output.txt

@@ -1,4 +1,4 @@
-"""Management view exports."""
+"""Admin/management view exports."""
 
 from .project import ProjectManagementViewSet
 from .achievement import AchievementManagementViewSet
