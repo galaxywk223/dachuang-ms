@@ -8,8 +8,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 
-from .models import Notification
-from .serializers import NotificationSerializer
+from ..models import Notification
+from ..serializers import NotificationSerializer
 from apps.users.models import User
 
 

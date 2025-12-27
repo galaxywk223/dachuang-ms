@@ -3,8 +3,8 @@
 """
 
 # 导入新的控制器
-from .controllers.auth_controller import AuthController
-from .controllers.user_management_controller import UserManagementController
+from ..controllers.auth_controller import AuthController
+from ..controllers.user_management_controller import UserManagementController
 
 # 为了保持向后兼容，创建别名
 AuthViewSet = AuthController
@@ -13,8 +13,9 @@ UserViewSet = UserManagementController
 # 保留原有的LoginLogViewSet（如果需要的话）
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
-from .models import LoginLog
-from .serializers import LoginLogSerializer
+from ..models import LoginLog
+from ..serializers import LoginLogSerializer
+from .admin import UserManagementViewSet
 
 
 class LoginLogViewSet(viewsets.ReadOnlyModelViewSet):

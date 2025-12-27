@@ -4,7 +4,7 @@
 
 from rest_framework import serializers
 
-from .models import SystemSetting, CertificateSetting, ProjectBatch
+from ..models import SystemSetting, CertificateSetting, ProjectBatch
 
 
 class SystemSettingSerializer(serializers.ModelSerializer):

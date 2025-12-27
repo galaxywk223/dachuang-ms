@@ -9,8 +9,8 @@ from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
 from django.contrib.auth.hashers import make_password
 
-from .models import User
-from .serializers import UserSerializer, UserCreateSerializer
+from ..models import User
+from ..serializers import UserSerializer, UserCreateSerializer
 
 
 class UserManagementViewSet(viewsets.ModelViewSet):

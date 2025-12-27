@@ -3,9 +3,10 @@
 """
 
 from rest_framework import serializers
-from .models import Review
+from ..models import Review
 from apps.projects.serializers import ProjectListSerializer
 from apps.system_settings.services import SystemSettingService
+from .expert import ExpertGroupSerializer
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -89,3 +90,10 @@ class ReviewActionSerializer(serializers.Serializer):
         required=False,
         help_text="结题驳回流向（teacher-退回导师，student-退回学生）",
     )
+
+
+__all__ = [
+    "ReviewSerializer",
+    "ReviewActionSerializer",
+    "ExpertGroupSerializer",
+]

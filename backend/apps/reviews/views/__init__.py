@@ -9,10 +9,9 @@ from rest_framework.permissions import IsAuthenticated, SAFE_METHODS, BasePermis
 from rest_framework.exceptions import PermissionDenied
 from django.utils import timezone
 
-from .models import Review, ExpertGroup
-from .serializers import ReviewSerializer, ReviewActionSerializer
-from .serializers_expert import ExpertGroupSerializer
-from .services import ReviewService
+from ..models import Review, ExpertGroup
+from ..serializers import ReviewSerializer, ReviewActionSerializer, ExpertGroupSerializer
+from ..services import ReviewService
 from apps.projects.models import Project
 from apps.notifications.services import NotificationService
 from apps.system_settings.services import SystemSettingService
@@ -458,7 +457,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
             project = Project.objects.get(id=project_id, leader__college=user.college)
 
             # 检查二级审核是否已通过
-            from .models import Review
+            from ..models import Review
             level2_passed = Review.objects.filter(
                 project=project,
                 review_type=Review.ReviewType.APPLICATION,

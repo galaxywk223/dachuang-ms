@@ -3,7 +3,7 @@
 """
 
 from rest_framework import serializers
-from .models import DictionaryType, DictionaryItem
+from ..models import DictionaryType, DictionaryItem
 
 
 class DictionaryItemSerializer(serializers.ModelSerializer):

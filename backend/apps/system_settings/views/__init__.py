@@ -9,13 +9,13 @@ from rest_framework.response import Response
 
 from apps.users.permissions import IsLevel1Admin
 from apps.projects.models import Project
-from .models import SystemSetting, CertificateSetting, ProjectBatch
-from .serializers import (
+from ..models import SystemSetting, CertificateSetting, ProjectBatch
+from ..serializers import (
     SystemSettingSerializer,
     CertificateSettingSerializer,
     ProjectBatchSerializer,
 )
-from .services import DEFAULT_SETTINGS, SystemSettingService
+from ..services import DEFAULT_SETTINGS, SystemSettingService
 
 
 class SystemSettingViewSet(viewsets.ModelViewSet):

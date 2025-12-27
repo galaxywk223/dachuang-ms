@@ -9,8 +9,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 
-from .models import DictionaryType, DictionaryItem
-from .serializers import (
+from ..models import DictionaryType, DictionaryItem
+from ..serializers import (
     DictionaryTypeSerializer,
     DictionaryTypeDetailSerializer,
     DictionaryItemSerializer,

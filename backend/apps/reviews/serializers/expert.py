@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ExpertGroup
+from ..models import ExpertGroup
 from apps.users.serializers import UserSerializer
 
 class ExpertGroupSerializer(serializers.ModelSerializer):
