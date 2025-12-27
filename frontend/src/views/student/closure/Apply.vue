@@ -148,6 +148,7 @@
                 <el-table-column label="附件" width="100" align="center">
                     <template #default="{ row }">
                         <el-tag v-if="row.file" type="success" size="small">已选择</el-tag>
+                        <el-link v-else-if="row.attachment_url" :href="row.attachment_url" target="_blank" type="primary" class="text-xs">已上传</el-link>
                         <span v-else class="text-gray-400 text-xs">无</span>
                     </template>
                 </el-table-column>
@@ -302,7 +303,7 @@ import { ref, reactive, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage, type FormInstance, type UploadFile } from "element-plus";
 import { UploadFilled, Plus } from "@element-plus/icons-vue";
-import { getProjectDetail, createClosureApplication } from "@/api/projects";
+import { getProjectDetail, createClosureApplication, updateClosureApplication, getProjectAchievements } from "@/api/projects";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionaries";
 
@@ -310,6 +311,7 @@ const route = useRoute();
 const router = useRouter();
 const formRef = ref<FormInstance>();
 const loading = ref(false);
+const project = ref<any | null>(null);
 const { loadDictionaries, getOptions, getLabel } = useDictionary();
 
 const projectId = route.query.projectId as string;
@@ -321,7 +323,8 @@ const projectInfo = reactive({
   leader_name: "",
   level_display: "",
   category_display: "",
-  budget: 0
+  budget: 0,
+  status: ""
 });
 
 // Main Form Data
@@ -341,6 +344,7 @@ const dialogIndex = ref(-1);
 const dialogFileList = ref<any[]>([]);
 
 const achievementForm = reactive({
+    id: null as number | null,
     achievement_type: "",
     title: "",
     description: "",
@@ -382,8 +386,19 @@ const isReportType = computed(() => REPORT_TYPES.includes(selectedAchievementTyp
 const isMediaType = computed(() => MEDIA_TYPES.includes(selectedAchievementTypeValue.value));
 
 const rules = {
-  final_report: [{ required: true, message: "请上传结题报告", trigger: "change" }],
-  achievement_summary: [{ required: true, message: "请填写成果简介", trigger: "blur" }]
+  final_report: [
+    {
+      validator: (_rule: any, _value: any, callback: any) => {
+        if (formData.final_report || project.value?.final_report_url) {
+          callback();
+          return;
+        }
+        callback(new Error("请上传结题报告"));
+      },
+      trigger: "change",
+    },
+  ],
+  achievement_summary: [{ required: true, message: "请填写成果简介", trigger: "blur" }],
 };
 
 // File Handlers
@@ -410,7 +425,24 @@ const openAchievementDialog = (row?: any, index = -1) => {
     dialogFileList.value = [];
     
     if (row && index > -1) {
-        Object.assign(achievementForm, { ...row });
+        // Copy fields (keep existing attachment unless re-uploaded)
+        achievementForm.id = row.id ?? null;
+        achievementForm.achievement_type = row.achievement_type || "";
+        achievementForm.title = row.title || "";
+        achievementForm.description = row.description || "";
+        achievementForm.authors = row.authors || "";
+        achievementForm.journal = row.journal || "";
+        achievementForm.publication_date = row.publication_date || "";
+        achievementForm.doi = row.doi || "";
+        achievementForm.patent_no = row.patent_no || "";
+        achievementForm.patent_type = row.patent_type || "";
+        achievementForm.applicant = row.applicant || "";
+        achievementForm.competition_name = row.competition_name || "";
+        achievementForm.award_level = row.award_level || "";
+        achievementForm.award_date = row.award_date || "";
+        achievementForm.extra_data = row.extra_data || {};
+        achievementForm.file = null;
+
         const extraData = row.extra_data || {};
         achievementForm.company_name = extraData.company_name || row.company_name || "";
         achievementForm.company_role = extraData.company_role || row.company_role || "";
@@ -425,6 +457,10 @@ const openAchievementDialog = (row?: any, index = -1) => {
         achievementForm.media_link = extraData.media_link || row.media_link || "";
         if (row.file) {
              dialogFileList.value = [{ name: row.file.name, status: 'ready' }];
+        } else if (row.attachment_url || row.attachment) {
+             const url = row.attachment_url || row.attachment;
+             const name = row.attachment_name || (typeof url === 'string' ? url.split('/').pop() : '附件');
+             dialogFileList.value = [{ name, url, status: 'success' }];
         }
     } else {
         // Reset form
@@ -433,6 +469,7 @@ const openAchievementDialog = (row?: any, index = -1) => {
         });
         achievementForm.extra_data = {};
         achievementForm.file = null;
+        achievementForm.id = null;
     }
 };
 
@@ -462,7 +499,17 @@ const confirmAchievement = () => {
         if (achievementForm.media_format) extraData.media_format = achievementForm.media_format;
         if (achievementForm.media_link) extraData.media_link = achievementForm.media_link;
     }
-    const newItem = { ...achievementForm, extra_data: extraData };
+    const prev = dialogIndex.value > -1 ? achievements.value[dialogIndex.value] : null;
+    const newItem = {
+        ...achievementForm,
+        extra_data: extraData,
+        attachment_url: prev?.attachment_url || "",
+        attachment_name: prev?.attachment_name || "",
+    };
+    if (achievementForm.file) {
+        newItem.attachment_url = "";
+        newItem.attachment_name = "";
+    }
     if (dialogIndex.value > -1) {
         achievements.value[dialogIndex.value] = newItem;
     } else {
@@ -476,6 +523,72 @@ const removeAchievement = (index: number) => {
 };
 
 // Initialization
+const initFromProject = async (data: any) => {
+    project.value = data;
+    projectInfo.title = data.title || "";
+    projectInfo.project_no = data.project_no || "";
+    projectInfo.leader_name = data.leader_name || data.leader_info?.real_name || "";
+    projectInfo.level_display = data.level_display || getLabel(DICT_CODES.PROJECT_LEVEL, data.level);
+    projectInfo.category_display = data.category_display || getLabel(DICT_CODES.PROJECT_CATEGORY, data.category);
+    projectInfo.budget = data.budget ?? 0;
+    projectInfo.status = data.status || "";
+
+    formData.achievement_summary = data.achievement_summary || "";
+
+    // Existing files (cannot prefill file input, show as existing link)
+    reportFileList.value = [];
+    achievementFileList.value = [];
+    if (data.final_report_url) {
+        reportFileList.value = [
+            {
+                name: data.final_report_name || "结题报告.pdf",
+                url: data.final_report_url,
+                status: "success",
+            },
+        ];
+    }
+    if (data.achievement_file_url) {
+        achievementFileList.value = [
+            {
+                name: data.achievement_file_name || "附件",
+                url: data.achievement_file_url,
+                status: "success",
+            },
+        ];
+    }
+
+    // Load achievements (draft/重提都会回显；附件未重新上传则后端保留)
+    achievements.value = [];
+    try {
+        const achRes: any = await getProjectAchievements(Number(projectId));
+        if (achRes?.code === 200) {
+            achievements.value = (achRes.data || []).map((item: any) => ({
+                id: item.id,
+                achievement_type: item.achievement_type_value || item.achievement_type,
+                title: item.title || "",
+                description: item.description || "",
+                authors: item.authors || "",
+                journal: item.journal || "",
+                publication_date: item.publication_date || "",
+                doi: item.doi || "",
+                patent_no: item.patent_no || "",
+                patent_type: item.patent_type || "",
+                applicant: item.applicant || "",
+                competition_name: item.competition_name || "",
+                award_level: item.award_level || "",
+                award_date: item.award_date || "",
+                extra_data: item.extra_data || {},
+                attachment_url: item.attachment_url || item.attachment || "",
+                attachment_name: item.attachment_name || "",
+                file: null,
+            }));
+        }
+    } catch (e) {
+        // ignore
+    }
+
+};
+
 const fetchProjectInfo = async () => {
     if (!projectId) {
         ElMessage.error("参数错误：缺少项目ID");
@@ -484,15 +597,9 @@ const fetchProjectInfo = async () => {
     loading.value = true;
     try {
         const res: any = await getProjectDetail(Number(projectId));
-        const data = res?.data ?? res; // 兼容两种返回结构
+        const data = res?.data ?? res;
         if (data) {
-            projectInfo.title = data.title || "";
-            projectInfo.project_no = data.project_no || "";
-            projectInfo.leader_name = data.leader_info?.real_name || data.leader_name || "";
-            // 优先后端提供的 display 字段，否则用字典映射
-            projectInfo.level_display = data.level_display || getLabel(DICT_CODES.PROJECT_LEVEL, data.level);
-            projectInfo.category_display = data.category_display || getLabel(DICT_CODES.PROJECT_CATEGORY, data.category);
-            projectInfo.budget = data.budget ?? 0;
+            await initFromProject(data);
         } else {
             ElMessage.error("未获取到项目详情");
         }
@@ -502,7 +609,6 @@ const fetchProjectInfo = async () => {
         loading.value = false;
     }
 };
-
 // Submission
 const submit = async (isDraft: boolean) => {
     if (!isDraft) {
@@ -529,8 +635,8 @@ const doSubmit = async (isDraft: boolean) => {
 
         // Achievements Logic
         // 1. Serialize the list (excluding file objects)
-        const achievementsData = achievements.value.map(item => {
-            const { file, ...rest } = item; 
+        const achievementsData = achievements.value.map((item: any) => {
+            const { file, attachment_url, attachment_name, ...rest } = item;
             return rest;
         });
         payload.append('achievements_json', JSON.stringify(achievementsData));
@@ -542,10 +648,13 @@ const doSubmit = async (isDraft: boolean) => {
             }
         });
 
-        const res: any = await createClosureApplication(Number(projectId), payload);
+        const isEditingDraft = projectInfo.status === "CLOSURE_DRAFT";
+        const res: any = await (isEditingDraft
+            ? updateClosureApplication(Number(projectId), payload)
+            : createClosureApplication(Number(projectId), payload));
         if (res.code === 200 || res.status === 201) {
              ElMessage.success(isDraft ? "草稿已保存" : "申请已提交");
-             router.push('/closure/applied'); 
+             router.push(isDraft ? '/closure/drafts' : '/closure/applied'); 
         } else {
              ElMessage.error(res.message || "操作失败");
         }

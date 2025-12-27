@@ -160,7 +160,12 @@ const getProjectYear = (projectNo: string) => {
 // 获取状态类型
 const getStatusType = (status: string) => {
   const typeMap: Record<string, string> = {
-    IN_PROGRESS: "primary",
+    READY_FOR_CLOSURE: "warning",
+    MID_TERM_APPROVED: "warning", // legacy
+    IN_PROGRESS: "primary", // legacy
+    CLOSURE_RETURNED: "danger",
+    CLOSURE_LEVEL2_REJECTED: "danger",
+    CLOSURE_LEVEL1_REJECTED: "danger",
     COMPLETED: "success",
   };
   return typeMap[status] || "info";

@@ -120,25 +120,39 @@ class ProjectViewSet(viewsets.ModelViewSet):
         exclude_review_type = self.request.query_params.get("exclude_assigned_review_type")
         exclude_review_level = self.request.query_params.get("exclude_assigned_review_level")
         if exclude_review_type:
-            current_phase_instance_subquery = (
-                ProjectPhaseInstance.objects.filter(
-                    project_id=OuterRef("pk"),
-                    phase=exclude_review_type,
-                )
-                .order_by("-attempt_no", "-id")
-                .values("id")[:1]
+            current_phase_qs = ProjectPhaseInstance.objects.filter(
+                project_id=OuterRef("pk"),
+                phase=exclude_review_type,
+            ).order_by("-attempt_no", "-id")
+            queryset = queryset.annotate(
+                _current_phase_instance_id=Subquery(current_phase_qs.values("id")[:1])
             )
             assigned_reviews = Review.objects.filter(
                 project_id=OuterRef("pk"),
                 review_type=exclude_review_type,
                 reviewer__isnull=False,
-                phase_instance_id=Subquery(current_phase_instance_subquery),
+                phase_instance_id=OuterRef("_current_phase_instance_id"),
             )
             if exclude_review_level:
                 assigned_reviews = assigned_reviews.filter(review_level=exclude_review_level)
-            queryset = queryset.annotate(_has_assigned=Exists(assigned_reviews)).filter(
-                _has_assigned=False
+            queryset = queryset.annotate(_has_assigned=Exists(assigned_reviews)).filter(_has_assigned=False)
+
+        phase = self.request.query_params.get("phase")
+        phase_step = self.request.query_params.get("phase_step")
+        phase_state = self.request.query_params.get("phase_state")
+        if phase:
+            current_phase_qs = ProjectPhaseInstance.objects.filter(
+                project_id=OuterRef("pk"),
+                phase=phase,
+            ).order_by("-attempt_no", "-id")
+            queryset = queryset.annotate(
+                _phase_step=Subquery(current_phase_qs.values("step")[:1]),
+                _phase_state=Subquery(current_phase_qs.values("state")[:1]),
             )
+            if phase_step:
+                queryset = queryset.filter(_phase_step=phase_step)
+            if phase_state:
+                queryset = queryset.filter(_phase_state=phase_state)
 
         return queryset
 
@@ -281,6 +295,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
         assigned = qs.count()
         pending = qs.filter(status=Review.ReviewStatus.PENDING).count()
         submitted = assigned - pending
+        approved_count = qs.filter(status=Review.ReviewStatus.APPROVED).count()
+        rejected_count = qs.filter(status=Review.ReviewStatus.REJECTED).count()
         avg_score = qs.exclude(status=Review.ReviewStatus.PENDING).aggregate(avg=Avg("score")).get("avg")
 
         return Response(
@@ -295,6 +311,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     "assigned": assigned,
                     "submitted": submitted,
                     "pending": pending,
+                    "approved": approved_count,
+                    "rejected": rejected_count,
                     "all_submitted": assigned > 0 and pending == 0,
                     "avg_score": avg_score,
                 },
@@ -316,8 +334,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("无权限退回该阶段")
         if phase == ProjectPhaseInstance.Phase.MID_TERM and not (user.is_level2_admin or user.is_level1_admin):
             raise PermissionDenied("无权限退回该阶段")
-        if phase == ProjectPhaseInstance.Phase.CLOSURE and not user.is_level1_admin:
-            raise PermissionDenied("无权限退回该阶段")
+        if phase == ProjectPhaseInstance.Phase.CLOSURE:
+            phase_instance_for_perm = self._get_current_phase_instance(project, ProjectPhaseInstance.Phase.CLOSURE)
+            if user.is_level1_admin:
+                pass
+            elif user.is_level2_admin and phase_instance_for_perm and str(phase_instance_for_perm.step).startswith("COLLEGE_"):
+                pass
+            else:
+                raise PermissionDenied("无权限退回该阶段")
 
         status_map = {
             ProjectPhaseInstance.Phase.APPLICATION: Project.ProjectStatus.APPLICATION_RETURNED,
@@ -367,7 +391,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
             review_level=Review.ReviewLevel.LEVEL2,
             phase_instance=phase_instance,
         )
-        if qs.exists() and qs.filter(status=Review.ReviewStatus.PENDING).exists():
+        if not qs.exists():
+            return Response({"code": 400, "message": "请先分配专家评审"}, status=status.HTTP_400_BAD_REQUEST)
+        if qs.filter(status=Review.ReviewStatus.PENDING).exists():
             return Response({"code": 400, "message": "院级专家评审尚未全部提交"}, status=status.HTTP_400_BAD_REQUEST)
 
         with transaction.atomic():
@@ -375,6 +401,42 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 phase_instance.step = "SCHOOL_EXPERT_SCORING"
                 phase_instance.save(update_fields=["step", "updated_at"])
             project.status = Project.ProjectStatus.LEVEL1_AUDITING
+            project.save(update_fields=["status", "updated_at"])
+
+        return Response({"code": 200, "message": "已上报校级"})
+
+
+    @action(detail=True, methods=["post"], url_path="workflow/report-to-school-closure")
+    def workflow_report_to_school_closure(self, request, pk=None):
+        """
+        学院管理员上报校级（结题流程）
+        要求：院级专家评审任务已全部提交
+        """
+        project = self.get_object()
+        user = request.user
+        if not user.is_level2_admin:
+            raise PermissionDenied("只有二级管理员可以上报校级")
+
+        phase_instance = self._get_current_phase_instance(project, ProjectPhaseInstance.Phase.CLOSURE)
+
+        if phase_instance is None:
+            return Response({"code": 400, "message": "流程状态异常：缺少结题阶段轮次，请重新上报或联系管理员"}, status=status.HTTP_400_BAD_REQUEST)
+        qs = self._get_expert_reviews_qs(
+            project=project,
+            review_type=Review.ReviewType.CLOSURE,
+            review_level=Review.ReviewLevel.LEVEL2,
+            phase_instance=phase_instance,
+        )
+        if not qs.exists():
+            return Response({"code": 400, "message": "请先分配专家评审"}, status=status.HTTP_400_BAD_REQUEST)
+        if qs.filter(status=Review.ReviewStatus.PENDING).exists():
+            return Response({"code": 400, "message": "院级专家评审尚未全部提交"}, status=status.HTTP_400_BAD_REQUEST)
+
+        with transaction.atomic():
+            if phase_instance:
+                phase_instance.step = "SCHOOL_EXPERT_SCORING"
+                phase_instance.save(update_fields=["step", "updated_at"])
+            project.status = Project.ProjectStatus.CLOSURE_LEVEL1_REVIEWING
             project.save(update_fields=["status", "updated_at"])
 
         return Response({"code": 200, "message": "已上报校级"})
@@ -444,7 +506,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
         with transaction.atomic():
             if action_type == "pass":
-                project.status = Project.ProjectStatus.MID_TERM_APPROVED
+                project.status = Project.ProjectStatus.READY_FOR_CLOSURE
                 project.save(update_fields=["status", "updated_at"])
                 if phase_instance:
                     ProjectPhaseService.mark_completed(phase_instance, step="COMPLETED")
@@ -487,13 +549,18 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return Response({"code": 400, "message": "action必须为approve或return"}, status=status.HTTP_400_BAD_REQUEST)
 
         phase_instance = self._get_current_phase_instance(project, ProjectPhaseInstance.Phase.CLOSURE)
+
+        if phase_instance is None:
+            return Response({"code": 400, "message": "请先分配校级专家评审"}, status=status.HTTP_400_BAD_REQUEST)
         qs = self._get_expert_reviews_qs(
             project=project,
             review_type=Review.ReviewType.CLOSURE,
             review_level=Review.ReviewLevel.LEVEL1,
             phase_instance=phase_instance,
         )
-        if qs.exists() and qs.filter(status=Review.ReviewStatus.PENDING).exists():
+        if not qs.exists():
+            return Response({"code": 400, "message": "请先分配专家评审"}, status=status.HTTP_400_BAD_REQUEST)
+        if qs.filter(status=Review.ReviewStatus.PENDING).exists():
             return Response({"code": 400, "message": "结题专家评审尚未全部提交"}, status=status.HTTP_400_BAD_REQUEST)
 
         with transaction.atomic():

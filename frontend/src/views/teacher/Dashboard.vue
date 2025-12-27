@@ -9,7 +9,7 @@
         </div>
       </template>
 
-      <el-tabs v-model="activeTab" @tab-click="handleTabChange">
+      <el-tabs v-model="activeTab">
         <el-tab-pane label="待审核" name="pending"></el-tab-pane>
         <el-tab-pane label="我指导的项目" name="my_projects"></el-tab-pane>
       </el-tabs>
@@ -105,13 +105,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive, computed } from "vue";
+import { ref, onMounted, reactive, computed, watch } from "vue";
 import { ElMessage } from "element-plus";
 import type { FormInstance, FormRules } from "element-plus";
 import request from "@/utils/request";
 import dayjs from "dayjs";
 import { useUserStore } from "@/stores/user";
-import WelcomeSection from "@/components/dashboard/WelcomeSection.vue";
 import StatsSection from "@/components/dashboard/StatsSection.vue";
 
 const loading = ref(false);
@@ -121,6 +120,7 @@ const activeTab = ref("pending");
 
 const userStore = useUserStore();
 const welcomeUser = computed(() => userStore.user ?? undefined);
+
 const statistics = reactive({
     myProjects: 0,
     pending: 0,
@@ -292,15 +292,18 @@ const formatDate = (date: string) => {
     return dayjs(date).format("YYYY-MM-DD HH:mm");
 };
 
-const handleTabChange = () => {
-    fetchProjects();
-    refreshStats();
-};
-
 onMounted(() => {
     fetchProjects();
     refreshStats();
 });
+
+watch(
+  () => activeTab.value,
+  () => {
+    fetchProjects();
+    refreshStats();
+  }
+);
 </script>
 
 <style scoped lang="scss">

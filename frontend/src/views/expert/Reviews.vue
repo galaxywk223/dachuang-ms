@@ -44,6 +44,7 @@
         </el-table-column>
         <el-table-column label="操作" width="150" align="center" fixed="right">
           <template #default="scope">
+            <div class="op-cell">
              <el-button 
                 v-if="scope.row.status === 'PENDING'"
                 size="small" 
@@ -56,6 +57,7 @@
                <el-button size="small" @click="handleView(scope.row)">查看详情</el-button>
                <el-button size="small" type="primary" @click="handleEdit(scope.row)">修改评审</el-button>
              </template>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -389,6 +391,11 @@ watch(
     padding: 20px;
     .card-header {
        font-size: 18px; font-weight: bold;
+    }
+    .op-cell {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
     }
 }
 </style>

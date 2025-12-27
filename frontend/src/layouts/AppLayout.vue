@@ -280,7 +280,6 @@ const currentMenus = computed(() => {
                     title: '结题管理',
                     icon: DocumentChecked,
                     children: [
-                        { index: '/closure/apply', title: '申请结题' },
                         { index: '/closure/pending', title: '待结题项目' },
                         { index: '/closure/applied', title: '已申请结题' },
                         { index: '/closure/drafts', title: '草稿箱' }

@@ -128,6 +128,14 @@ const defaultStatusByReviewType = computed<Record<string, string>>(() => {
         CLOSURE: isSchoolScope ? "CLOSURE_LEVEL1_REVIEWING" : "CLOSURE_LEVEL2_REVIEWING",
     };
 });
+const defaultPhaseStepByReviewType = computed<Record<string, string>>(() => {
+    const isSchoolScope = assignedReviewLevel.value === "LEVEL1";
+    return {
+        APPLICATION: isSchoolScope ? "SCHOOL_EXPERT_SCORING" : "COLLEGE_EXPERT_SCORING",
+        MID_TERM: "COLLEGE_EXPERT_REVIEWING",
+        CLOSURE: isSchoolScope ? "SCHOOL_EXPERT_SCORING" : "COLLEGE_EXPERT_SCORING",
+    };
+});
 
 const resolveList = (payload: any) => {
     if (Array.isArray(payload)) return payload;
@@ -154,7 +162,11 @@ const fetchProjects = async () => {
             search: searchQuery.value,
             exclude_assigned_review_type: reviewType.value,
             exclude_assigned_review_level: assignedReviewLevel.value,
+            phase: reviewType.value,
         };
+        if (reviewType.value !== "MID_TERM") {
+            params.phase_step = defaultPhaseStepByReviewType.value[reviewType.value];
+        }
         if (statusFilter.value) {
             params["status"] = statusFilter.value;
         } else if (defaultStatusByReviewType.value[reviewType.value]) {
@@ -215,6 +227,10 @@ const handleAssign = () => {
 
 onMounted(() => {
     fetchGroups();
+    const q = String((route.query.reviewType || route.query.review_type || "") as any).toUpperCase();
+    if (q && ["APPLICATION", "MID_TERM", "CLOSURE"].includes(q)) {
+      reviewType.value = q;
+    }
     statusFilter.value = defaultStatusByReviewType.value[reviewType.value] || "";
     fetchProjects();
 });

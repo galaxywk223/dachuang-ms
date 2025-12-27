@@ -79,6 +79,15 @@ class ReviewViewSet(viewsets.ModelViewSet):
         if reviewer_isnull in ("true", "false"):
             queryset = queryset.filter(reviewer__isnull=(reviewer_isnull == "true"))
 
+        # Explicitly handle status and review_level to ensure strict filtering
+        status_param = self.request.query_params.get("status")
+        if status_param:
+            queryset = queryset.filter(status=status_param)
+
+        review_level_param = self.request.query_params.get("review_level")
+        if review_level_param:
+            queryset = queryset.filter(review_level=review_level_param)
+
         return queryset
 
     @action(methods=["post"], detail=True)
@@ -88,6 +97,18 @@ class ReviewViewSet(viewsets.ModelViewSet):
         """
         review = self.get_object()
         user = request.user
+
+        if (
+            review.reviewer_id is None
+            and review.review_level in (Review.ReviewLevel.LEVEL2, Review.ReviewLevel.LEVEL1)
+            and review.review_type
+            in (Review.ReviewType.APPLICATION, Review.ReviewType.MID_TERM, Review.ReviewType.CLOSURE)
+            and (user.is_level2_admin or user.is_level1_admin)
+        ):
+            return Response(
+                {"code": 400, "message": "该环节需先分配专家评审，管理员不能直接审核"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # 检查审核权限
         if not self.check_review_permission(review, user):
@@ -361,6 +382,19 @@ class ReviewViewSet(viewsets.ModelViewSet):
         success = 0
         failed = []
         for review in Review.objects.filter(id__in=review_ids, status=Review.ReviewStatus.PENDING):
+            if (
+                review.reviewer_id is None
+                and review.review_level in (Review.ReviewLevel.LEVEL2, Review.ReviewLevel.LEVEL1)
+                and review.review_type
+                in (
+                    Review.ReviewType.APPLICATION,
+                    Review.ReviewType.MID_TERM,
+                    Review.ReviewType.CLOSURE,
+                )
+                and (request.user.is_level2_admin or request.user.is_level1_admin)
+            ):
+                failed.append({"id": review.id, "reason": "需先分配专家评审"})
+                continue
             if not self.check_review_permission(review, request.user):
                 failed.append({"id": review.id, "reason": "无权限"})
                 continue

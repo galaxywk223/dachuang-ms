@@ -30,6 +30,7 @@ class Project(models.Model):
         MID_TERM_SUBMITTED = "MID_TERM_SUBMITTED", "中期已提交"
         MID_TERM_REVIEWING = "MID_TERM_REVIEWING", "中期审核中"
         MID_TERM_APPROVED = "MID_TERM_APPROVED", "中期审核通过"
+        READY_FOR_CLOSURE = "READY_FOR_CLOSURE", "待结题"
         MID_TERM_REJECTED = "MID_TERM_REJECTED", "中期审核不通过"
         MID_TERM_RETURNED = "MID_TERM_RETURNED", "中期退回修改"
         CLOSURE_DRAFT = "CLOSURE_DRAFT", "结题草稿"
@@ -173,6 +174,10 @@ class Project(models.Model):
     )
     achievement_file = models.FileField(
         upload_to="achievements/", blank=True, null=True, verbose_name="成果材料", max_length=255
+    )
+
+    achievement_summary = models.TextField(
+        blank=True, default="", verbose_name="结题成果简介"
     )
 
     # 状态信息

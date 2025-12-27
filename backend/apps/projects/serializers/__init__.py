@@ -209,6 +209,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             "research_content",
             "research_plan",
             "expected_results",
+            "achievement_summary",
             "expected_results_data",
             "innovation_points",
             "proposal_file",
@@ -620,6 +621,7 @@ class ProjectAchievementSerializer(serializers.ModelSerializer):
     achievement_type_display = serializers.CharField(
         source="achievement_type.label", read_only=True
     )
+    achievement_type_value = serializers.CharField(source="achievement_type.value", read_only=True)
     project_title = serializers.CharField(source="project.title", read_only=True)
     project_no = serializers.CharField(source="project.project_no", read_only=True)
     leader_name = serializers.CharField(source="project.leader.real_name", read_only=True)
@@ -636,6 +638,7 @@ class ProjectAchievementSerializer(serializers.ModelSerializer):
             "college",
             "achievement_type",
             "achievement_type_display",
+            "achievement_type_value",
             "title",
             "description",
             "authors",

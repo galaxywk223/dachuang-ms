@@ -7,7 +7,7 @@
              <span class="header-title">中期检查审核</span>
           </div>
           <div class="header-actions">
-            <el-button type="primary" plain @click="openBatchDialog">批量审核</el-button>
+            <el-button type="primary" plain @click="openBatchDialog">批量确认</el-button>
           </div>
         </div>
       </template>
@@ -42,6 +42,17 @@
               {{ formatDate(scope.row.mid_term_submitted_at) }}
            </template>
         </el-table-column>
+        <el-table-column label="专家评审" width="160">
+          <template #default="scope">
+            <el-tag v-if="(scope.row.expert_summary?.assigned || 0) === 0" type="info">未分配</el-tag>
+            <el-tag
+              v-else
+              :type="scope.row.expert_summary?.all_submitted ? 'success' : 'warning'"
+            >
+              {{ scope.row.expert_summary?.submitted || 0 }}/{{ scope.row.expert_summary?.assigned || 0 }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="150" fixed="right">
           <template #default="scope">
             <el-button 
@@ -49,7 +60,7 @@
               type="primary" 
               @click="handleReview(scope.row)"
             >
-              审核
+              确认
             </el-button>
           </template>
         </el-table-column>
@@ -97,20 +108,18 @@
       </div>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="submitReview(false)" type="danger" :loading="reviewing">不通过</el-button>
-          <el-button type="primary" @click="submitReview(true)" :loading="reviewing">
-            通 过
-          </el-button>
+          <el-button @click="submitFinalize('return')" type="danger" :loading="reviewing">退回学生</el-button>
+          <el-button type="primary" @click="submitFinalize('pass')" :loading="reviewing">确认通过</el-button>
         </span>
       </template>
     </el-dialog>
 
-    <el-dialog v-model="batchDialogVisible" title="批量审核" width="520px">
+    <el-dialog v-model="batchDialogVisible" title="批量确认" width="520px">
       <el-form label-position="top">
         <el-form-item label="审核结果">
           <el-radio-group v-model="batchForm.action">
-            <el-radio label="approve">通过</el-radio>
-            <el-radio label="reject">驳回</el-radio>
+            <el-radio label="pass">确认通过</el-radio>
+            <el-radio label="return">退回学生</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="审核意见">
@@ -132,11 +141,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useRouter } from 'vue-router'
 import request from '@/utils/request'
 import dayjs from 'dayjs'
 
 const loading = ref(false)
-const tableData = ref([])
+const tableData = ref<any[]>([])
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
@@ -146,11 +156,12 @@ const currentRow = ref<any>(null)
 const reviewComments = ref('')
 const reviewing = ref(false)
 const selectedRows = ref<any[]>([])
+const router = useRouter()
 
 const batchDialogVisible = ref(false)
 const batchSubmitting = ref(false)
 const batchForm = ref({
-  action: 'approve',
+  action: 'pass',
   comments: ''
 })
 
@@ -162,41 +173,34 @@ const formatDate = (dateStr: string) => {
 const fetchData = async () => {
     loading.value = true
     try {
-        // 查询项目（当前后端实现更确定：中期申请会将项目置为 MID_TERM_REVIEWING）
-        
-        // ADMIN Logic:
-        // Level 2 Admin (College) sees MID_TERM_REVIEWING (after submission/teacher check?).
-        // Wait, our service implementation:
-        // apply_mid_term -> MID_TERM_SUBMITTED -> (if auto approved or teacher step?)
-        // ReviewService.create_mid_term_review sets status to MID_TERM_REVIEWING.
-        // So Admin should look for status='MID_TERM_REVIEWING'.
-        
         const projectParams = {
            page: currentPage.value,
            page_size: pageSize.value,
            status: 'MID_TERM_REVIEWING',
-           search: searchQuery.value
+           search: searchQuery.value,
+           phase: 'MID_TERM'
         }
         
         const res = await request.get('/projects/', { params: projectParams })
         const projectPayload = res.data || res
         const results = projectPayload.results || projectPayload.data?.results || []
-        tableData.value = results
+        // Load expert summary for each project
+        const enriched = await Promise.all(
+          (results || []).map(async (item: any) => {
+            try {
+              const s: any = await request.get(`/projects/${item.id}/expert-summary`, {
+                params: { review_type: 'MID_TERM', scope: 'COLLEGE' }
+              })
+              const sp = (s as any)?.data ?? s
+              return { ...item, expert_summary: sp || null }
+            } catch (e) {
+              return { ...item, expert_summary: null }
+            }
+          })
+        )
+        tableData.value = enriched
         total.value = projectPayload.count || projectPayload.data?.count || 0
         selectedRows.value = []
-
-        const reviewRes: any = await request.get('/reviews/', {
-          params: { review_type: 'MID_TERM', status: 'PENDING' }
-        })
-        const reviewPayload = reviewRes.data || reviewRes
-        const reviewRecords = Array.isArray(reviewPayload)
-          ? reviewPayload
-          : (reviewPayload.results || reviewPayload.data?.results || reviewPayload.data || [])
-        const reviewMap = new Map(reviewRecords.map((r: any) => [r.project, r.id]))
-        tableData.value = results.map((item: any) => ({
-          ...item,
-          review_id: reviewMap.get(item.id)
-        }))
 
     } catch(err) {
         console.error(err)
@@ -222,27 +226,31 @@ const handleCurrentChange = (val: number) => {
 }
 
 const handleReview = (row: any) => {
+  const summary = row?.expert_summary
+  if (!summary || (summary.assigned || 0) === 0) {
+    ElMessage.warning('请先到“院系评审分配”分配专家组')
+    router.push({ path: '/level2-admin/expert/assignment', query: { reviewType: 'MID_TERM' } })
+    return
+  }
+  if (!summary.all_submitted) {
+    ElMessage.warning('专家评审尚未全部提交')
+    return
+  }
   currentRow.value = row
   reviewComments.value = ''
   dialogVisible.value = true
 }
 
-const submitReview = async (approved: boolean) => {
+const submitFinalize = async (action: 'pass' | 'return') => {
   if (!currentRow.value) return
   
   reviewing.value = true
   try {
-     const reviewId = currentRow.value.review_id
-     if (!reviewId) {
-       ElMessage.error('未找到审核记录')
-       return
-     }
-     await request.post(`/reviews/${reviewId}/review/`, {
-        action: approved ? 'approve' : 'reject',
-        comments: reviewComments.value
+     await request.post(`/projects/${currentRow.value.id}/workflow/finalize-midterm/`, {
+        action,
+        reason: reviewComments.value
      })
-     
-     ElMessage.success('审核完成')
+     ElMessage.success('操作完成')
      dialogVisible.value = false
      fetchData()
 
@@ -263,10 +271,10 @@ const handleSelectionChange = (rows: any[]) => {
 
 const openBatchDialog = () => {
   if (selectedRows.value.length === 0) {
-    ElMessage.warning('请先勾选要审核的项目')
+    ElMessage.warning('请先勾选要确认的项目')
     return
   }
-  batchForm.value = { action: 'approve', comments: '' }
+  batchForm.value = { action: 'pass', comments: '' }
   batchDialogVisible.value = true
 }
 
@@ -274,27 +282,31 @@ const submitBatchReview = async () => {
   if (selectedRows.value.length === 0) return
   batchSubmitting.value = true
   try {
-    const reviewIds = selectedRows.value
-      .map((row) => row.review_id)
-      .filter((id) => !!id)
-    if (reviewIds.length === 0) {
-      ElMessage.warning('未找到可审核的记录')
+    const readyRows = selectedRows.value.filter((row: any) => {
+      const s = row?.expert_summary
+      return s && (s.assigned || 0) > 0 && !!s.all_submitted
+    })
+    const skipped = selectedRows.value.length - readyRows.length
+    if (readyRows.length === 0) {
+      ElMessage.warning('所选项目均未完成专家评审或未分配专家')
       return
     }
-    const payload = {
-      review_ids: reviewIds,
-      action: batchForm.value.action,
-      comments: batchForm.value.comments
-    }
-    const res: any = await request.post('/reviews/batch-review/', payload)
-    if (res.code === 200) {
-      ElMessage.success('批量审核完成')
-      batchDialogVisible.value = false
-      selectedRows.value = []
-      fetchData()
-    }
+
+    await Promise.all(
+      readyRows.map((row: any) =>
+        request.post(`/projects/${row.id}/workflow/finalize-midterm/`, {
+          action: batchForm.value.action,
+          reason: batchForm.value.comments,
+        })
+      )
+    )
+
+    ElMessage.success(skipped ? `批量完成（跳过${skipped}条未就绪）` : '批量完成')
+    batchDialogVisible.value = false
+    selectedRows.value = []
+    fetchData()
   } catch (err: any) {
-    ElMessage.error(err.response?.data?.message || '批量审核失败')
+    ElMessage.error(err.response?.data?.message || '批量确认失败')
   } finally {
     batchSubmitting.value = false
   }

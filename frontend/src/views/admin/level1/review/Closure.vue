@@ -128,12 +128,6 @@
       destroy-on-close
     >
       <el-form :model="reviewForm" label-position="top">
-        <el-form-item v-if="reviewType === 'reject'" label="驳回去向">
-          <el-radio-group v-model="reviewForm.reject_to">
-            <el-radio label="student">退回学生</el-radio>
-            <el-radio label="teacher">退回导师</el-radio>
-          </el-radio-group>
-        </el-form-item>
         <el-form-item
           :label="
             reviewType === 'approve' ? '审核意见 (可选)' : '驳回原因 (必填)'
@@ -171,17 +165,6 @@
             <el-radio label="reject">驳回</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item v-if="batchForm.action === 'reject'" label="驳回去向">
-          <el-radio-group v-model="batchForm.reject_to">
-            <el-radio label="student">退回学生</el-radio>
-            <el-radio label="teacher">退回导师</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="结题评价">
-          <el-select v-model="batchForm.closure_rating" placeholder="请选择" style="width: 100%">
-            <el-option v-for="item in closureRatingOptions" :key="item.value" :label="item.label" :value="item.value" />
-          </el-select>
-        </el-form-item>
         <el-form-item label="审核意见">
           <el-input v-model="batchForm.comments" type="textarea" :rows="4" placeholder="请输入审核意见" />
         </el-form-item>
@@ -199,19 +182,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import { Search, Download } from "@element-plus/icons-vue";
-import {
-  getReviewProjects,
-  approveProject,
-  rejectProject,
-  batchDownloadAttachments,
-} from "@/api/projects/admin";
+import { batchDownloadAttachments } from "@/api/projects/admin";
 import ProjectStatusBadge from "@/components/business/project/StatusBadge.vue";
 import request from "@/utils/request";
-import { useDictionary } from "@/composables/useDictionary";
-import { DICT_CODES } from "@/api/dictionaries";
 
 const loading = ref(false);
 const projects = ref<any[]>([]);
@@ -226,7 +202,6 @@ const reviewType = ref<"approve" | "reject">("approve");
 const reviewForm = ref({
   projectId: 0,
   comment: "",
-  reject_to: "student",
 });
 
 const batchDialogVisible = ref(false);
@@ -234,28 +209,42 @@ const batchSubmitting = ref(false);
 const batchForm = ref({
   action: "approve",
   comments: "",
-  closure_rating: "",
-  reject_to: "student",
 });
 
-const { loadDictionaries, getOptions } = useDictionary();
-const closureRatingOptions = computed(() => getOptions(DICT_CODES.CLOSURE_RATING));
+
+const resolveList = (payload: any) => {
+  if (Array.isArray(payload)) return payload;
+  if (payload?.results) return payload.results;
+  if (payload?.data?.results) return payload.data.results;
+  return payload?.data || [];
+};
+
+const resolveCount = (payload: any) => {
+  if (typeof payload?.total === "number") return payload.total;
+  if (typeof payload?.count === "number") return payload.count;
+  if (typeof payload?.data?.count === "number") return payload.data.count;
+  if (typeof payload?.data?.total === "number") return payload.data.total;
+  return 0;
+};
 
 const fetchProjects = async () => {
   loading.value = true;
   try {
-    const response: any = await getReviewProjects({
-      page: currentPage.value,
-      page_size: pageSize.value,
-      search: searchQuery.value,
-      type: "closure",
+    const projectRes: any = await request.get("/projects/", {
+      params: {
+        page: currentPage.value,
+        page_size: pageSize.value,
+        search: searchQuery.value,
+        status: "CLOSURE_LEVEL1_REVIEWING",
+        phase: "CLOSURE",
+        phase_step: "SCHOOL_EXPERT_SCORING",
+      },
     });
 
-    if (response.code === 200) {
-      projects.value = response.data.results;
-      total.value = response.data.total;
-      selectedRows.value = [];
-    }
+    const data = projectRes?.data ?? projectRes;
+    projects.value = resolveList(data);
+    total.value = resolveCount(data) || projects.value.length;
+    selectedRows.value = [];
   } catch (error) {
     ElMessage.error("获取项目列表失败");
   } finally {
@@ -286,7 +275,6 @@ const handleApprove = (row: any) => {
   reviewType.value = "approve";
   reviewForm.value.projectId = row.id;
   reviewForm.value.comment = "";
-  reviewForm.value.reject_to = "student";
   reviewDialogVisible.value = true;
 };
 
@@ -294,7 +282,6 @@ const handleReject = (row: any) => {
   reviewType.value = "reject";
   reviewForm.value.projectId = row.id;
   reviewForm.value.comment = "";
-  reviewForm.value.reject_to = "student";
   reviewDialogVisible.value = true;
 };
 
@@ -305,25 +292,34 @@ const confirmReview = async () => {
   }
 
   try {
-    const data: any = { comment: reviewForm.value.comment };
-    if (reviewType.value === "reject") {
-      data.reject_to = reviewForm.value.reject_to;
-    }
-
-    let response: any;
     if (reviewType.value === "approve") {
-      response = await approveProject(reviewForm.value.projectId, data);
+      const res: any = await request.post(
+        `/projects/${reviewForm.value.projectId}/workflow/finalize-closure/`,
+        { action: "approve" }
+      );
+      if (res?.code === 200) {
+        ElMessage.success("结题已通过");
+      } else {
+        ElMessage.error(res?.message || "操作失败");
+        return;
+      }
     } else {
-      response = await rejectProject(reviewForm.value.projectId, data);
+      const res: any = await request.post(
+        `/projects/${reviewForm.value.projectId}/workflow/finalize-closure/`,
+        { action: "return", reason: reviewForm.value.comment }
+      );
+      if (res?.code === 200) {
+        ElMessage.success("已退回学生修改");
+      } else {
+        ElMessage.error(res?.message || "操作失败");
+        return;
+      }
     }
 
-    if (response.code === 200) {
-      ElMessage.success(reviewType.value === "approve" ? "已通过" : "已驳回");
-      reviewDialogVisible.value = false;
-      fetchProjects();
-    }
-  } catch (error) {
-    ElMessage.error("操作失败");
+    reviewDialogVisible.value = false;
+    fetchProjects();
+  } catch (error: any) {
+    ElMessage.error(error.response?.data?.message || error.message || "操作失败");
   }
 };
 
@@ -336,34 +332,41 @@ const openBatchDialog = () => {
     ElMessage.warning("请先勾选要审核的项目");
     return;
   }
-  batchForm.value = { action: "approve", comments: "", closure_rating: "", reject_to: "student" };
+  batchForm.value = { action: "approve", comments: "" };
   batchDialogVisible.value = true;
 };
 
 const submitBatchReview = async () => {
   if (selectedRows.value.length === 0) return;
+  if (batchForm.value.action === "reject" && !batchForm.value.comments) {
+    ElMessage.warning("请输入驳回原因");
+    return;
+  }
+
   batchSubmitting.value = true;
   try {
-    const payload: any = {
-      review_ids: selectedRows.value.map((row) => row.review_id),
-      action: batchForm.value.action,
-      comments: batchForm.value.comments,
-    };
-    if (batchForm.value.action === "reject") {
-      payload.reject_to = batchForm.value.reject_to;
+    let okCount = 0;
+    for (const row of selectedRows.value) {
+      try {
+        if (batchForm.value.action === "approve") {
+          const res: any = await request.post(`/projects/${row.id}/workflow/finalize-closure/`, { action: 'approve' });
+          if (res?.code === 200) okCount += 1;
+        } else {
+          const res: any = await request.post(`/projects/${row.id}/workflow/finalize-closure/`, {
+            action: 'return',
+            reason: batchForm.value.comments,
+          });
+          if (res?.code === 200) okCount += 1;
+        }
+      } catch {
+        // continue
+      }
     }
-    if (batchForm.value.closure_rating) {
-      payload.closure_rating = batchForm.value.closure_rating;
-    }
-    const res: any = await request.post("/reviews/batch-review/", payload);
-    if (res.code === 200) {
-      ElMessage.success("批量审核完成");
-      batchDialogVisible.value = false;
-      selectedRows.value = [];
-      fetchProjects();
-    }
-  } catch (error: any) {
-    ElMessage.error(error.response?.data?.message || "批量审核失败");
+
+    ElMessage.success(`批量处理完成：成功 ${okCount}/${selectedRows.value.length}`);
+    batchDialogVisible.value = false;
+    selectedRows.value = [];
+    fetchProjects();
   } finally {
     batchSubmitting.value = false;
   }
@@ -426,7 +429,6 @@ const downloadFile = (blob: Blob, filename: string) => {
 };
 
 onMounted(() => {
-  loadDictionaries([DICT_CODES.CLOSURE_RATING]);
   fetchProjects();
 });
 </script>

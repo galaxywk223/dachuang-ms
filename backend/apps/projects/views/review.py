@@ -40,6 +40,12 @@ class ProjectReviewViewSet(viewsets.ViewSet):
             "type", "establishment"
         )  # establishment, midterm, closure
 
+        if review_type == "closure":
+            return Response(
+                {"code": 400, "message": "结题流程需先分配校级专家评审，管理员不能直接审核（请到专家评审分配/校级结题审核页操作）"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         review_type_map = {
             "establishment": Review.ReviewType.APPLICATION,
             "closure": Review.ReviewType.CLOSURE,
@@ -118,6 +124,12 @@ class ProjectReviewViewSet(viewsets.ViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        if review.review_type == Review.ReviewType.CLOSURE:
+            return Response(
+                {"code": 400, "message": "结题流程需先分配专家评审，管理员不能直接审核"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         comment = request.data.get("comment", "")
         reject_to = request.data.get("reject_to")
         score = request.data.get("score")
@@ -185,6 +197,12 @@ class ProjectReviewViewSet(viewsets.ViewSet):
             )
 
         comment = request.data.get("comment", "")
+        if review.review_type == Review.ReviewType.CLOSURE:
+            return Response(
+                {"code": 400, "message": "结题流程需先分配专家评审，管理员不能直接审核"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
 
         if not comment:
             return Response(

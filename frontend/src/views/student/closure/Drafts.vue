@@ -150,7 +150,6 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { useRouter } from "vue-router";
 import {
   getClosureDrafts,
-  updateClosureApplication,
   deleteClosureDraft,
 } from "@/api/projects";
 
@@ -219,33 +218,20 @@ const handleEdit = (row: any) => {
 const handleSubmit = async (row: any) => {
   try {
     await ElMessageBox.confirm(
-      "确定要提交该结题申请吗？提交后将进入审核流程。",
+      "将跳转到编辑页提交结题申请（可检查材料/成果后提交）",
       "提示",
       {
-        confirmButtonText: "确定",
+        confirmButtonText: "前往",
         cancelButtonText: "取消",
         type: "warning",
       }
     );
 
-    // 调用API提交结题申请
-    const response: any = await updateClosureApplication(row.id, {
-      is_draft: false,
-      research_content: row.research_content,
-      expected_results: row.expected_results,
-      achievements: row.achievements || [],
-    });
-
-    if (response.code === 200) {
-      ElMessage.success("提交成功");
-      fetchClosureDrafts();
-    } else {
-      ElMessage.error(response.message || "提交失败");
-    }
+    router.push(`/closure/apply?projectId=${row.id}`);
   } catch (error: any) {
     if (error !== "cancel") {
-      console.error("提交结题申请失败:", error);
-      ElMessage.error(error.message || "提交失败");
+      console.error("跳转提交失败:", error);
+      ElMessage.error(error.message || "操作失败");
     }
   }
 };

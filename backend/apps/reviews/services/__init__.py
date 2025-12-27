@@ -167,22 +167,38 @@ class ReviewService:
         # 中期审核
         elif review.review_type == Review.ReviewType.MID_TERM:
             if review.review_level == Review.ReviewLevel.TEACHER:
-                # 导师通过后进入二级审核
-                ReviewService.create_mid_term_review(project)
+                # 导师通过后进入院级专家评审（由院级管理员分配专家任务）
+                project.status = Project.ProjectStatus.MID_TERM_REVIEWING
+                project.save(update_fields=["status"])
+                phase_instance = ProjectPhaseService.ensure_current(
+                    project, ProjectPhaseInstance.Phase.MID_TERM, step="COLLEGE_EXPERT_REVIEWING"
+                )
+                review.phase_instance = phase_instance
+                review.save(update_fields=["phase_instance"])
             elif review.review_level == Review.ReviewLevel.LEVEL2:
-                project.status = Project.ProjectStatus.MID_TERM_APPROVED
+                project.status = Project.ProjectStatus.READY_FOR_CLOSURE
                 if review.phase_instance:
                     ProjectPhaseService.mark_completed(review.phase_instance, step="COMPLETED")
 
         # 结题审核
         elif review.review_type == Review.ReviewType.CLOSURE:
             if review.review_level == Review.ReviewLevel.TEACHER:
-                # 导师通过后进入一级审核（校级）
-                ReviewService.create_closure_level1_review(project)
+                # 导师通过后进入院级专家评审（由院级管理员分配专家任务）
+                project.status = Project.ProjectStatus.CLOSURE_LEVEL2_REVIEWING
+                project.save(update_fields=["status"])
+                phase_instance = ProjectPhaseService.ensure_current(
+                    project, ProjectPhaseInstance.Phase.CLOSURE, step="COLLEGE_EXPERT_SCORING"
+                )
+                review.phase_instance = phase_instance
+                review.save(update_fields=["phase_instance"])
             elif review.review_level == Review.ReviewLevel.LEVEL2:
-                project.status = Project.ProjectStatus.CLOSURE_LEVEL2_APPROVED
-                # 二级审核通过后，自动创建一级审核记录
-                ReviewService.create_closure_level1_review(project)
+                # 二级管理员确认后进入校级专家评审（legacy admin-review 路径）
+                project.status = Project.ProjectStatus.CLOSURE_LEVEL1_REVIEWING
+                phase_instance = ProjectPhaseService.ensure_current(
+                    project, ProjectPhaseInstance.Phase.CLOSURE, step="SCHOOL_EXPERT_SCORING"
+                )
+                review.phase_instance = phase_instance
+                review.save(update_fields=["phase_instance"])
             elif review.review_level == Review.ReviewLevel.LEVEL1:
                 project.status = Project.ProjectStatus.CLOSURE_LEVEL1_APPROVED
                 # 一级审核通过后，项目结题
@@ -348,21 +364,7 @@ class ReviewService:
         phase_instance = ProjectPhaseService.ensure_current(
             project, ProjectPhaseInstance.Phase.MID_TERM, step="COLLEGE_EXPERT_REVIEWING"
         )
-        existing = Review.objects.filter(
-            project=project,
-            review_type=Review.ReviewType.MID_TERM,
-            review_level=Review.ReviewLevel.LEVEL2,
-            status=Review.ReviewStatus.PENDING,
-        ).first()
-        if existing:
-            return existing
-
-        return ReviewService.create_review(
-            project=project,
-            review_type=Review.ReviewType.MID_TERM,
-            review_level=Review.ReviewLevel.LEVEL2,
-            phase_instance=phase_instance,
-        )
+        return phase_instance
 
     @staticmethod
     @transaction.atomic
@@ -370,9 +372,6 @@ class ReviewService:
         """
         创建中期审核记录（导师审核）
         """
-        project.status = Project.ProjectStatus.MID_TERM_REVIEWING
-        project.save(update_fields=["status"])
-
         phase_instance = ProjectPhaseService.ensure_current(
             project, ProjectPhaseInstance.Phase.MID_TERM, step="TEACHER_REVIEWING"
         )

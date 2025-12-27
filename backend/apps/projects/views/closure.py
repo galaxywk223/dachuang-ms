@@ -45,6 +45,84 @@ def _resolve_achievement_type_value(raw_value, cache):
         return raw_value
     return None
 
+def _resolve_achievement_type_obj(raw_value):
+    if raw_value is None or raw_value == "":
+        return None
+    if isinstance(raw_value, int) or (isinstance(raw_value, str) and raw_value.isdigit()):
+        return DictionaryItem.objects.filter(id=int(raw_value)).first()
+    if isinstance(raw_value, str):
+        return DictionaryItem.objects.filter(dict_type__code="achievement_type", value=raw_value).first()
+    return None
+
+
+def _upsert_project_achievements(project, achievements_data, files):
+    existing = {str(a.id): a for a in project.achievements.all()}
+    seen_ids = set()
+
+    for index, achievement_data in enumerate(achievements_data or []):
+        if not isinstance(achievement_data, dict):
+            continue
+
+        title = achievement_data.get("title")
+        if not title:
+            continue
+
+        raw_id = achievement_data.get("id")
+        ach_id = None
+        if raw_id is not None and raw_id != "":
+            try:
+                ach_id = int(raw_id)
+            except (TypeError, ValueError):
+                ach_id = None
+
+        ach_type_val = achievement_data.get("achievement_type")
+        if ach_type_val is None:
+            ach_type_val = achievement_data.get("achievement_type_value")
+        ach_type_obj = _resolve_achievement_type_obj(ach_type_val)
+
+        payload = {
+            "achievement_type": ach_type_obj,
+            "title": title or "",
+            "description": achievement_data.get("description", ""),
+            "extra_data": _parse_json_payload(achievement_data.get("extra_data"), {}),
+            "authors": achievement_data.get("authors", ""),
+            "journal": achievement_data.get("journal", ""),
+            "publication_date": achievement_data.get("publication_date") or None,
+            "doi": achievement_data.get("doi", ""),
+            "patent_no": achievement_data.get("patent_no", ""),
+            "patent_type": achievement_data.get("patent_type", ""),
+            "applicant": achievement_data.get("applicant", ""),
+            "copyright_no": achievement_data.get("copyright_no", ""),
+            "copyright_owner": achievement_data.get("copyright_owner", ""),
+            "competition_name": achievement_data.get("competition_name", ""),
+            "award_level": achievement_data.get("award_level", ""),
+            "award_date": achievement_data.get("award_date") or None,
+        }
+
+        instance = None
+        if ach_id is not None:
+            instance = existing.get(str(ach_id))
+
+        if instance:
+            for key, val in payload.items():
+                setattr(instance, key, val)
+            instance.save()
+            seen_ids.add(str(instance.id))
+        else:
+            instance = ProjectAchievement.objects.create(project=project, **payload)
+            seen_ids.add(str(instance.id))
+
+        file_key = f"achievement_{index}"
+        if file_key in files:
+            instance.attachment = files[file_key]
+            instance.save(update_fields=["attachment"])  # keep other fields
+
+    # Delete achievements removed by user
+    for existing_id, existing_obj in existing.items():
+        if existing_id not in seen_ids:
+            existing_obj.delete()
+
+
 
 def _validate_expected_results(project, achievements_data):
     expected_list = project.expected_results_data or []
@@ -94,7 +172,7 @@ def _validate_expected_results(project, achievements_data):
 @permission_classes([IsAuthenticated])
 def get_pending_closure_projects(request):
     """
-    获取待结题项目列表（状态为 IN_PROGRESS）
+    获取待结题项目列表（中期审核通过后待结题）
     """
     user = request.user
 
@@ -106,9 +184,16 @@ def get_pending_closure_projects(request):
     page = int(request.query_params.get("page", 1))
     page_size = int(request.query_params.get("page_size", 10))
 
-    # 构建查询 - 只查询进行中的项目
+    # 构建查询 - 待结题项目
     projects = Project.objects.filter(
-        leader=user, status=Project.ProjectStatus.IN_PROGRESS
+        leader=user,
+        status__in=[
+            Project.ProjectStatus.READY_FOR_CLOSURE,
+            Project.ProjectStatus.MID_TERM_APPROVED,  # legacy
+            Project.ProjectStatus.CLOSURE_RETURNED,
+            Project.ProjectStatus.CLOSURE_LEVEL2_REJECTED,
+            Project.ProjectStatus.CLOSURE_LEVEL1_REJECTED,
+        ],
     )
 
     # 应用筛选
@@ -270,7 +355,7 @@ def get_closure_drafts(request):
 @permission_classes([IsAuthenticated])
 def create_closure_application(request, pk):
     """
-    创建结题申请（将项目状态从 IN_PROGRESS 改为 CLOSURE_DRAFT 或 CLOSURE_SUBMITTED）
+    创建结题申请（将项目状态从 待结题 改为 CLOSURE_DRAFT 或 CLOSURE_SUBMITTED）
     """
     user = request.user
 
@@ -284,7 +369,9 @@ def create_closure_application(request, pk):
 
     # 允许进行中/结题驳回的项目重新发起结题
     allowed_statuses = {
-        Project.ProjectStatus.IN_PROGRESS,
+        Project.ProjectStatus.READY_FOR_CLOSURE,
+        Project.ProjectStatus.MID_TERM_APPROVED,  # legacy
+        Project.ProjectStatus.CLOSURE_RETURNED,
         Project.ProjectStatus.CLOSURE_DRAFT,
         Project.ProjectStatus.CLOSURE_LEVEL2_REJECTED,
         Project.ProjectStatus.CLOSURE_LEVEL1_REJECTED,
@@ -346,6 +433,9 @@ def create_closure_application(request, pk):
             if data.get("expected_results"):
                 project.expected_results = data.get("expected_results")
             
+            if "achievement_summary" in data:
+                project.achievement_summary = data.get("achievement_summary") or ""
+
             # Handle Files
             if 'final_report' in request.FILES:
                 project.final_report = request.FILES['final_report']
@@ -354,54 +444,8 @@ def create_closure_application(request, pk):
 
             project.save()
 
-            # 保存成果信息
-            # 先删除旧的成果记录（如果是更新）
-            if not is_draft:
-                project.achievements.all().delete()
-            else:
-                 # Verify strategy for draft: replace all or update?
-                 # Simple strategy: replace all for now to avoid syncing issues
-                 project.achievements.all().delete()
-
-            for index, achievement_data in enumerate(achievements_data):
-                if achievement_data.get("title"):  # 只保存填写了标题的成果
-                    ach_type_val = achievement_data.get("achievement_type")
-                    ach_type_obj = None
-                    if ach_type_val:
-                         # Try to resolve if string
-                         if isinstance(ach_type_val, str) and not ach_type_val.isdigit():
-                             ach_type_obj = DictionaryItem.objects.filter(value=ach_type_val).first()
-                         elif isinstance(ach_type_val, int) or (isinstance(ach_type_val, str) and ach_type_val.isdigit()):
-                             ach_type_obj = DictionaryItem.objects.filter(id=int(ach_type_val)).first()
-                    
-                    ach = ProjectAchievement.objects.create(
-                        project=project,
-                        achievement_type=ach_type_obj,
-                        title=achievement_data.get("title", ""),
-                        description=achievement_data.get("description", ""),
-                        extra_data=_parse_json_payload(
-                            achievement_data.get("extra_data"), {}
-                        ),
-                        authors=achievement_data.get("authors", ""),
-                        journal=achievement_data.get("journal", ""),
-                        publication_date=achievement_data.get("publication_date") or None,
-                        doi=achievement_data.get("doi", ""),
-                        patent_no=achievement_data.get("patent_no", ""),
-                        patent_type=achievement_data.get("patent_type", ""),
-                        applicant=achievement_data.get("applicant", ""),
-                        copyright_no=achievement_data.get("copyright_no", ""),
-                        copyright_owner=achievement_data.get("copyright_owner", ""),
-                        competition_name=achievement_data.get("competition_name", ""),
-                        award_level=achievement_data.get("award_level", ""),
-                        award_date=achievement_data.get("award_date") or None,
-                    )
-                    
-                    # Handle achievement attachment
-                    # Expect key "achievement_{index}" in FILES
-                    file_key = f'achievement_{index}'
-                    if file_key in request.FILES:
-                        ach.attachment = request.FILES[file_key]
-                        ach.save()
+            # 保存/更新成果信息（保留已有附件，未重新上传则不覆盖）
+            _upsert_project_achievements(project, achievements_data, request.FILES)
 
             # 非草稿时创建/确保导师结题审核记录
             if not is_draft:
@@ -504,6 +548,9 @@ def update_closure_application(request, pk):
             if data.get("expected_results"):
                 project.expected_results = data.get("expected_results")
             
+            if "achievement_summary" in data:
+                project.achievement_summary = data.get("achievement_summary") or ""
+
             # Handle Files
             if 'final_report' in request.FILES:
                 project.final_report = request.FILES['final_report']
@@ -512,47 +559,8 @@ def update_closure_application(request, pk):
 
             project.save()
 
-            # 更新成果信息（先删除旧的）
-            project.achievements.all().delete()
-            
-            for index, achievement_data in enumerate(achievements_data):
-                if achievement_data.get("title"):
-                    ach_type_val = achievement_data.get("achievement_type")
-                    ach_type_obj = None
-                    if ach_type_val:
-                         # Try to resolve if string
-                         if isinstance(ach_type_val, str) and not ach_type_val.isdigit():
-                             ach_type_obj = DictionaryItem.objects.filter(value=ach_type_val).first()
-                         elif isinstance(ach_type_val, int) or (isinstance(ach_type_val, str) and ach_type_val.isdigit()):
-                             ach_type_obj = DictionaryItem.objects.filter(id=int(ach_type_val)).first()
-
-                    ach = ProjectAchievement.objects.create(
-                        project=project,
-                        achievement_type=ach_type_obj,
-                        title=achievement_data.get("title", ""),
-                        description=achievement_data.get("description", ""),
-                        extra_data=_parse_json_payload(
-                            achievement_data.get("extra_data"), {}
-                        ),
-                        authors=achievement_data.get("authors", ""),
-                        journal=achievement_data.get("journal", ""),
-                        publication_date=achievement_data.get("publication_date") or None,
-                        doi=achievement_data.get("doi", ""),
-                        patent_no=achievement_data.get("patent_no", ""),
-                        patent_type=achievement_data.get("patent_type", ""),
-                        applicant=achievement_data.get("applicant", ""),
-                        copyright_no=achievement_data.get("copyright_no", ""),
-                        copyright_owner=achievement_data.get("copyright_owner", ""),
-                        competition_name=achievement_data.get("competition_name", ""),
-                        award_level=achievement_data.get("award_level", ""),
-                        award_date=achievement_data.get("award_date") or None,
-                    )
-                    
-                    # Handle achievement attachment
-                    file_key = f'achievement_{index}'
-                    if file_key in request.FILES:
-                        ach.attachment = request.FILES[file_key]
-                        ach.save()
+            # 保存/更新成果信息（保留已有附件，未重新上传则不覆盖）
+            _upsert_project_achievements(project, achievements_data, request.FILES)
 
             # 非草稿时创建/确保导师结题审核记录
             if not is_draft:
@@ -605,8 +613,8 @@ def delete_closure_draft(request, pk):
         )
 
     try:
-        # 将状态恢复为进行中
-        project.status = Project.ProjectStatus.IN_PROGRESS
+        # 将状态恢复为待结题
+        project.status = Project.ProjectStatus.READY_FOR_CLOSURE
         project.save()
 
         return Response({"code": 200, "message": "删除成功"}, status=status.HTTP_200_OK)

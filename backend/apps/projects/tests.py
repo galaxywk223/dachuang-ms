@@ -55,21 +55,23 @@ class MidTermTestCase(TestCase):
         self.assertIsNotNone(self.project.mid_term_report)
         self.assertIsNotNone(self.project.mid_term_submitted_at)
 
-        # 4. Create Review (Simulate Admin ViewSet action)
-        ReviewService.create_mid_term_review(self.project)
+        # 4. Create midterm phase + a legacy level2 review record (admin approval path)
+        phase_instance = ReviewService.create_mid_term_review(self.project)
         self.project.refresh_from_db()
         self.assertEqual(self.project.status, Project.ProjectStatus.MID_TERM_REVIEWING)
-        
-        # Verify Review Created
-        reviews = Review.objects.filter(project=self.project, review_type=Review.ReviewType.MID_TERM)
-        self.assertTrue(reviews.exists())
-        review = reviews.first()
+
+        review = ReviewService.create_review(
+            self.project,
+            Review.ReviewType.MID_TERM,
+            Review.ReviewLevel.LEVEL2,
+            phase_instance=phase_instance,
+        )
         self.assertEqual(review.status, Review.ReviewStatus.PENDING)
 
-        # 5. Approve Review
+        # 5. Approve Review (should advance to 待结题)
         ReviewService.approve_review(review, self.admin, "Good job")
         self.project.refresh_from_db()
-        self.assertEqual(self.project.status, Project.ProjectStatus.MID_TERM_APPROVED)
+        self.assertEqual(self.project.status, Project.ProjectStatus.READY_FOR_CLOSURE)
 
     def test_mid_term_rejection(self):
         # Setup as reviewing

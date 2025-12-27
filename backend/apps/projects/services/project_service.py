@@ -154,15 +154,17 @@ class ProjectService:
         申请项目结题
         """
         if project.status not in [
-            Project.ProjectStatus.IN_PROGRESS,
+            Project.ProjectStatus.READY_FOR_CLOSURE,
+            Project.ProjectStatus.MID_TERM_APPROVED,  # legacy
             Project.ProjectStatus.CLOSURE_LEVEL2_REJECTED,
             Project.ProjectStatus.CLOSURE_LEVEL1_REJECTED,
             Project.ProjectStatus.CLOSURE_RETURNED,
         ]:
             raise ValueError("当前项目状态无法申请结题")
 
-        # 更新结题报告
-        project.final_report = final_report
+        # 更新结题报告（未重新上传则保留原文件）
+        if final_report is not None:
+            project.final_report = final_report
 
         if is_draft:
             # 保存为草稿
@@ -250,8 +252,9 @@ class ProjectService:
         if project.status not in allowed_statuses:
             raise ValueError("当前项目状态不允许提交中期检查")
 
-        # 更新中期报告
-        project.mid_term_report = mid_term_report
+        # 更新中期报告（未重新上传则保留原文件）
+        if mid_term_report is not None:
+            project.mid_term_report = mid_term_report
 
         if is_draft:
             # 保存为草稿
@@ -303,7 +306,7 @@ class ProjectService:
             raise ValueError("项目不在中期审核中")
 
         if is_approved:
-            project.status = Project.ProjectStatus.MID_TERM_APPROVED
+            project.status = Project.ProjectStatus.READY_FOR_CLOSURE
         else:
             project.status = Project.ProjectStatus.MID_TERM_REJECTED
 
