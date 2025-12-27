@@ -37,7 +37,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = [IsAuthenticated]
-    filterset_fields = ["status", "review_type", "review_level", "project"]
+    filterset_fields = ["status", "review_type", "review_level", "project", "project__status"]
     search_fields = ["project__project_no", "project__title"]
     ordering_fields = ["created_at", "reviewed_at"]
 
@@ -74,6 +74,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
             status_list = [s.strip() for s in status_in.split(",") if s.strip()]
             if status_list:
                 queryset = queryset.filter(status__in=status_list)
+
+        reviewer_isnull = self.request.query_params.get("reviewer_isnull")
+        if reviewer_isnull in ("true", "false"):
+            queryset = queryset.filter(reviewer__isnull=(reviewer_isnull == "true"))
 
         return queryset
 

@@ -15,7 +15,7 @@
                     :value="group.id"
                  />
               </el-select>
-              <el-select v-model="reviewType" placeholder="审核类型" style="width: 150px" class="mr-2">
+              <el-select v-model="reviewType" placeholder="审核类型" style="width: 150px" class="mr-2" @change="handleReviewTypeChange">
                  <el-option label="申报审核" value="APPLICATION" />
                  <el-option label="中期审核" value="MID_TERM" />
                  <el-option label="结题审核" value="CLOSURE" />
@@ -44,7 +44,9 @@
              <el-option label="待提交" value="DRAFT" />
              <el-option label="已提交" value="SUBMITTED" />
              <el-option label="进行中" value="IN_PROGRESS" />
-             <!-- Add more as needed -->
+             <el-option label="中期审核中" value="MID_TERM_REVIEWING" />
+             <el-option label="中期已提交" value="MID_TERM_SUBMITTED" />
+             <el-option label="结题二级审核中" value="CLOSURE_LEVEL2_REVIEWING" />
          </el-select>
       </div>
 
@@ -115,6 +117,11 @@ const statusFilter = ref("");
 const selectedGroup = ref<number | null>(null);
 const reviewType = ref("APPLICATION");
 const selectedProjects = ref<any[]>([]);
+const defaultStatusByReviewType: Record<string, string> = {
+    APPLICATION: "COLLEGE_AUDITING",
+    MID_TERM: "MID_TERM_REVIEWING",
+    CLOSURE: "CLOSURE_LEVEL2_REVIEWING",
+};
 
 const resolveList = (payload: any) => {
     if (Array.isArray(payload)) return payload;
@@ -139,29 +146,57 @@ const fetchProjects = async () => {
             page: currentPage.value,
             page_size: pageSize.value,
             search: searchQuery.value,
-            exclude_assigned_review_type: reviewType.value,
-            exclude_assigned_review_level: assignedReviewLevel.value,
+            review_type: reviewType.value,
+            review_level: assignedReviewLevel.value,
+            status: "PENDING",
+            reviewer_isnull: "true",
         };
         if (statusFilter.value) {
-            params.status = statusFilter.value;
+            params["project__status"] = statusFilter.value;
+        } else if (defaultStatusByReviewType[reviewType.value]) {
+            params["project__status"] = defaultStatusByReviewType[reviewType.value];
         }
-        
-        // Optionally filter by projects needing review?
-        // Usually review assignment happens when project is SUBMITTED or similar status.
-        
-        const projectRes: any = await request.get('/projects/', { params });
-        const rows = resolveList(projectRes);
-        projects.value = rows || [];
-        total.value =
-            projectRes?.data?.count ??
-            projectRes?.count ??
-            (rows ? rows.length : 0);
+
+        const reviewRes: any = await request.get('/reviews/', { params });
+        const records = resolveList(reviewRes);
+        const rows = (records || []).map((item: any) => {
+            const projectInfo = item.project_info || {};
+            return {
+                ...projectInfo,
+                review_id: item.id,
+                review_type: item.review_type,
+                review_level: item.review_level,
+            };
+        });
+        const assignedRes: any = await request.get('/reviews/', {
+            params: {
+                review_type: reviewType.value,
+                review_level: assignedReviewLevel.value,
+                reviewer_isnull: "false",
+            },
+        });
+        const assignedRecords = resolveList(assignedRes) || [];
+        const assignedProjectIds = new Set(
+            assignedRecords.map((item: any) => item.project)
+        );
+        const filteredRows = (rows || []).filter(
+            (row: any) => !assignedProjectIds.has(row.id)
+        );
+        projects.value = filteredRows;
+        total.value = filteredRows.length;
     } catch (e) {
         console.error(e);
         ElMessage.error("获取项目失败");
     } finally {
         loading.value = false;
     }
+};
+
+const handleReviewTypeChange = () => {
+    statusFilter.value = defaultStatusByReviewType[reviewType.value] || "";
+    selectedProjects.value = [];
+    currentPage.value = 1;
+    fetchProjects();
 };
 
 const handleSelectionChange = (val: any[]) => {
