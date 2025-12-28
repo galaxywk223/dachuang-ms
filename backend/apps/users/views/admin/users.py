@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
 from django.contrib.auth.hashers import make_password
+from django.conf import settings
 
 from ...models import User
 from ...serializers import UserSerializer, UserCreateSerializer
@@ -147,7 +148,15 @@ class AdminUserViewSet(viewsets.ModelViewSet):
 
         # 设置默认密码
         if "password" not in data or not data["password"]:
-            data["password"] = "123456"
+            if not settings.DEFAULT_USER_PASSWORD:
+                return Response(
+                    {
+                        "code": 400,
+                        "message": "请提供密码或配置 DEFAULT_USER_PASSWORD",
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            data["password"] = settings.DEFAULT_USER_PASSWORD
 
         serializer = self.get_serializer(data=data)
         if not serializer.is_valid():
@@ -287,11 +296,19 @@ class AdminUserViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_403_FORBIDDEN,
                 )
 
-        # 重置为默认密码
-        user.password = make_password("123456")
+        new_password = request.data.get("password") or settings.DEFAULT_RESET_PASSWORD
+        if not new_password:
+            return Response(
+                {"code": 400, "message": "请提供密码或配置 DEFAULT_RESET_PASSWORD"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.password = make_password(new_password)
         user.save()
 
-        return Response({"code": 200, "message": "密码已重置为: 123456"})
+        return Response(
+            {"code": 200, "message": f"密码已重置为: {new_password}"}
+        )
 
     @action(methods=["get"], detail=False, url_path="statistics")
     def get_statistics(self, request):

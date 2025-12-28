@@ -4,15 +4,36 @@ from apps.projects.models import Project
 from apps.projects.services import ProjectService
 from apps.reviews.services import ReviewService
 from apps.reviews.models import Review
+from django.utils.crypto import get_random_string
 
 User = get_user_model()
 
 class MidTermTestCase(TestCase):
     def setUp(self):
         # Create users
-        self.student = User.objects.create_user(username='student', password='password', role='STUDENT', real_name='Student', employee_id='1001')
-        self.teacher = User.objects.create_user(username='teacher', password='password', role='TEACHER', real_name='Teacher', employee_id='2001')
-        self.admin = User.objects.create_user(username='admin', password='password', role='LEVEL2_ADMIN', real_name='Admin', employee_id='3001', college='CS')
+        password = get_random_string(12)
+        self.student = User.objects.create_user(
+            username='student',
+            password=password,
+            role='STUDENT',
+            real_name='Student',
+            employee_id='1001',
+        )
+        self.teacher = User.objects.create_user(
+            username='teacher',
+            password=password,
+            role='TEACHER',
+            real_name='Teacher',
+            employee_id='2001',
+        )
+        self.admin = User.objects.create_user(
+            username='admin',
+            password=password,
+            role='LEVEL2_ADMIN',
+            real_name='Admin',
+            employee_id='3001',
+            college='CS',
+        )
 
         # Create project
         self.project = Project.objects.create(

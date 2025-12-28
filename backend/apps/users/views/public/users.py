@@ -71,14 +71,13 @@ class UserViewSet(viewsets.ModelViewSet):
         重置用户密码
         """
         user = self.get_object()
-        success = self.user_service.reset_password(user)
+        try:
+            new_password = request.data.get("password")
+            self.user_service.reset_password(user, new_password=new_password)
+        except ValueError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
-        if success:
-            return Response({"message": "密码重置成功"}, status=status.HTTP_200_OK)
-        else:
-            return Response(
-                {"error": "密码重置失败"}, status=status.HTTP_400_BAD_REQUEST
-            )
+        return Response({"message": "密码重置成功"}, status=status.HTTP_200_OK)
 
     @action(methods=["post"], detail=True)
     def toggle_active(self, request, pk=None):

@@ -3,6 +3,7 @@
 """
 
 from datetime import datetime
+import logging
 
 from django.http import HttpResponse
 from rest_framework import status
@@ -11,6 +12,7 @@ from rest_framework.response import Response
 
 
 class ProjectAdminExportAttachmentsMixin:
+    logger = logging.getLogger(__name__)
     @action(methods=["get"], detail=False, url_path="batch-download")
     def batch_download_attachments(self, request):
         """
@@ -42,8 +44,8 @@ class ProjectAdminExportAttachmentsMixin:
                     files_to_zip.append(
                         (p.proposal_file.path, f"{p.project_no}_{p.title}/申请书.{ext}")
                     )
-                except Exception:
-                    pass
+                except Exception as exc:
+                    self.logger.warning("Skip proposal file for project %s: %s", p.id, exc)
 
             # 中期报告
             if p.mid_term_report:
@@ -51,8 +53,8 @@ class ProjectAdminExportAttachmentsMixin:
                     files_to_zip.append(
                         (p.mid_term_report.path, f"{p.project_no}_{p.title}/中期报告.pdf")
                     )
-                except Exception:
-                    pass
+                except Exception as exc:
+                    self.logger.warning("Skip mid-term report for project %s: %s", p.id, exc)
 
             # 结题报告
             if p.final_report:
@@ -60,8 +62,8 @@ class ProjectAdminExportAttachmentsMixin:
                     files_to_zip.append(
                         (p.final_report.path, f"{p.project_no}_{p.title}/结题报告.pdf")
                     )
-                except Exception:
-                    pass
+                except Exception as exc:
+                    self.logger.warning("Skip final report for project %s: %s", p.id, exc)
 
             # 成果附件 (zip/rar/pdf)
             if p.achievement_file:
@@ -73,8 +75,8 @@ class ProjectAdminExportAttachmentsMixin:
                             f"{p.project_no}_{p.title}/成果附件.{ext}",
                         )
                     )
-                except Exception:
-                    pass
+                except Exception as exc:
+                    self.logger.warning("Skip achievement file for project %s: %s", p.id, exc)
 
             # 独立的成果附件 (ProjectAchievement)
             for ach in p.achievements.all():
@@ -87,8 +89,8 @@ class ProjectAdminExportAttachmentsMixin:
                                 f"{p.project_no}_{p.title}/成果/{ach.title}.{ext}",
                             )
                         )
-                    except Exception:
-                        pass
+                    except Exception as exc:
+                        self.logger.warning("Skip achievement attachment for project %s: %s", p.id, exc)
 
         if not files_to_zip:
             return Response(

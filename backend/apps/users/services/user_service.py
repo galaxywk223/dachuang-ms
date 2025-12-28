@@ -86,20 +86,27 @@ class UserService:
 
         return {"success": True}
 
-    def reset_password(self, user, new_password="123456"):
+    def reset_password(self, user, new_password=None):
         """
         重置用户密码
 
         Args:
             user: 用户对象
-            new_password: 新密码，默认为123456
+            new_password: 新密码
 
         Returns:
-            bool: 操作结果
+            str: 新密码
         """
+        from django.conf import settings
+
+        if not new_password:
+            new_password = settings.DEFAULT_RESET_PASSWORD
+        if not new_password:
+            raise ValueError("未配置默认重置密码")
+
         user.password = make_password(new_password)
         user.save(update_fields=["password"])
-        return True
+        return new_password
 
     def toggle_user_active(self, user):
         """

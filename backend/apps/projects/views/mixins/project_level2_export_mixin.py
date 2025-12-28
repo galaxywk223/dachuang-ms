@@ -4,6 +4,7 @@ Project export actions.
 
 from io import BytesIO
 import zipfile
+import logging
 
 import openpyxl  # type: ignore[import-untyped]
 from django.http import HttpResponse
@@ -15,6 +16,7 @@ from ...models import Project
 
 
 class ProjectLevel2ExportMixin:
+    logger = logging.getLogger(__name__)
     @action(methods=["get"], detail=False, url_path="export-excel")
     def export_excel(self, request):
         """
@@ -85,8 +87,8 @@ class ProjectLevel2ExportMixin:
             for cell in column_cells:
                 try:
                     max_length = max(max_length, len(str(cell.value)))
-                except Exception:
-                    pass
+                except Exception as exc:
+                    self.logger.debug("Failed to size column: %s", exc)
             adjusted_width = (max_length + 2) * 1.2
             ws.column_dimensions[column_cells[0].column_letter].width = adjusted_width
 
@@ -126,8 +128,8 @@ class ProjectLevel2ExportMixin:
                             project.proposal_file.path,
                             f"{project.project_no}/申报书_{project.proposal_file.name.split('/')[-1]}",
                         )
-                    except Exception:
-                        pass
+                    except Exception as exc:
+                        self.logger.warning("Skip proposal file for project %s: %s", project.id, exc)
 
                 if project.mid_term_report:
                     try:
@@ -135,8 +137,8 @@ class ProjectLevel2ExportMixin:
                             project.mid_term_report.path,
                             f"{project.project_no}/中期报告_{project.mid_term_report.name.split('/')[-1]}",
                         )
-                    except Exception:
-                        pass
+                    except Exception as exc:
+                        self.logger.warning("Skip mid-term report for project %s: %s", project.id, exc)
 
                 if project.final_report:
                     try:
@@ -144,8 +146,8 @@ class ProjectLevel2ExportMixin:
                             project.final_report.path,
                             f"{project.project_no}/结题报告_{project.final_report.name.split('/')[-1]}",
                         )
-                    except Exception:
-                        pass
+                    except Exception as exc:
+                        self.logger.warning("Skip final report for project %s: %s", project.id, exc)
 
                 for achievement in project.achievements.all():
                     if achievement.attachment:
@@ -154,8 +156,8 @@ class ProjectLevel2ExportMixin:
                                 achievement.attachment.path,
                                 f"{project.project_no}/成果_{achievement.title}_{achievement.attachment.name.split('/')[-1]}",
                             )
-                        except Exception:
-                            pass
+                        except Exception as exc:
+                            self.logger.warning("Skip achievement attachment for project %s: %s", project.id, exc)
 
         zip_buffer.seek(0)
         response = HttpResponse(zip_buffer.read(), content_type="application/zip")

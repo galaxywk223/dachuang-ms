@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from apps.projects.models import Project
 from apps.dictionaries.models import DictionaryItem, DictionaryType
 from apps.projects.services import ProjectService
+from django.utils.crypto import get_random_string
 from decimal import Decimal
 import datetime
 
@@ -11,7 +12,14 @@ User = get_user_model()
 class BudgetTestCase(TestCase):
     def setUp(self):
         # Create users
-        self.student = User.objects.create_user(username='student', password='password', role='STUDENT', real_name='Student', employee_id='1001')
+        password = get_random_string(12)
+        self.student = User.objects.create_user(
+            username='student',
+            password=password,
+            role='STUDENT',
+            real_name='Student',
+            employee_id='1001',
+        )
         
         # Create dictionary item for category
         type_obj = DictionaryType.objects.create(code='EXPENDITURE_CATEGORY', name='支出类别', is_system=True)

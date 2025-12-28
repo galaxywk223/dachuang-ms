@@ -4,6 +4,7 @@
 
 import io
 import zipfile
+import logging
 
 from django.http import HttpResponse
 from rest_framework import status
@@ -14,6 +15,7 @@ from ...services import DocumentService
 
 
 class ProjectAdminExportDocumentsMixin:
+    logger = logging.getLogger(__name__)
     def _render_project_doc(self, project, title):
         advisors = []
         for advisor in project.advisors.all():
@@ -118,8 +120,8 @@ class ProjectAdminExportDocumentsMixin:
                 try:
                     doc_buffer, filename = DocumentService.generate_project_doc(pk)
                     zf.writestr(filename, doc_buffer.getvalue())
-                except Exception:
-                    pass
+                except Exception as exc:
+                    self.logger.warning("Failed to export doc for project %s: %s", pk, exc)
 
         buffer.seek(0)
         response = HttpResponse(buffer.read(), content_type="application/zip")

@@ -5,6 +5,7 @@ Django settings for dachuang management system project.
 import os
 from pathlib import Path
 from datetime import timedelta
+from django.core.management.utils import get_random_secret_key
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -12,7 +13,10 @@ PROJECT_ROOT = BASE_DIR.parent
 LOCAL_DATA_DIR = PROJECT_ROOT / ".local" / "backend"
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-your-secret-key-here-change-in-production"
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY") or get_random_secret_key()
+
+DEFAULT_USER_PASSWORD = os.environ.get("DEFAULT_USER_PASSWORD")
+DEFAULT_RESET_PASSWORD = os.environ.get("DEFAULT_RESET_PASSWORD")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

@@ -3,6 +3,7 @@
 """
 
 from django.utils import timezone
+import logging
 from django.db import transaction
 from ..models import (
     Review,
@@ -20,6 +21,7 @@ class ReviewService:
     """
     审核服务类
     """
+    logger = logging.getLogger(__name__)
 
     @staticmethod
     def _normalize_score_details(review, score, score_details):
@@ -38,7 +40,8 @@ class ReviewService:
             try:
                 item_id = int(item.get("item_id"))
                 detail_map[item_id] = item
-            except Exception:
+            except (TypeError, ValueError, AttributeError) as exc:
+                ReviewService.logger.debug("Skip invalid score detail: %s", exc)
                 continue
 
         total = 0

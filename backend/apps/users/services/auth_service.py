@@ -3,6 +3,7 @@
 """
 
 from rest_framework_simplejwt.tokens import RefreshToken
+import logging
 from ..repositories.user_repository import UserRepository
 from ..repositories.login_log_repository import LoginLogRepository
 
@@ -62,8 +63,10 @@ class AuthService:
             try:
                 token = RefreshToken(refresh_token)
                 token.blacklist()
-            except Exception:
-                pass  # Token可能已经过期或无效
+            except Exception as exc:
+                logging.getLogger(__name__).warning(
+                    "Failed to blacklist refresh token: %s", exc
+                )
 
         # 记录登出日志（如果需要的话）
         # self.login_log_repository.create_logout_log(user)
