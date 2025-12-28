@@ -1,4 +1,5 @@
 asgiref==3.11.0
+bandit==1.9.2
 certifi==2025.11.12
 charset-normalizer==3.4.4
 Django==6.0
@@ -16,6 +17,8 @@ idna==3.11
 inflection==0.5.1
 librt==0.7.5
 lxml==6.0.2
+markdown-it-py==4.0.0
+mdurl==0.1.2
 mypy==1.19.1
 mypy_extensions==1.1.0
 openpyxl==3.1.2
@@ -23,15 +26,18 @@ packaging==25.0
 pathspec==0.12.1
 pillow==10.3.0
 psycopg2-binary==2.9.9
+Pygments==2.19.2
 PyJWT==2.10.1
 python-decouple==3.8
 python-docx==1.1.0
 pytz==2025.2
 PyYAML==6.0.3
 requests==2.32.5
+rich==14.2.0
 ruff==0.14.10
 setuptools==80.9.0
 sqlparse==0.5.4
+stevedore==5.6.0
 types-PyYAML==6.0.12.20250915
 types-requests==2.32.4.20250913
 typing_extensions==4.15.0
