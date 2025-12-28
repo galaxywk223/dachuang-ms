@@ -12,7 +12,8 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
-from apps.projects.models import ProjectArchive, ProjectPhaseInstance
+from apps.projects.models import ProjectPhaseInstance
+from apps.projects.services.archive_service import ensure_project_archive
 from apps.projects.services.phase_service import ProjectPhaseService
 from apps.system_settings.services import WorkflowService
 from apps.reviews.models import Review
@@ -427,17 +428,7 @@ class ProjectWorkflowMixin:
             if action_type == "approve":
                 project.status = Project.ProjectStatus.CLOSED
                 project.save(update_fields=["status", "updated_at"])
-                if not hasattr(project, "archive"):
-                    ProjectArchive.objects.create(
-                        project=project,
-                        snapshot={
-                            "project_no": project.project_no,
-                            "title": project.title,
-                            "leader": project.leader_id,
-                            "status": project.status,
-                        },
-                        attachments=[],
-                    )
+                ensure_project_archive(project)
                 if phase_instance:
                     ProjectPhaseService.mark_completed(phase_instance, step="COMPLETED")
             else:

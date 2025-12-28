@@ -6,13 +6,12 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from ...models import Project, ProjectArchive, ProjectMember, ProjectPushRecord
+from ...models import Project, ProjectMember, ProjectPushRecord
 from ...serializers import (
     ProjectArchiveSerializer,
     ProjectPushRecordSerializer,
-    ProjectSerializer,
 )
-from ...services import ExternalPushService
+from ...services import ExternalPushService, archive_projects
 
 
 class ProjectBatchMixin:
@@ -62,28 +61,9 @@ class ProjectBatchMixin:
         归档已结题项目
         """
         closed_projects = self.get_queryset().filter(status=Project.ProjectStatus.CLOSED)
-        created = 0
-        for project in closed_projects:
-            if hasattr(project, "archive"):
-                continue
-            snapshot = ProjectSerializer(project, context={"request": request}).data
-            attachments = []
-            for field in [
-                "proposal_file",
-                "attachment_file",
-                "mid_term_report",
-                "final_report",
-                "achievement_file",
-            ]:
-                f = getattr(project, field, None)
-                if f:
-                    attachments.append({"field": field, "name": f.name})
-            ProjectArchive.objects.create(
-                project=project, snapshot=snapshot, attachments=attachments
-            )
-            created += 1
+        created = archive_projects(closed_projects, request=request)
         return Response(
-            {"code": 200, "message": "归档完成", "data": {"created": created}}
+            {"code": 200, "message": "归档完成", "data": {"created": len(created)}}
         )
 
     @action(methods=["post"], detail=False, url_path="push-external")

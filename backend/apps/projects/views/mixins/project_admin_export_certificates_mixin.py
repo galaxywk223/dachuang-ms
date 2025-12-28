@@ -15,8 +15,8 @@ from ...models import Project
 
 
 class ProjectAdminExportCertificatesMixin:
-    def _render_certificate_html(self, project, setting):
-        return render_certificate_html(project, setting)
+    def _render_certificate_html(self, project, setting, request=None):
+        return render_certificate_html(project, setting, request=request)
 
     @action(methods=["get"], detail=True, url_path="certificate-preview")
     def certificate_preview(self, request, pk=None):
@@ -31,7 +31,7 @@ class ProjectAdminExportCertificatesMixin:
             .order_by("-updated_at")
             .first()
         )
-        html = self._render_certificate_html(project, setting)
+        html = self._render_certificate_html(project, setting, request=request)
         return HttpResponse(html, content_type="text/html")
 
     @action(methods=["get"], detail=False, url_path="batch-certificates")
@@ -66,7 +66,7 @@ class ProjectAdminExportCertificatesMixin:
         buffer = io.BytesIO()
         with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
             for project in queryset:
-                html = self._render_certificate_html(project, setting)
+                html = self._render_certificate_html(project, setting, request=request)
                 filename = f"{project.project_no}_结题证书.html"
                 zf.writestr(filename, html)
         buffer.seek(0)

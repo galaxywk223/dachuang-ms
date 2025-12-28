@@ -11,6 +11,7 @@ from ..models import (
 from apps.projects.models import Project
 from apps.projects.models import ProjectPhaseInstance
 from apps.projects.services.phase_service import ProjectPhaseService
+from apps.projects.services.archive_service import ensure_project_archive
 from apps.system_settings.services import SystemSettingService, WorkflowService
 from apps.notifications.services import NotificationService
 
@@ -322,18 +323,7 @@ class ReviewService:
                 project.status = Project.ProjectStatus.CLOSURE_LEVEL1_APPROVED
                 # 一级审核通过后，项目结题
                 project.status = Project.ProjectStatus.CLOSED
-                from apps.projects.models import ProjectArchive
-                if not hasattr(project, "archive"):
-                    ProjectArchive.objects.create(
-                        project=project,
-                        snapshot={
-                            "project_no": project.project_no,
-                            "title": project.title,
-                            "leader": project.leader_id,
-                            "status": project.status,
-                        },
-                        attachments=[],
-                    )
+                ensure_project_archive(project)
                 if review.phase_instance:
                     ProjectPhaseService.mark_completed(review.phase_instance, step="COMPLETED")
 

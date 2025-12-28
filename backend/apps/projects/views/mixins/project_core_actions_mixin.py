@@ -53,7 +53,7 @@ class ProjectCoreActionsMixin:
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        html = render_certificate_html(project)
+        html = render_certificate_html(project, request=request)
         return HttpResponse(html, content_type="text/html")
 
     @action(methods=["post"], detail=True)
