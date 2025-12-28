@@ -262,13 +262,55 @@ import { getReviewProjects, approveProject, rejectProject } from "@/api/projects
 import ProjectStatusBadge from "@/components/business/project/StatusBadge.vue";
 import request from "@/utils/request";
 
+defineOptions({ name: "Level1EstablishmentReviewView" });
+
+type ProjectRow = {
+  id: number;
+  review_id?: number;
+  title?: string;
+  level_display?: string;
+  category_display?: string;
+  is_key_field?: boolean;
+  key_domain_code?: string;
+  leader_name?: string;
+  leader_student_id?: string;
+  college?: string;
+  leader_contact?: string;
+  leader_email?: string;
+  budget?: number;
+  approved_budget?: number | null;
+  status?: string;
+  status_display?: string;
+};
+
+type ReviewProjectsResponse = {
+  code?: number;
+  data?: {
+    results?: ProjectRow[];
+    total?: number;
+  };
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (!isRecord(error)) return fallback;
+  const response = error.response;
+  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === "string") {
+    return response.data.message;
+  }
+  if (typeof error.message === "string") return error.message;
+  return fallback;
+};
+
 const loading = ref(false);
-const projects = ref<any[]>([]);
+const projects = ref<ProjectRow[]>([]);
 const searchQuery = ref("");
 const currentPage = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
-const selectedRows = ref<any[]>([]);
+const selectedRows = ref<ProjectRow[]>([]);
 
 const reviewDialogVisible = ref(false);
 const reviewType = ref<"approve" | "reject">("approve");
@@ -287,16 +329,16 @@ const batchForm = ref({
 const fetchProjects = async () => {
   loading.value = true;
   try {
-    const response: any = await getReviewProjects({
+    const response = (await getReviewProjects({
       page: currentPage.value,
       page_size: pageSize.value,
       search: searchQuery.value,
       type: "establishment",
-    });
+    })) as ReviewProjectsResponse;
 
-    if (response.code === 200) {
-      projects.value = response.data.results;
-      total.value = response.data.total;
+    if (response.code === 200 && response.data) {
+      projects.value = response.data.results ?? [];
+      total.value = response.data.total ?? 0;
       selectedRows.value = [];
     }
   } catch {
@@ -325,20 +367,20 @@ const handleSizeChange = () => {
   fetchProjects();
 };
 
-const handleSelectionChange = (val: any[]) => {
+const handleSelectionChange = (val: ProjectRow[]) => {
   selectedRows.value = val;
 };
 
-const handleViewDetail = (_row: any) => {
-  ElMessage.info("查看详情功能开发中");
+const handleViewDetail = (row: ProjectRow) => {
+  ElMessage.info(`查看详情：${row.title || "项目"}`);
 };
 
-const handleCommand = (command: string, row: any) => {
+const handleCommand = (command: string, row: ProjectRow) => {
   if (command === "approve") handleApprove(row);
   if (command === "reject") handleReject(row);
 };
 
-const handleApprove = (row: any) => {
+const handleApprove = (row: ProjectRow) => {
   reviewType.value = "approve";
   reviewForm.value.projectId = row.id;
   reviewForm.value.comment = "";
@@ -347,7 +389,7 @@ const handleApprove = (row: any) => {
   reviewDialogVisible.value = true;
 };
 
-const handleReject = (row: any) => {
+const handleReject = (row: ProjectRow) => {
   reviewType.value = "reject";
   reviewForm.value.projectId = row.id;
   reviewForm.value.comment = "";
@@ -366,13 +408,15 @@ const confirmReview = async () => {
   }
 
   try {
-    const data: any = { comment: reviewForm.value.comment };
-    let response: any;
+    const data: { comment: string; approved_budget?: number | null } = {
+      comment: reviewForm.value.comment,
+    };
+    let response: ReviewProjectsResponse;
     if (reviewType.value === "approve") {
       data.approved_budget = reviewForm.value.approved_budget;
-      response = await approveProject(reviewForm.value.projectId, data);
+      response = (await approveProject(reviewForm.value.projectId, data)) as ReviewProjectsResponse;
     } else {
-      response = await rejectProject(reviewForm.value.projectId, data);
+      response = (await rejectProject(reviewForm.value.projectId, data)) as ReviewProjectsResponse;
     }
 
     if (response.code === 200) {
@@ -401,20 +445,26 @@ const submitBatchReject = async () => {
   }
   batchSubmitting.value = true;
   try {
-    const payload: any = {
-      review_ids: selectedRows.value.map((row) => row.review_id),
+    const payload: {
+      review_ids: number[];
+      action: string;
+      comments: string;
+    } = {
+      review_ids: selectedRows.value
+        .map((row) => row.review_id)
+        .filter((id): id is number => typeof id === "number"),
       action: "reject",
       comments: batchForm.value.comments,
     };
-    const res: any = await request.post("/reviews/batch-review/", payload);
-    if (res.code === 200) {
+    const res = await request.post("/reviews/batch-review/", payload);
+    if (isRecord(res) && res.code === 200) {
       ElMessage.success("批量驳回完成");
       batchDialogVisible.value = false;
       selectedRows.value = [];
       fetchProjects();
     }
-  } catch (error: any) {
-    ElMessage.error(error.response?.data?.message || "批量驳回失败");
+  } catch (error) {
+    ElMessage.error(getErrorMessage(error, "批量驳回失败"));
   } finally {
     batchSubmitting.value = false;
   }

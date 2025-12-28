@@ -34,7 +34,7 @@
       >
         <el-table-column type="selection" width="55" align="center" />
         <el-table-column prop="project_no" label="项目编号" width="140" />
-        <el-table-column prop="title" label="项目名称" min-width="180"show-overflow-tooltip />
+        <el-table-column prop="title" label="项目名称" min-width="180" show-overflow-tooltip />
         <el-table-column prop="leader_name" label="负责人" width="100" />
         <el-table-column prop="college" label="学院" width="150" show-overflow-tooltip />
         <el-table-column prop="submitted_at" label="提交时间" width="160">
@@ -146,17 +146,74 @@ import { getProjects } from '@/api/projects'
 import { finalizeMidterm, getProjectExpertSummary } from '@/api/projects/midterm'
 import dayjs from 'dayjs'
 
+type ExpertSummary = {
+  assigned?: number
+  submitted?: number
+  all_submitted?: boolean
+}
+
+type ProjectRow = {
+  id: number
+  project_no?: string
+  title?: string
+  leader_name?: string
+  college?: string
+  mid_term_submitted_at?: string
+  mid_term_report_url?: string
+  mid_term_report_name?: string
+  expert_summary?: ExpertSummary | null
+}
+
+type ProjectListPayload = {
+  results?: ProjectRow[]
+  count?: number
+  data?: {
+    results?: ProjectRow[]
+    count?: number
+  }
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null
+
+const resolveListPayload = (payload: unknown): ProjectListPayload =>
+  (isRecord(payload) ? (payload as ProjectListPayload) : {})
+
+const resolveList = (payload: unknown): ProjectRow[] => {
+  if (!isRecord(payload)) return []
+  if (Array.isArray((payload as ProjectListPayload).results)) {
+    return (payload as ProjectListPayload).results ?? []
+  }
+  if (isRecord((payload as ProjectListPayload).data)) {
+    const data = (payload as ProjectListPayload).data
+    if (Array.isArray(data?.results)) {
+      return data?.results ?? []
+    }
+  }
+  return []
+}
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (!isRecord(error)) return fallback
+  const response = error.response
+  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === 'string') {
+    return response.data.message
+  }
+  if (typeof error.message === 'string') return error.message
+  return fallback
+}
+
 const loading = ref(false)
-const tableData = ref<any[]>([])
+const tableData = ref<ProjectRow[]>([])
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 const searchQuery = ref('')
 const dialogVisible = ref(false)
-const currentRow = ref<any>(null)
+const currentRow = ref<ProjectRow | null>(null)
 const reviewComments = ref('')
 const reviewing = ref(false)
-const selectedRows = ref<any[]>([])
+const selectedRows = ref<ProjectRow[]>([])
 const router = useRouter()
 
 const batchDialogVisible = ref(false)
@@ -166,8 +223,8 @@ const batchForm = ref({
   comments: ''
 })
 
-const formatDate = (dateStr: string) => {
-  if(!dateStr) return '-'
+const formatDate = (dateStr?: string) => {
+  if (!dateStr) return '-'
   return dayjs(dateStr).format('YYYY-MM-DD HH:mm')
 }
 
@@ -183,19 +240,19 @@ const fetchData = async () => {
         }
         
         const res = await getProjects(projectParams)
-        const projectPayload = res.data || res
-        const results = projectPayload.results || projectPayload.data?.results || []
+        const projectPayload = resolveListPayload(isRecord(res) && 'data' in res ? res.data : res)
+        const results = resolveList(projectPayload)
         // Load expert summary for each project
         const enriched = await Promise.all(
-          (results || []).map(async (item: any) => {
+          results.map(async (item) => {
             try {
-              const s: any = await getProjectExpertSummary(item.id, {
+              const s = await getProjectExpertSummary(item.id, {
                 review_type: 'MID_TERM',
                 scope: 'COLLEGE'
               })
-              const sp = (s as any)?.data ?? s
-              return { ...item, expert_summary: sp || null }
-            } catch (e) {
+              const sp = isRecord(s) && 'data' in s ? s.data : s
+              return { ...item, expert_summary: isRecord(sp) ? (sp as ExpertSummary) : null }
+            } catch {
               return { ...item, expert_summary: null }
             }
           })
@@ -204,7 +261,7 @@ const fetchData = async () => {
         total.value = projectPayload.count || projectPayload.data?.count || 0
         selectedRows.value = []
 
-    } catch(err) {
+    } catch (err) {
         console.error(err)
         ElMessage.error('获取列表失败')
     } finally {
@@ -227,7 +284,7 @@ const handleCurrentChange = (val: number) => {
   fetchData()
 }
 
-const handleReview = (row: any) => {
+const handleReview = (row: ProjectRow) => {
   const summary = row?.expert_summary
   if (!summary || (summary.assigned || 0) === 0) {
     ElMessage.warning('请先到“院系评审分配”分配专家组')
@@ -256,8 +313,8 @@ const submitFinalize = async (action: 'pass' | 'return') => {
      dialogVisible.value = false
      fetchData()
 
-  } catch(err: any) {
-    ElMessage.error(err.response?.data?.message || '操作失败')
+  } catch (err) {
+    ElMessage.error(getErrorMessage(err, '操作失败'))
   } finally {
     reviewing.value = false
   }
@@ -267,7 +324,7 @@ onMounted(() => {
   fetchData()
 })
 
-const handleSelectionChange = (rows: any[]) => {
+const handleSelectionChange = (rows: ProjectRow[]) => {
   selectedRows.value = rows
 }
 
@@ -284,7 +341,7 @@ const submitBatchReview = async () => {
   if (selectedRows.value.length === 0) return
   batchSubmitting.value = true
   try {
-    const readyRows = selectedRows.value.filter((row: any) => {
+    const readyRows = selectedRows.value.filter((row) => {
       const s = row?.expert_summary
       return s && (s.assigned || 0) > 0 && !!s.all_submitted
     })
@@ -295,7 +352,7 @@ const submitBatchReview = async () => {
     }
 
     await Promise.all(
-      readyRows.map((row: any) =>
+      readyRows.map((row) =>
         finalizeMidterm(row.id, {
           action: batchForm.value.action as 'pass' | 'return',
           reason: batchForm.value.comments,
@@ -307,8 +364,8 @@ const submitBatchReview = async () => {
     batchDialogVisible.value = false
     selectedRows.value = []
     fetchData()
-  } catch (err: any) {
-    ElMessage.error(err.response?.data?.message || '批量确认失败')
+  } catch (err) {
+    ElMessage.error(getErrorMessage(err, '批量确认失败'))
   } finally {
     batchSubmitting.value = false
   }

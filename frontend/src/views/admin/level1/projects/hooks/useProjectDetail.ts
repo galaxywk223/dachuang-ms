@@ -1,10 +1,18 @@
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { ElMessage } from "element-plus";
+import { ElMessage, type FormInstance, type FormRules, type UploadFile } from "element-plus";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionaries";
 import { getAdminProjectDetail, updateProjectInfo } from "@/api/projects/admin";
 import { exportProjectDoc } from "@/api/projects";
+
+type OptionItem = {
+  value: string;
+  label: string;
+  extra_data?: {
+    budget?: number | string;
+  };
+};
 
 interface AdvisorInfo {
   job_number: string;
@@ -21,6 +29,54 @@ interface MemberInfo {
   role?: string;
 }
 
+type ProjectForm = {
+  id: number | null;
+  project_no: string;
+  status_display: string;
+  source: string;
+  level: string;
+  category: string;
+  discipline: string;
+  is_key_field: boolean;
+  key_field_code: string;
+  title: string;
+  budget: number;
+  approved_budget: number | null;
+  college: string;
+  major_code: string;
+  leader_name: string;
+  leader_student_id: string;
+  leader_contact: string;
+  leader_email: string;
+  expected_results: string;
+  description: string;
+  contract_file_url: string;
+  contract_file_name: string;
+  task_book_file_url: string;
+  task_book_file_name: string;
+  contract_file: File | null;
+  task_book_file: File | null;
+  advisors: AdvisorInfo[];
+  members: MemberInfo[];
+};
+
+type ProjectDetailResponse = {
+  data?: Record<string, unknown>;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (!isRecord(error)) return fallback;
+  const response = error.response;
+  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === "string") {
+    return response.data.message;
+  }
+  if (typeof error.message === "string") return error.message;
+  return fallback;
+};
+
 export function useProjectDetail() {
   const router = useRouter();
   const route = useRoute();
@@ -29,8 +85,8 @@ export function useProjectDetail() {
   const pageLoading = ref(false);
   const saving = ref(false);
 
-  const formRef = ref();
-  const form = reactive<any>({
+  const formRef = ref<FormInstance>();
+  const form = reactive<ProjectForm>({
     id: null,
     project_no: "",
     status_display: "",
@@ -66,7 +122,7 @@ export function useProjectDetail() {
     isViewMode.value ? "项目详情" : "编辑项目信息"
   );
 
-  const rules = {
+  const rules: FormRules = {
     title: [{ required: true, message: "请输入项目名称", trigger: "blur" }],
     level: [{ required: true, message: "请选择项目级别", trigger: "change" }],
     category: [{ required: true, message: "请选择项目类别", trigger: "change" }],
@@ -82,7 +138,7 @@ export function useProjectDetail() {
   const advisorTitleOptions = computed(() => getOptions(DICT_CODES.ADVISOR_TITLE));
 
   const keyFieldCascaderOptions = computed(() => {
-    const children = keyFieldOptions.value.map((opt: any) => ({
+    const children = (keyFieldOptions.value as OptionItem[]).map((opt) => ({
       value: opt.value,
       label: opt.label,
     }));
@@ -124,14 +180,16 @@ export function useProjectDetail() {
         form.budget = 0;
         return;
       }
-      const selected = levelOptions.value.find((opt: any) => opt.value === newVal);
+      const selected = (levelOptions.value as OptionItem[]).find(
+        (opt) => opt.value === newVal
+      );
       if (selected && selected.extra_data && selected.extra_data.budget) {
         form.budget = Number(selected.extra_data.budget);
       }
     }
   );
 
-  const getLabel = (options: any[], value: string) => {
+  const getLabel = (options: OptionItem[], value: string) => {
     const found = options.find((opt) => opt.value === value);
     return found ? found.label : value;
   };
@@ -145,65 +203,65 @@ export function useProjectDetail() {
     }
     pageLoading.value = true;
     try {
-      const res: any = await getAdminProjectDetail(id);
-      const data = res.data || res;
-      if (!data) {
+      const res = (await getAdminProjectDetail(id)) as ProjectDetailResponse | Record<string, unknown>;
+      const data = (isRecord(res) && "data" in res ? res.data : res) as Record<string, unknown> | undefined;
+      if (!data || !isRecord(data)) {
         throw new Error("数据为空");
       }
-      form.id = data.id;
-      form.project_no = data.project_no || "";
-      form.status_display = data.status_display || "";
-      form.source = data.source || "";
-      form.level = data.level || "";
-      form.category = data.category || "";
-      form.discipline = data.discipline || "";
+      form.id = typeof data.id === "number" ? data.id : Number(data.id || 0);
+      form.project_no = String(data.project_no || "");
+      form.status_display = String(data.status_display || "");
+      form.source = String(data.source || "");
+      form.level = String(data.level || "");
+      form.category = String(data.category || "");
+      form.discipline = String(data.discipline || "");
       form.is_key_field = !!data.is_key_field;
-      form.key_field_code = data.key_domain_code || data.key_field_code || "";
-      form.title = data.title || "";
+      form.key_field_code = String(data.key_domain_code || data.key_field_code || "");
+      form.title = String(data.title || "");
       form.budget = Number(data.budget || 0);
       form.approved_budget =
         data.approved_budget !== null && data.approved_budget !== undefined
           ? Number(data.approved_budget)
           : null;
-      form.college = data.college || "";
-      form.major_code = data.major_code || "";
-      form.leader_name = data.leader_name || "";
-      form.leader_student_id = data.leader_student_id || data.student_id || "";
-      form.leader_contact = data.leader_contact || "";
-      form.leader_email = data.leader_email || "";
-      form.expected_results = data.expected_results || "";
-      form.description = data.description || "";
-      form.contract_file_url = data.contract_file_url || "";
-      form.contract_file_name = data.contract_file_name || "";
-      form.task_book_file_url = data.task_book_file_url || "";
-      form.task_book_file_name = data.task_book_file_name || "";
+      form.college = String(data.college || "");
+      form.major_code = String(data.major_code || "");
+      form.leader_name = String(data.leader_name || "");
+      form.leader_student_id = String(data.leader_student_id || data.student_id || "");
+      form.leader_contact = String(data.leader_contact || "");
+      form.leader_email = String(data.leader_email || "");
+      form.expected_results = String(data.expected_results || "");
+      form.description = String(data.description || "");
+      form.contract_file_url = String(data.contract_file_url || "");
+      form.contract_file_name = String(data.contract_file_name || "");
+      form.task_book_file_url = String(data.task_book_file_url || "");
+      form.task_book_file_name = String(data.task_book_file_name || "");
       form.contract_file = null;
       form.task_book_file = null;
 
       if (Array.isArray(data.advisors_info)) {
-        form.advisors = data.advisors_info.map((item: any, index: number) => ({
-          job_number: item.job_number || "",
-          name: item.name || "",
-          title: item.title || "",
-          contact: item.contact || "",
-          email: item.email || "",
-          order: item.order || index + 1,
+        form.advisors = (data.advisors_info as Record<string, unknown>[]).map((item, index: number) => ({
+          job_number: String(item.job_number || ""),
+          name: String(item.name || ""),
+          title: String(item.title || ""),
+          contact: String(item.contact || ""),
+          email: String(item.email || ""),
+          order: Number(item.order || index + 1),
         }));
       } else {
         form.advisors = [];
       }
 
       if (Array.isArray(data.members_info)) {
-        form.members = data.members_info.map((item: any) => ({
-          student_id: item.student_id || "",
-          name: item.user_name || item.name || "",
-          role: item.role || "MEMBER",
+        form.members = (data.members_info as Record<string, unknown>[]).map((item) => ({
+          student_id: String(item.student_id || ""),
+          name: String(item.user_name || item.name || ""),
+          role: String(item.role || "MEMBER"),
         }));
       } else {
         form.members = [];
       }
-    } catch (error: any) {
-      ElMessage.error(error.message || "加载项目详情失败");
+    } catch (error) {
+      ElMessage.error(getErrorMessage(error, "加载项目详情失败"));
     } finally {
       pageLoading.value = false;
     }
@@ -238,54 +296,57 @@ export function useProjectDetail() {
         expected_results: form.expected_results,
         description: form.description,
       };
-      let payload: any;
       const hasFiles = !!(form.contract_file || form.task_book_file);
-
-      if (hasFiles) {
-        payload = new FormData();
-        Object.entries(basePayload).forEach(([key, value]) => {
-          if (value === null || value === undefined || value === "") {
-            return;
-          }
-          payload.append(key, String(value));
-        });
-        if (form.contract_file) {
-          payload.append("contract_file", form.contract_file);
-        }
-        if (form.task_book_file) {
-          payload.append("task_book_file", form.task_book_file);
-        }
-      } else {
-        payload = basePayload;
+      if (!form.id) {
+        ElMessage.error("项目ID无效");
+        saving.value = false;
+        return;
       }
       try {
-        await updateProjectInfo(form.id, payload);
+        if (hasFiles) {
+          const formData = new FormData();
+          Object.entries(basePayload).forEach(([key, value]) => {
+            if (value === null || value === undefined || value === "") {
+              return;
+            }
+            formData.append(key, String(value));
+          });
+          if (form.contract_file) {
+            formData.append("contract_file", form.contract_file);
+          }
+          if (form.task_book_file) {
+            formData.append("task_book_file", form.task_book_file);
+          }
+          await updateProjectInfo(form.id, formData);
+        } else {
+          await updateProjectInfo(form.id, basePayload);
+        }
         ElMessage.success("保存成功");
         router.replace({
           name: "level1-project-detail",
           params: { id: form.id },
           query: { mode: "view" },
         });
-      } catch (error: any) {
-        const resp = error?.response;
-        const respData: any = resp?.data;
+      } catch (error) {
+        const resp = isRecord(error) ? error.response : undefined;
+        const respData = isRecord(resp) ? resp.data : undefined;
         console.error("Update project failed", {
-          payload,
-          status: resp?.status,
+          payload: hasFiles ? "formData" : basePayload,
+          status: isRecord(resp) ? resp.status : undefined,
           response: respData || error,
         });
-        let msg = error?.message || "保存失败";
-        if (respData) {
-          if (respData.message) {
+        let msg = getErrorMessage(error, "保存失败");
+        if (respData && isRecord(respData)) {
+          if (typeof respData.message === "string") {
             msg = respData.message;
-          } else if (typeof respData === "object") {
+          } else {
             const details = Object.entries(respData)
               .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join("; ") : v}`)
               .join("；");
             if (details) msg = `${msg}：${details}`;
-          } else if (typeof respData === "string") {
-            msg = `${msg}：${respData}`;
           }
+        } else if (typeof respData === "string") {
+          msg = `${msg}：${respData}`;
         }
         ElMessage.error(msg);
       } finally {
@@ -294,12 +355,12 @@ export function useProjectDetail() {
     });
   };
 
-  const handleContractFileChange = (file: any) => {
-    form.contract_file = file.raw || null;
+  const handleContractFileChange = (file: UploadFile) => {
+    form.contract_file = file.raw ?? null;
   };
 
-  const handleTaskBookFileChange = (file: any) => {
-    form.task_book_file = file.raw || null;
+  const handleTaskBookFileChange = (file: UploadFile) => {
+    form.task_book_file = file.raw ?? null;
   };
 
   const switchToEdit = () => {
@@ -313,10 +374,20 @@ export function useProjectDetail() {
   const handleExportDoc = async () => {
     if (!form.id) return;
     try {
-      const res: any = await exportProjectDoc(form.id);
-      const blob = new Blob([res], {
-        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      });
+      const res = await exportProjectDoc(form.id);
+      const blobPart =
+        typeof res === "string"
+          ? res
+          : res instanceof ArrayBuffer
+            ? res
+            : ArrayBuffer.isView(res)
+              ? (res.buffer as ArrayBuffer)
+              : JSON.stringify(res ?? "");
+      const blob = res instanceof Blob
+        ? res
+        : new Blob([blobPart], {
+            type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -325,7 +396,7 @@ export function useProjectDetail() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-    } catch (error) {
+    } catch {
       ElMessage.error("导出失败");
     }
   };

@@ -196,12 +196,57 @@ import { useRouter } from "vue-router";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionaries";
 
+defineOptions({
+  name: "StudentEstablishmentMyProjectsView",
+});
+
+type DictOption = {
+  value: string;
+  label: string;
+};
+
+type ProjectRow = {
+  id: number;
+  project_no?: string;
+  title?: string;
+  level?: string;
+  category?: string;
+  college?: string;
+  leader_name?: string;
+  leader_student_id?: string;
+  leader_contact?: string;
+  budget?: number;
+  status?: string;
+};
+
+type ProjectsResponse = {
+  code?: number;
+  status?: number;
+  data?: ProjectRow[];
+  total?: number;
+  message?: string;
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+  if (typeof error === "string") {
+    return error || fallback;
+  }
+  return fallback;
+};
+
 const router = useRouter();
 const { loadDictionaries, getOptions } = useDictionary();
 
 // Dict Options
-const levelOptions = computed(() => getOptions(DICT_CODES.PROJECT_LEVEL));
-const categoryOptions = computed(() => getOptions(DICT_CODES.PROJECT_CATEGORY));
+const levelOptions = computed(
+  () => getOptions(DICT_CODES.PROJECT_LEVEL) as DictOption[]
+);
+const categoryOptions = computed(
+  () => getOptions(DICT_CODES.PROJECT_CATEGORY) as DictOption[]
+);
 // Add status mapping if needed, or hardcode common statuses
 const statusMap: Record<string, string> = {
     'DRAFT': '草稿',
@@ -221,7 +266,7 @@ const filterForm = reactive({
   category: "",
 });
 
-const tableData = ref<any[]>([]);
+const tableData = ref<ProjectRow[]>([]);
 const loading = ref(false);
 
 const pagination = reactive({
@@ -242,7 +287,7 @@ onMounted(async () => {
 const fetchProjects = async () => {
   loading.value = true;
   try {
-    const params: any = {
+    const params: Record<string, string | number> = {
       page: pagination.page,
       page_size: pagination.pageSize,
       ...filterForm
@@ -251,21 +296,21 @@ const fetchProjects = async () => {
     if (!params.level) delete params.level;
     if (!params.category) delete params.category;
 
-    const response: any = await getMyProjects(params);
+    const response = (await getMyProjects(params)) as ProjectsResponse;
     if (response.code === 200) {
       tableData.value = response.data || [];
       pagination.total = response.total || response.data?.length || 0;
     } else {
       ElMessage.error(response.message || "获取列表失败");
     }
-  } catch (error: any) {
-    ElMessage.error(error.message || "获取列表失败");
+  } catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, "获取列表失败"));
   } finally {
     loading.value = false;
   }
 };
 
-const getLabel = (options: any[], value: string) => {
+const getLabel = (options: DictOption[], value: string) => {
     const found = options.find(opt => opt.value === value);
     return found ? found.label : value;
 };
@@ -310,32 +355,32 @@ const getStatusColor = (status: string) => {
     return 'info';
 };
 
-const handleEdit = (row: any) => {
+const handleEdit = (row: ProjectRow) => {
   router.push(`/establishment/apply?id=${row.id}`);
 };
 
-const canWithdraw = (row: any) => {
+const canWithdraw = (row: ProjectRow) => {
     // Only allow withdraw if submitted and not fully approved/rejected yet (logic varies by requirement)
-    return ['SUBMITTED', 'TEACHER_AUDITING'].includes(row.status); 
+    return ["SUBMITTED", "TEACHER_AUDITING"].includes(row.status || ""); 
 };
 
-const canDeleteSubmission = (row: any) => {
+const canDeleteSubmission = (row: ProjectRow) => {
     return [
       "SUBMITTED",
       "TEACHER_AUDITING",
       "TEACHER_REJECTED",
       "APPLICATION_RETURNED",
-    ].includes(row.status);
+    ].includes(row.status || "");
 };
 
-const handleWithdraw = async (row: any) => {
+const handleWithdraw = async (row: ProjectRow) => {
     try {
       await ElMessageBox.confirm("确认撤回该项目申请吗？撤回后将进入草稿箱。", "提示", {
         type: "warning",
         confirmButtonText: "确认撤回",
         cancelButtonText: "取消",
       });
-      const response: any = await withdrawProjectApplication(row.id);
+      const response = (await withdrawProjectApplication(row.id)) as ProjectsResponse;
       if (response.code === 200) {
         ElMessage.success("撤回成功，已转入草稿箱");
         fetchProjects();
@@ -345,23 +390,25 @@ const handleWithdraw = async (row: any) => {
     }
 };
 
-const handleDelete = async (row: any) => {
+const handleDelete = async (row: ProjectRow) => {
   try {
     await ElMessageBox.confirm("确定删除吗？", "提示", { type: "warning" });
-    const response: any = await deleteProject(row.id);
+    const response = (await deleteProject(row.id)) as ProjectsResponse;
     if (response.code === 200 || response.status === 204) {
       ElMessage.success("删除成功");
       fetchProjects();
     }
-  } catch {}
+  } catch {
+    // ignore
+  }
 };
 
-const handleDeleteSubmission = async (row: any) => {
+const handleDeleteSubmission = async (row: ProjectRow) => {
   try {
     await ElMessageBox.confirm("确定删除该申报提交吗？删除后可在回收站恢复。", "提示", {
       type: "warning",
     });
-    const response: any = await deleteProjectApplication(row.id);
+    const response = (await deleteProjectApplication(row.id)) as ProjectsResponse;
     if (response.code === 200) {
       ElMessage.success("已移入回收站");
       fetchProjects();

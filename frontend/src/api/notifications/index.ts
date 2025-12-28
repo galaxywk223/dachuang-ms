@@ -9,7 +9,7 @@ export function batchSendNotifications(data: {
   recipients?: number[];
   role?: string;
   college?: string;
-}) {
+}): Promise<unknown> {
   return request({
     url: "/notifications/batch-send/",
     method: "post",
@@ -17,7 +17,7 @@ export function batchSendNotifications(data: {
   });
 }
 
-export function getNotifications(params?: any) {
+export function getNotifications(params?: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/notifications/",
     method: "get",
@@ -25,21 +25,21 @@ export function getNotifications(params?: any) {
   });
 }
 
-export function markNotificationRead(id: number) {
+export function markNotificationRead(id: number): Promise<unknown> {
   return request({
     url: `/notifications/${id}/mark_read/`,
     method: "post",
   });
 }
 
-export function markAllNotificationsRead() {
+export function markAllNotificationsRead(): Promise<unknown> {
   return request({
     url: "/notifications/mark-all-read/",
     method: "post",
   });
 }
 
-export function getUnreadCount() {
+export function getUnreadCount(): Promise<unknown> {
   return request({
     url: "/notifications/unread_count/",
     method: "get",

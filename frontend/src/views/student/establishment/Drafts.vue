@@ -133,12 +133,58 @@ import { useRouter } from "vue-router";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionaries";
 
+defineOptions({
+  name: "StudentEstablishmentDraftsView",
+});
+
+type DictOption = {
+  value: string;
+  label: string;
+};
+
+type DraftRow = {
+  id: number;
+  project_no?: string;
+  title?: string;
+  level?: string;
+  level_display?: string;
+  category?: string;
+  category_display?: string;
+  college?: string;
+  leader_name?: string;
+  leader_student_id?: string;
+  leader_contact?: string;
+  budget?: number;
+};
+
+type DraftsResponse = {
+  code?: number;
+  status?: number;
+  data?: DraftRow[];
+  total?: number;
+  message?: string;
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+  if (typeof error === "string") {
+    return error || fallback;
+  }
+  return fallback;
+};
+
 const router = useRouter();
 const { loadDictionaries, getOptions } = useDictionary();
 
 // Dict Options
-const levelOptions = computed(() => getOptions(DICT_CODES.PROJECT_LEVEL));
-const categoryOptions = computed(() => getOptions(DICT_CODES.PROJECT_CATEGORY));
+const levelOptions = computed(
+  () => getOptions(DICT_CODES.PROJECT_LEVEL) as DictOption[]
+);
+const categoryOptions = computed(
+  () => getOptions(DICT_CODES.PROJECT_CATEGORY) as DictOption[]
+);
 
 const filterForm = reactive({
   title: "",
@@ -146,7 +192,7 @@ const filterForm = reactive({
   category: "",
 });
 
-const tableData = ref<any[]>([]);
+const tableData = ref<DraftRow[]>([]);
 const loading = ref(false);
 
 const pagination = reactive({
@@ -167,7 +213,7 @@ onMounted(async () => {
 const fetchDrafts = async () => {
   loading.value = true;
   try {
-    const params: any = {
+    const params: Record<string, string | number> = {
       page: pagination.page,
       page_size: pagination.pageSize,
       ...filterForm
@@ -177,21 +223,21 @@ const fetchDrafts = async () => {
     if (!params.level) delete params.level;
     if (!params.category) delete params.category;
 
-    const response: any = await getMyDrafts(params);
+    const response = (await getMyDrafts(params)) as DraftsResponse;
     if (response.code === 200) {
       tableData.value = response.data || [];
       pagination.total = response.total || response.data?.length || 0;
     } else {
       ElMessage.error(response.message || "获取草稿列表失败");
     }
-  } catch (error: any) {
-    ElMessage.error(error.message || "获取草稿列表失败");
+  } catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, "获取草稿列表失败"));
   } finally {
     loading.value = false;
   }
 };
 
-const getLabel = (options: any[], value: string) => {
+const getLabel = (options: DictOption[], value: string) => {
     const found = options.find(opt => opt.value === value);
     return found ? found.label : value;
 };
@@ -225,23 +271,25 @@ const getLevelType = (level: string) => {
     return 'info';
 };
 
-const handleEdit = (row: any) => {
+const handleEdit = (row: DraftRow) => {
   router.push(`/establishment/apply?id=${row.id}`);
 };
 
-const handleDelete = async (row: any) => {
+const handleDelete = async (row: DraftRow) => {
   try {
     await ElMessageBox.confirm("确定要删除该草稿吗？删除后无法恢复。", "提示", { 
         type: "warning",
         confirmButtonText: "确定",
         cancelButtonText: "取消"
     });
-    const response: any = await deleteProject(row.id);
+    const response = (await deleteProject(row.id)) as DraftsResponse;
     if (response.code === 200 || response.status === 204) {
       ElMessage.success("删除成功");
       fetchDrafts();
     }
-  } catch {}
+  } catch {
+    // ignore
+  }
 };
 </script>
 

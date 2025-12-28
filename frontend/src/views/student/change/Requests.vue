@@ -99,15 +99,79 @@ import { ElMessage, type UploadFile, type UploadUserFile } from "element-plus";
 import { getChangeRequests, createChangeRequest, updateChangeRequest, submitChangeRequest } from "@/api/projects/change-requests";
 import request from "@/utils/request";
 
+defineOptions({
+  name: "StudentChangeRequestsView",
+});
+
+type ProjectOption = {
+  id: number;
+  title: string;
+};
+
+type ChangeRequest = {
+  id: number;
+  project: number;
+  project_no?: string;
+  project_title?: string;
+  request_type?: string;
+  request_type_display?: string;
+  status?: string;
+  status_display?: string;
+  submitted_at?: string;
+  requested_end_date?: string;
+  reason?: string;
+  attachment_url?: string;
+  change_data?: Record<string, unknown>;
+};
+
+type RequestForm = {
+  id: number | null;
+  project: number | null;
+  request_type: string;
+  reason: string;
+  requested_end_date: string;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const resolveList = <T,>(payload: unknown): T[] => {
+  if (Array.isArray(payload)) return payload as T[];
+  if (isRecord(payload) && Array.isArray(payload.results)) {
+    return payload.results as T[];
+  }
+  if (
+    isRecord(payload) &&
+    isRecord(payload.data) &&
+    Array.isArray(payload.data.results)
+  ) {
+    return payload.data.results as T[];
+  }
+  if (isRecord(payload) && Array.isArray(payload.data)) {
+    return payload.data as T[];
+  }
+  return [];
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+  if (typeof error === "string") {
+    return error || fallback;
+  }
+  return fallback;
+};
+
 const loading = ref(false);
 const saving = ref(false);
 const dialogVisible = ref(false);
-const requests = ref<any[]>([]);
-const projectOptions = ref<any[]>([]);
+const requests = ref<ChangeRequest[]>([]);
+const projectOptions = ref<ProjectOption[]>([]);
 const fileList = ref<UploadUserFile[]>([]);
 const attachmentFile = ref<File | null>(null);
 
-const form = reactive<any>({
+const form = reactive<RequestForm>({
   id: null,
   project: null,
   request_type: "CHANGE",
@@ -119,11 +183,10 @@ const changeDataText = ref("{}");
 const fetchRequests = async () => {
   loading.value = true;
   try {
-    const res: any = await getChangeRequests();
-    const payload = res.data || res;
-    const list = payload.data || payload.results || payload;
-    requests.value = Array.isArray(list) ? list : [];
-  } catch (error) {
+    const res = await getChangeRequests();
+    const payload = isRecord(res) && isRecord(res.data) ? res.data : res;
+    requests.value = resolveList<ChangeRequest>(payload);
+  } catch (error: unknown) {
     console.error(error);
   } finally {
     loading.value = false;
@@ -131,12 +194,14 @@ const fetchRequests = async () => {
 };
 
 const fetchProjects = async () => {
-  const res: any = await request.get("/projects/", {
-    params: { status_in: "IN_PROGRESS,MID_TERM_DRAFT,MID_TERM_SUBMITTED,MID_TERM_REVIEWING,MID_TERM_APPROVED" },
+  const res = await request.get("/projects/", {
+    params: {
+      status_in:
+        "IN_PROGRESS,MID_TERM_DRAFT,MID_TERM_SUBMITTED,MID_TERM_REVIEWING,MID_TERM_APPROVED",
+    },
   });
-  const payload = res.data || res;
-  const list = payload.data?.results || payload.results || payload.data || [];
-  projectOptions.value = Array.isArray(list) ? list : [];
+  const payload = isRecord(res) && isRecord(res.data) ? res.data : res;
+  projectOptions.value = resolveList<ProjectOption>(payload);
 };
 
 const openDialog = () => {
@@ -151,10 +216,10 @@ const openDialog = () => {
   dialogVisible.value = true;
 };
 
-const editRequest = (row: any) => {
+const editRequest = (row: ChangeRequest) => {
   form.id = row.id;
   form.project = row.project;
-  form.request_type = row.request_type;
+  form.request_type = row.request_type ?? "";
   form.reason = row.reason || "";
   form.requested_end_date = row.requested_end_date || "";
   changeDataText.value = JSON.stringify(row.change_data || {}, null, 2);
@@ -174,6 +239,7 @@ const saveDraft = async () => {
       changeData = JSON.parse(changeDataText.value || "{}");
     } catch {
       ElMessage.error("变更内容不是有效的JSON");
+      saving.value = false;
       return;
     }
 
@@ -199,20 +265,20 @@ const saveDraft = async () => {
     ElMessage.success("保存成功");
     dialogVisible.value = false;
     fetchRequests();
-  } catch (error: any) {
-    ElMessage.error(error.response?.data?.message || "保存失败");
+  } catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, "保存失败"));
   } finally {
     saving.value = false;
   }
 };
 
-const submitRequest = async (row: any) => {
+const submitRequest = async (row: ChangeRequest) => {
   try {
     await submitChangeRequest(row.id);
     ElMessage.success("提交成功");
     fetchRequests();
-  } catch (error: any) {
-    ElMessage.error(error.response?.data?.message || "提交失败");
+  } catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, "提交失败"));
   }
 };
 
@@ -263,4 +329,3 @@ onMounted(() => {
     gap: 12px;
 }
 </style>
-

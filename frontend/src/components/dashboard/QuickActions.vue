@@ -23,7 +23,6 @@
 
 <script setup>
 import { computed } from "vue";
-import { useRouter } from "vue-router";
 import {
   Plus,
   Folder,
@@ -31,8 +30,6 @@ import {
   Bell,
   User,
 } from "@element-plus/icons-vue";
-
-const router = useRouter();
 
 const props = defineProps({
   userRole: {

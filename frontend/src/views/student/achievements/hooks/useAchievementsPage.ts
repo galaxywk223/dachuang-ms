@@ -11,17 +11,57 @@ import {
 import { DICT_CODES } from "@/api/dictionaries";
 import { useDictionary } from "@/composables/useDictionary";
 
+type ProjectItem = {
+  id: number;
+  project_no?: string;
+  title: string;
+  status?: string;
+};
+
+type AchievementItem = {
+  id: number;
+  achievement_type?: string;
+  achievement_type_display?: string;
+  title?: string;
+  description?: string;
+  attachment?: string;
+  created_at?: string;
+  [key: string]: unknown;
+};
+
+type OptionItem = {
+  id?: number;
+  value?: string;
+  label?: string;
+};
+
+type ApiResponse<T> = {
+  code: number;
+  data?: T;
+  message?: string;
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+  if (typeof error === "string") {
+    return error || fallback;
+  }
+  return fallback;
+};
+
 export function useAchievementsPage() {
   const loading = ref(false);
   const listLoading = ref(false);
-  const projects = ref<any[]>([]);
-  const achievements = ref<any[]>([]);
+  const projects = ref<ProjectItem[]>([]);
+  const achievements = ref<AchievementItem[]>([]);
   const activeProjectId = ref<number | null>(null);
 
   const dialogVisible = ref(false);
   const viewDialogVisible = ref(false);
   const submitting = ref(false);
-  const currentAchievement = ref<any>(null);
+  const currentAchievement = ref<AchievementItem | null>(null);
   const fileList = ref<UploadFile[]>([]);
   const formRef = ref<FormInstance>();
 
@@ -63,7 +103,7 @@ export function useAchievementsPage() {
 
   const { loadDictionaries, getOptions } = useDictionary();
   const achievementTypeOptions = computed(
-    () => getOptions(DICT_CODES.ACHIEVEMENT_TYPE) as any[]
+    () => getOptions(DICT_CODES.ACHIEVEMENT_TYPE) as OptionItem[]
   );
 
   const activeProject = computed(
@@ -99,7 +139,7 @@ export function useAchievementsPage() {
   const canAdd = computed(() => {
     if (!activeProject.value) return false;
     const allowedStatuses = ["IN_PROGRESS", "CLOSURE_DRAFT", "CLOSURE_SUBMITTED"];
-    return allowedStatuses.includes(activeProject.value.status);
+    return allowedStatuses.includes(activeProject.value.status ?? "");
   });
 
   const formatDate = (date?: string) => {
@@ -110,15 +150,15 @@ export function useAchievementsPage() {
   const fetchProjects = async () => {
     loading.value = true;
     try {
-      const response: any = await getMyProjects({});
+      const response = (await getMyProjects({})) as ApiResponse<ProjectItem[]>;
       if (response.code === 200) {
         projects.value = response.data || [];
         if (!activeProjectId.value && projects.value.length > 0) {
           activeProjectId.value = projects.value[0].id;
         }
       }
-    } catch (error: any) {
-      ElMessage.error(error.message || "获取项目列表失败");
+    } catch (error: unknown) {
+      ElMessage.error(getErrorMessage(error, "获取项目列表失败"));
     } finally {
       loading.value = false;
     }
@@ -131,14 +171,16 @@ export function useAchievementsPage() {
     }
     listLoading.value = true;
     try {
-      const response: any = await getProjectAchievementList(activeProjectId.value);
+      const response = (await getProjectAchievementList(
+        activeProjectId.value
+      )) as ApiResponse<AchievementItem[]>;
       if (response.code === 200) {
         achievements.value = response.data || [];
       } else {
         achievements.value = [];
       }
-    } catch (error: any) {
-      ElMessage.error(error.message || "获取成果列表失败");
+    } catch (error: unknown) {
+      ElMessage.error(getErrorMessage(error, "获取成果列表失败"));
     } finally {
       listLoading.value = false;
     }
@@ -264,7 +306,10 @@ export function useAchievementsPage() {
         }
         if (form.attachment) payload.append("attachment", form.attachment);
 
-        const response: any = await addProjectAchievement(projectId, payload);
+        const response = (await addProjectAchievement(
+          projectId,
+          payload
+        )) as ApiResponse<unknown>;
         if (response.code === 200) {
           ElMessage.success("成果登记成功");
           dialogVisible.value = false;
@@ -273,8 +318,8 @@ export function useAchievementsPage() {
         } else {
           ElMessage.error(response.message || "提交失败");
         }
-      } catch (error: any) {
-        ElMessage.error(error.message || "提交失败");
+      } catch (error: unknown) {
+        ElMessage.error(getErrorMessage(error, "提交失败"));
       } finally {
         submitting.value = false;
       }
@@ -315,12 +360,12 @@ export function useAchievementsPage() {
     fileList.value = [];
   };
 
-  const handleView = (row: any) => {
+  const handleView = (row: AchievementItem) => {
     currentAchievement.value = row;
     viewDialogVisible.value = true;
   };
 
-  const handleDelete = async (row: any) => {
+  const handleDelete = async (row: AchievementItem) => {
     if (!activeProjectId.value) return;
     try {
       await ElMessageBox.confirm("确认删除该成果记录？删除后可在回收站恢复。", "提示", {
@@ -328,7 +373,10 @@ export function useAchievementsPage() {
         confirmButtonText: "删除",
         cancelButtonText: "取消",
       });
-      const response: any = await removeProjectAchievement(activeProjectId.value, row.id);
+      const response = (await removeProjectAchievement(
+        activeProjectId.value,
+        row.id
+      )) as ApiResponse<unknown>;
       if (response.code === 200) {
         ElMessage.success("已移入回收站");
         fetchAchievements();

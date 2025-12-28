@@ -7,7 +7,7 @@ export interface DictionaryItem {
   id?: number;
   value: string;
   label: string;
-  extra_data?: any;
+  extra_data?: Record<string, unknown>;
   template_file?: string;
 }
 
@@ -64,7 +64,7 @@ export function getAllDictionaries(): Promise<DictionaryBatchResponse> {
 /**
  * 创建字典项
  */
-export function createDictionaryItem(data: any) {
+export function createDictionaryItem(data: Record<string, unknown> | FormData): Promise<unknown> {
   return request({
     url: "/dictionaries/items/",
     method: "post",
@@ -78,7 +78,7 @@ export function createDictionaryItem(data: any) {
 /**
  * 更新字典项
  */
-export function updateDictionaryItem(id: number, data: any) {
+export function updateDictionaryItem(id: number, data: Record<string, unknown> | FormData): Promise<unknown> {
   return request({
     url: `/dictionaries/items/${id}/`,
     method: "patch", // Use PATCH for partial updates

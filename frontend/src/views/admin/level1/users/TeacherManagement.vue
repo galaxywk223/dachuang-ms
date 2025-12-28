@@ -263,12 +263,45 @@
 import { ref, reactive, onMounted, computed } from 'vue';
 import { Search, Plus, Upload, UploadFilled } from '@element-plus/icons-vue';
 import { getUsers, toggleUserStatus, createUser, updateUser, deleteUser } from '@/api/users/admin';
-import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus';
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadFile } from 'element-plus';
 import { useDictionary } from '@/composables/useDictionary';
 import { DICT_CODES } from '@/api/dictionaries';
 
+type TeacherRow = {
+  id: number;
+  employee_id: string;
+  real_name: string;
+  phone?: string;
+  email?: string;
+  college?: string;
+  title?: string;
+  is_active?: boolean;
+};
+
+type UserListResponse = {
+  code?: number;
+  data?: {
+    results?: TeacherRow[];
+    count?: number;
+    total?: number;
+  };
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (!isRecord(error)) return fallback;
+  const response = error.response;
+  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === 'string') {
+    return response.data.message;
+  }
+  if (typeof error.message === 'string') return error.message;
+  return fallback;
+};
+
 const loading = ref(false);
-const tableData = ref<any[]>([]);
+const tableData = ref<TeacherRow[]>([]);
 const total = ref(0);
 const currentPage = ref(1);
 const pageSize = ref(10);
@@ -329,18 +362,17 @@ const filters = reactive({
 const loadData = async () => {
   loading.value = true;
   try {
-    const params = {
+    const params: Record<string, string | number> = {
       page: currentPage.value,
       page_size: pageSize.value,
-      ...filters
+      role: filters.role
     };
-    // Clean empty params
-    if (!params.search) delete (params as any).search;
-    if (!params.college) delete (params as any).college;
+    if (filters.search) params.search = filters.search;
+    if (filters.college) params.college = filters.college;
 
-    const res = await getUsers(params);
+    const res = (await getUsers(params)) as UserListResponse;
     if (res.code === 200 && res.data) {
-      tableData.value = res.data.results || [];
+      tableData.value = res.data.results ?? [];
       const resultCount = res.data.count ?? res.data.total ?? tableData.value.length;
       total.value = Number.isFinite(resultCount) ? resultCount : 0;
     } else {
@@ -376,7 +408,7 @@ const handleCurrentChange = (val: number) => {
     loadData();
 };
 
-const handleEdit = (row: any) => {
+const handleEdit = (row: TeacherRow) => {
     isEditMode.value = true;
     currentId.value = row.id;
     Object.assign(formData, {
@@ -391,14 +423,14 @@ const handleEdit = (row: any) => {
     addDialogVisible.value = true;
 };
 
-const handleToggleStatus = async (row: any) => {
+const handleToggleStatus = async (row: TeacherRow) => {
    try {
      const action = row.is_active ? '禁用' : '激活';
      await ElMessageBox.confirm(`确定要${action}该教师吗？`, '提示', {
          type: 'warning'
      });
      const res = await toggleUserStatus(row.id);
-     if (res.code === 200) {
+     if (isRecord(res) && res.code === 200) {
         ElMessage.success(`${action}成功`);
         loadData();
      }
@@ -407,7 +439,7 @@ const handleToggleStatus = async (row: any) => {
    }
 };
 
-const handleDelete = async (row: any) => {
+const handleDelete = async (row: TeacherRow) => {
   try {
     await ElMessageBox.confirm(
       `确定要删除教师 "${row.real_name}" 吗？此操作不可恢复。`,
@@ -420,7 +452,7 @@ const handleDelete = async (row: any) => {
     );
 
     const res = await deleteUser(row.id);
-    if (res.code === 200 || res.code === 204) {
+    if (isRecord(res) && (res.code === 200 || res.code === 204)) {
       ElMessage.success('删除成功');
       loadData();
     } else {
@@ -430,7 +462,7 @@ const handleDelete = async (row: any) => {
   } catch (error) {
     if (error !== 'cancel') {
       console.error(error);
-      ElMessage.error('删除失败');
+      ElMessage.error(getErrorMessage(error, '删除失败'));
     }
   }
 };
@@ -473,7 +505,7 @@ const handleSubmit = async () => {
         res = await createUser(payload);
     }
 
-    if (res.code === 200) {
+    if (isRecord(res) && res.code === 200) {
       ElMessage.success(isEditMode.value ? '修改成功' : '添加成功');
       addDialogVisible.value = false;
       loadData();
@@ -496,8 +528,8 @@ const handleImportClick = () => {
     importFile.value = null;
 };
 
-const handleFileChange = (file: any) => {
-    importFile.value = file.raw;
+const handleFileChange = (file: UploadFile) => {
+    importFile.value = file.raw ?? null;
 };
 
 const handleImportSubmit = async () => {
@@ -515,14 +547,14 @@ const handleImportSubmit = async () => {
         const { importUsers } = await import('@/api/users/admin');
         const res = await importUsers(formData);
         
-        if (res.code === 200) {
-            ElMessage.success(res.message);
+        if (isRecord(res) && res.code === 200) {
+            ElMessage.success((typeof res.message === "string" && res.message) || "导入成功");
             importDialogVisible.value = false;
             loadData();
         }
-    } catch (error: any) {
+    } catch (error) {
         console.error(error);
-        ElMessage.error(error.response?.data?.message || "导入失败");
+        ElMessage.error(getErrorMessage(error, "导入失败"));
     } finally {
         importLoading.value = false;
     }

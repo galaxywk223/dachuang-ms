@@ -250,7 +250,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from "vue";
-import { ElMessage } from "element-plus";
+import { ElMessage, type UploadFile, type UploadInstance } from "element-plus";
 import { Folder, Check, Clock } from "@element-plus/icons-vue";
 import StatCard from "@/components/common/StatCard.vue";
 import {
@@ -266,8 +266,74 @@ import {
 } from "@/api/projects/admin";
 import dayjs from "dayjs";
 
+defineOptions({
+  name: "StatisticsView",
+});
+
+type StatsSummary = {
+  total_projects: number;
+  approved_projects: number;
+  pending_review: number;
+};
+
+type ArchiveRecord = {
+  project_no?: string;
+  project_title?: string;
+  archived_at?: string;
+  attachments?: unknown[];
+};
+
+type PushRecord = {
+  project_no?: string;
+  project_title?: string;
+  target?: string;
+  status_display?: string;
+  created_at?: string;
+  response_message?: string;
+};
+
+type DuplicateNo = {
+  project_no?: string;
+  cnt?: number;
+};
+
+type ReportRow = {
+  count?: number;
+};
+
+type ReportData = {
+  total: number;
+  by_status: (ReportRow & { status?: string })[];
+  by_college: (ReportRow & { leader__college?: string })[];
+  by_level: (ReportRow & { level__label?: string })[];
+  by_category: (ReportRow & { category__label?: string })[];
+};
+
+type ApiResponse<T> = {
+  code?: number;
+  data?: T;
+  message?: string;
+};
+
+const toBlob = (value: unknown, fallbackType: string) => {
+  if (value instanceof Blob) return value;
+  if (value instanceof ArrayBuffer) return new Blob([value], { type: fallbackType });
+  if (typeof value === "string") return new Blob([value], { type: fallbackType });
+  return new Blob([JSON.stringify(value ?? "")], { type: fallbackType });
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+  if (typeof error === "string") {
+    return error || fallback;
+  }
+  return fallback;
+};
+
 const activeTab = ref("import");
-const stats = reactive({
+const stats = reactive<StatsSummary>({
   total_projects: 0,
   approved_projects: 0,
   pending_review: 0,
@@ -278,19 +344,19 @@ const importFile = ref<File | null>(null);
 const importResult = ref("");
 const importErrors = ref<string[]>([]);
 const importErrorRows = ref<{ message: string }[]>([]);
-const uploadRef = ref();
+const uploadRef = ref<UploadInstance>();
 
 const archiving = ref(false);
-const archiveRecords = ref<any[]>([]);
+const archiveRecords = ref<ArchiveRecord[]>([]);
 
 const pushing = ref(false);
-const pushRecords = ref<any[]>([]);
+const pushRecords = ref<PushRecord[]>([]);
 const pushForm = reactive({
   projectIds: "",
   target: "ANHUI_INNOVATION_PLATFORM",
   simulate: true,
 });
-const duplicateNos = ref<any[]>([]);
+const duplicateNos = ref<DuplicateNo[]>([]);
 
 const reportFilters = reactive({
   year: "",
@@ -298,12 +364,12 @@ const reportFilters = reactive({
   status_in: "",
 });
 
-const reportData = reactive({
+const reportData = reactive<ReportData>({
   total: 0,
-  by_status: [] as any[],
-  by_college: [] as any[],
-  by_level: [] as any[],
-  by_category: [] as any[],
+  by_status: [],
+  by_college: [],
+  by_level: [],
+  by_category: [],
 });
 
 const formatDate = (date?: string) => {
@@ -313,19 +379,18 @@ const formatDate = (date?: string) => {
 
 const fetchReport = async () => {
   try {
-    const params: any = {};
+    const params: Record<string, string> = {};
     if (reportFilters.year) params.year = reportFilters.year;
     if (reportFilters.college) params.college = reportFilters.college;
     if (reportFilters.status_in) params.status_in = reportFilters.status_in;
-    const res: any = await getProjectStatisticsReport(params);
-    const payload = res?.data || res;
-    const data = payload?.data || payload;
-    reportData.total = data?.total || 0;
-    reportData.by_status = data?.by_status || [];
-    reportData.by_college = data?.by_college || [];
-    reportData.by_level = data?.by_level || [];
-    reportData.by_category = data?.by_category || [];
-  } catch (error) {
+    const res = (await getProjectStatisticsReport(params)) as ApiResponse<ReportData>;
+    const data = res?.data;
+    reportData.total = data?.total ?? 0;
+    reportData.by_status = data?.by_status ?? [];
+    reportData.by_college = data?.by_college ?? [];
+    reportData.by_level = data?.by_level ?? [];
+    reportData.by_category = data?.by_category ?? [];
+  } catch (error: unknown) {
     console.error(error);
   }
 };
@@ -339,7 +404,7 @@ const resetReport = () => {
 
 const fetchStatistics = async () => {
   try {
-    const res: any = await getProjectStatistics();
+    const res = (await getProjectStatistics()) as ApiResponse<StatsSummary>;
     if (res.code === 200) {
       Object.assign(stats, res.data);
     }
@@ -350,7 +415,7 @@ const fetchStatistics = async () => {
 
 const fetchArchives = async () => {
   try {
-    const res: any = await getArchives();
+    const res = (await getArchives()) as ApiResponse<ArchiveRecord[]>;
     if (res.code === 200) {
       archiveRecords.value = res.data || [];
     }
@@ -361,7 +426,7 @@ const fetchArchives = async () => {
 
 const fetchPushRecords = async () => {
   try {
-    const res: any = await getPushRecords();
+    const res = (await getPushRecords()) as ApiResponse<PushRecord[]>;
     if (res.code === 200) {
       pushRecords.value = res.data || [];
     }
@@ -370,7 +435,7 @@ const fetchPushRecords = async () => {
   }
 };
 
-const handleFileChange = (file: any) => {
+const handleFileChange = (file: UploadFile) => {
   importFile.value = file.raw || null;
 };
 
@@ -387,18 +452,21 @@ const submitImport = async () => {
   try {
     const formData = new FormData();
     formData.append("file", importFile.value);
-    const res: any = await importHistoryProjects(formData);
+    const res = (await importHistoryProjects(formData)) as ApiResponse<{
+      created?: number;
+      errors?: string[];
+    }>;
     if (res.code === 200) {
       importResult.value = `导入完成：新增 ${res.data?.created || 0} 条`;
       importErrors.value = res.data?.errors || [];
       importErrorRows.value = importErrors.value.map((message) => ({ message }));
       fetchStatistics();
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     importResult.value = "导入失败";
     importErrors.value = [];
     importErrorRows.value = [];
-    ElMessage.error(error.response?.data?.message || "导入失败");
+    ElMessage.error(getErrorMessage(error, "导入失败"));
   } finally {
     importing.value = false;
     if (uploadRef.value) {
@@ -421,13 +489,13 @@ const downloadFile = (blob: Blob, filename: string) => {
 const archiveClosed = async () => {
   archiving.value = true;
   try {
-    const res: any = await archiveClosedProjects();
+    const res = (await archiveClosedProjects()) as ApiResponse<{ created?: number }>;
     if (res.code === 200) {
       ElMessage.success(`归档完成：新增 ${res.data?.created || 0} 条`);
       fetchArchives();
     }
-  } catch (error: any) {
-    ElMessage.error(error.response?.data?.message || "归档失败");
+  } catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, "归档失败"));
   } finally {
     archiving.value = false;
   }
@@ -435,17 +503,18 @@ const archiveClosed = async () => {
 
 const exportProjectNos = async () => {
   try {
-    const res: any = await exportProjectNumbers();
-    downloadFile(res, "项目编号清单.xlsx");
+    const res = await exportProjectNumbers();
+    const blob = toBlob(res, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    downloadFile(blob, "项目编号清单.xlsx");
     ElMessage.success("导出成功");
-  } catch (error: any) {
-    ElMessage.error(error.response?.data?.message || "导出失败");
+  } catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, "导出失败"));
   }
 };
 
 const fetchDuplicateNos = async () => {
   try {
-    const res: any = await getDuplicateProjectNumbers();
+    const res = (await getDuplicateProjectNumbers()) as ApiResponse<DuplicateNo[]>;
     if (res.code === 200) {
       duplicateNos.value = res.data || [];
     }
@@ -469,17 +538,17 @@ const submitPush = async () => {
 
   pushing.value = true;
   try {
-    const res: any = await pushProjectsExternal({
+    const res = (await pushProjectsExternal({
       project_ids: ids,
       target: pushForm.target,
       simulate: pushForm.simulate,
-    });
+    })) as ApiResponse<unknown>;
     if (res.code === 200) {
       ElMessage.success("推送任务已创建");
       fetchPushRecords();
     }
-  } catch (error: any) {
-    ElMessage.error(error.response?.data?.message || "推送失败");
+  } catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, "推送失败"));
   } finally {
     pushing.value = false;
   }

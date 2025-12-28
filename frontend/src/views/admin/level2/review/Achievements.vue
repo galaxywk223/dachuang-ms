@@ -103,8 +103,35 @@ import { ref, reactive, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { getAchievements, exportAchievements } from '@/api/projects/admin';
 
+defineOptions({ name: "Level2AchievementsReviewView" });
+
+type AchievementRow = {
+  id?: number;
+  title?: string;
+  achievement_type_display?: string;
+  achievement_types?: string;
+  achievement_summary?: string;
+  publication_date?: string;
+  award_date?: string;
+  project_no?: string;
+  project_title?: string;
+  leader_name?: string;
+  project?: {
+    title?: string;
+  };
+};
+
+type AchievementListResponse = {
+  results?: AchievementRow[];
+  count?: number;
+  data?: {
+    results?: AchievementRow[];
+    total?: number;
+  };
+};
+
 const loading = ref(false);
-const tableData = ref([]);
+const tableData = ref<AchievementRow[]>([]);
 
 const searchForm = reactive({
   keyword: '',
@@ -128,12 +155,12 @@ const fetchData = async () => {
         year: searchForm.year,
         college: searchForm.college
     };
-    const res: any = await getAchievements(params);
-    if (res.results) {
-        tableData.value = res.results.map((item: any) => ({
+    const res = (await getAchievements(params)) as AchievementListResponse;
+    if (Array.isArray(res.results)) {
+        tableData.value = res.results.map((item) => ({
             ...item,
             // Map flat fields if needed, but serializer provides project, title, etc.
-            project_title: item.project?.title || item.project_title, // Depends on serializer (ProjectAchievementSerializer has project: id)
+            project_title: item.project?.title || item.project_title,
             // Wait, ProjectAchievementSerializer (nested) usually returns project ID.
             // I need to update Serializer to return Project Details or use source='project.title'
             // Let's check serializer again.
@@ -141,13 +168,13 @@ const fetchData = async () => {
             // It does NOT include project title/leader name by default unless I add them.
             // I should update ProjectAchievementSerializer to include project info.
         }));
-        pagination.total = res.count;
+        pagination.total = res.count ?? 0;
     } else if (res.data) {
         // Handle standard response wrapper
-        tableData.value = res.data.results;
-        pagination.total = res.data.total;
+        tableData.value = res.data.results ?? [];
+        pagination.total = res.data.total ?? 0;
     }
-  } catch(e) {
+  } catch {
     ElMessage.error('获取成果列表失败');
   } finally {
     loading.value = false;
@@ -174,10 +201,23 @@ const handleExport = async () => {
             year: searchForm.year,
             college: searchForm.college
         };
-        const res: any = await exportAchievements(params);
-        downloadFile(res, "成果列表.xlsx");
+        const res = await exportAchievements(params);
+        const blobPart =
+          typeof res === "string"
+            ? res
+            : res instanceof ArrayBuffer
+              ? res
+              : ArrayBuffer.isView(res)
+                ? (res.buffer as ArrayBuffer)
+                : JSON.stringify(res ?? "");
+        const blob = res instanceof Blob
+          ? res
+          : new Blob([blobPart], {
+              type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            });
+        downloadFile(blob, "成果列表.xlsx");
         ElMessage.success("导出成功");
-    } catch (e) {
+    } catch {
         ElMessage.error("导出失败");
     }
 };
@@ -202,7 +242,7 @@ const handleCurrentChange = (val: number) => {
   fetchData();
 };
 
-const handleView = (row: any) => {
+const handleView = (row: AchievementRow) => {
    // Show details dialog (Can implement later)
    // For now just show alert with full info
    ElMessage.info(`查看成果: ${row.title}`);
@@ -258,4 +298,3 @@ onMounted(() => {
     justify-content: flex-end;
 }
 </style>
-

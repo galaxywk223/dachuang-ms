@@ -16,12 +16,12 @@
       </el-col>
       <el-col :span="12">
         <el-form-item label="联系电话" prop="leader_contact">
-          <el-input v-model="formData.leader_contact" placeholder="手机号" />
+          <el-input v-model="localFormData.leader_contact" placeholder="手机号" />
         </el-form-item>
       </el-col>
       <el-col :span="12">
         <el-form-item label="电子邮箱" prop="leader_email">
-          <el-input v-model="formData.leader_email" placeholder="邮箱" />
+          <el-input v-model="localFormData.leader_email" placeholder="邮箱" />
         </el-form-item>
       </el-col>
     </el-row>
@@ -29,8 +29,40 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
-  formData: any;
+import { reactive, watch } from "vue";
+
+type LeaderFormData = {
+  leader_contact?: string;
+  leader_email?: string;
+};
+
+const props = defineProps<{
+  formData: LeaderFormData;
   currentUser: { name: string; student_id: string };
 }>();
+
+const emit = defineEmits<{
+  (event: "update:formData", value: LeaderFormData): void;
+}>();
+
+const localFormData = reactive<LeaderFormData>({
+  leader_contact: "",
+  leader_email: "",
+});
+
+watch(
+  () => props.formData,
+  (value) => {
+    Object.assign(localFormData, value);
+  },
+  { immediate: true, deep: true }
+);
+
+watch(
+  localFormData,
+  (value) => {
+    emit("update:formData", { ...value });
+  },
+  { deep: true }
+);
 </script>

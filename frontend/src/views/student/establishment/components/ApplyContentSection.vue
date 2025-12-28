@@ -7,7 +7,7 @@
       <el-col :span="24">
         <el-form-item label="预期成果" prop="expected_results">
           <el-input
-            v-model="formData.expected_results"
+            v-model="localFormData.expected_results"
             type="textarea"
             :rows="3"
             maxlength="200"
@@ -20,7 +20,7 @@
         <el-form-item label="预期成果清单">
           <div class="expected-grid">
             <el-select
-              v-model="expectedForm.achievement_type"
+              v-model="localExpectedForm.achievement_type"
               placeholder="成果类型"
               class="expected-select"
             >
@@ -32,7 +32,7 @@
               />
             </el-select>
             <el-input-number
-              v-model="expectedForm.expected_count"
+            v-model="localExpectedForm.expected_count"
               :min="1"
               controls-position="right"
               class="expected-count"
@@ -42,8 +42,8 @@
             </el-button>
           </div>
           <el-table
-            v-if="formData.expected_results_data.length"
-            :data="formData.expected_results_data"
+            v-if="localFormData.expected_results_data.length"
+            :data="localFormData.expected_results_data"
             border
             style="width: 100%; margin-top: 12px;"
             :header-cell-style="{ background: '#f8fafc', color: '#475569' }"
@@ -65,7 +65,7 @@
       <el-col :span="24">
         <el-form-item label="项目简介" prop="description">
           <el-input
-            v-model="formData.description"
+            v-model="localFormData.description"
             type="textarea"
             :rows="6"
             maxlength="500"
@@ -80,13 +80,83 @@
 
 <script setup lang="ts">
 import { Plus } from "@element-plus/icons-vue";
+import { reactive, watch } from "vue";
 
-defineProps<{
-  formData: any;
-  expectedForm: any;
-  achievementTypeOptions: any[];
-  getLabel: (options: any[], value: string) => string;
+type ExpectedRow = {
+  achievement_type?: string;
+  expected_count?: number;
+};
+
+type ContentFormData = {
+  expected_results?: string;
+  expected_results_data: ExpectedRow[];
+  description?: string;
+};
+
+type ExpectedForm = {
+  achievement_type?: string;
+  expected_count?: number;
+};
+
+type OptionItem = {
+  value: string;
+  label: string;
+};
+
+const props = defineProps<{
+  formData: ContentFormData;
+  expectedForm: ExpectedForm;
+  achievementTypeOptions: OptionItem[];
+  getLabel: (options: OptionItem[], value: string) => string;
   addExpectedResult: () => void;
   removeExpectedResult: (index: number) => void;
 }>();
+
+const emit = defineEmits<{
+  (event: "update:formData", value: ContentFormData): void;
+  (event: "update:expectedForm", value: ExpectedForm): void;
+}>();
+
+const localFormData = reactive<ContentFormData>({
+  expected_results: "",
+  expected_results_data: [],
+  description: "",
+});
+
+const localExpectedForm = reactive<ExpectedForm>({
+  achievement_type: "",
+  expected_count: 1,
+});
+
+watch(
+  () => props.formData,
+  (value) => {
+    Object.assign(localFormData, value);
+  },
+  { immediate: true, deep: true }
+);
+
+watch(
+  () => props.expectedForm,
+  (value) => {
+    Object.assign(localExpectedForm, value);
+  },
+  { immediate: true, deep: true }
+);
+
+watch(
+  localFormData,
+  (value) => {
+    emit("update:formData", { ...value });
+  },
+  { deep: true }
+);
+
+watch(
+  localExpectedForm,
+  (value) => {
+    emit("update:expectedForm", { ...value });
+  },
+  { deep: true }
+);
 </script>

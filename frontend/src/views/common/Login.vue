@@ -48,11 +48,21 @@ import { useUserStore } from "@/stores/user";
 import { ElMessage } from "element-plus";
 import LoginForm from "@/components/forms/LoginForm.vue";
 
+defineOptions({
+  name: "LoginView",
+});
+
 const loading = ref(false);
 const router = useRouter();
 const userStore = useUserStore();
 
-const handleLogin = async (formData: any) => {
+type LoginFormData = {
+  employeeId: string;
+  password: string;
+  role?: string;
+};
+
+const handleLogin = async (formData: LoginFormData) => {
   loading.value = true;
   try {
     // Correct store action usage with destructured args
@@ -89,8 +99,10 @@ const handleLogin = async (formData: any) => {
     } else {
       ElMessage.error("登录失败，请检查用户名或密码");
     }
-  } catch (error: any) {
-    ElMessage.error(error.message || "登录服务暂不可用");
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "登录服务暂不可用";
+    ElMessage.error(message);
   } finally {
     loading.value = false;
   }

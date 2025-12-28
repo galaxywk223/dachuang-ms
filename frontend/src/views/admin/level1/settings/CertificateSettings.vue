@@ -29,12 +29,12 @@
         </el-form-item>
         <el-form-item label="适用项目级别">
           <el-select v-model="form.project_level" placeholder="不限制" clearable>
-            <el-option v-for="item in levelOptions" :key="item.id" :label="item.label" :value="item.id" />
+            <el-option v-for="item in levelOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
         <el-form-item label="适用项目类别">
           <el-select v-model="form.project_category" placeholder="不限制" clearable>
-            <el-option v-for="item in categoryOptions" :key="item.id" :label="item.label" :value="item.id" />
+            <el-option v-for="item in categoryOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
         <el-form-item label="证书底图">
@@ -100,14 +100,53 @@ import {
   updateCertificateSetting,
 } from "@/api/system-settings";
 
+defineOptions({ name: "Level1CertificateSettingsView" });
+
+type OptionItem = {
+  value: string;
+  label: string;
+};
+
+type CertificateSetting = {
+  id?: number;
+  name?: string;
+  school_name?: string;
+  issuer_name?: string;
+  template_code?: string;
+  project_level?: string | null;
+  project_category?: string | null;
+  background_image_url?: string;
+  seal_image_url?: string;
+  style_config?: Record<string, unknown>;
+};
+
+type SettingsResponse = {
+  data?: {
+    data?: CertificateSetting[];
+  } | CertificateSetting[];
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (!isRecord(error)) return fallback;
+  const response = error.response;
+  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === "string") {
+    return response.data.message;
+  }
+  if (typeof error.message === "string") return error.message;
+  return fallback;
+};
+
 const loading = ref(false);
 const saving = ref(false);
 const currentId = ref<number | null>(null);
 
-const levelOptions = ref<any[]>([]);
-const categoryOptions = ref<any[]>([]);
+const levelOptions = ref<OptionItem[]>([]);
+const categoryOptions = ref<OptionItem[]>([]);
 
-const form = reactive<any>({
+const form = reactive<CertificateSetting>({
   name: "默认模板",
   school_name: "",
   issuer_name: "",
@@ -124,24 +163,32 @@ const sealFile = ref<File | null>(null);
 const backgroundFileList = ref<UploadUserFile[]>([]);
 const sealFileList = ref<UploadUserFile[]>([]);
 
+const extractOptions = (payload: unknown): OptionItem[] => {
+  if (!isRecord(payload)) return [];
+  if (Array.isArray(payload.items)) return payload.items as OptionItem[];
+  const data = payload.data;
+  if (isRecord(data) && Array.isArray(data.items)) return data.items as OptionItem[];
+  return [];
+};
+
 const loadOptions = async () => {
   const [levels, categories] = await Promise.all([
     getDictionaryByCode("project_level"),
     getDictionaryByCode("project_type"),
   ]);
-  levelOptions.value = (levels as any)?.items || (levels as any)?.data?.items || [];
-  categoryOptions.value = (categories as any)?.items || (categories as any)?.data?.items || [];
+  levelOptions.value = extractOptions(levels);
+  categoryOptions.value = extractOptions(categories);
 };
 
 const loadConfig = async () => {
   loading.value = true;
   try {
-    const res: any = await getCertificateSettings();
-    const data = res.data || res;
-    const list = data.data || data;
+    const res = (await getCertificateSettings()) as SettingsResponse | CertificateSetting[];
+    const data = isRecord(res) && "data" in res ? res.data : res;
+    const list = isRecord(data) && Array.isArray(data.data) ? data.data : data;
     if (Array.isArray(list) && list.length > 0) {
       const item = list[0];
-      currentId.value = item.id;
+      currentId.value = item.id ?? null;
       form.name = item.name || "默认模板";
       form.school_name = item.school_name || "";
       form.issuer_name = item.issuer_name || "";
@@ -154,7 +201,7 @@ const loadConfig = async () => {
     }
   } catch (error) {
     console.error(error);
-    ElMessage.error("加载证书配置失败");
+    ElMessage.error(getErrorMessage(error, "加载证书配置失败"));
   } finally {
     loading.value = false;
   }
@@ -210,8 +257,8 @@ const saveConfig = async () => {
     }
     ElMessage.success("保存成功");
     await loadConfig();
-  } catch (error: any) {
-    ElMessage.error(error.message || "保存失败");
+  } catch (error) {
+    ElMessage.error(getErrorMessage(error, "保存失败"));
   } finally {
     saving.value = false;
   }

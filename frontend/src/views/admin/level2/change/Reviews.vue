@@ -46,9 +46,41 @@ import { ref, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import { getChangeRequests, reviewChangeRequest } from "@/api/projects/change-requests";
 
+defineOptions({ name: "Level2ChangeReviewsView" });
+
+type ChangeRequestRow = {
+  id: number;
+  project_no?: string;
+  project_title?: string;
+  request_type_display?: string;
+  leader_name?: string;
+  status_display?: string;
+  attachment_url?: string;
+};
+
+type ChangeRequestListResponse = {
+  data?: {
+    results?: ChangeRequestRow[];
+  } | ChangeRequestRow[];
+  results?: ChangeRequestRow[];
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (!isRecord(error)) return fallback;
+  const response = error.response;
+  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === "string") {
+    return response.data.message;
+  }
+  if (typeof error.message === "string") return error.message;
+  return fallback;
+};
+
 const loading = ref(false);
 const reviewing = ref(false);
-const requests = ref<any[]>([]);
+const requests = ref<ChangeRequestRow[]>([]);
 const dialogVisible = ref(false);
 const currentId = ref<number | null>(null);
 const comments = ref("");
@@ -56,9 +88,9 @@ const comments = ref("");
 const fetchRequests = async () => {
   loading.value = true;
   try {
-    const res: any = await getChangeRequests({ status: "LEVEL2_REVIEWING" });
-    const payload = res.data || res;
-    const list = payload.data || payload.results || payload;
+    const res = (await getChangeRequests({ status: "LEVEL2_REVIEWING" })) as ChangeRequestListResponse;
+    const payload = isRecord(res) && "data" in res ? res.data : res;
+    const list = isRecord(payload) ? payload.results : payload;
     requests.value = Array.isArray(list) ? list : [];
   } catch (error) {
     console.error(error);
@@ -67,7 +99,7 @@ const fetchRequests = async () => {
   }
 };
 
-const openReview = (row: any) => {
+const openReview = (row: ChangeRequestRow) => {
   currentId.value = row.id;
   comments.value = "";
   dialogVisible.value = true;
@@ -81,8 +113,8 @@ const submitReview = async (action: "approve" | "reject") => {
     ElMessage.success("审核完成");
     dialogVisible.value = false;
     fetchRequests();
-  } catch (error: any) {
-    ElMessage.error(error.response?.data?.message || "操作失败");
+  } catch (error) {
+    ElMessage.error(getErrorMessage(error, "操作失败"));
   } finally {
     reviewing.value = false;
   }
@@ -129,4 +161,3 @@ onMounted(() => {
     color: $slate-800;
 }
 </style>
-

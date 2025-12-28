@@ -7,7 +7,7 @@
       <el-row :gutter="16">
         <el-col :span="10">
           <el-input
-            v-model="newMember.student_id"
+            v-model="localNewMember.student_id"
             placeholder="成员学号 (回车查询)"
             @blur="handleSearchNewMember"
             @keyup.enter="handleSearchNewMember"
@@ -18,7 +18,7 @@
           </el-input>
         </el-col>
         <el-col :span="10">
-          <el-input v-model="newMember.name" placeholder="成员姓名" disabled />
+          <el-input v-model="localNewMember.name" placeholder="成员姓名" disabled />
         </el-col>
         <el-col :span="4">
           <el-button type="primary" plain @click="handleAddNewMember" style="width: 100%">
@@ -50,12 +50,47 @@
 
 <script setup lang="ts">
 import { Search, Plus } from "@element-plus/icons-vue";
+import { reactive, watch } from "vue";
 
-defineProps<{
-  formData: any;
-  newMember: any;
+type MemberRow = {
+  student_id: string;
+  name: string;
+};
+
+type MemberFormData = {
+  members: MemberRow[];
+};
+
+const props = defineProps<{
+  formData: MemberFormData;
+  newMember: MemberRow;
   handleSearchNewMember: () => void;
   handleAddNewMember: () => void;
   removeMember: (index: number) => void;
 }>();
+
+const emit = defineEmits<{
+  (event: "update:newMember", value: MemberRow): void;
+}>();
+
+const localNewMember = reactive<MemberRow>({
+  student_id: "",
+  name: "",
+});
+
+watch(
+  () => props.newMember,
+  (value) => {
+    Object.assign(localNewMember, value);
+  },
+  { immediate: true, deep: true }
+);
+
+watch(
+  localNewMember,
+  (value) => {
+    emit("update:newMember", { ...value });
+  },
+  { deep: true }
+);
 </script>

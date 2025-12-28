@@ -150,10 +150,39 @@ import {
   deleteProjectBatch,
 } from "@/api/system-settings/batches";
 
+defineOptions({ name: "Level1BatchesView" });
+
+type BatchRow = {
+  id: number;
+  name?: string;
+  year?: number;
+  code?: string;
+  status?: string;
+  is_current?: boolean;
+  is_deleted?: boolean;
+  updated_at?: string;
+};
+
+type BatchListResponse = {
+  data?: BatchRow[];
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (!isRecord(error)) return fallback;
+  const response = error.response;
+  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === "string") {
+    return response.data.message;
+  }
+  if (typeof error.message === "string") return error.message;
+  return fallback;
+};
 
 const router = useRouter();
 const batchLoading = ref(false);
-const batches = ref<any[]>([]);
+const batches = ref<BatchRow[]>([]);
 const statusFilter = ref("");
 const showArchived = ref(false);
 
@@ -173,7 +202,7 @@ const batchStatusOptions = [
   { value: "archived", label: "已归档" },
 ];
 
-const canDelete = (row: any) => row.status === "draft" && !row.is_deleted;
+const canDelete = (row: BatchRow) => row.status === "draft" && !row.is_deleted;
 
 const getStatusLabel = (status?: string) => {
   const match = batchStatusOptions.find((item) => item.value === status);
@@ -213,11 +242,11 @@ const formatDate = (value?: string) => {
 const loadBatches = async () => {
   batchLoading.value = true;
   try {
-    const res: any = await listProjectBatches({
+    const res = (await listProjectBatches({
       include_archived: showArchived.value ? 1 : 0,
       include_deleted: showArchived.value ? 1 : 0,
-    });
-    const data = res.data || res;
+    })) as BatchListResponse | BatchRow[];
+    const data = isRecord(res) && "data" in res ? res.data : res;
     batches.value = Array.isArray(data) ? data : [];
   } catch (error) {
     console.error(error);
@@ -246,25 +275,25 @@ const submitBatch = async () => {
   }
   batchSaving.value = true;
   try {
-    const res: any = await createProjectBatch({ ...batchForm });
-    if (res.code === 200 || res.code === 201) {
+    const res = await createProjectBatch({ ...batchForm });
+    if (isRecord(res) && (res.code === 200 || res.code === 201)) {
       ElMessage.success("批次创建成功");
       batchDialogVisible.value = false;
       await loadBatches();
     }
   } catch (error) {
     console.error(error);
-    ElMessage.error("批次创建失败");
+    ElMessage.error(getErrorMessage(error, "批次创建失败"));
   } finally {
     batchSaving.value = false;
   }
 };
 
-const openSettings = (row: any) => {
+const openSettings = (row: BatchRow) => {
   router.push({ name: "level1-settings-batch-config", params: { id: row.id } });
 };
 
-const startBatch = async (row: any) => {
+const startBatch = async (row: BatchRow) => {
   try {
     await ElMessageBox.confirm("开始该批次将替换当前批次，是否继续？", "确认操作", {
       type: "warning",
@@ -280,11 +309,11 @@ const startBatch = async (row: any) => {
     await loadBatches();
   } catch (error) {
     console.error(error);
-    ElMessage.error("开始失败");
+    ElMessage.error(getErrorMessage(error, "开始失败"));
   }
 };
 
-const finishBatch = async (row: any) => {
+const finishBatch = async (row: BatchRow) => {
   try {
     await ElMessageBox.confirm("结束后该批次将进入只读状态，是否继续？", "确认操作", {
       type: "warning",
@@ -300,11 +329,11 @@ const finishBatch = async (row: any) => {
     await loadBatches();
   } catch (error) {
     console.error(error);
-    ElMessage.error("结束失败");
+    ElMessage.error(getErrorMessage(error, "结束失败"));
   }
 };
 
-const archiveBatch = async (row: any) => {
+const archiveBatch = async (row: BatchRow) => {
   try {
     await ElMessageBox.confirm("归档后该批次将进入只读状态，是否继续？", "确认操作", {
       type: "warning",
@@ -320,11 +349,11 @@ const archiveBatch = async (row: any) => {
     await loadBatches();
   } catch (error) {
     console.error(error);
-    ElMessage.error("归档失败");
+    ElMessage.error(getErrorMessage(error, "归档失败"));
   }
 };
 
-const restoreBatch = async (row: any) => {
+const restoreBatch = async (row: BatchRow) => {
   try {
     await ElMessageBox.confirm("确认恢复该批次并移出归档？", "确认操作", {
       type: "warning",
@@ -340,11 +369,11 @@ const restoreBatch = async (row: any) => {
     await loadBatches();
   } catch (error) {
     console.error(error);
-    ElMessage.error("恢复失败");
+    ElMessage.error(getErrorMessage(error, "恢复失败"));
   }
 };
 
-const handleDelete = async (row: any) => {
+const handleDelete = async (row: BatchRow) => {
   try {
     await ElMessageBox.confirm(
       "确定删除该批次？若该批次已有项目，将移入归档并可在回收站恢复。",
@@ -359,16 +388,16 @@ const handleDelete = async (row: any) => {
     return;
   }
   try {
-    const res: any = await deleteProjectBatch(row.id);
-    if (res.code === 200 || res.code === 204) {
-      ElMessage.success(res.message || "删除成功");
+    const res = await deleteProjectBatch(row.id);
+    if (isRecord(res) && (res.code === 200 || res.code === 204)) {
+      ElMessage.success((typeof res.message === "string" && res.message) || "删除成功");
       await loadBatches();
     } else {
-      ElMessage.error(res.message || "删除失败");
+      ElMessage.error((isRecord(res) && typeof res.message === "string" && res.message) || "删除失败");
     }
   } catch (error) {
     console.error(error);
-    ElMessage.error("删除失败");
+    ElMessage.error(getErrorMessage(error, "删除失败"));
   }
 };
 

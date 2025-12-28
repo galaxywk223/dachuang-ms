@@ -136,10 +136,46 @@ import { ElMessage } from "element-plus";
 import { useRouter } from "vue-router";
 import { getPendingClosureProjects } from "@/api/projects";
 
+defineOptions({
+  name: "StudentClosurePendingView",
+});
+
+type ProjectRow = {
+  id: number;
+  project_no?: string;
+  title?: string;
+  level_display?: string;
+  category_display?: string;
+  leader_name?: string;
+  leader_student_id?: string;
+  college?: string;
+  leader_contact?: string;
+  budget?: number;
+  status?: string;
+  status_display?: string;
+};
+
+type PendingResponse = {
+  code: number;
+  data?: ProjectRow[];
+  total?: number;
+  message?: string;
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+  if (typeof error === "string") {
+    return error || fallback;
+  }
+  return fallback;
+};
+
 const router = useRouter();
 
 // 表格数据
-const tableData = ref<any[]>([]);
+const tableData = ref<ProjectRow[]>([]);
 const loading = ref(false);
 
 // 分页
@@ -180,16 +216,16 @@ const fetchPendingProjects = async () => {
       page_size: pagination.pageSize,
     };
 
-    const response: any = await getPendingClosureProjects(params);
+    const response = (await getPendingClosureProjects(params)) as PendingResponse;
     if (response.code === 200) {
       tableData.value = response.data || [];
       pagination.total = response.total || 0;
     } else {
       ElMessage.error(response.message || "获取项目列表失败");
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("获取待结题项目失败:", error);
-    ElMessage.error(error.message || "获取项目列表失败");
+    ElMessage.error(getErrorMessage(error, "获取项目列表失败"));
   } finally {
     loading.value = false;
   }
@@ -208,7 +244,7 @@ const handleCurrentChange = (page: number) => {
 };
 
 // 申请结题
-const handleApplyClosure = (row: any) => {
+const handleApplyClosure = (row: ProjectRow) => {
   // 跳转到结题申请页面或打开对话框
   router.push(`/closure/apply?projectId=${row.id}`);
   ElMessage.info("跳转到结题申请页面");

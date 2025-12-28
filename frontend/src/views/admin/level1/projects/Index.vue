@@ -355,6 +355,8 @@ import { Search, RefreshLeft, Download, ArrowDown } from "@element-plus/icons-vu
 import { useAllProjects } from "./hooks/useAllProjects";
 import ProjectStatusBadge from "@/components/business/project/StatusBadge.vue";
 
+defineOptions({ name: "Level1ProjectsView" });
+
 const {
   loading,
   projects,

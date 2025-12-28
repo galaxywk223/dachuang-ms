@@ -1,6 +1,6 @@
 import request from "@/utils/request";
 
-export function getEffectiveSettings(batchId?: number | null) {
+export function getEffectiveSettings(batchId?: number | null): Promise<unknown> {
   return request({
     url: "/system-settings/settings/effective/",
     method: "get",
@@ -8,7 +8,11 @@ export function getEffectiveSettings(batchId?: number | null) {
   });
 }
 
-export function updateSettingByCode(code: string, data: any, batchId?: number | null) {
+export function updateSettingByCode(
+  code: string,
+  data: Record<string, unknown>,
+  batchId?: number | null
+): Promise<unknown> {
   return request({
     url: `/system-settings/settings/by-code/${code}/`,
     method: "put",
@@ -17,14 +21,14 @@ export function updateSettingByCode(code: string, data: any, batchId?: number | 
   });
 }
 
-export function getCertificateSettings() {
+export function getCertificateSettings(): Promise<unknown> {
   return request({
     url: "/system-settings/certificates/",
     method: "get",
   });
 }
 
-export function createCertificateSetting(data: any) {
+export function createCertificateSetting(data: Record<string, unknown> | FormData): Promise<unknown> {
   return request({
     url: "/system-settings/certificates/",
     method: "post",
@@ -35,7 +39,7 @@ export function createCertificateSetting(data: any) {
   });
 }
 
-export function updateCertificateSetting(id: number, data: any) {
+export function updateCertificateSetting(id: number, data: Record<string, unknown> | FormData): Promise<unknown> {
   return request({
     url: `/system-settings/certificates/${id}/`,
     method: "patch",
@@ -46,14 +50,14 @@ export function updateCertificateSetting(id: number, data: any) {
   });
 }
 
-export function deleteCertificateSetting(id: number) {
+export function deleteCertificateSetting(id: number): Promise<unknown> {
   return request({
     url: `/system-settings/certificates/${id}/`,
     method: "delete",
   });
 }
 
-export function getWorkflows(params?: any) {
+export function getWorkflows(params?: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/system-settings/workflows/",
     method: "get",
@@ -61,7 +65,7 @@ export function getWorkflows(params?: any) {
   });
 }
 
-export function createWorkflow(data: any) {
+export function createWorkflow(data: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/system-settings/workflows/",
     method: "post",
@@ -69,7 +73,7 @@ export function createWorkflow(data: any) {
   });
 }
 
-export function updateWorkflow(id: number, data: any) {
+export function updateWorkflow(id: number, data: Record<string, unknown>): Promise<unknown> {
   return request({
     url: `/system-settings/workflows/${id}/`,
     method: "patch",
@@ -77,14 +81,14 @@ export function updateWorkflow(id: number, data: any) {
   });
 }
 
-export function deleteWorkflow(id: number) {
+export function deleteWorkflow(id: number): Promise<unknown> {
   return request({
     url: `/system-settings/workflows/${id}/`,
     method: "delete",
   });
 }
 
-export function getWorkflowNodes(params?: any) {
+export function getWorkflowNodes(params?: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/system-settings/workflow-nodes/",
     method: "get",
@@ -92,7 +96,7 @@ export function getWorkflowNodes(params?: any) {
   });
 }
 
-export function createWorkflowNode(data: any) {
+export function createWorkflowNode(data: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/system-settings/workflow-nodes/",
     method: "post",
@@ -100,7 +104,7 @@ export function createWorkflowNode(data: any) {
   });
 }
 
-export function updateWorkflowNode(id: number, data: any) {
+export function updateWorkflowNode(id: number, data: Record<string, unknown>): Promise<unknown> {
   return request({
     url: `/system-settings/workflow-nodes/${id}/`,
     method: "patch",
@@ -108,14 +112,14 @@ export function updateWorkflowNode(id: number, data: any) {
   });
 }
 
-export function deleteWorkflowNode(id: number) {
+export function deleteWorkflowNode(id: number): Promise<unknown> {
   return request({
     url: `/system-settings/workflow-nodes/${id}/`,
     method: "delete",
   });
 }
 
-export function reorderWorkflowNodes(items: Array<{ id: number; sort_order: number }>) {
+export function reorderWorkflowNodes(items: Array<{ id: number; sort_order: number }>): Promise<unknown> {
   return request({
     url: "/system-settings/workflow-nodes/reorder/",
     method: "post",
@@ -123,7 +127,7 @@ export function reorderWorkflowNodes(items: Array<{ id: number; sort_order: numb
   });
 }
 
-export function getReviewTemplates(params?: any) {
+export function getReviewTemplates(params?: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/system-settings/review-templates/",
     method: "get",
@@ -131,7 +135,7 @@ export function getReviewTemplates(params?: any) {
   });
 }
 
-export function createReviewTemplate(data: any) {
+export function createReviewTemplate(data: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/system-settings/review-templates/",
     method: "post",
@@ -139,7 +143,7 @@ export function createReviewTemplate(data: any) {
   });
 }
 
-export function updateReviewTemplate(id: number, data: any) {
+export function updateReviewTemplate(id: number, data: Record<string, unknown>): Promise<unknown> {
   return request({
     url: `/system-settings/review-templates/${id}/`,
     method: "patch",
@@ -147,14 +151,14 @@ export function updateReviewTemplate(id: number, data: any) {
   });
 }
 
-export function deleteReviewTemplate(id: number) {
+export function deleteReviewTemplate(id: number): Promise<unknown> {
   return request({
     url: `/system-settings/review-templates/${id}/`,
     method: "delete",
   });
 }
 
-export function getReviewTemplateItems(params?: any) {
+export function getReviewTemplateItems(params?: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/system-settings/review-template-items/",
     method: "get",
@@ -162,7 +166,7 @@ export function getReviewTemplateItems(params?: any) {
   });
 }
 
-export function createReviewTemplateItem(data: any) {
+export function createReviewTemplateItem(data: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/system-settings/review-template-items/",
     method: "post",
@@ -170,7 +174,7 @@ export function createReviewTemplateItem(data: any) {
   });
 }
 
-export function updateReviewTemplateItem(id: number, data: any) {
+export function updateReviewTemplateItem(id: number, data: Record<string, unknown>): Promise<unknown> {
   return request({
     url: `/system-settings/review-template-items/${id}/`,
     method: "patch",
@@ -178,14 +182,14 @@ export function updateReviewTemplateItem(id: number, data: any) {
   });
 }
 
-export function deleteReviewTemplateItem(id: number) {
+export function deleteReviewTemplateItem(id: number): Promise<unknown> {
   return request({
     url: `/system-settings/review-template-items/${id}/`,
     method: "delete",
   });
 }
 
-export function reorderReviewTemplateItems(items: Array<{ id: number; sort_order: number }>) {
+export function reorderReviewTemplateItems(items: Array<{ id: number; sort_order: number }>): Promise<unknown> {
   return request({
     url: "/system-settings/review-template-items/reorder/",
     method: "post",

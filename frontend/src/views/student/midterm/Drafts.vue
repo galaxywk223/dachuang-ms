@@ -68,9 +68,38 @@ import { ElMessage } from "element-plus";
 import { useRouter } from "vue-router";
 import { getProjects } from "@/api/projects";
 
+defineOptions({
+  name: "StudentMidtermDraftsView",
+});
+
+type ProjectRow = {
+  id: number;
+  project_no?: string;
+  title?: string;
+  leader_name?: string;
+  college?: string;
+  status_display?: string;
+};
+
+type ProjectsResponse = {
+  code?: number;
+  data?: { results?: ProjectRow[]; count?: number };
+  message?: string;
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+  if (typeof error === "string") {
+    return error || fallback;
+  }
+  return fallback;
+};
+
 const router = useRouter();
 
-const tableData = ref<any[]>([]);
+const tableData = ref<ProjectRow[]>([]);
 const loading = ref(false);
 
 const pagination = reactive({
@@ -88,22 +117,22 @@ const fetchDrafts = async () => {
       status_in: "MID_TERM_DRAFT",
     };
 
-    const res: any = await getProjects(params);
+    const res = (await getProjects(params)) as ProjectsResponse;
     if (res?.code === 200) {
       tableData.value = res.data?.results || [];
       pagination.total = res.data?.count || 0;
     } else {
       ElMessage.error(res?.message || "获取草稿列表失败");
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("获取中期草稿失败:", error);
-    ElMessage.error(error.message || "获取草稿列表失败");
+    ElMessage.error(getErrorMessage(error, "获取草稿列表失败"));
   } finally {
     loading.value = false;
   }
 };
 
-const handleEdit = (row: any) => {
+const handleEdit = (row: ProjectRow) => {
   router.push(`/midterm/apply?projectId=${row.id}`);
 };
 

@@ -2,6 +2,27 @@ import { ref } from "vue";
 import { ElMessage } from "element-plus";
 import { getAllProjects } from "@/api/projects/admin";
 
+type ProjectRow = {
+  id: number;
+  title?: string;
+  project_no?: string;
+  status?: string;
+  status_display?: string;
+  leader?: number | string;
+};
+
+type ProjectListResponse = {
+  results?: ProjectRow[];
+  count?: number;
+  data?: {
+    results?: ProjectRow[];
+    count?: number;
+  };
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
 export function useProjectTable(filters: {
   search: string;
   level: string;
@@ -9,8 +30,8 @@ export function useProjectTable(filters: {
   status: string;
 }) {
   const loading = ref(false);
-  const projects = ref<any[]>([]);
-  const selectedRows = ref<any[]>([]);
+  const projects = ref<ProjectRow[]>([]);
+  const selectedRows = ref<ProjectRow[]>([]);
   const currentPage = ref(1);
   const pageSize = ref(10);
   const total = ref(0);
@@ -27,13 +48,13 @@ export function useProjectTable(filters: {
         status: filters.status,
       };
 
-      const res: any = await getAllProjects(params);
-      if (res.results) {
-        projects.value = res.results;
-        total.value = res.count;
-      } else if (res.data && res.data.results) {
-        projects.value = res.data.results;
-        total.value = res.data.count;
+      const res = (await getAllProjects(params)) as ProjectListResponse | ProjectRow[];
+      if (isRecord(res) && Array.isArray(res.results)) {
+        projects.value = res.results ?? [];
+        total.value = res.count ?? projects.value.length;
+      } else if (isRecord(res) && isRecord(res.data) && Array.isArray(res.data?.results)) {
+        projects.value = res.data?.results ?? [];
+        total.value = res.data?.count ?? projects.value.length;
       } else {
         projects.value = Array.isArray(res) ? res : [];
         total.value = projects.value.length;
@@ -51,7 +72,7 @@ export function useProjectTable(filters: {
     fetchProjects();
   };
 
-  const handleSelectionChange = (val: any[]) => {
+  const handleSelectionChange = (val: ProjectRow[]) => {
     selectedRows.value = val;
   };
 

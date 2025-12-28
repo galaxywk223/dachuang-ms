@@ -34,9 +34,14 @@
           :college-options="collegeOptions"
           :major-options="majorOptions"
           v-model:key-field-cascader-value="keyFieldCascaderValue"
+          @update:form-data="(value) => Object.assign(formData, value)"
         />
 
-        <ApplyLeaderSection :form-data="formData" :current-user="currentUser" />
+        <ApplyLeaderSection
+          :form-data="formData"
+          :current-user="currentUser"
+          @update:form-data="(value) => Object.assign(formData, value)"
+        />
 
         <ApplyAdvisorSection
           :form-data="formData"
@@ -46,6 +51,7 @@
           :handle-search-new-advisor="handleSearchNewAdvisor"
           :handle-add-new-advisor="handleAddNewAdvisor"
           :remove-advisor="removeAdvisor"
+          @update:new-advisor="(value) => Object.assign(newAdvisor, value)"
         />
 
         <ApplyMemberSection
@@ -54,6 +60,7 @@
           :handle-search-new-member="handleSearchNewMember"
           :handle-add-new-member="handleAddNewMember"
           :remove-member="removeMember"
+          @update:new-member="(value) => Object.assign(newMember, value)"
         />
 
         <ApplyContentSection
@@ -63,6 +70,8 @@
           :get-label="getLabel"
           :add-expected-result="addExpectedResult"
           :remove-expected-result="removeExpectedResult"
+          @update:form-data="(value) => Object.assign(formData, value)"
+          @update:expected-form="(value) => Object.assign(expectedForm, value)"
         />
 
         <ApplyAttachmentSection
@@ -86,6 +95,10 @@ import ApplyMemberSection from "./components/ApplyMemberSection.vue";
 import ApplyContentSection from "./components/ApplyContentSection.vue";
 import ApplyAttachmentSection from "./components/ApplyAttachmentSection.vue";
 import { useProjectApplication } from "./hooks/useProjectApplication";
+
+defineOptions({
+  name: "StudentEstablishmentApplyView",
+});
 
 const {
   formRef,

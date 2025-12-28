@@ -13,6 +13,10 @@
   </div>
 </template>
 
+<script setup lang="ts">
+defineOptions({ name: "Level1CollegesView" });
+</script>
+
 <style scoped lang="scss">
 @use "@/styles/variables.scss" as *;
 

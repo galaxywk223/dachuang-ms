@@ -176,7 +176,7 @@
 import { ref, computed, reactive, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user';
-import { ElMessageBox, ElMessage } from 'element-plus';
+import { ElMessageBox, ElMessage, type FormInstance, type FormRules } from 'element-plus';
 import {
   DocumentAdd, DocumentChecked, 
 	  QuestionFilled, Bell, ArrowDown, 
@@ -185,6 +185,31 @@ import {
 } from '@element-plus/icons-vue';
 import { getCurrentBatch } from '@/api/system-settings/batches';
 import { getUnreadCount } from "@/api/notifications";
+
+type CurrentBatch = {
+  name?: string;
+  year?: number | string;
+  status?: string;
+};
+
+type ApiResponse = {
+  code?: number;
+  message?: string;
+  data?: unknown;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (!isRecord(error)) return fallback;
+  const response = error.response;
+  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === 'string') {
+    return response.data.message;
+  }
+  if (typeof error.message === 'string') return error.message;
+  return fallback;
+};
 
 const route = useRoute();
 const router = useRouter();
@@ -198,7 +223,7 @@ const userRole = computed(() => String(userStore.user?.role || localStorage.getI
 const userName = computed(() => userStore.user?.real_name || (userRole.value === 'student' ? '学生用户' : '管理员'));
 const userInitials = computed(() => userName.value?.[0] || 'U');
 
-const currentBatch = ref<any | null>(null);
+const currentBatch = ref<CurrentBatch | null>(null);
 const currentBatchLabel = computed(() => {
     if (!currentBatch.value) return '';
     const name = currentBatch.value.name || '';
@@ -240,8 +265,8 @@ const breadcrumbs = computed(() => {
 
 const loadCurrentBatch = async () => {
   try {
-    const res: any = await getCurrentBatch();
-    const data = res.data || res;
+    const res = (await getCurrentBatch()) as ApiResponse | unknown;
+    const data = (isRecord(res) && 'data' in res ? res.data : res) as CurrentBatch | undefined;
     if (data && data.status === 'active') {
       currentBatch.value = data;
       return;
@@ -517,8 +542,12 @@ const toggleSidebar = () => {
 
 const refreshUnread = async () => {
   try {
-    const res: any = await getUnreadCount();
-    const count = res?.data?.data?.count ?? res?.data?.count ?? 0;
+    const res = await getUnreadCount();
+    const payload = isRecord(res) && 'data' in res ? res.data : res;
+    const count =
+      (isRecord(payload) && isRecord(payload.data) && typeof payload.data.count === 'number' && payload.data.count) ||
+      (isRecord(payload) && typeof payload.count === 'number' && payload.count) ||
+      0;
     hasUnread.value = count > 0;
   } catch {
     hasUnread.value = false;
@@ -551,7 +580,7 @@ const handleCommand = async (command: string) => {
 import { changePassword } from '@/api/auth';
 
 const passwordDialogVisible = ref(false);
-const passwordFormRef = ref();
+const passwordFormRef = ref<FormInstance>();
 const passwordLoading = ref(false);
 
 const passwordForm = reactive({
@@ -560,7 +589,7 @@ const passwordForm = reactive({
     confirmPassword: ''
 });
 
-const passwordRules = {
+const passwordRules: FormRules = {
     oldPassword: [{ required: true, message: '请输入原密码', trigger: 'blur' }],
     newPassword: [
         { required: true, message: '请输入新密码', trigger: 'blur' },
@@ -569,7 +598,7 @@ const passwordRules = {
     confirmPassword: [
         { required: true, message: '请确认新密码', trigger: 'blur' },
         { 
-            validator: (_rule: any, value: string, callback: any) => {
+            validator: (_rule: unknown, value: string, callback: (error?: Error) => void) => {
                 if (value !== passwordForm.newPassword) {
                     callback(new Error('两次输入密码不一致'));
                 } else {
@@ -602,8 +631,8 @@ const handleSubmitPassword = async () => {
                 } else {
                     ElMessage.error(res.message || '修改失败');
                 }
-            } catch (error: any) {
-                ElMessage.error(error.message || '请求失败');
+            } catch (error) {
+                ElMessage.error(getErrorMessage(error, '请求失败'));
             } finally {
                 passwordLoading.value = false;
             }

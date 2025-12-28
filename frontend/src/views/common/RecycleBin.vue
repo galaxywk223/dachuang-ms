@@ -117,9 +117,90 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import dayjs from "dayjs";
 import { getRecycleBin, restoreRecycleBin, getProjects } from "@/api/projects";
 
+defineOptions({
+  name: "RecycleBinView",
+});
+
+type ProjectItem = {
+  id: number;
+  project_no?: string;
+  title: string;
+};
+
+type AttachmentItem = {
+  name?: string;
+};
+
+type RecycleItem = {
+  id: number;
+  project_no?: string;
+  project_title?: string;
+  resource_type_display?: string;
+  deleted_at?: string;
+  is_restored?: boolean;
+  attachments?: Array<string | AttachmentItem>;
+};
+
+type ListResponse<T> = {
+  results?: T[];
+  data?: { results?: T[]; count?: number; total?: number };
+  count?: number;
+  total?: number;
+};
+
+type PaginationParams = {
+  page: number;
+  page_size: number;
+  project?: string;
+  resource_type?: string;
+  is_restored?: string;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const resolveList = <T,>(payload: unknown): T[] => {
+  if (Array.isArray(payload)) return payload as T[];
+  if (isRecord(payload) && Array.isArray(payload.results)) {
+    return payload.results as T[];
+  }
+  if (
+    isRecord(payload) &&
+    isRecord(payload.data) &&
+    Array.isArray(payload.data.results)
+  ) {
+    return payload.data.results as T[];
+  }
+  if (isRecord(payload) && Array.isArray(payload.data)) {
+    return payload.data as T[];
+  }
+  return [];
+};
+
+const getTotal = (payload: unknown): number => {
+  if (!isRecord(payload)) return 0;
+  if (typeof payload.count === "number") return payload.count;
+  if (typeof payload.total === "number") return payload.total;
+  if (isRecord(payload.data)) {
+    if (typeof payload.data.count === "number") return payload.data.count;
+    if (typeof payload.data.total === "number") return payload.data.total;
+  }
+  return 0;
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+  if (typeof error === "string") {
+    return error || fallback;
+  }
+  return fallback;
+};
+
 const loading = ref(false);
-const items = ref<any[]>([]);
-const projects = ref<any[]>([]);
+const items = ref<RecycleItem[]>([]);
+const projects = ref<ProjectItem[]>([]);
 
 const filters = reactive({
   project: "",
@@ -149,9 +230,9 @@ const formatDate = (value?: string) => {
 
 const fetchProjects = async () => {
   try {
-    const res: any = await getProjects({ page_size: 200 });
-    projects.value = res?.data?.results || res?.data || res || [];
-  } catch (error) {
+    const res = (await getProjects({ page_size: 200 })) as ListResponse<ProjectItem>;
+    projects.value = resolveList<ProjectItem>(res);
+  } catch (error: unknown) {
     console.error(error);
   }
 };
@@ -159,7 +240,7 @@ const fetchProjects = async () => {
 const fetchItems = async () => {
   loading.value = true;
   try {
-    const params: any = {
+    const params: PaginationParams = {
       page: pagination.page,
       page_size: pagination.pageSize,
     };
@@ -167,13 +248,12 @@ const fetchItems = async () => {
     if (filters.resource_type) params.resource_type = filters.resource_type;
     if (filters.is_restored !== "") params.is_restored = filters.is_restored;
 
-    const res: any = await getRecycleBin(params);
-    const payload = res?.data || res;
-    items.value = payload?.results || payload?.data?.results || payload?.data || [];
-    pagination.total =
-      payload?.count || payload?.data?.count || payload?.total || payload?.data?.total || 0;
-  } catch (error: any) {
-    ElMessage.error(error.message || "获取回收站失败");
+    const res = (await getRecycleBin(params)) as ListResponse<RecycleItem>;
+    const payload = isRecord(res) && isRecord(res.data) ? res.data : res;
+    items.value = resolveList<RecycleItem>(payload);
+    pagination.total = getTotal(payload);
+  } catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, "获取回收站失败"));
   } finally {
     loading.value = false;
   }
@@ -202,17 +282,17 @@ const handleCurrentChange = (page: number) => {
   fetchItems();
 };
 
-const handleRestore = async (row: any) => {
+const handleRestore = async (row: RecycleItem) => {
   try {
     await ElMessageBox.confirm("确认恢复该记录吗？", "提示", { type: "warning" });
-    const res: any = await restoreRecycleBin(row.id);
-    if (res?.code === 200) {
+    const res = await restoreRecycleBin(row.id);
+    if (isRecord(res) && res.code === 200) {
       ElMessage.success("恢复成功");
       fetchItems();
     } else {
-      ElMessage.error(res?.message || "恢复失败");
+      ElMessage.error((isRecord(res) && typeof res.message === "string" && res.message) || "恢复失败");
     }
-  } catch (error) {
+  } catch {
     // cancel
   }
 };

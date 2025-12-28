@@ -46,6 +46,11 @@
               :closure-window="closureWindow"
               :expert-review-window="expertReviewWindow"
               :review-window="reviewWindow"
+              @update:application-window="(value) => Object.assign(applicationWindow, value)"
+              @update:midterm-window="(value) => Object.assign(midtermWindow, value)"
+              @update:closure-window="(value) => Object.assign(closureWindow, value)"
+              @update:expert-review-window="(value) => Object.assign(expertReviewWindow, value)"
+              @update:review-window="(value) => Object.assign(reviewWindow, value)"
             />
           </el-tab-pane>
 
@@ -57,6 +62,8 @@
               v-model:allowed-types-by-college-text="allowedTypesByCollegeText"
               v-model:allowed-levels-by-college-text="allowedLevelsByCollegeText"
               :is-process-locked="isProcessLocked"
+              @update:limit-rules="(value) => Object.assign(limitRules, value)"
+              @update:validation-rules="(value) => Object.assign(validationRules, value)"
             />
           </el-tab-pane>
 
@@ -65,6 +72,8 @@
               :process-rules="processRules"
               :review-rules="reviewRules"
               :is-process-locked="isProcessLocked"
+              @update:process-rules="(value) => Object.assign(processRules, value)"
+              @update:review-rules="(value) => Object.assign(reviewRules, value)"
             />
           </el-tab-pane>
         </el-tabs>
@@ -83,12 +92,36 @@ import SystemConfigDatesTab from "./components/SystemConfigDatesTab.vue";
 import SystemConfigLimitsTab from "./components/SystemConfigLimitsTab.vue";
 import SystemConfigProcessTab from "./components/SystemConfigProcessTab.vue";
 
+defineOptions({ name: "Level1SystemConfigView" });
+
+type BatchInfo = {
+  id: number;
+  name?: string;
+  year?: number;
+  status?: string;
+};
+
+type SettingsPayload = Record<string, unknown>;
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (!isRecord(error)) return fallback;
+  const response = error.response;
+  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === "string") {
+    return response.data.message;
+  }
+  if (typeof error.message === "string") return error.message;
+  return fallback;
+};
+
 const route = useRoute();
 const router = useRouter();
 
 const activeTab = ref("dates");
 const savingAll = ref(false);
-const batchInfo = ref<any | null>(null);
+const batchInfo = ref<BatchInfo | null>(null);
 const globalDateRange = ref<string[]>([]);
 
 const batchId = computed(() => {
@@ -202,8 +235,13 @@ const goBack = () => {
   router.push({ name: "level1-settings-batches" });
 };
 
-const fillRange = (target: { range: string[] }, data: any) => {
+const fillRange = (target: { range: string[] }, data: { start?: string; end?: string }) => {
   target.range = data.start && data.end ? [data.start, data.end] : [];
+};
+
+const getWindowSegment = (source: Record<string, unknown>, key: string) => {
+  const segment = source[key];
+  return isRecord(segment) ? (segment as { enabled?: boolean; start?: string; end?: string }) : {};
 };
 
 const loadBatch = async () => {
@@ -212,59 +250,67 @@ const loadBatch = async () => {
     return;
   }
   try {
-    const res: any = await getProjectBatch(batchId.value);
-    batchInfo.value = res.data || res;
+    const res = await getProjectBatch(batchId.value);
+    batchInfo.value = (isRecord(res) && "data" in res ? res.data : res) as BatchInfo | null;
   } catch (error) {
     console.error(error);
-    ElMessage.error("加载批次失败");
+    ElMessage.error(getErrorMessage(error, "加载批次失败"));
   }
 };
 
 const loadSettings = async () => {
   if (!batchId.value) return;
   try {
-    const res: any = await getEffectiveSettings(batchId.value);
-    const data = res.data || res;
+    const res = await getEffectiveSettings(batchId.value);
+    const data = (isRecord(res) && "data" in res ? res.data : res) as SettingsPayload;
 
-    const app = data.APPLICATION_WINDOW || {};
+    const app = (data.APPLICATION_WINDOW as Record<string, unknown>) || {};
     applicationWindow.enabled = !!app.enabled;
-    fillRange(applicationWindow, app);
+    fillRange(applicationWindow, app as { start?: string; end?: string });
 
-    const mid = data.MIDTERM_WINDOW || {};
+    const mid = (data.MIDTERM_WINDOW as Record<string, unknown>) || {};
     midtermWindow.enabled = !!mid.enabled;
-    fillRange(midtermWindow, mid);
+    fillRange(midtermWindow, mid as { start?: string; end?: string });
 
-    const clo = data.CLOSURE_WINDOW || {};
+    const clo = (data.CLOSURE_WINDOW as Record<string, unknown>) || {};
     closureWindow.enabled = !!clo.enabled;
-    fillRange(closureWindow, clo);
+    fillRange(closureWindow, clo as { start?: string; end?: string });
 
-    const expert = data.EXPERT_REVIEW_WINDOW || {};
+    const expert = (data.EXPERT_REVIEW_WINDOW as Record<string, unknown>) || {};
     expertReviewWindow.enabled = !!expert.enabled;
-    fillRange(expertReviewWindow, expert);
+    fillRange(expertReviewWindow, expert as { start?: string; end?: string });
 
-    const review = data.REVIEW_WINDOW || {};
-    const appReview = review.application || {};
-    const midReview = review.midterm || {};
-    const cloReview = review.closure || {};
+    const review = (data.REVIEW_WINDOW as Record<string, unknown>) || {};
+    const appReview = (review.application as Record<string, unknown>) || {};
+    const midReview = (review.midterm as Record<string, unknown>) || {};
+    const cloReview = (review.closure as Record<string, unknown>) || {};
 
-    reviewWindow.application.teacher.enabled = !!appReview.teacher?.enabled;
-    fillRange(reviewWindow.application.teacher, appReview.teacher || {});
-    reviewWindow.application.level2.enabled = !!appReview.level2?.enabled;
-    fillRange(reviewWindow.application.level2, appReview.level2 || {});
-    reviewWindow.application.level1.enabled = !!appReview.level1?.enabled;
-    fillRange(reviewWindow.application.level1, appReview.level1 || {});
+    const appTeacher = getWindowSegment(appReview, "teacher");
+    const appLevel2 = getWindowSegment(appReview, "level2");
+    const appLevel1 = getWindowSegment(appReview, "level1");
+    reviewWindow.application.teacher.enabled = !!appTeacher.enabled;
+    fillRange(reviewWindow.application.teacher, appTeacher);
+    reviewWindow.application.level2.enabled = !!appLevel2.enabled;
+    fillRange(reviewWindow.application.level2, appLevel2);
+    reviewWindow.application.level1.enabled = !!appLevel1.enabled;
+    fillRange(reviewWindow.application.level1, appLevel1);
 
-    reviewWindow.midterm.teacher.enabled = !!midReview.teacher?.enabled;
-    fillRange(reviewWindow.midterm.teacher, midReview.teacher || {});
-    reviewWindow.midterm.level2.enabled = !!midReview.level2?.enabled;
-    fillRange(reviewWindow.midterm.level2, midReview.level2 || {});
+    const midTeacher = getWindowSegment(midReview, "teacher");
+    const midLevel2 = getWindowSegment(midReview, "level2");
+    reviewWindow.midterm.teacher.enabled = !!midTeacher.enabled;
+    fillRange(reviewWindow.midterm.teacher, midTeacher);
+    reviewWindow.midterm.level2.enabled = !!midLevel2.enabled;
+    fillRange(reviewWindow.midterm.level2, midLevel2);
 
-    reviewWindow.closure.teacher.enabled = !!cloReview.teacher?.enabled;
-    fillRange(reviewWindow.closure.teacher, cloReview.teacher || {});
-    reviewWindow.closure.level2.enabled = !!cloReview.level2?.enabled;
-    fillRange(reviewWindow.closure.level2, cloReview.level2 || {});
-    reviewWindow.closure.level1.enabled = !!cloReview.level1?.enabled;
-    fillRange(reviewWindow.closure.level1, cloReview.level1 || {});
+    const cloTeacher = getWindowSegment(cloReview, "teacher");
+    const cloLevel2 = getWindowSegment(cloReview, "level2");
+    const cloLevel1 = getWindowSegment(cloReview, "level1");
+    reviewWindow.closure.teacher.enabled = !!cloTeacher.enabled;
+    fillRange(reviewWindow.closure.teacher, cloTeacher);
+    reviewWindow.closure.level2.enabled = !!cloLevel2.enabled;
+    fillRange(reviewWindow.closure.level2, cloLevel2);
+    reviewWindow.closure.level1.enabled = !!cloLevel1.enabled;
+    fillRange(reviewWindow.closure.level1, cloLevel1);
 
     Object.assign(limitRules, data.LIMIT_RULES || {});
     collegeQuotaText.value = JSON.stringify(limitRules.college_quota || {}, null, 2);
@@ -284,7 +330,7 @@ const loadSettings = async () => {
     );
   } catch (error) {
     console.error(error);
-    ElMessage.error("加载配置失败");
+    ElMessage.error(getErrorMessage(error, "加载配置失败"));
   }
 };
 
@@ -425,7 +471,7 @@ const saveAll = async () => {
     goBack();
   } catch (error) {
     console.error(error);
-    ElMessage.error("保存失败");
+    ElMessage.error(getErrorMessage(error, "保存失败"));
   } finally {
     savingAll.value = false;
   }

@@ -5,7 +5,7 @@ import request from "@/utils/request";
 /**
  * 获取待审核项目列表
  */
-export function getReviewProjects(params: any) {
+export function getReviewProjects(params: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/projects/admin/review/pending/",
     method: "get",
@@ -16,7 +16,7 @@ export function getReviewProjects(params: any) {
 /**
  * 审核通过项目
  */
-export function approveProject(id: number, data: any) {
+export function approveProject(id: number, data: Record<string, unknown>): Promise<unknown> {
   return request({
     url: `/projects/admin/review/${id}/approve/`,
     method: "post",
@@ -27,7 +27,7 @@ export function approveProject(id: number, data: any) {
 /**
  * 驳回项目
  */
-export function rejectProject(id: number, data: any) {
+export function rejectProject(id: number, data: Record<string, unknown>): Promise<unknown> {
   return request({
     url: `/projects/admin/review/${id}/reject/`,
     method: "post",
@@ -40,7 +40,7 @@ export function rejectProject(id: number, data: any) {
 /**
  * 获取所有项目列表
  */
-export function getAllProjects(params: any) {
+export function getAllProjects(params: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/projects/admin/manage/",
     method: "get",
@@ -51,7 +51,7 @@ export function getAllProjects(params: any) {
 /**
  * 获取项目详情
  */
-export function getAdminProjectDetail(id: number) {
+export function getAdminProjectDetail(id: number): Promise<unknown> {
   return request({
     url: `/projects/admin/manage/${id}/`,
     method: "get",
@@ -61,7 +61,7 @@ export function getAdminProjectDetail(id: number) {
 /**
  * 更新项目信息
  */
-export function updateProjectInfo(id: number, data: any) {
+export function updateProjectInfo(id: number, data: Record<string, unknown> | FormData): Promise<unknown> {
   return request({
     url: `/projects/admin/manage/${id}/`,
     method: "patch",
@@ -72,7 +72,7 @@ export function updateProjectInfo(id: number, data: any) {
 /**
  * 删除项目
  */
-export function deleteProjectById(id: number) {
+export function deleteProjectById(id: number): Promise<unknown> {
   return request({
     url: `/projects/admin/manage/${id}/`,
     method: "delete",
@@ -82,7 +82,7 @@ export function deleteProjectById(id: number) {
 /**
  * 获取项目统计数据
  */
-export function getProjectStatistics() {
+export function getProjectStatistics(): Promise<unknown> {
   return request({
     url: "/projects/admin/manage/statistics/",
     method: "get",
@@ -92,7 +92,7 @@ export function getProjectStatistics() {
 /**
  * 获取项目统计报表
  */
-export function getProjectStatisticsReport(params?: any) {
+export function getProjectStatisticsReport(params?: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/projects/admin/manage/statistics-report/",
     method: "get",
@@ -105,7 +105,7 @@ export function getProjectStatisticsReport(params?: any) {
 /**
  * 获取成果列表
  */
-export function getAchievements(params: any) {
+export function getAchievements(params: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/projects/admin/achievements/",
     method: "get",
@@ -116,7 +116,7 @@ export function getAchievements(params: any) {
 /**
  * 导出成果数据
  */
-export function exportAchievements(params: any) {
+export function exportAchievements(params: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/projects/admin/achievements/export/",
     method: "get",
@@ -128,7 +128,7 @@ export function exportAchievements(params: any) {
 /**
  * 批量导出项目数据
  */
-export function exportProjects(params?: any) {
+export function exportProjects(params?: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/projects/admin/manage/export/",
     method: "get",
@@ -140,7 +140,7 @@ export function exportProjects(params?: any) {
 /**
  * 批量下载附件
  */
-export function batchDownloadAttachments(params?: any) {
+export function batchDownloadAttachments(params?: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/projects/admin/manage/batch-download/",
     method: "get",
@@ -149,7 +149,7 @@ export function batchDownloadAttachments(params?: any) {
   });
 }
 
-export function batchUpdateProjectStatus(data: any) {
+export function batchUpdateProjectStatus(data: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/projects/admin/manage/batch-status/",
     method: "post",
@@ -157,7 +157,7 @@ export function batchUpdateProjectStatus(data: any) {
   });
 }
 
-export function batchExportDocs(params: any) {
+export function batchExportDocs(params: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/projects/admin/manage/batch-export-doc/",
     method: "get",
@@ -166,7 +166,7 @@ export function batchExportDocs(params: any) {
   });
 }
 
-export function batchExportCertificates(params: any) {
+export function batchExportCertificates(params: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/projects/admin/manage/batch-certificates/",
     method: "get",
@@ -175,7 +175,7 @@ export function batchExportCertificates(params: any) {
   });
 }
 
-export function batchExportNotices(params: any) {
+export function batchExportNotices(params: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/projects/admin/manage/batch-establishment-notice/",
     method: "get",
@@ -184,7 +184,7 @@ export function batchExportNotices(params: any) {
   });
 }
 
-export function importHistoryProjects(data: any) {
+export function importHistoryProjects(data: Record<string, unknown> | FormData): Promise<unknown> {
   return request({
     url: "/projects/admin/manage/import-history/",
     method: "post",
@@ -195,14 +195,14 @@ export function importHistoryProjects(data: any) {
   });
 }
 
-export function archiveClosedProjects() {
+export function archiveClosedProjects(): Promise<unknown> {
   return request({
     url: "/projects/admin/manage/archive-closed/",
     method: "post",
   });
 }
 
-export function pushProjectsExternal(data: any) {
+export function pushProjectsExternal(data: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/projects/admin/manage/push-external/",
     method: "post",
@@ -210,28 +210,28 @@ export function pushProjectsExternal(data: any) {
   });
 }
 
-export function getPushRecords() {
+export function getPushRecords(): Promise<unknown> {
   return request({
     url: "/projects/admin/manage/push-records/",
     method: "get",
   });
 }
 
-export function getArchives() {
+export function getArchives(): Promise<unknown> {
   return request({
     url: "/projects/admin/manage/archives/",
     method: "get",
   });
 }
 
-export function getDuplicateProjectNumbers() {
+export function getDuplicateProjectNumbers(): Promise<unknown> {
   return request({
     url: "/projects/admin/manage/duplicate-project-nos/",
     method: "get",
   });
 }
 
-export function exportProjectNumbers(params?: any) {
+export function exportProjectNumbers(params?: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/projects/admin/manage/export-project-nos/",
     method: "get",
@@ -240,7 +240,7 @@ export function exportProjectNumbers(params?: any) {
   });
 }
 
-export function duplicateProjectNumbers() {
+export function duplicateProjectNumbers(): Promise<unknown> {
   return request({
     url: "/projects/admin/manage/duplicate-project-nos/",
     method: "get",

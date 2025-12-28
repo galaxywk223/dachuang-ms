@@ -90,17 +90,67 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
-import { useRoute } from 'vue-router';
-import { Search } from '@element-plus/icons-vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import request from '@/utils/request';
-import { useUserStore } from '@/stores/user';
+import { ref, onMounted, computed } from "vue";
+import { useRoute } from "vue-router";
+import { Search } from "@element-plus/icons-vue";
+import { ElMessage, ElMessageBox } from "element-plus";
+import request from "@/utils/request";
+import { useUserStore } from "@/stores/user";
+
+defineOptions({
+  name: "ExpertAssignmentView",
+});
+
+type ProjectRow = {
+  id: number;
+  project_no?: string;
+  title?: string;
+  leader_name?: string;
+  college?: string;
+  level_name?: string;
+  status_display?: string;
+};
+
+type GroupRow = {
+  id: number;
+  name: string;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const resolveList = <T,>(payload: unknown): T[] => {
+  if (Array.isArray(payload)) return payload as T[];
+  if (isRecord(payload) && Array.isArray(payload.results)) {
+    return payload.results as T[];
+  }
+  if (
+    isRecord(payload) &&
+    isRecord(payload.data) &&
+    Array.isArray(payload.data.results)
+  ) {
+    return payload.data.results as T[];
+  }
+  if (isRecord(payload) && Array.isArray(payload.data)) {
+    return payload.data as T[];
+  }
+  return [];
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+  if (typeof error === "string") {
+    return error || fallback;
+  }
+  return fallback;
+};
 
 const loading = ref(false);
 const assigning = ref(false);
-const projects = ref<any[]>([]);
-const groups = ref<any[]>([]);
+const projects = ref<ProjectRow[]>([]);
+const groups = ref<GroupRow[]>([]);
 const total = ref(0);
 const currentPage = ref(1);
 const pageSize = ref(20);
@@ -108,10 +158,10 @@ const route = useRoute();
 const pageTitle = computed(() => (route.meta.title as string) || "专家评审分配");
 const userStore = useUserStore();
 const userRole = computed(() =>
-    String(userStore.user?.role || localStorage.getItem('user_role') || '').toLowerCase()
+  String(userStore.user?.role || localStorage.getItem("user_role") || "").toLowerCase()
 );
 const assignedReviewLevel = computed(() =>
-    userRole.value === 'level1_admin' ? 'LEVEL1' : 'LEVEL2'
+  userRole.value === "level1_admin" ? "LEVEL1" : "LEVEL2"
 );
 
 // Filters and Selections
@@ -119,7 +169,7 @@ const searchQuery = ref("");
 const statusFilter = ref("");
 const selectedGroup = ref<number | null>(null);
 const reviewType = ref("APPLICATION");
-const selectedProjects = ref<any[]>([]);
+const selectedProjects = ref<ProjectRow[]>([]);
 const defaultStatusByReviewType = computed<Record<string, string>>(() => {
     const isSchoolScope = assignedReviewLevel.value === "LEVEL1";
     return {
@@ -129,99 +179,100 @@ const defaultStatusByReviewType = computed<Record<string, string>>(() => {
     };
 });
 
-const resolveList = (payload: any) => {
-    if (Array.isArray(payload)) return payload;
-    if (payload?.results) return payload.results;
-    if (payload?.data?.results) return payload.data.results;
-    return payload?.data || [];
-};
-
 const fetchGroups = async () => {
-    try {
-        const res: any = await request.get('/reviews/groups/');
-        groups.value = resolveList(res);
-    } catch (e) {
-        console.error(e);
-    }
+  try {
+    const res = await request.get("/reviews/groups/");
+    groups.value = resolveList<GroupRow>(res);
+  } catch (error: unknown) {
+    console.error(error);
+  }
 };
 
 const fetchProjects = async () => {
-    loading.value = true;
-    try {
-        const params: any = {
-            page: currentPage.value,
-            page_size: pageSize.value,
-            search: searchQuery.value,
-            exclude_assigned_review_type: reviewType.value,
-            exclude_assigned_review_level: assignedReviewLevel.value,
-            phase: reviewType.value,
-        };
-        if (statusFilter.value) {
-            params["status"] = statusFilter.value;
-        } else if (defaultStatusByReviewType.value[reviewType.value]) {
-            params["status"] = defaultStatusByReviewType.value[reviewType.value];
-        }
-
-        const projectRes: any = await request.get('/projects/', { params });
-        const data = projectRes?.data ?? projectRes;
-        const rows = data?.results || data?.data?.results || data?.data || [];
-        const count = data?.count ?? data?.data?.count ?? rows.length;
-        projects.value = rows;
-        total.value = count;
-    } catch (e) {
-        console.error(e);
-        ElMessage.error("获取项目失败");
-    } finally {
-        loading.value = false;
+  loading.value = true;
+  try {
+    const params: Record<string, string | number> = {
+      page: currentPage.value,
+      page_size: pageSize.value,
+      search: searchQuery.value,
+      exclude_assigned_review_type: reviewType.value,
+      exclude_assigned_review_level: assignedReviewLevel.value,
+      phase: reviewType.value,
+    };
+    if (statusFilter.value) {
+      params.status = statusFilter.value;
+    } else if (defaultStatusByReviewType.value[reviewType.value]) {
+      params.status = defaultStatusByReviewType.value[reviewType.value];
     }
+    if (!params.search) delete params.search;
+
+    const projectRes = await request.get("/projects/", { params });
+    const data = isRecord(projectRes) && isRecord(projectRes.data)
+      ? projectRes.data
+      : projectRes;
+    const rows = resolveList<ProjectRow>(data);
+    const count =
+      (isRecord(data) && typeof data.count === "number" && data.count) ||
+      (isRecord(data) && isRecord(data.data) && typeof data.data.count === "number"
+        ? data.data.count
+        : rows.length);
+    projects.value = rows;
+    total.value = count;
+  } catch (error: unknown) {
+    console.error(error);
+    ElMessage.error("获取项目失败");
+  } finally {
+    loading.value = false;
+  }
 };
 
 const handleReviewTypeChange = () => {
-    statusFilter.value = defaultStatusByReviewType.value[reviewType.value] || "";
-    selectedProjects.value = [];
-    currentPage.value = 1;
-    fetchProjects();
+  statusFilter.value = defaultStatusByReviewType.value[reviewType.value] || "";
+  selectedProjects.value = [];
+  currentPage.value = 1;
+  fetchProjects();
 };
 
-const handleSelectionChange = (val: any[]) => {
-    selectedProjects.value = val;
+const handleSelectionChange = (val: ProjectRow[]) => {
+  selectedProjects.value = val;
 };
 
 const handleAssign = () => {
-    if (!selectedGroup.value || selectedProjects.value.length === 0) return;
-    
-    ElMessageBox.confirm(
-       `确定将选中的 ${selectedProjects.value.length} 个项目分配给该专家组进行 "${reviewType.value}" 评审吗？`, 
-       "提示",
-       { confirmButtonText: "确定", cancelButtonText: "取消", type: "warning" }
-    ).then(async () => {
-        assigning.value = true;
-        try {
-            const projectIds = selectedProjects.value.map(p => p.id);
-            const res: any = await request.post('/reviews/assignments/assign_batch/', {
-                project_ids: projectIds,
-                group_id: selectedGroup.value,
-                review_type: reviewType.value
-            });
-            ElMessage.success(res?.message || res?.data?.message || "分配成功");
-            // Clear selection?
-        } catch (error: any) {
-            console.error(error);
-            ElMessage.error(error.response?.data?.message || error.message || "分配失败");
-        } finally {
-            assigning.value = false;
-        }
-    });
+  if (!selectedGroup.value || selectedProjects.value.length === 0) return;
+
+  ElMessageBox.confirm(
+    `确定将选中的 ${selectedProjects.value.length} 个项目分配给该专家组进行 "${reviewType.value}" 评审吗？`,
+    "提示",
+    { confirmButtonText: "确定", cancelButtonText: "取消", type: "warning" }
+  ).then(async () => {
+    assigning.value = true;
+    try {
+      const projectIds = selectedProjects.value.map((p) => p.id);
+      const res = await request.post("/reviews/assignments/assign_batch/", {
+        project_ids: projectIds,
+        group_id: selectedGroup.value,
+        review_type: reviewType.value,
+      });
+      const message = isRecord(res) ? res.message : null;
+      const dataMessage = isRecord(res) && isRecord(res.data) ? res.data.message : null;
+      ElMessage.success(message || dataMessage || "分配成功");
+    } catch (error: unknown) {
+      console.error(error);
+      ElMessage.error(getErrorMessage(error, "分配失败"));
+    } finally {
+      assigning.value = false;
+    }
+  });
 };
 
 onMounted(() => {
-    fetchGroups();
-    const q = String((route.query.reviewType || route.query.review_type || "") as any).toUpperCase();
-    if (q && ["APPLICATION", "MID_TERM", "CLOSURE"].includes(q)) {
-      reviewType.value = q;
-    }
-    statusFilter.value = defaultStatusByReviewType.value[reviewType.value] || "";
-    fetchProjects();
+  fetchGroups();
+  const q = String(route.query.reviewType || route.query.review_type || "").toUpperCase();
+  if (q && ["APPLICATION", "MID_TERM", "CLOSURE"].includes(q)) {
+    reviewType.value = q;
+  }
+  statusFilter.value = defaultStatusByReviewType.value[reviewType.value] || "";
+  fetchProjects();
 });
 
 </script>

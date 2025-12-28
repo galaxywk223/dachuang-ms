@@ -336,6 +336,8 @@ import ProjectStatusBadge from "@/components/business/project/StatusBadge.vue";
 
 import { useProjectsPage } from "./hooks/useProjectsPage";
 
+defineOptions({ name: "Level2ProjectsView" });
+
 const {
   batchNotifyDialogVisible,
   batchNotifyForm,

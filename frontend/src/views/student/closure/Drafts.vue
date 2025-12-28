@@ -153,10 +153,50 @@ import {
   deleteClosureDraft,
 } from "@/api/projects";
 
+defineOptions({
+  name: "StudentClosureDraftsView",
+});
+
+type ProjectRow = {
+  id: number;
+  project_no?: string;
+  title?: string;
+  level_display?: string;
+  category_display?: string;
+  major_code?: string;
+  leader_name?: string;
+  leader_student_id?: string;
+  college?: string;
+  leader_contact?: string;
+  budget?: number;
+};
+
+type DraftsResponse = {
+  code: number;
+  data?: ProjectRow[];
+  total?: number;
+  message?: string;
+};
+
+type ApiResponse = {
+  code?: number;
+  message?: string;
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+  if (typeof error === "string") {
+    return error || fallback;
+  }
+  return fallback;
+};
+
 const router = useRouter();
 
 // 表格数据
-const tableData = ref<any[]>([]);
+const tableData = ref<ProjectRow[]>([]);
 const loading = ref(false);
 
 // 分页
@@ -182,16 +222,16 @@ const fetchClosureDrafts = async () => {
       page_size: pagination.pageSize,
     };
 
-    const response: any = await getClosureDrafts(params);
+    const response = (await getClosureDrafts(params)) as DraftsResponse;
     if (response.code === 200) {
       tableData.value = response.data || [];
       pagination.total = response.total || 0;
     } else {
       ElMessage.error(response.message || "获取草稿列表失败");
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("获取结题草稿失败:", error);
-    ElMessage.error(error.message || "获取草稿列表失败");
+    ElMessage.error(getErrorMessage(error, "获取草稿列表失败"));
   } finally {
     loading.value = false;
   }
@@ -210,12 +250,12 @@ const handleCurrentChange = (page: number) => {
 };
 
 // 继续编辑
-const handleEdit = (row: any) => {
+const handleEdit = (row: ProjectRow) => {
   router.push(`/closure/apply?projectId=${row.id}`);
 };
 
 // 提交草稿
-const handleSubmit = async (row: any) => {
+const handleSubmit = async (row: ProjectRow) => {
   try {
     await ElMessageBox.confirm(
       "将跳转到编辑页提交结题申请（可检查材料/成果后提交）",
@@ -228,16 +268,16 @@ const handleSubmit = async (row: any) => {
     );
 
     router.push(`/closure/apply?projectId=${row.id}`);
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error !== "cancel") {
       console.error("跳转提交失败:", error);
-      ElMessage.error(error.message || "操作失败");
+      ElMessage.error(getErrorMessage(error, "操作失败"));
     }
   }
 };
 
 // 删除草稿
-const handleDelete = async (row: any) => {
+const handleDelete = async (row: ProjectRow) => {
   try {
     await ElMessageBox.confirm(
       "确定要删除该结题草稿吗？删除后无法恢复。",
@@ -250,17 +290,17 @@ const handleDelete = async (row: any) => {
     );
 
     // 调用API删除草稿
-    const response: any = await deleteClosureDraft(row.id);
+    const response = (await deleteClosureDraft(row.id)) as ApiResponse;
     if (response.code === 200) {
       ElMessage.success("删除成功");
       fetchClosureDrafts();
     } else {
       ElMessage.error(response.message || "删除失败");
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error !== "cancel") {
       console.error("删除结题草稿失败:", error);
-      ElMessage.error(error.message || "删除失败");
+      ElMessage.error(getErrorMessage(error, "删除失败"));
     }
   }
 };

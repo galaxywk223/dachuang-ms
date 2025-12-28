@@ -33,10 +33,10 @@
             <template #header><span class="sub-title">项目申报提交</span></template>
             <div class="card-body">
               <div class="flex-row">
-                <el-switch v-model="applicationWindow.enabled" active-text="开启" :disabled="isReadOnly" />
+                <el-switch v-model="localApplicationWindow.enabled" active-text="开启" :disabled="isReadOnly" />
               </div>
               <el-date-picker
-                v-model="applicationWindow.range"
+                v-model="localApplicationWindow.range"
                 type="daterange"
                 range-separator="至"
                 start-placeholder="开始"
@@ -53,10 +53,10 @@
             <template #header><span class="sub-title">专家评审时间</span></template>
             <div class="card-body">
               <div class="flex-row">
-                <el-switch v-model="expertReviewWindow.enabled" active-text="开启" :disabled="isReadOnly" />
+                <el-switch v-model="localExpertReviewWindow.enabled" active-text="开启" :disabled="isReadOnly" />
               </div>
               <el-date-picker
-                v-model="expertReviewWindow.range"
+                v-model="localExpertReviewWindow.range"
                 type="daterange"
                 range-separator="至"
                 start-placeholder="开始"
@@ -73,10 +73,10 @@
             <template #header><span class="sub-title">中期检查提交</span></template>
             <div class="card-body">
               <div class="flex-row">
-                <el-switch v-model="midtermWindow.enabled" active-text="开启" :disabled="isReadOnly" />
+                <el-switch v-model="localMidtermWindow.enabled" active-text="开启" :disabled="isReadOnly" />
               </div>
               <el-date-picker
-                v-model="midtermWindow.range"
+                v-model="localMidtermWindow.range"
                 type="daterange"
                 range-separator="至"
                 start-placeholder="开始"
@@ -93,10 +93,10 @@
             <template #header><span class="sub-title">结题报告提交</span></template>
             <div class="card-body">
               <div class="flex-row">
-                <el-switch v-model="closureWindow.enabled" active-text="开启" :disabled="isReadOnly" />
+                <el-switch v-model="localClosureWindow.enabled" active-text="开启" :disabled="isReadOnly" />
               </div>
               <el-date-picker
-                v-model="closureWindow.range"
+                v-model="localClosureWindow.range"
                 type="daterange"
                 range-separator="至"
                 start-placeholder="开始"
@@ -123,9 +123,9 @@
         <div class="matrix-row">
           <div class="col-phase">申报审核</div>
           <div class="col-role">
-            <el-switch v-model="reviewWindow.application.teacher.enabled" size="small" :disabled="isReadOnly" />
+            <el-switch v-model="localReviewWindow.application.teacher.enabled" size="small" :disabled="isReadOnly" />
             <el-date-picker
-              v-model="reviewWindow.application.teacher.range"
+              v-model="localReviewWindow.application.teacher.range"
               type="daterange"
               size="small"
               style="width: 200px; margin-top: 4px"
@@ -135,9 +135,9 @@
             />
           </div>
           <div class="col-role">
-            <el-switch v-model="reviewWindow.application.level2.enabled" size="small" :disabled="isReadOnly" />
+            <el-switch v-model="localReviewWindow.application.level2.enabled" size="small" :disabled="isReadOnly" />
             <el-date-picker
-              v-model="reviewWindow.application.level2.range"
+              v-model="localReviewWindow.application.level2.range"
               type="daterange"
               size="small"
               style="width: 200px; margin-top: 4px"
@@ -147,9 +147,9 @@
             />
           </div>
           <div class="col-role">
-            <el-switch v-model="reviewWindow.application.level1.enabled" size="small" :disabled="isReadOnly" />
+            <el-switch v-model="localReviewWindow.application.level1.enabled" size="small" :disabled="isReadOnly" />
             <el-date-picker
-              v-model="reviewWindow.application.level1.range"
+              v-model="localReviewWindow.application.level1.range"
               type="daterange"
               size="small"
               style="width: 200px; margin-top: 4px"
@@ -162,9 +162,9 @@
         <div class="matrix-row">
           <div class="col-phase">中期审核</div>
           <div class="col-role">
-            <el-switch v-model="reviewWindow.midterm.teacher.enabled" size="small" :disabled="isReadOnly" />
+            <el-switch v-model="localReviewWindow.midterm.teacher.enabled" size="small" :disabled="isReadOnly" />
             <el-date-picker
-              v-model="reviewWindow.midterm.teacher.range"
+              v-model="localReviewWindow.midterm.teacher.range"
               type="daterange"
               size="small"
               style="width: 200px; margin-top: 4px"
@@ -174,9 +174,9 @@
             />
           </div>
           <div class="col-role">
-            <el-switch v-model="reviewWindow.midterm.level2.enabled" size="small" :disabled="isReadOnly" />
+            <el-switch v-model="localReviewWindow.midterm.level2.enabled" size="small" :disabled="isReadOnly" />
             <el-date-picker
-              v-model="reviewWindow.midterm.level2.range"
+              v-model="localReviewWindow.midterm.level2.range"
               type="daterange"
               size="small"
               style="width: 200px; margin-top: 4px"
@@ -192,9 +192,9 @@
         <div class="matrix-row">
           <div class="col-phase">结题审核</div>
           <div class="col-role">
-            <el-switch v-model="reviewWindow.closure.teacher.enabled" size="small" :disabled="isReadOnly" />
+            <el-switch v-model="localReviewWindow.closure.teacher.enabled" size="small" :disabled="isReadOnly" />
             <el-date-picker
-              v-model="reviewWindow.closure.teacher.range"
+              v-model="localReviewWindow.closure.teacher.range"
               type="daterange"
               size="small"
               style="width: 200px; margin-top: 4px"
@@ -204,9 +204,9 @@
             />
           </div>
           <div class="col-role">
-            <el-switch v-model="reviewWindow.closure.level2.enabled" size="small" :disabled="isReadOnly" />
+            <el-switch v-model="localReviewWindow.closure.level2.enabled" size="small" :disabled="isReadOnly" />
             <el-date-picker
-              v-model="reviewWindow.closure.level2.range"
+              v-model="localReviewWindow.closure.level2.range"
               type="daterange"
               size="small"
               style="width: 200px; margin-top: 4px"
@@ -216,9 +216,9 @@
             />
           </div>
           <div class="col-role">
-            <el-switch v-model="reviewWindow.closure.level1.enabled" size="small" :disabled="isReadOnly" />
+            <el-switch v-model="localReviewWindow.closure.level1.enabled" size="small" :disabled="isReadOnly" />
             <el-date-picker
-              v-model="reviewWindow.closure.level1.range"
+              v-model="localReviewWindow.closure.level1.range"
               type="daterange"
               size="small"
               style="width: 200px; margin-top: 4px"
@@ -234,7 +234,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, reactive, watch } from "vue";
 
 const props = defineProps<{
   globalDateRange: string[];
@@ -262,12 +262,101 @@ const props = defineProps<{
   };
 }>();
 
+type WindowConfig = { enabled: boolean; range: string[] };
+type ReviewWindowConfig = {
+  application: {
+    teacher: WindowConfig;
+    level2: WindowConfig;
+    level1: WindowConfig;
+  };
+  midterm: {
+    teacher: WindowConfig;
+    level2: WindowConfig;
+  };
+  closure: {
+    teacher: WindowConfig;
+    level2: WindowConfig;
+    level1: WindowConfig;
+  };
+};
+
 const emit = defineEmits<{
   (event: "update:globalDateRange", value: string[]): void;
+  (event: "update:applicationWindow", value: WindowConfig): void;
+  (event: "update:midtermWindow", value: WindowConfig): void;
+  (event: "update:closureWindow", value: WindowConfig): void;
+  (event: "update:expertReviewWindow", value: WindowConfig): void;
+  (event: "update:reviewWindow", value: ReviewWindowConfig): void;
 }>();
 
 const localGlobalDateRange = computed({
   get: () => props.globalDateRange,
   set: (value: string[]) => emit("update:globalDateRange", value),
 });
+
+const cloneWindow = (source: WindowConfig): WindowConfig => ({
+  enabled: source.enabled,
+  range: [...source.range],
+});
+
+const cloneReviewWindow = (source: ReviewWindowConfig): ReviewWindowConfig =>
+  JSON.parse(JSON.stringify(source)) as ReviewWindowConfig;
+
+const localApplicationWindow = reactive(cloneWindow(props.applicationWindow));
+const localMidtermWindow = reactive(cloneWindow(props.midtermWindow));
+const localClosureWindow = reactive(cloneWindow(props.closureWindow));
+const localExpertReviewWindow = reactive(cloneWindow(props.expertReviewWindow));
+const localReviewWindow = reactive(cloneReviewWindow(props.reviewWindow));
+
+watch(
+  () => props.applicationWindow,
+  (value) => Object.assign(localApplicationWindow, cloneWindow(value)),
+  { deep: true }
+);
+watch(
+  () => props.midtermWindow,
+  (value) => Object.assign(localMidtermWindow, cloneWindow(value)),
+  { deep: true }
+);
+watch(
+  () => props.closureWindow,
+  (value) => Object.assign(localClosureWindow, cloneWindow(value)),
+  { deep: true }
+);
+watch(
+  () => props.expertReviewWindow,
+  (value) => Object.assign(localExpertReviewWindow, cloneWindow(value)),
+  { deep: true }
+);
+watch(
+  () => props.reviewWindow,
+  (value) => Object.assign(localReviewWindow, cloneReviewWindow(value)),
+  { deep: true }
+);
+
+watch(
+  localApplicationWindow,
+  (value) => emit("update:applicationWindow", { enabled: value.enabled, range: value.range }),
+  { deep: true }
+);
+watch(
+  localMidtermWindow,
+  (value) => emit("update:midtermWindow", { enabled: value.enabled, range: value.range }),
+  { deep: true }
+);
+watch(
+  localClosureWindow,
+  (value) => emit("update:closureWindow", { enabled: value.enabled, range: value.range }),
+  { deep: true }
+);
+watch(
+  localExpertReviewWindow,
+  (value) => emit("update:expertReviewWindow", { enabled: value.enabled, range: value.range }),
+  { deep: true }
+);
+watch(
+  localReviewWindow,
+  (value) => emit("update:reviewWindow", cloneReviewWindow(value)),
+  { deep: true }
+);
 </script>

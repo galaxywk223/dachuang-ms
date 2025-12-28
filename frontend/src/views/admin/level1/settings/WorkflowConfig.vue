@@ -186,11 +186,63 @@ import {
 } from "@/api/system-settings";
 import { listProjectBatches } from "@/api/system-settings/batches";
 
-const workflows = ref<any[]>([]);
-const currentWorkflow = ref<any | null>(null);
-const nodes = ref<any[]>([]);
-const templates = ref<any[]>([]);
-const batches = ref<any[]>([]);
+defineOptions({ name: "Level1WorkflowConfigView" });
+
+type Workflow = {
+  id: number;
+  name: string;
+  phase: string;
+  batch?: number | null;
+  description?: string;
+};
+
+type WorkflowNode = {
+  id: number;
+  workflow: number | null;
+  code: string;
+  name: string;
+  node_type: string;
+  role: string;
+  review_level: string;
+  scope?: string;
+  return_policy?: string;
+  review_template?: number | null;
+  notice?: string;
+  sort_order?: number;
+};
+
+type ReviewTemplate = {
+  id: number;
+  name: string;
+};
+
+type BatchInfo = {
+  id: number;
+  name?: string;
+};
+
+type ListResponse<T> = {
+  data?: T[] | { data?: T[] };
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (!isRecord(error)) return fallback;
+  const response = error.response;
+  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === "string") {
+    return response.data.message;
+  }
+  if (typeof error.message === "string") return error.message;
+  return fallback;
+};
+
+const workflows = ref<Workflow[]>([]);
+const currentWorkflow = ref<Workflow | null>(null);
+const nodes = ref<WorkflowNode[]>([]);
+const templates = ref<ReviewTemplate[]>([]);
+const batches = ref<BatchInfo[]>([]);
 const saving = ref(false);
 const dragIndex = ref<number | null>(null);
 
@@ -230,26 +282,46 @@ const phaseLabel = (phase: string) => {
 };
 
 const loadWorkflows = async () => {
-  const res: any = await getWorkflows();
-  workflows.value = res.data || res;
+  const res = (await getWorkflows()) as ListResponse<Workflow> | Workflow[];
+  const payload = isRecord(res) && "data" in res ? res.data : res;
+  if (isRecord(payload) && Array.isArray(payload.data)) {
+    workflows.value = payload.data as Workflow[];
+  } else {
+    workflows.value = Array.isArray(payload) ? (payload as Workflow[]) : [];
+  }
 };
 
 const loadNodes = async (workflowId: number) => {
-  const res: any = await getWorkflowNodes({ workflow: workflowId });
-  nodes.value = res.data || res;
+  const res = (await getWorkflowNodes({ workflow: workflowId })) as ListResponse<WorkflowNode> | WorkflowNode[];
+  const payload = isRecord(res) && "data" in res ? res.data : res;
+  if (isRecord(payload) && Array.isArray(payload.data)) {
+    nodes.value = payload.data as WorkflowNode[];
+  } else {
+    nodes.value = Array.isArray(payload) ? (payload as WorkflowNode[]) : [];
+  }
 };
 
 const loadTemplates = async () => {
-  const res: any = await getReviewTemplates();
-  templates.value = res.data || res;
+  const res = (await getReviewTemplates()) as ListResponse<ReviewTemplate> | ReviewTemplate[];
+  const payload = isRecord(res) && "data" in res ? res.data : res;
+  if (isRecord(payload) && Array.isArray(payload.data)) {
+    templates.value = payload.data as ReviewTemplate[];
+  } else {
+    templates.value = Array.isArray(payload) ? (payload as ReviewTemplate[]) : [];
+  }
 };
 
 const loadBatches = async () => {
-  const res: any = await listProjectBatches();
-  batches.value = res.data || res;
+  const res = (await listProjectBatches()) as ListResponse<BatchInfo> | BatchInfo[];
+  const payload = isRecord(res) && "data" in res ? res.data : res;
+  if (isRecord(payload) && Array.isArray(payload.data)) {
+    batches.value = payload.data as BatchInfo[];
+  } else {
+    batches.value = Array.isArray(payload) ? (payload as BatchInfo[]) : [];
+  }
 };
 
-const selectWorkflow = async (item: any) => {
+const selectWorkflow = async (item: Workflow) => {
   currentWorkflow.value = item;
   await loadNodes(item.id);
 };
@@ -277,7 +349,7 @@ const saveWorkflow = async () => {
     workflowDialogVisible.value = false;
     await loadWorkflows();
   } catch (error) {
-    ElMessage.error("保存失败");
+    ElMessage.error(getErrorMessage(error, "保存失败"));
   } finally {
     saving.value = false;
   }
@@ -300,8 +372,14 @@ const openNodeDialog = () => {
   nodeDialogVisible.value = true;
 };
 
-const editNode = (node: any) => {
-  nodeForm.value = { ...node };
+const editNode = (node: WorkflowNode) => {
+  nodeForm.value = {
+    ...node,
+    scope: node.scope ?? "",
+    return_policy: node.return_policy ?? "STUDENT",
+    review_template: node.review_template ?? null,
+    notice: node.notice ?? "",
+  };
   nodeDialogVisible.value = true;
 };
 
@@ -319,13 +397,13 @@ const saveNode = async () => {
     nodeDialogVisible.value = false;
     await loadNodes(currentWorkflow.value.id);
   } catch (error) {
-    ElMessage.error("保存失败");
+    ElMessage.error(getErrorMessage(error, "保存失败"));
   } finally {
     saving.value = false;
   }
 };
 
-const removeNode = async (node: any) => {
+const removeNode = async (node: WorkflowNode) => {
   await ElMessageBox.confirm("确认删除该节点？", "提示", {
     type: "warning",
   });
@@ -350,7 +428,9 @@ const handleDrop = async (index: number) => {
     sort_order: idx,
   }));
   await reorderWorkflowNodes(payload);
-  await loadNodes(currentWorkflow.value.id);
+  if (currentWorkflow.value) {
+    await loadNodes(currentWorkflow.value.id);
+  }
 };
 
 onMounted(async () => {

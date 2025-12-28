@@ -90,21 +90,27 @@
 
 <script setup lang="ts">
 import { ref, reactive } from "vue";
-import type { FormInstance, FormRules } from "element-plus";
+import type { FormInstance, FormRules, UploadFile } from "element-plus";
 import { ElMessage } from "element-plus";
 import request from "@/utils/request";
+
+type CategoryItem = {
+  id: number;
+  label: string;
+  value: string;
+};
 
 const props = defineProps<{
   visible: boolean;
   projectId: number | null;
-  categories: any[];
+  categories: CategoryItem[];
 }>();
 
 const emit = defineEmits(["update:visible", "success"]);
 
 const formRef = ref<FormInstance>();
 const loading = ref(false);
-const fileList = ref<any[]>([]);
+const fileList = ref<UploadFile[]>([]);
 const uploadFile = ref<File | null>(null);
 
 const form = reactive({
@@ -151,7 +157,9 @@ const beforeUpload = (file: File) => {
   }
 
   uploadFile.value = file;
-  fileList.value = [file];
+  fileList.value = [
+    { name: file.name, status: "ready", raw: file } as UploadFile,
+  ];
   return false; // 阻止自动上传
 };
 
@@ -189,9 +197,11 @@ const handleSubmit = async () => {
         ElMessage.success("经费录入成功");
         emit("success");
         handleClose();
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error(error);
-        ElMessage.error(error.response?.data?.message || "录入失败");
+        const message =
+          error instanceof Error ? error.message : "录入失败";
+        ElMessage.error(message);
       } finally {
         loading.value = false;
       }

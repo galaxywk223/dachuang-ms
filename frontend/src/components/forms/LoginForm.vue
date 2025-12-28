@@ -90,11 +90,11 @@
 
 <script setup>
 import { ref, reactive } from "vue";
-import { User, Lock, Avatar, ArrowRight } from "@element-plus/icons-vue";
+import { User, Lock } from "@element-plus/icons-vue";
 
 const emit = defineEmits(["submit"]);
 
-const props = defineProps({
+defineProps({
   loading: {
     type: Boolean,
     default: false,

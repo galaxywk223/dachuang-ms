@@ -100,6 +100,10 @@ import request from "@/utils/request";
 import dayjs from "dayjs";
 import { useUserStore } from "@/stores/user";
 
+defineOptions({
+  name: "ExpertGroupsView",
+});
+
 // interfaces
 interface Expert {
     id: number;
@@ -114,6 +118,37 @@ interface Group {
     members_info: Expert[];
     created_at: string;
 }
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const resolveList = <T,>(payload: unknown): T[] => {
+  if (Array.isArray(payload)) return payload as T[];
+  if (isRecord(payload) && Array.isArray(payload.results)) {
+    return payload.results as T[];
+  }
+  if (
+    isRecord(payload) &&
+    isRecord(payload.data) &&
+    Array.isArray(payload.data.results)
+  ) {
+    return payload.data.results as T[];
+  }
+  if (isRecord(payload) && Array.isArray(payload.data)) {
+    return payload.data as T[];
+  }
+  return [];
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+  if (typeof error === "string") {
+    return error || fallback;
+  }
+  return fallback;
+};
 
 const loading = ref(false);
 const submitting = ref(false);
@@ -139,20 +174,12 @@ const rules = reactive<FormRules>({
 const dialogTitle = computed(() => isEdit.value ? "编辑专家组" : "新建专家组");
 const pageTitle = computed(() => (route.meta.title as string) || "专家组管理");
 
-// Fetch Data
-const resolveList = (payload: any) => {
-    if (Array.isArray(payload)) return payload;
-    if (payload?.results) return payload.results;
-    if (payload?.data?.results) return payload.data.results;
-    return payload?.data || [];
-};
-
 const fetchGroups = async () => {
     loading.value = true;
     try {
-        const res: any = await request.get('/reviews/groups/');
-        groups.value = resolveList(res);
-    } catch (error) {
+        const res = await request.get("/reviews/groups/");
+        groups.value = resolveList<Group>(res);
+    } catch (error: unknown) {
         console.error(error);
         ElMessage.error("获取专家组列表失败");
     } finally {
@@ -162,11 +189,16 @@ const fetchGroups = async () => {
 
 const fetchExperts = async () => {
     try {
-        const userRole = userStore.user?.role || localStorage.getItem('user_role');
-        const expertScope = (userRole === 'level1_admin' || userRole === 'admin') ? 'SCHOOL' : 'COLLEGE';
-        const res: any = await request.get('/auth/users/', { params: { role: 'EXPERT', expert_scope: expertScope } });
-        expertList.value = resolveList(res);
-    } catch (error) {
+        const userRole = userStore.user?.role || localStorage.getItem("user_role");
+        const expertScope =
+          userRole === "level1_admin" || userRole === "admin"
+            ? "SCHOOL"
+            : "COLLEGE";
+        const res = await request.get("/auth/users/", {
+          params: { role: "EXPERT", expert_scope: expertScope },
+        });
+        expertList.value = resolveList<Expert>(res);
+    } catch (error: unknown) {
         console.error(error);
         ElMessage.error("获取专家列表失败");
     }
@@ -228,9 +260,9 @@ const handleSubmit = async () => {
                 }
                 dialogVisible.value = false;
                 fetchGroups();
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error(error);
-                ElMessage.error(error.response?.data?.message || "操作失败");
+                ElMessage.error(getErrorMessage(error, "操作失败"));
             } finally {
                 submitting.value = false;
             }

@@ -24,7 +24,7 @@ interface Props {
 defineProps<Props>();
 
 defineSlots<{
-  actions?: () => any;
+  actions?: () => void;
 }>();
 
 const greeting = computed(() => {

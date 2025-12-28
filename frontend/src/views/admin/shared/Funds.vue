@@ -109,11 +109,67 @@ import request from "@/utils/request";
 import AddExpenseDialog from "@/views/student/funds/components/AddExpenseDialog.vue";
 import { removeProjectExpenditure } from "@/api/projects";
 
+defineOptions({
+  name: "FundsView",
+});
+
+type ProjectItem = {
+  id: number;
+  project_no?: string;
+  title: string;
+};
+
+type ExpenditureItem = {
+  id: number;
+  expenditure_date?: string;
+  title?: string;
+  category_name?: string;
+  amount?: number | string;
+  proof_file_url?: string;
+  created_by_name?: string;
+};
+
+type CategoryItem = {
+  id: number;
+  label: string;
+  value: string;
+};
+
+type StatsPayload = {
+  total_budget?: number;
+  used_amount?: number;
+  remaining_amount?: number;
+  usage_rate?: number;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const normalizeList = <T,>(payload: unknown): T[] => {
+  if (!isRecord(payload)) return [];
+  if (Array.isArray(payload.results)) return payload.results as T[];
+  if (isRecord(payload.data) && Array.isArray(payload.data.results)) {
+    return payload.data.results as T[];
+  }
+  if (Array.isArray(payload.data)) return payload.data as T[];
+  return [];
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+  if (typeof error === "string") {
+    return error || fallback;
+  }
+  return fallback;
+};
+
 const loading = ref(false);
 const dialogVisible = ref(false);
-const projects = ref<any[]>([]);
-const expenditures = ref<any[]>([]);
-const categories = ref<any[]>([]);
+const projects = ref<ProjectItem[]>([]);
+const expenditures = ref<ExpenditureItem[]>([]);
+const categories = ref<CategoryItem[]>([]);
 const activeProjectId = ref<number | null>(null);
 
 const stats = reactive({
@@ -130,19 +186,19 @@ const activeProject = computed(() =>
 const fetchProjects = async () => {
   loading.value = true;
   try {
-    const res: any = await request.get("/projects/", {
+    const res = await request.get("/projects/", {
       params: {
         status_in:
           "IN_PROGRESS,MID_TERM_DRAFT,MID_TERM_SUBMITTED,MID_TERM_REVIEWING,MID_TERM_APPROVED,MID_TERM_REJECTED,CLOSURE_DRAFT,CLOSURE_SUBMITTED,CLOSURE_LEVEL2_REVIEWING,CLOSURE_LEVEL1_REVIEWING",
       },
     });
-    const payload = res.data || res;
-    projects.value = payload.results || payload.data?.results || payload.data || [];
+    const payload = isRecord(res) && isRecord(res.data) ? res.data : res;
+    projects.value = normalizeList<ProjectItem>(payload);
     if (!activeProjectId.value && projects.value.length > 0) {
       activeProjectId.value = projects.value[0].id;
     }
-  } catch (error: any) {
-    ElMessage.error(error.message || "获取项目列表失败");
+  } catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, "获取项目列表失败"));
   } finally {
     loading.value = false;
   }
@@ -150,37 +206,38 @@ const fetchProjects = async () => {
 
 const fetchStats = async (projectId: number) => {
   try {
-    const res: any = await request.get(`/projects/${projectId}/budget-stats/`);
-    const payload = res.data || res;
-    Object.assign(stats, payload.data || payload);
-  } catch (error) {
+    const res = await request.get(`/projects/${projectId}/budget-stats/`);
+    const payload = isRecord(res) && isRecord(res.data) ? res.data : res;
+    const data = isRecord(payload) && isRecord(payload.data) ? payload.data : payload;
+    Object.assign(stats, data as StatsPayload);
+  } catch (error: unknown) {
     console.error(error);
   }
 };
 
 const fetchExpenditures = async (projectId: number) => {
   try {
-    const res: any = await request.get(`/projects/expenditures/`, {
+    const res = await request.get(`/projects/expenditures/`, {
       params: { project: projectId },
     });
-    const payload = res.data || res;
-    expenditures.value = payload.results || payload.data?.results || payload.data || [];
-  } catch (error) {
+    const payload = isRecord(res) && isRecord(res.data) ? res.data : res;
+    expenditures.value = normalizeList<ExpenditureItem>(payload);
+  } catch (error: unknown) {
     console.error(error);
   }
 };
 
-const handleDelete = async (row: any) => {
+const handleDelete = async (row: ExpenditureItem) => {
   try {
     await ElMessageBox.confirm("确定删除该经费记录吗？删除后可在回收站恢复。", "提示", {
       type: "warning",
     });
-    const res: any = await removeProjectExpenditure(row.id);
-    if (res?.code === 200 || res?.status === 204) {
+    const res = await removeProjectExpenditure(row.id);
+    if (isRecord(res) && (res.code === 200 || res.status === 204)) {
       ElMessage.success("已移入回收站");
       refreshProjectData();
     } else {
-      ElMessage.error(res?.message || "删除失败");
+      ElMessage.error((isRecord(res) && typeof res.message === "string" && res.message) || "删除失败");
     }
   } catch {
     // cancel
@@ -192,12 +249,10 @@ const fetchCategories = async () => {
     const response = await request.get("/dictionaries/items/", {
       params: { type_code: "EXPENDITURE_CATEGORY" },
     });
-    const list =
-      (response as any)?.data?.results ??
-      (response as any)?.results ??
-      (response as any)?.data ??
-      response;
-    categories.value = Array.isArray(list) ? list : [];
+    const payload = isRecord(response) && isRecord(response.data)
+      ? response.data
+      : response;
+    categories.value = normalizeList<CategoryItem>(payload);
     if (categories.value.length === 0) {
       categories.value = [
         { id: 1, label: "设备费", value: "EQUIPMENT" },
@@ -207,7 +262,7 @@ const fetchCategories = async () => {
         { id: 5, label: "劳务费", value: "LABOR" },
       ];
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error(error);
   }
 };

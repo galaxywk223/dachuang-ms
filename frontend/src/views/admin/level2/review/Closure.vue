@@ -212,13 +212,56 @@ import { batchDownloadAttachments } from "@/api/projects/admin";
 import ProjectStatusBadge from "@/components/business/project/StatusBadge.vue";
 import request from "@/utils/request";
 
+defineOptions({ name: "Level2ClosureReviewView" });
+
+type ProjectRow = {
+  id: number;
+  title?: string;
+  level_display?: string;
+  category_display?: string;
+  is_key_field?: boolean;
+  key_domain_code?: string;
+  leader_name?: string;
+  leader_student_id?: string;
+  college?: string;
+  leader_contact?: string;
+  leader_email?: string;
+  budget?: number;
+  status?: string;
+  status_display?: string;
+};
+
+type ListPayload = {
+  results?: ProjectRow[];
+  count?: number;
+  total?: number;
+  data?: {
+    results?: ProjectRow[];
+    count?: number;
+    total?: number;
+  };
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (!isRecord(error)) return fallback;
+  const response = error.response;
+  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === "string") {
+    return response.data.message;
+  }
+  if (typeof error.message === "string") return error.message;
+  return fallback;
+};
+
 const loading = ref(false);
-const projects = ref<any[]>([]);
+const projects = ref<ProjectRow[]>([]);
 const searchQuery = ref("");
 const currentPage = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
-const selectedRows = ref<any[]>([]);
+const selectedRows = ref<ProjectRow[]>([]);
 
 const reviewDialogVisible = ref(false);
 const reviewType = ref<"approve" | "reject">("approve");
@@ -235,25 +278,34 @@ const batchForm = ref({
 });
 
 
-const resolveList = (payload: any) => {
-  if (Array.isArray(payload)) return payload;
-  if (payload?.results) return payload.results;
-  if (payload?.data?.results) return payload.data.results;
-  return payload?.data || [];
+const resolveList = (payload: unknown): ProjectRow[] => {
+  if (Array.isArray(payload)) return payload as ProjectRow[];
+  if (!isRecord(payload)) return [];
+  const typed = payload as ListPayload;
+  if (Array.isArray(typed.results)) return typed.results ?? [];
+  if (isRecord(typed.data) && Array.isArray(typed.data?.results)) {
+    return typed.data?.results ?? [];
+  }
+  if (Array.isArray(typed.data as ProjectRow[])) return typed.data as ProjectRow[];
+  return [];
 };
 
-const resolveCount = (payload: any) => {
-  if (typeof payload?.total === "number") return payload.total;
-  if (typeof payload?.count === "number") return payload.count;
-  if (typeof payload?.data?.count === "number") return payload.data.count;
-  if (typeof payload?.data?.total === "number") return payload.data.total;
+const resolveCount = (payload: unknown) => {
+  if (!isRecord(payload)) return 0;
+  const typed = payload as ListPayload;
+  if (typeof typed.total === "number") return typed.total;
+  if (typeof typed.count === "number") return typed.count;
+  if (isRecord(typed.data)) {
+    if (typeof typed.data?.count === "number") return typed.data.count;
+    if (typeof typed.data?.total === "number") return typed.data.total;
+  }
   return 0;
 };
 
 const fetchProjects = async () => {
   loading.value = true;
   try {
-    const projectRes: any = await request.get("/projects/", {
+    const projectRes = await request.get("/projects/", {
       params: {
         page: currentPage.value,
         page_size: pageSize.value,
@@ -263,11 +315,11 @@ const fetchProjects = async () => {
       },
     });
 
-    const data = projectRes?.data ?? projectRes;
+    const data = isRecord(projectRes) && "data" in projectRes ? projectRes.data : projectRes;
     projects.value = resolveList(data);
     total.value = resolveCount(data) || projects.value.length;
     selectedRows.value = [];
-  } catch (error) {
+  } catch {
     ElMessage.error("获取项目列表失败");
   } finally {
     loading.value = false;
@@ -293,14 +345,14 @@ const handleSizeChange = () => {
   fetchProjects();
 };
 
-const handleApprove = (row: any) => {
+const handleApprove = (row: ProjectRow) => {
   reviewType.value = "approve";
   reviewForm.value.projectId = row.id;
   reviewForm.value.comment = "";
   reviewDialogVisible.value = true;
 };
 
-const handleReject = (row: any) => {
+const handleReject = (row: ProjectRow) => {
   reviewType.value = "reject";
   reviewForm.value.projectId = row.id;
   reviewForm.value.comment = "";
@@ -315,37 +367,37 @@ const confirmReview = async () => {
 
   try {
     if (reviewType.value === "approve") {
-      const res: any = await request.post(
+      const res = await request.post(
         `/projects/${reviewForm.value.projectId}/workflow/report-to-school-closure/`,
         {}
       );
-      if (res?.code === 200) {
+      if (isRecord(res) && res.code === 200) {
         ElMessage.success("已上报校级");
       } else {
-        ElMessage.error(res?.message || "操作失败");
+        ElMessage.error((isRecord(res) && typeof res.message === "string" && res.message) || "操作失败");
         return;
       }
     } else {
-      const res: any = await request.post(
+      const res = await request.post(
         `/projects/${reviewForm.value.projectId}/workflow/return-to-student/`,
         { phase: "CLOSURE", reason: reviewForm.value.comment }
       );
-      if (res?.code === 200) {
+      if (isRecord(res) && res.code === 200) {
         ElMessage.success("已退回学生修改");
       } else {
-        ElMessage.error(res?.message || "操作失败");
+        ElMessage.error((isRecord(res) && typeof res.message === "string" && res.message) || "操作失败");
         return;
       }
     }
 
     reviewDialogVisible.value = false;
     fetchProjects();
-  } catch (error: any) {
-    ElMessage.error(error.response?.data?.message || error.message || "操作失败");
+  } catch (error) {
+    ElMessage.error(getErrorMessage(error, "操作失败"));
   }
 };
 
-const handleSelectionChange = (val: any[]) => {
+const handleSelectionChange = (val: ProjectRow[]) => {
   selectedRows.value = val;
 };
 
@@ -371,14 +423,14 @@ const submitBatchReview = async () => {
     for (const row of selectedRows.value) {
       try {
         if (batchForm.value.action === "approve") {
-          const res: any = await request.post(`/projects/${row.id}/workflow/report-to-school-closure/`, {});
-          if (res?.code === 200) okCount += 1;
+          const res = await request.post(`/projects/${row.id}/workflow/report-to-school-closure/`, {});
+          if (isRecord(res) && res.code === 200) okCount += 1;
         } else {
-          const res: any = await request.post(`/projects/${row.id}/workflow/return-to-student/`, {
+          const res = await request.post(`/projects/${row.id}/workflow/return-to-student/`, {
             phase: "CLOSURE",
             reason: batchForm.value.comments,
           });
-          if (res?.code === 200) okCount += 1;
+          if (isRecord(res) && res.code === 200) okCount += 1;
         }
       } catch {
         // continue
@@ -397,7 +449,7 @@ const submitBatchReview = async () => {
 const handleBatchDownload = async () => {
   try {
     ElMessage.info("正在打包附件，请稍候...");
-    const params: any = {};
+    const params: { ids?: string; search?: string; status?: string } = {};
 
     if (selectedRows.value.length > 0) {
       params.ids = selectedRows.value.map((row) => row.id).join(",");
@@ -426,16 +478,27 @@ const handleBatchDownload = async () => {
       return;
     }
 
-    const res: any = await batchDownloadAttachments(params);
-    if (res.type === "application/json") {
+    const res = await batchDownloadAttachments(params);
+    if (res instanceof Blob && res.type === "application/json") {
       const text = await res.text();
       const json = JSON.parse(text);
       ElMessage.error(json.message || "下载失败");
       return;
     }
-    downloadFile(res, "结题审核附件.zip");
+    const blobPart =
+      typeof res === "string"
+        ? res
+        : res instanceof ArrayBuffer
+          ? res
+          : ArrayBuffer.isView(res)
+            ? (res.buffer as ArrayBuffer)
+            : JSON.stringify(res ?? "");
+    const blob = res instanceof Blob
+      ? res
+      : new Blob([blobPart], { type: "application/zip" });
+    downloadFile(blob, "结题审核附件.zip");
     ElMessage.success("下载成功");
-  } catch (error) {
+  } catch {
     ElMessage.error("下载失败");
   }
 };

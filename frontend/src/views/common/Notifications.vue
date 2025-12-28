@@ -83,12 +83,37 @@ import {
   markAllNotificationsRead,
 } from "@/api/notifications";
 
+defineOptions({
+  name: "NotificationsView",
+});
+
+type NotificationItem = {
+  id: number;
+  title: string;
+  content: string;
+  notification_type_display?: string;
+  created_at?: string;
+  is_read?: boolean;
+};
+
+type NotificationQuery = {
+  page: number;
+  page_size: number;
+  notification_type?: string;
+  is_read?: string;
+};
+
+type NotificationListPayload = {
+  results?: NotificationItem[];
+  count?: number;
+};
+
 const loading = ref(false);
-const notifications = ref<any[]>([]);
+const notifications = ref<NotificationItem[]>([]);
 const filterType = ref<string | undefined>();
 const filterRead = ref<string | undefined>();
 const detailVisible = ref(false);
-const current = ref<any | null>(null);
+const current = ref<NotificationItem | null>(null);
 
 const pagination = reactive({
   page: 1,
@@ -101,19 +126,50 @@ const formatDate = (date?: string) => {
   return dayjs(date).format("YYYY-MM-DD HH:mm");
 };
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const normalizeListPayload = (payload: unknown): NotificationListPayload => {
+  if (!isRecord(payload)) {
+    return {};
+  }
+  const results = Array.isArray(payload.results)
+    ? (payload.results as NotificationItem[])
+    : undefined;
+  const count =
+    typeof payload.count === "number" ? payload.count : undefined;
+  return { results, count };
+};
+
+const normalizeResponse = (
+  response: unknown
+): { results: NotificationItem[]; count: number } => {
+  const rootPayload = normalizeListPayload(response);
+  const dataPayload = isRecord(response)
+    ? normalizeListPayload(response.data)
+    : {};
+
+  const results =
+    dataPayload.results || rootPayload.results || [];
+  const count =
+    dataPayload.count ?? rootPayload.count ?? results.length;
+
+  return { results, count };
+};
+
 const fetchNotifications = async () => {
   loading.value = true;
   try {
-    const params: any = {
+    const params: NotificationQuery = {
       page: pagination.page,
       page_size: pagination.pageSize,
     };
     if (filterType.value) params.notification_type = filterType.value;
     if (filterRead.value) params.is_read = filterRead.value;
-    const res: any = await getNotifications(params);
-    const data = res.data || res;
-    notifications.value = data.results || data.data?.results || data.data || [];
-    pagination.total = data.count || data.data?.count || notifications.value.length;
+    const res = await getNotifications(params);
+    const normalized = normalizeResponse(res);
+    notifications.value = normalized.results;
+    pagination.total = normalized.count;
   } catch {
     ElMessage.error("获取通知失败");
   } finally {
@@ -121,12 +177,12 @@ const fetchNotifications = async () => {
   }
 };
 
-const openDetail = (row: any) => {
+const openDetail = (row: NotificationItem) => {
   current.value = row;
   detailVisible.value = true;
 };
 
-const markRead = async (row: any) => {
+const markRead = async (row: NotificationItem) => {
   await markNotificationRead(row.id);
   row.is_read = true;
   ElMessage.success("已标记为已读");

@@ -14,12 +14,52 @@ import {
 } from "@/api/projects/admin";
 import { batchSendNotifications } from "@/api/notifications";
 
+type ProjectRow = {
+  id: number;
+  title?: string;
+  leader?: number | string;
+};
+
+type ProjectListResponse = {
+  results?: ProjectRow[];
+  count?: number;
+  data?: {
+    results?: ProjectRow[];
+    count?: number;
+  };
+};
+
+type OptionItem = {
+  value: string;
+  label: string;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (!isRecord(error)) return fallback;
+  const response = error.response;
+  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === "string") {
+    return response.data.message;
+  }
+  if (typeof error.message === "string") return error.message;
+  return fallback;
+};
+
+const toBlob = (value: unknown, fallbackType: string) => {
+  if (value instanceof Blob) return value;
+  if (value instanceof ArrayBuffer) return new Blob([value], { type: fallbackType });
+  if (typeof value === "string") return new Blob([value], { type: fallbackType });
+  return new Blob([JSON.stringify(value ?? "")], { type: fallbackType });
+};
+
 export function useProjectsPage() {
   const { loadDictionaries, getOptions } = useDictionary();
 
   const loading = ref(false);
-  const projects = ref<any[]>([]);
-  const selectedRows = ref<any[]>([]);
+  const projects = ref<ProjectRow[]>([]);
+  const selectedRows = ref<ProjectRow[]>([]);
   const currentPage = ref(1);
   const pageSize = ref(10);
   const total = ref(0);
@@ -56,18 +96,18 @@ export function useProjectsPage() {
         status: filters.status,
       };
 
-      const res: any = await getProjects(params);
-      if (res.results) {
-        projects.value = res.results;
-        total.value = res.count;
-      } else if (res.data && res.data.results) {
-        projects.value = res.data.results;
-        total.value = res.data.count;
+      const res = (await getProjects(params)) as ProjectListResponse | ProjectRow[];
+      if (isRecord(res) && Array.isArray(res.results)) {
+        projects.value = res.results ?? [];
+        total.value = res.count ?? projects.value.length;
+      } else if (isRecord(res) && isRecord(res.data) && Array.isArray(res.data?.results)) {
+        projects.value = res.data?.results ?? [];
+        total.value = res.data?.count ?? projects.value.length;
       } else {
         projects.value = Array.isArray(res) ? res : [];
         total.value = projects.value.length;
       }
-    } catch (error) {
+    } catch {
       ElMessage.error("获取项目列表失败");
     } finally {
       loading.value = false;
@@ -98,12 +138,12 @@ export function useProjectsPage() {
     ElMessage.info("申报功能请在学生端进行或开发管理员代申请功能");
   };
 
-  const handleView = (row: any) => ElMessage.success(`正在查看项目: ${row.title}`);
-  const handleEdit = (row: any) => ElMessage.warning(`编辑项目: ${row.title}`);
-  const handleDelete = async (row: any) => {
+  const handleView = (row: ProjectRow) => ElMessage.success(`正在查看项目: ${row.title}`);
+  const handleEdit = (row: ProjectRow) => ElMessage.warning(`编辑项目: ${row.title}`);
+  const handleDelete = async (row: ProjectRow) => {
     try {
       await ElMessageBox.confirm(
-        `确定要删除项目\"${row.title}\"吗？此操作不可恢复！`,
+        `确定要删除项目"${row.title}"吗？此操作不可恢复！`,
         "警告",
         {
           confirmButtonText: "确定删除",
@@ -119,7 +159,7 @@ export function useProjectsPage() {
     }
   };
 
-  const handleSelectionChange = (val: any[]) => {
+  const handleSelectionChange = (val: ProjectRow[]) => {
     selectedRows.value = val;
   };
 
@@ -134,7 +174,7 @@ export function useProjectsPage() {
   const handleBatchExport = async () => {
     try {
       ElMessage.info("正在生成导出文件，请稍候...");
-      const params: any = {};
+      const params: Record<string, string> = {};
 
       if (selectedRows.value.length > 0) {
         params.ids = selectedRows.value.map((row) => row.id).join(",");
@@ -145,10 +185,11 @@ export function useProjectsPage() {
         params.status = filters.status;
       }
 
-      const res: any = await exportProjects(params);
-      downloadFile(res, "项目数据.xlsx");
+      const res = await exportProjects(params);
+      const blob = toBlob(res, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      downloadFile(blob, "项目数据.xlsx");
       ElMessage.success("导出成功");
-    } catch (error) {
+    } catch {
       ElMessage.error("导出失败");
     }
   };
@@ -158,8 +199,9 @@ export function useProjectsPage() {
     try {
       ElMessage.info("正在生成申报书，请稍候...");
       const ids = selectedRows.value.map((row) => row.id).join(",");
-      const res: any = await batchExportDocs({ ids });
-      downloadFile(res, "项目申报书.zip");
+      const res = await batchExportDocs({ ids });
+      const blob = toBlob(res, "application/zip");
+      downloadFile(blob, "项目申报书.zip");
       ElMessage.success("导出成功");
     } catch {
       ElMessage.error("导出失败");
@@ -171,8 +213,9 @@ export function useProjectsPage() {
     try {
       ElMessage.info("正在生成立项通知书，请稍候...");
       const ids = selectedRows.value.map((row) => row.id).join(",");
-      const res: any = await batchExportNotices({ ids });
-      downloadFile(res, "立项通知书.zip");
+      const res = await batchExportNotices({ ids });
+      const blob = toBlob(res, "application/zip");
+      downloadFile(blob, "立项通知书.zip");
       ElMessage.success("生成成功");
     } catch {
       ElMessage.error("生成失败");
@@ -184,8 +227,9 @@ export function useProjectsPage() {
     try {
       ElMessage.info("正在生成结题证书，请稍候...");
       const ids = selectedRows.value.map((row) => row.id).join(",");
-      const res: any = await batchExportCertificates({ ids });
-      downloadFile(res, "结题证书.zip");
+      const res = await batchExportCertificates({ ids });
+      const blob = toBlob(res, "application/zip");
+      downloadFile(blob, "结题证书.zip");
       ElMessage.success("生成成功");
     } catch {
       ElMessage.error("生成失败");
@@ -195,7 +239,7 @@ export function useProjectsPage() {
   const handleBatchDownload = async () => {
     try {
       ElMessage.info("正在打包附件，请稍候...");
-      const params: any = {};
+      const params: Record<string, string> = {};
 
       if (selectedRows.value.length > 0) {
         params.ids = selectedRows.value.map((row) => row.id).join(",");
@@ -206,16 +250,17 @@ export function useProjectsPage() {
         params.status = filters.status;
       }
 
-      const res: any = await batchDownloadAttachments(params);
-      if (res.type === "application/json") {
+      const res = await batchDownloadAttachments(params);
+      if (res instanceof Blob && res.type === "application/json") {
         const text = await res.text();
         const json = JSON.parse(text);
         ElMessage.error(json.message || "下载失败");
         return;
       }
-      downloadFile(res, "项目附件.zip");
+      const blob = toBlob(res, "application/zip");
+      downloadFile(blob, "项目附件.zip");
       ElMessage.success("下载成功");
-    } catch (error) {
+    } catch {
       ElMessage.error("下载失败，可能没有可下载的附件");
     }
   };
@@ -237,8 +282,8 @@ export function useProjectsPage() {
         project_ids: selectedRows.value.map((row) => row.id),
         status: batchStatusForm.status,
       };
-      const res: any = await batchUpdateProjectStatus(payload);
-      if (res.code === 200) {
+      const res = await batchUpdateProjectStatus(payload);
+      if (isRecord(res) && res.code === 200) {
         ElMessage.success("状态更新成功");
         batchStatusDialogVisible.value = false;
         fetchProjects();
@@ -265,19 +310,23 @@ export function useProjectsPage() {
     batchNotifyLoading.value = true;
     try {
       const recipients = Array.from(
-        new Set(selectedRows.value.map((row) => row.leader).filter(Boolean))
+        new Set(
+          selectedRows.value
+            .map((row) => row.leader)
+            .filter((value): value is number => typeof value === "number")
+        )
       );
-      const res: any = await batchSendNotifications({
+      const res = await batchSendNotifications({
         title: batchNotifyForm.title,
         content: batchNotifyForm.content,
         recipients,
       });
-      if (res.code === 200) {
+      if (isRecord(res) && res.code === 200) {
         ElMessage.success("通知已发送");
         batchNotifyDialogVisible.value = false;
       }
-    } catch (error: any) {
-      ElMessage.error(error.response?.data?.message || "发送失败");
+    } catch (error) {
+      ElMessage.error(getErrorMessage(error, "发送失败"));
     } finally {
       batchNotifyLoading.value = false;
     }
@@ -307,7 +356,7 @@ export function useProjectsPage() {
     return "info";
   };
 
-  const getLabel = (options: any[], value: string) => {
+  const getLabel = (options: OptionItem[], value: string) => {
     const found = options.find((opt) => opt.value === value);
     return found ? found.label : value;
   };

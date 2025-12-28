@@ -188,10 +188,57 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { useRouter } from "vue-router";
 import { getAppliedClosureProjects, getProjectCertificate, revokeClosureApplication, deleteClosureSubmission } from "@/api/projects";
 
+defineOptions({
+  name: "StudentClosureAppliedView",
+});
+
+type AchievementInfo = {
+  achievement_type_display?: string;
+};
+
+type ProjectRow = {
+  id: number;
+  project_no?: string;
+  title?: string;
+  level_display?: string;
+  category_display?: string;
+  leader_name?: string;
+  leader_student_id?: string;
+  college?: string;
+  leader_contact?: string;
+  budget?: number;
+  advisors_info?: Array<{ name?: string }>;
+  achievements?: AchievementInfo[];
+  achievement_summary?: string;
+  status?: string;
+};
+
+type AppliedListResponse = {
+  code: number;
+  data?: ProjectRow[];
+  total?: number;
+  message?: string;
+};
+
+type ApiResponse = {
+  code?: number;
+  message?: string;
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+  if (typeof error === "string") {
+    return error || fallback;
+  }
+  return fallback;
+};
+
 const router = useRouter();
 
 // 表格数据
-const tableData = ref<any[]>([]);
+const tableData = ref<ProjectRow[]>([]);
 const loading = ref(false);
 
 // 分页
@@ -209,10 +256,10 @@ const getProjectYear = (projectNo: string) => {
 };
 
 // 获取成果形式
-const getAchievementTypes = (row: any) => {
+const getAchievementTypes = (row: ProjectRow) => {
   // 根据项目的成果信息拼接成果形式
   if (row.achievements && row.achievements.length > 0) {
-    const types = row.achievements.map((a: any) => a.achievement_type_display);
+    const types = row.achievements.map((a) => a.achievement_type_display);
     return Array.from(new Set(types)).join("、");
   }
   return "";
@@ -227,22 +274,24 @@ const fetchAppliedProjects = async () => {
       page_size: pagination.pageSize,
     };
 
-    const response: any = await getAppliedClosureProjects(params);
+    const response = (await getAppliedClosureProjects(
+      params
+    )) as AppliedListResponse;
     if (response.code === 200) {
       tableData.value = response.data || [];
       pagination.total = response.total || 0;
     } else {
       ElMessage.error(response.message || "获取项目列表失败");
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("获取已申请结题项目失败:", error);
-    ElMessage.error(error.message || "获取项目列表失败");
+    ElMessage.error(getErrorMessage(error, "获取项目列表失败"));
   } finally {
     loading.value = false;
   }
 };
 
-const canDeleteSubmission = (row: any) => {
+const canDeleteSubmission = (row: ProjectRow) => {
   return [
     "CLOSURE_SUBMITTED",
     "CLOSURE_LEVEL2_REVIEWING",
@@ -250,7 +299,7 @@ const canDeleteSubmission = (row: any) => {
     "CLOSURE_LEVEL1_REVIEWING",
     "CLOSURE_LEVEL1_REJECTED",
     "CLOSURE_RETURNED",
-  ].includes(row.status);
+  ].includes(row.status ?? "");
 };
 
 // 分页大小改变
@@ -266,23 +315,24 @@ const handleCurrentChange = (page: number) => {
 };
 
 // 查看详情
-const handleView = (_row: any) => {
+const handleView = (row: ProjectRow) => {
+  void row;
   ElMessage.info("查看结题详情功能待开发");
 };
 
-const handleReapply = (row: any) => {
+const handleReapply = (row: ProjectRow) => {
   if (!row?.id) return;
   router.push({ path: "/closure/apply", query: { projectId: row.id } });
 };
 
-const handleRevoke = async (row: any) => {
+const handleRevoke = async (row: ProjectRow) => {
   try {
     await ElMessageBox.confirm("确认撤回结题申请吗？", "提示", {
       type: "warning",
       confirmButtonText: "确认撤回",
       cancelButtonText: "取消",
     });
-    const response: any = await revokeClosureApplication(row.id);
+    const response = (await revokeClosureApplication(row.id)) as ApiResponse;
     if (response.code === 200) {
       ElMessage.success("已撤回结题申请");
       fetchAppliedProjects();
@@ -292,12 +342,12 @@ const handleRevoke = async (row: any) => {
   }
 };
 
-const handleDeleteSubmission = async (row: any) => {
+const handleDeleteSubmission = async (row: ProjectRow) => {
   try {
     await ElMessageBox.confirm("确定删除该结题提交吗？删除后可在回收站恢复。", "提示", {
       type: "warning",
     });
-    const res: any = await deleteClosureSubmission(row.id);
+    const res = (await deleteClosureSubmission(row.id)) as ApiResponse;
     if (res?.code === 200) {
       ElMessage.success("已移入回收站");
       fetchAppliedProjects();
@@ -309,16 +359,21 @@ const handleDeleteSubmission = async (row: any) => {
   }
 };
 
-const handleCertificate = async (row: any) => {
+const handleCertificate = async (row: ProjectRow) => {
   try {
-    const res: any = await getProjectCertificate(row.id);
-    const blob = res instanceof Blob ? res : new Blob([res], { type: "text/html" });
+    const res = await getProjectCertificate(row.id);
+    const blob =
+      res instanceof Blob
+        ? res
+        : new Blob([typeof res === "string" ? res : JSON.stringify(res ?? "")], {
+            type: "text/html",
+          });
     const url = window.URL.createObjectURL(blob);
     window.open(url, "_blank");
     window.setTimeout(() => URL.revokeObjectURL(url), 10000);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("获取结题证书失败:", error);
-    ElMessage.error(error.message || "获取结题证书失败");
+    ElMessage.error(getErrorMessage(error, "获取结题证书失败"));
   }
 };
 

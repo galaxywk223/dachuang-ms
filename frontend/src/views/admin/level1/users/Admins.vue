@@ -201,8 +201,44 @@ import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'elem
 import { useDictionary } from '@/composables/useDictionary';
 import { DICT_CODES } from '@/api/dictionaries';
 
+defineOptions({ name: 'Level1AdminsView' });
+
+type AdminRow = {
+  id: number;
+  employee_id: string;
+  real_name: string;
+  phone?: string;
+  email?: string;
+  college?: string;
+  is_active?: boolean;
+};
+
+type UserListResponse = {
+  code?: number;
+  data?: {
+    results?: AdminRow[];
+    count?: number;
+    total?: number;
+  };
+  results?: AdminRow[];
+  count?: number;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (!isRecord(error)) return fallback;
+  const response = error.response;
+  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === 'string') {
+    return response.data.message;
+  }
+  if (typeof error.message === 'string') return error.message;
+  return fallback;
+};
+
 const loading = ref(false);
-const tableData = ref<any[]>([]);
+const tableData = ref<AdminRow[]>([]);
 const total = ref(0);
 const currentPage = ref(1);
 const pageSize = ref(10);
@@ -255,26 +291,28 @@ const filters = reactive({
 const loadData = async () => {
   loading.value = true;
   try {
-    const params = {
+    const params: Record<string, string | number> = {
       page: currentPage.value,
       page_size: pageSize.value,
-      ...filters
+      role: filters.role
     };
-    // Clean empty params
-    if (!params.search) delete (params as any).search;
-    if (!params.college) delete (params as any).college;
+    if (filters.search) params.search = filters.search;
+    if (filters.college) params.college = filters.college;
 
-    const res = await getUsers(params);
+    const res = (await getUsers(params)) as UserListResponse;
     if (res.code === 200 && res.data) {
-      tableData.value = res.data.results || [];
+      tableData.value = res.data.results ?? [];
       const resultCount = res.data.count ?? res.data.total ?? tableData.value.length;
       total.value = Number.isFinite(resultCount) ? resultCount : 0;
-    } else if (res.results) {
-      tableData.value = res.results;
-      total.value = res.count || res.results.length;
-    } else {
-      tableData.value = Array.isArray(res) ? res : [];
+    } else if (Array.isArray(res.results)) {
+      tableData.value = res.results ?? [];
+      total.value = res.count ?? res.results.length;
+    } else if (Array.isArray(res as unknown)) {
+      tableData.value = res as AdminRow[];
       total.value = tableData.value.length;
+    } else {
+      tableData.value = [];
+      total.value = 0;
     }
   } catch (error) {
     console.error(error);
@@ -305,18 +343,18 @@ const handleCurrentChange = (val: number) => {
     loadData();
 };
 
-const handleEdit = (row: any) => {
+const handleEdit = (row: AdminRow) => {
     ElMessage.info('编辑: ' + row.real_name);
 };
 
-const handleToggleStatus = async (row: any) => {
+const handleToggleStatus = async (row: AdminRow) => {
    try {
      const action = row.is_active ? '禁用' : '激活';
      await ElMessageBox.confirm(`确定要${action}该管理员吗？`, '提示', {
          type: 'warning'
      });
      const res = await toggleUserStatus(row.id);
-     if (res.code === 200) {
+     if (isRecord(res) && res.code === 200) {
         ElMessage.success(`${action}成功`);
         loadData();
      }
@@ -325,7 +363,7 @@ const handleToggleStatus = async (row: any) => {
    }
 };
 
-const handleDelete = async (row: any) => {
+const handleDelete = async (row: AdminRow) => {
   try {
     await ElMessageBox.confirm(
       `确定要删除管理员 "${row.real_name}" 吗？此操作不可恢复。`,
@@ -338,7 +376,7 @@ const handleDelete = async (row: any) => {
     );
 
     const res = await deleteUser(row.id);
-    if (res.code === 200 || res.code === 204) {
+    if (isRecord(res) && (res.code === 200 || res.code === 204)) {
       ElMessage.success('删除成功');
       loadData();
     } else {
@@ -348,7 +386,7 @@ const handleDelete = async (row: any) => {
   } catch (error) {
     if (error !== 'cancel') {
       console.error(error);
-      ElMessage.error('删除失败');
+      ElMessage.error(getErrorMessage(error, '删除失败'));
     }
   }
 };
@@ -380,7 +418,7 @@ const handleCreateAdmin = async () => {
     const sanitizedId = adminForm.employee_id.replace(/[^a-zA-Z0-9]/g, '');
     const payload = { ...adminForm, employee_id: sanitizedId, role: 'LEVEL2_ADMIN' };
     const res = await createUser(payload);
-    if (res.code === 200) {
+    if (isRecord(res) && res.code === 200) {
       ElMessage.success('管理员添加成功，默认密码为 123456');
       addDialogVisible.value = false;
       resetAdminForm();

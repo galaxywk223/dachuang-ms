@@ -12,12 +12,82 @@ import {
 import { DICT_CODES } from "@/api/dictionaries";
 import { useDictionary } from "@/composables/useDictionary";
 
+type ProjectDetail = {
+  id: number;
+  title?: string;
+  project_no?: string;
+  leader_name?: string;
+  leader_info?: { real_name?: string };
+  level_display?: string;
+  level?: string;
+  category_display?: string;
+  category?: string;
+  budget?: number;
+  status?: string;
+  achievement_summary?: string;
+  final_report_url?: string;
+  final_report_name?: string;
+  achievement_file_url?: string;
+  achievement_file_name?: string;
+};
+
+type AchievementItem = {
+  id?: number | null;
+  achievement_type?: string;
+  achievement_type_value?: string;
+  title?: string;
+  description?: string;
+  authors?: string;
+  journal?: string;
+  publication_date?: string;
+  doi?: string;
+  patent_no?: string;
+  patent_type?: string;
+  applicant?: string;
+  competition_name?: string;
+  award_level?: string;
+  award_date?: string;
+  company_name?: string;
+  company_role?: string;
+  company_date?: string;
+  conference_name?: string;
+  conference_level?: string;
+  conference_date?: string;
+  report_title?: string;
+  report_type?: string;
+  media_title?: string;
+  media_format?: string;
+  media_link?: string;
+  extra_data?: Record<string, string>;
+  attachment_url?: string;
+  attachment_name?: string;
+  attachment?: string;
+  file?: File | null;
+};
+
+type ApiResponse<T> = {
+  code?: number;
+  status?: number;
+  data?: T;
+  message?: string;
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+  if (typeof error === "string") {
+    return error || fallback;
+  }
+  return fallback;
+};
+
 export function useClosureApply() {
   const route = useRoute();
   const router = useRouter();
   const formRef = ref<FormInstance>();
   const loading = ref(false);
-  const project = ref<any | null>(null);
+  const project = ref<ProjectDetail | null>(null);
   const { loadDictionaries, getOptions, getLabel } = useDictionary();
 
   const projectId = route.query.projectId as string;
@@ -38,15 +108,21 @@ export function useClosureApply() {
     achievement_summary: "",
   });
 
-  const reportFileList = ref<any[]>([]);
-  const achievementFileList = ref<any[]>([]);
+const reportFileList = ref<UploadFile[]>([]);
+const achievementFileList = ref<UploadFile[]>([]);
 
-  const achievements = ref<any[]>([]);
+  const achievements = ref<AchievementItem[]>([]);
   const dialogVisible = ref(false);
   const dialogIndex = ref(-1);
-  const dialogFileList = ref<any[]>([]);
+const dialogFileList = ref<UploadFile[]>([]);
+  const buildUploadFile = (name: string, status: UploadFile["status"], url?: string): UploadFile => ({
+    name,
+    status,
+    url,
+    uid: Date.now(),
+  });
 
-  const achievementForm = reactive({
+  const achievementForm = reactive<AchievementItem>({
     id: null as number | null,
     achievement_type: "",
     title: "",
@@ -72,8 +148,8 @@ export function useClosureApply() {
     media_title: "",
     media_format: "",
     media_link: "",
-    extra_data: {} as Record<string, string>,
-    file: null as File | null,
+    extra_data: {},
+    file: null,
   });
 
   const achievementTypeOptions = computed(() => getOptions(DICT_CODES.ACHIEVEMENT_TYPE));
@@ -101,7 +177,7 @@ export function useClosureApply() {
   const rules = {
     final_report: [
       {
-        validator: (_rule: any, _value: any, callback: any) => {
+        validator: (_rule: unknown, _value: unknown, callback: (error?: Error) => void) => {
           if (formData.final_report || project.value?.final_report_url) {
             callback();
             return;
@@ -132,7 +208,7 @@ export function useClosureApply() {
     dialogFileList.value = [file];
   };
 
-  const openAchievementDialog = (row?: any, index = -1) => {
+  const openAchievementDialog = (row?: AchievementItem, index = -1) => {
     dialogIndex.value = index;
     dialogVisible.value = true;
     dialogFileList.value = [];
@@ -171,20 +247,45 @@ export function useClosureApply() {
       achievementForm.media_format = extraData.media_format || row.media_format || "";
       achievementForm.media_link = extraData.media_link || row.media_link || "";
       if (row.file) {
-        dialogFileList.value = [{ name: row.file.name, status: "ready" }];
+        dialogFileList.value = [buildUploadFile(row.file.name, "ready")];
       } else if (row.attachment_url || row.attachment) {
         const url = row.attachment_url || row.attachment;
         const name =
-          row.attachment_name || (typeof url === "string" ? url.split("/").pop() : "附件");
-        dialogFileList.value = [{ name, url, status: "success" }];
+          row.attachment_name ||
+          (typeof url === "string" ? url.split("/").pop() : "") ||
+          "附件";
+        dialogFileList.value = [buildUploadFile(name, "success", typeof url === "string" ? url : "")];
       }
     } else {
-      Object.keys(achievementForm).forEach((key) => {
-        (achievementForm as any)[key] = "";
+      Object.assign(achievementForm, {
+        id: null,
+        achievement_type: "",
+        title: "",
+        description: "",
+        authors: "",
+        journal: "",
+        publication_date: "",
+        doi: "",
+        patent_no: "",
+        patent_type: "",
+        applicant: "",
+        competition_name: "",
+        award_level: "",
+        award_date: "",
+        company_name: "",
+        company_role: "",
+        company_date: "",
+        conference_name: "",
+        conference_level: "",
+        conference_date: "",
+        report_title: "",
+        report_type: "",
+        media_title: "",
+        media_format: "",
+        media_link: "",
+        extra_data: {},
+        file: null,
       });
-      achievementForm.extra_data = {};
-      achievementForm.file = null;
-      achievementForm.id = null;
     }
   };
 
@@ -196,12 +297,12 @@ export function useClosureApply() {
 
     const extraData: Record<string, string> = {};
     if (isCompanyType.value) {
-      extraData.company_name = achievementForm.company_name;
+      extraData.company_name = achievementForm.company_name || "";
       if (achievementForm.company_role) extraData.company_role = achievementForm.company_role;
       if (achievementForm.company_date) extraData.company_date = achievementForm.company_date;
     }
     if (isConferenceType.value) {
-      extraData.conference_name = achievementForm.conference_name;
+      extraData.conference_name = achievementForm.conference_name || "";
       if (achievementForm.conference_level) {
         extraData.conference_level = achievementForm.conference_level;
       }
@@ -210,11 +311,11 @@ export function useClosureApply() {
       }
     }
     if (isReportType.value) {
-      extraData.report_title = achievementForm.report_title;
+      extraData.report_title = achievementForm.report_title || "";
       if (achievementForm.report_type) extraData.report_type = achievementForm.report_type;
     }
     if (isMediaType.value) {
-      extraData.media_title = achievementForm.media_title;
+      extraData.media_title = achievementForm.media_title || "";
       if (achievementForm.media_format) {
         extraData.media_format = achievementForm.media_format;
       }
@@ -243,15 +344,15 @@ export function useClosureApply() {
     achievements.value.splice(index, 1);
   };
 
-  const initFromProject = async (data: any) => {
+  const initFromProject = async (data: ProjectDetail) => {
     project.value = data;
     projectInfo.title = data.title || "";
     projectInfo.project_no = data.project_no || "";
     projectInfo.leader_name = data.leader_name || data.leader_info?.real_name || "";
     projectInfo.level_display =
-      data.level_display || getLabel(DICT_CODES.PROJECT_LEVEL, data.level);
+      data.level_display || getLabel(DICT_CODES.PROJECT_LEVEL, data.level ?? "");
     projectInfo.category_display =
-      data.category_display || getLabel(DICT_CODES.PROJECT_CATEGORY, data.category);
+      data.category_display || getLabel(DICT_CODES.PROJECT_CATEGORY, data.category ?? "");
     projectInfo.budget = data.budget ?? 0;
     projectInfo.status = data.status || "";
 
@@ -265,6 +366,7 @@ export function useClosureApply() {
           name: data.final_report_name || "结题报告.pdf",
           url: data.final_report_url,
           status: "success",
+          uid: Date.now(),
         },
       ];
     }
@@ -274,15 +376,18 @@ export function useClosureApply() {
           name: data.achievement_file_name || "附件",
           url: data.achievement_file_url,
           status: "success",
+          uid: Date.now() + 1,
         },
       ];
     }
 
     achievements.value = [];
     try {
-      const achRes: any = await getProjectAchievements(Number(projectId));
+      const achRes = (await getProjectAchievements(
+        Number(projectId)
+      )) as ApiResponse<AchievementItem[]>;
       if (achRes?.code === 200) {
-        achievements.value = (achRes.data || []).map((item: any) => ({
+        achievements.value = (achRes.data || []).map((item) => ({
           id: item.id,
           achievement_type: item.achievement_type_value || item.achievement_type,
           title: item.title || "",
@@ -315,15 +420,15 @@ export function useClosureApply() {
     }
     loading.value = true;
     try {
-      const res: any = await getProjectDetail(Number(projectId));
+      const res = (await getProjectDetail(Number(projectId))) as ApiResponse<ProjectDetail>;
       const data = res?.data ?? res;
       if (data) {
-        await initFromProject(data);
+        await initFromProject(data as ProjectDetail);
       } else {
         ElMessage.error("未获取到项目详情");
       }
-    } catch {
-      ElMessage.error("获取项目详情失败");
+    } catch (error: unknown) {
+      ElMessage.error(getErrorMessage(error, "获取项目详情失败"));
     } finally {
       loading.value = false;
     }
@@ -353,8 +458,11 @@ export function useClosureApply() {
       payload.append("achievement_summary", formData.achievement_summary);
       payload.append("is_draft", String(isDraft));
 
-      const achievementsData = achievements.value.map((item: any) => {
+      const achievementsData = achievements.value.map((item) => {
         const { file, attachment_url, attachment_name, ...rest } = item;
+        void file;
+        void attachment_url;
+        void attachment_name;
         return rest;
       });
       payload.append("achievements_json", JSON.stringify(achievementsData));
@@ -366,17 +474,17 @@ export function useClosureApply() {
       });
 
       const isEditingDraft = projectInfo.status === "CLOSURE_DRAFT";
-      const res: any = await (isEditingDraft
+      const res = (await (isEditingDraft
         ? updateClosureApplication(Number(projectId), payload)
-        : createClosureApplication(Number(projectId), payload));
+        : createClosureApplication(Number(projectId), payload))) as ApiResponse<unknown>;
       if (res.code === 200 || res.status === 201) {
         ElMessage.success(isDraft ? "草稿已保存" : "申请已提交");
         router.push(isDraft ? "/closure/drafts" : "/closure/applied");
       } else {
         ElMessage.error(res.message || "操作失败");
       }
-    } catch (e: any) {
-      ElMessage.error(e.message || "提交失败");
+    } catch (error: unknown) {
+      ElMessage.error(getErrorMessage(error, "提交失败"));
     } finally {
       loading.value = false;
     }
@@ -404,7 +512,7 @@ export function useClosureApply() {
       await ElMessageBox.confirm("确定删除该结题提交吗？删除后可在回收站恢复。", "提示", {
         type: "warning",
       });
-      const res: any = await deleteClosureSubmission(project.value.id);
+      const res = (await deleteClosureSubmission(project.value.id)) as ApiResponse<unknown>;
       if (res?.code === 200) {
         ElMessage.success("已移入回收站");
         fetchProjectInfo();

@@ -120,9 +120,42 @@ import { Search } from "@element-plus/icons-vue";
 import { getChangeRequests, reviewChangeRequest } from "@/api/projects/change-requests";
 import dayjs from "dayjs";
 
+defineOptions({ name: "Level1ChangeReviewsView" });
+
+type ChangeRequestRow = {
+  id: number;
+  project_title?: string;
+  project_no?: string;
+  type_display?: string;
+  created_at?: string;
+  status?: string;
+  status_display?: string;
+  attachment_url?: string;
+};
+
+type ChangeRequestListResponse = {
+  data?: {
+    results?: ChangeRequestRow[];
+    total?: number;
+  } | ChangeRequestRow[];
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (!isRecord(error)) return fallback;
+  const response = error.response;
+  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === "string") {
+    return response.data.message;
+  }
+  if (typeof error.message === "string") return error.message;
+  return fallback;
+};
+
 const loading = ref(false);
 const reviewing = ref(false);
-const changeRequests = ref<any[]>([]);
+const changeRequests = ref<ChangeRequestRow[]>([]);
 const total = ref(0);
 const currentPage = ref(1);
 const pageSize = ref(10);
@@ -138,7 +171,7 @@ const filters = ref({
 const fetchRequests = async () => {
   loading.value = true;
   try {
-    const params: any = {
+    const params: Record<string, string | number> = {
       page: currentPage.value,
       page_size: pageSize.value,
       status: "LEVEL1_REVIEWING", // Only show pending reviews
@@ -146,21 +179,20 @@ const fetchRequests = async () => {
     if (filters.value.changeType) params.type = filters.value.changeType;
     if (filters.value.search) params.search = filters.value.search;
 
-    const res: any = await getChangeRequests(params);
+    const res = (await getChangeRequests(params)) as ChangeRequestListResponse | ChangeRequestRow[];
     // Handle different API response structures if needed, but assuming standard pagination
-    if (res.data && Array.isArray(res.data.results)) {
-       changeRequests.value = res.data.results;
-       total.value = res.data.total;
-    } else if (res.data && Array.isArray(res.data)) {
-        // Fallback or non-paginated?
-        changeRequests.value = res.data;
-        total.value = res.data.length;
+    if (isRecord(res) && isRecord(res.data) && Array.isArray(res.data.results)) {
+      changeRequests.value = res.data.results ?? [];
+      total.value = typeof res.data.total === "number" ? res.data.total : changeRequests.value.length;
+    } else if (isRecord(res) && Array.isArray(res.data)) {
+      changeRequests.value = res.data as ChangeRequestRow[];
+      total.value = changeRequests.value.length;
     } else if (Array.isArray(res)) {
-        changeRequests.value = res;
-        total.value = res.length;
+      changeRequests.value = res;
+      total.value = res.length;
     } else {
-        changeRequests.value = [];
-        total.value = 0;
+      changeRequests.value = [];
+      total.value = 0;
     }
   } catch (error) {
     console.error(error);
@@ -191,7 +223,7 @@ const handlePageChange = (val: number) => {
   fetchRequests();
 };
 
-const handleReview = (row: any) => {
+const handleReview = (row: ChangeRequestRow) => {
   currentId.value = row.id;
   comments.value = "";
   dialogVisible.value = true;
@@ -205,8 +237,8 @@ const submitReview = async (action: "approve" | "reject") => {
     ElMessage.success("审核完成");
     dialogVisible.value = false;
     fetchRequests();
-  } catch (error: any) {
-    ElMessage.error(error.response?.data?.message || "操作失败");
+  } catch (error) {
+    ElMessage.error(getErrorMessage(error, "操作失败"));
   } finally {
     reviewing.value = false;
   }

@@ -1,5 +1,11 @@
 import { computed, onMounted, reactive, ref, watch } from "vue";
-import { ElMessage, type FormInstance, type UploadUserFile } from "element-plus";
+import {
+  ElMessage,
+  type CascaderOption,
+  type FormInstance,
+  type UploadFile,
+  type UploadUserFile,
+} from "element-plus";
 import { useRouter, useRoute } from "vue-router";
 import { getUsers } from "@/api/users/admin";
 import { useDictionary } from "@/composables/useDictionary";
@@ -27,11 +33,73 @@ interface MemberInfo {
   name: string;
 }
 
-interface CascaderOption {
+interface DictOption {
   value: string;
   label: string;
-  disabled?: boolean;
-  children?: CascaderOption[];
+  extra_data?: { budget?: number };
+  template_file?: string;
+}
+
+interface ExpectedResult {
+  achievement_type: string;
+  expected_count: number;
+}
+
+interface ProjectDetail {
+  id?: number;
+  title?: string;
+  source?: string;
+  level?: string;
+  category?: string;
+  college?: string;
+  major_code?: string;
+  budget?: number | string;
+  leader_contact?: string;
+  leader_email?: string;
+  description?: string;
+  expected_results?: string;
+  expected_results_data?: ExpectedResult[];
+  is_key_field?: boolean;
+  key_domain_code?: string;
+  key_field_code?: string;
+  proposal_file_url?: string;
+  attachment_file_url?: string;
+  proposal_file_name?: string;
+  attachment_file_name?: string;
+  advisors_info?: AdvisorInfoDetail[];
+  members_info?: MemberInfoDetail[];
+}
+
+interface AdvisorInfoDetail {
+  job_number?: string;
+  name?: string;
+  title?: string;
+  contact?: string;
+  email?: string;
+  order?: number;
+}
+
+interface MemberInfoDetail {
+  role?: string;
+  student_id?: string;
+  user_name?: string;
+  name?: string;
+}
+
+interface UserRow {
+  id: number;
+  real_name: string;
+  title?: string;
+  phone?: string;
+  email?: string;
+}
+
+interface ApiResponse<T> {
+  code?: number;
+  status?: number;
+  data?: T;
+  message?: string;
+  errors?: Record<string, string | string[]>;
 }
 
 interface FormDataState {
@@ -49,12 +117,22 @@ interface FormDataState {
   leader_email: string;
   title: string;
   expected_results: string;
-  expected_results_data: { achievement_type: string; expected_count: number }[];
+  expected_results_data: ExpectedResult[];
   description: string;
   advisors: AdvisorInfo[];
   members: MemberInfo[];
   attachment_file: File | null;
 }
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+  if (typeof error === "string") {
+    return error || fallback;
+  }
+  return fallback;
+};
 
 export function useProjectApplication() {
   const userStore = useUserStore();
@@ -102,9 +180,9 @@ export function useProjectApplication() {
         return;
       }
       const selectedOption = levelOptions.value.find(
-        (opt: any) => opt.value === newVal
+        (opt) => opt.value === newVal
       );
-      if (selectedOption && selectedOption.extra_data && selectedOption.extra_data.budget) {
+      if (selectedOption?.extra_data?.budget) {
         formData.budget = Number(selectedOption.extra_data.budget);
       } else {
         // Fallback or keep 0 if no config found
@@ -127,7 +205,7 @@ export function useProjectApplication() {
 
   const currentTemplateUrl = computed(() => {
     if (!formData.category) return null;
-    const option = categoryOptions.value.find((opt: any) => opt.value === formData.category);
+    const option = categoryOptions.value.find((opt) => opt.value === formData.category);
     return option?.template_file || null;
   });
 
@@ -157,7 +235,7 @@ export function useProjectApplication() {
     description: [{ required: true, message: "必填项", trigger: "blur" }],
     attachment_file: [
       {
-        validator: (_rule: any, _value: any, callback: any) => {
+        validator: (_rule: unknown, _value: unknown, callback: (error?: Error) => void) => {
           if (fileList.value.length > 0) {
             callback();
           } else {
@@ -170,15 +248,33 @@ export function useProjectApplication() {
   };
 
   // Dicts
-  const sourceOptions = computed(() => getOptions(DICT_CODES.PROJECT_SOURCE));
-  const collegeOptions = computed(() => getOptions(DICT_CODES.COLLEGE));
-  const majorOptions = computed(() => getOptions(DICT_CODES.MAJOR_CATEGORY));
-  const advisorTitleOptions = computed(() => getOptions(DICT_CODES.ADVISOR_TITLE));
-  const levelOptions = computed(() => getOptions(DICT_CODES.PROJECT_LEVEL));
-  const keyFieldOptions = computed(() => getOptions(DICT_CODES.KEY_FIELD_CODE));
-  const categoryOptions = computed(() => getOptions(DICT_CODES.PROJECT_CATEGORY));
-  const disciplineOptions = computed(() => getOptions(DICT_CODES.DISCIPLINE));
-  const achievementTypeOptions = computed(() => getOptions(DICT_CODES.ACHIEVEMENT_TYPE));
+  const sourceOptions = computed(
+    () => getOptions(DICT_CODES.PROJECT_SOURCE) as DictOption[]
+  );
+  const collegeOptions = computed(
+    () => getOptions(DICT_CODES.COLLEGE) as DictOption[]
+  );
+  const majorOptions = computed(
+    () => getOptions(DICT_CODES.MAJOR_CATEGORY) as DictOption[]
+  );
+  const advisorTitleOptions = computed(
+    () => getOptions(DICT_CODES.ADVISOR_TITLE) as DictOption[]
+  );
+  const levelOptions = computed(
+    () => getOptions(DICT_CODES.PROJECT_LEVEL) as DictOption[]
+  );
+  const keyFieldOptions = computed(
+    () => getOptions(DICT_CODES.KEY_FIELD_CODE) as DictOption[]
+  );
+  const categoryOptions = computed(
+    () => getOptions(DICT_CODES.PROJECT_CATEGORY) as DictOption[]
+  );
+  const disciplineOptions = computed(
+    () => getOptions(DICT_CODES.DISCIPLINE) as DictOption[]
+  );
+  const achievementTypeOptions = computed(
+    () => getOptions(DICT_CODES.ACHIEVEMENT_TYPE) as DictOption[]
+  );
 
   const getDefaultLevel = () => levelOptions.value[0]?.value || "";
   const getDefaultCategory = () => categoryOptions.value[0]?.value || "";
@@ -253,7 +349,7 @@ export function useProjectApplication() {
     formData.expected_results_data.splice(index, 1);
   };
 
-  const getLabel = (options: any[], value: string) => {
+  const getLabel = (options: DictOption[], value: string) => {
     const found = options.find((opt) => opt.value === value);
     return found ? found.label : value;
   };
@@ -266,19 +362,19 @@ export function useProjectApplication() {
     }
 
     try {
-      const res = await getUsers({
+      const res = (await getUsers({
         employee_id: newAdvisor.job_number,
         role: "TEACHER",
         page_size: 1,
-      });
+      })) as ApiResponse<{ results?: UserRow[] }>;
       const users = res.data?.results || [];
       if (users.length > 0) {
         const user = users[0];
         newAdvisor.user_id = user.id;
         newAdvisor.name = user.real_name;
         newAdvisor.title = user.title || "";
-        newAdvisor.contact = user.phone;
-        newAdvisor.email = user.email;
+        newAdvisor.contact = user.phone || "";
+        newAdvisor.email = user.email || "";
 
         ElMessage.success(`已找到教师: ${user.real_name}`);
       } else {
@@ -289,7 +385,7 @@ export function useProjectApplication() {
         newAdvisor.contact = "";
         newAdvisor.email = "";
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Search failed", error);
       ElMessage.error("查询失败");
     }
@@ -338,11 +434,11 @@ export function useProjectApplication() {
     }
 
     try {
-      const res = await getUsers({
+      const res = (await getUsers({
         employee_id: newMember.student_id,
         role: "STUDENT",
         page_size: 1,
-      });
+      })) as ApiResponse<{ results?: UserRow[] }>;
       const users = res.data?.results || [];
       if (users.length > 0) {
         const user = users[0];
@@ -352,7 +448,7 @@ export function useProjectApplication() {
         ElMessage.error("未找到该学号的学生");
         newMember.name = "";
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Search failed", error);
       ElMessage.error("查询失败");
     }
@@ -383,7 +479,8 @@ export function useProjectApplication() {
   const removeAdvisor = (i: number) => formData.advisors.splice(i, 1);
   const removeMember = (i: number) => formData.members.splice(i, 1);
 
-  const handleFileChange = (file: any) => {
+  const handleFileChange = (file: UploadFile) => {
+    if (!file.raw) return;
     const isPDF = file.raw.type === "application/pdf";
     const isLt2M = file.raw.size / 1024 / 1024 < 2;
 
@@ -457,15 +554,15 @@ export function useProjectApplication() {
       const payload = new FormData();
 
       // 1. Basic Fields Mapping
-      const basicFields = { ...formData };
+      const basicFields: FormDataState = { ...formData };
 
       // Handle Logic before appending
-      const validLevels = levelOptions.value.map((opt: any) => opt.value);
+      const validLevels = levelOptions.value.map((opt) => opt.value);
       if (!validLevels.includes(basicFields.level)) {
         basicFields.level = getDefaultLevel();
       }
 
-      const validCategories = categoryOptions.value.map((opt: any) => opt.value);
+      const validCategories = categoryOptions.value.map((opt) => opt.value);
       if (!validCategories.includes(basicFields.category)) {
         basicFields.category = getDefaultCategory();
       }
@@ -488,7 +585,7 @@ export function useProjectApplication() {
       payload.append("is_draft", String(isDraft));
 
       // Append fields loop
-      Object.keys(basicFields).forEach((key) => {
+      (Object.keys(basicFields) as (keyof FormDataState)[]).forEach((key) => {
         if (key === "attachment_file") {
           if (basicFields.attachment_file) {
             payload.append("proposal_file", basicFields.attachment_file);
@@ -500,18 +597,23 @@ export function useProjectApplication() {
         } else if (key === "id") {
           // Skip ID in body
         } else {
-          const val = (basicFields as any)[key];
+          const val = basicFields[key];
           if (val !== null && val !== undefined) {
             payload.append(key, String(val));
           }
         }
       });
 
-      let response: any;
+      let response: ApiResponse<{ id?: number }>;
       if (formData.id) {
-        response = await updateProjectApplication(formData.id, payload);
+        response = (await updateProjectApplication(
+          formData.id,
+          payload
+        )) as ApiResponse<{ id?: number }>;
       } else {
-        response = await createProjectApplication(payload);
+        response = (await createProjectApplication(
+          payload
+        )) as ApiResponse<{ id?: number }>;
       }
 
       if (response.code === 200 || response.status === 201) {
@@ -537,9 +639,9 @@ export function useProjectApplication() {
         }
         ElMessage.error(errorMsg);
       }
-    } catch (e: any) {
-      ElMessage.error(e.message || "请求失败");
-      console.error(e);
+    } catch (error: unknown) {
+      ElMessage.error(getErrorMessage(error, "请求失败"));
+      console.error(error);
     } finally {
       loading.value = false;
     }
@@ -552,14 +654,14 @@ export function useProjectApplication() {
   const loadData = async (id: number) => {
     loading.value = true;
     try {
-      const res: any = await getProjectDetail(id);
-      const projectData = res.data || res;
+      const res = (await getProjectDetail(id)) as ApiResponse<ProjectDetail>;
+      const projectData = res.data || (res as ProjectDetail);
 
       if (projectData && (projectData.id || res.code === 200)) {
-        const data = projectData.id ? projectData : projectData.data;
+        const data = projectData.id ? projectData : (projectData as ProjectDetail);
         if (!data) throw new Error("No data found");
 
-        formData.id = data.id;
+        formData.id = typeof data.id === "number" ? data.id : null;
         formData.title = data.title || "";
         formData.source = data.source || "";
         formData.level = data.level || getDefaultLevel();
@@ -586,7 +688,7 @@ export function useProjectApplication() {
           : [];
 
         if (Array.isArray(data.advisors_info) && data.advisors_info.length > 0) {
-          formData.advisors = data.advisors_info.map((adh: any, index: number) => ({
+          formData.advisors = data.advisors_info.map((adh, index) => ({
             job_number: adh.job_number || "",
             name: adh.name || "",
             title: adh.title || "",
@@ -597,9 +699,11 @@ export function useProjectApplication() {
         }
 
         if (Array.isArray(data.members_info) && data.members_info.length > 0) {
-          const otherMembers = data.members_info.filter((m: any) => m.role === "MEMBER");
+          const otherMembers = data.members_info.filter(
+            (m) => m.role === "MEMBER"
+          );
           if (otherMembers.length > 0) {
-            formData.members = otherMembers.map((m: any) => ({
+            formData.members = otherMembers.map((m) => ({
               student_id: m.student_id || "",
               name: m.user_name || m.name || "",
             }));
@@ -607,8 +711,8 @@ export function useProjectApplication() {
         }
         ElMessage.success("数据加载成功");
       }
-    } catch (e: any) {
-      ElMessage.error("加载详情失败");
+    } catch (error: unknown) {
+      ElMessage.error(getErrorMessage(error, "加载详情失败"));
     } finally {
       loading.value = false;
     }

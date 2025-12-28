@@ -5,6 +5,7 @@ import {
   type FormInstance,
   type FormRules,
   type UploadFile,
+  type UploadUserFile,
 } from "element-plus";
 import request from "@/utils/request";
 import {
@@ -29,9 +30,22 @@ interface DictionaryItem {
   description?: string;
   sort_order: number;
   is_active: boolean;
-  extra_data?: any;
+  extra_data?: Record<string, unknown>;
   template_file?: string | null;
 }
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const resolveList = <T,>(response: unknown): T[] => {
+  if (!isRecord(response)) return [];
+  if (Array.isArray(response.results)) return response.results as T[];
+  if (isRecord(response.data) && Array.isArray(response.data.results)) {
+    return response.data.results as T[];
+  }
+  if (Array.isArray(response.data)) return response.data as T[];
+  return [];
+};
 
 const CATEGORY_GROUPS: Record<string, string[]> = {
   project: [
@@ -70,7 +84,7 @@ export function useSystemDictionaries(options: { category?: string } = {}) {
   const formRef = ref<FormInstance>();
 
   const selectedFile = ref<File | null>(null);
-  const fileList = ref<any[]>([]);
+  const fileList = ref<UploadUserFile[]>([]);
 
   const CODE_BASED_TYPES = ["major_category", "key_field_code", "project_level"];
 
@@ -107,18 +121,12 @@ export function useSystemDictionaries(options: { category?: string } = {}) {
   const fetchTypes = async () => {
     try {
       const response = await request.get("/dictionaries/types/");
-      const list =
-        (response as any)?.data?.results ??
-        (response as any)?.results ??
-        (response as any)?.data ??
-        response;
-
-      const allTypes = Array.isArray(list) ? list : [];
+      const allTypes = resolveList<DictionaryType>(response);
       const category = options.category || "";
 
       if (category && CATEGORY_GROUPS[category]) {
         const allowedCodes = CATEGORY_GROUPS[category];
-        dictionaryTypes.value = allTypes.filter((t: any) =>
+        dictionaryTypes.value = allTypes.filter((t: DictionaryType) =>
           allowedCodes.includes(t.code)
         );
       } else {
@@ -140,12 +148,7 @@ export function useSystemDictionaries(options: { category?: string } = {}) {
       const response = await request.get("/dictionaries/items/", {
         params: { dict_type_code: typeCode },
       });
-      const list =
-        (response as any)?.data?.results ??
-        (response as any)?.results ??
-        (response as any)?.data ??
-        response;
-      items.value = Array.isArray(list) ? list : [];
+      items.value = resolveList<DictionaryItem>(response);
     } catch (error) {
       console.error("Failed to fetch items:", error);
       ElMessage.error("获取参数数据失败");
@@ -184,7 +187,7 @@ export function useSystemDictionaries(options: { category?: string } = {}) {
     form.sort_order = item.sort_order;
 
     if (item.extra_data && typeof item.extra_data === "object") {
-      form.budget = (item.extra_data as any).budget || 0;
+      form.budget = Number(item.extra_data?.budget || 0);
     } else {
       form.budget = 0;
     }
@@ -221,12 +224,12 @@ export function useSystemDictionaries(options: { category?: string } = {}) {
       try {
         const finalValue = showCode.value ? form.value : form.label;
 
-        const extraData: any = {};
+        const extraData: Record<string, unknown> = {};
         if (showBudget.value) {
           extraData.budget = Number(form.budget) || 0;
         }
 
-        let payload: any;
+        let payload: FormData | Record<string, unknown>;
         if (selectedFile.value) {
           payload = new FormData();
           payload.append("label", form.label);
@@ -281,7 +284,7 @@ export function useSystemDictionaries(options: { category?: string } = {}) {
   const deleteItem = async (item: DictionaryItem) => {
     try {
       await ElMessageBox.confirm(
-        `确认要删除 \"${item.label}\" 吗？此操作不可恢复。`,
+        `确认要删除 "${item.label}" 吗？此操作不可恢复。`,
         "警告",
         {
           confirmButtonText: "确定删除",
@@ -341,4 +344,3 @@ export function useSystemDictionaries(options: { category?: string } = {}) {
     deleteItem,
   };
 }
-

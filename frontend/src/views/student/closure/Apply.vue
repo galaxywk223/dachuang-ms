@@ -306,6 +306,10 @@ import { Plus, UploadFilled } from "@element-plus/icons-vue";
 
 import { useClosureApply } from "./hooks/useClosureApply";
 
+defineOptions({
+  name: "StudentClosureApplyView",
+});
+
 const {
   achievementFileList,
   achievementForm,

@@ -158,9 +158,52 @@ import {
   reorderReviewTemplateItems,
 } from "@/api/system-settings";
 
-const templates = ref<any[]>([]);
-const currentTemplate = ref<any | null>(null);
-const items = ref<any[]>([]);
+defineOptions({ name: "Level1ReviewTemplatesView" });
+
+type ReviewTemplate = {
+  id: number;
+  name: string;
+  review_type: string;
+  review_level: string;
+  scope: string;
+  notice?: string;
+};
+
+type ReviewTemplateItem = {
+  id: number;
+  template: number | null;
+  title: string;
+  weight: number;
+  max_score: number;
+  is_required: boolean;
+  description?: string;
+  sort_order?: number;
+};
+
+type TemplateListResponse = {
+  data?: ReviewTemplate[] | { data?: ReviewTemplate[] };
+};
+
+type ItemListResponse = {
+  data?: ReviewTemplateItem[] | { data?: ReviewTemplateItem[] };
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (!isRecord(error)) return fallback;
+  const response = error.response;
+  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === "string") {
+    return response.data.message;
+  }
+  if (typeof error.message === "string") return error.message;
+  return fallback;
+};
+
+const templates = ref<ReviewTemplate[]>([]);
+const currentTemplate = ref<ReviewTemplate | null>(null);
+const items = ref<ReviewTemplateItem[]>([]);
 const saving = ref(false);
 const dragIndex = ref<number | null>(null);
 
@@ -187,16 +230,26 @@ const itemForm = ref({
 });
 
 const loadTemplates = async () => {
-  const res: any = await getReviewTemplates();
-  templates.value = res.data || res;
+  const res = (await getReviewTemplates()) as TemplateListResponse | ReviewTemplate[];
+  const payload = isRecord(res) && "data" in res ? res.data : res;
+  if (isRecord(payload) && Array.isArray(payload.data)) {
+    templates.value = payload.data as ReviewTemplate[];
+  } else {
+    templates.value = Array.isArray(payload) ? (payload as ReviewTemplate[]) : [];
+  }
 };
 
 const loadItems = async (templateId: number) => {
-  const res: any = await getReviewTemplateItems({ template: templateId });
-  items.value = res.data || res;
+  const res = (await getReviewTemplateItems({ template: templateId })) as ItemListResponse | ReviewTemplateItem[];
+  const payload = isRecord(res) && "data" in res ? res.data : res;
+  if (isRecord(payload) && Array.isArray(payload.data)) {
+    items.value = payload.data as ReviewTemplateItem[];
+  } else {
+    items.value = Array.isArray(payload) ? (payload as ReviewTemplateItem[]) : [];
+  }
 };
 
-const selectTemplate = async (item: any) => {
+const selectTemplate = async (item: ReviewTemplate) => {
   currentTemplate.value = item;
   await loadItems(item.id);
 };
@@ -225,7 +278,7 @@ const saveTemplate = async () => {
     templateDialogVisible.value = false;
     await loadTemplates();
   } catch (error) {
-    ElMessage.error("保存失败");
+    ElMessage.error(getErrorMessage(error, "保存失败"));
   } finally {
     saving.value = false;
   }
@@ -245,8 +298,8 @@ const openItemDialog = () => {
   itemDialogVisible.value = true;
 };
 
-const editItem = (item: any) => {
-  itemForm.value = { ...item };
+const editItem = (item: ReviewTemplateItem) => {
+  itemForm.value = { ...item, description: item.description ?? "" };
   itemDialogVisible.value = true;
 };
 
@@ -264,13 +317,13 @@ const saveItem = async () => {
     itemDialogVisible.value = false;
     await loadItems(currentTemplate.value.id);
   } catch (error) {
-    ElMessage.error("保存失败");
+    ElMessage.error(getErrorMessage(error, "保存失败"));
   } finally {
     saving.value = false;
   }
 };
 
-const removeItem = async (item: any) => {
+const removeItem = async (item: ReviewTemplateItem) => {
   await ElMessageBox.confirm("确认删除评分项？", "提示", { type: "warning" });
   await deleteReviewTemplateItem(item.id);
   ElMessage.success("已删除");
@@ -285,6 +338,7 @@ const handleDragStart = (index: number) => {
 
 const handleDrop = async (index: number) => {
   if (dragIndex.value === null || dragIndex.value === index) return;
+  if (!currentTemplate.value) return;
   const moving = items.value.splice(dragIndex.value, 1)[0];
   items.value.splice(index, 0, moving);
   dragIndex.value = null;

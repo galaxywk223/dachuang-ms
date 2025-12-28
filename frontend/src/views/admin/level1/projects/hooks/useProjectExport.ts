@@ -7,6 +7,10 @@ import {
   exportProjects,
 } from "@/api/projects/admin";
 
+type ProjectRow = {
+  id: number;
+};
+
 export function useProjectExport(
   filters: {
     search: string;
@@ -14,7 +18,7 @@ export function useProjectExport(
     category: string;
     status: string;
   },
-  selectedRows: { value: any[] }
+  selectedRows: { value: ProjectRow[] }
 ) {
   const ensureSelection = () => {
     if (selectedRows.value.length === 0) {
@@ -22,6 +26,16 @@ export function useProjectExport(
       return false;
     }
     return true;
+  };
+
+  const toBlob = (value: unknown, type: string) => {
+    if (value instanceof Blob) return value;
+    if (typeof value === "string") return new Blob([value], { type });
+    if (value instanceof ArrayBuffer) return new Blob([value], { type });
+    if (ArrayBuffer.isView(value)) {
+      return new Blob([value.buffer as ArrayBuffer], { type });
+    }
+    return new Blob([JSON.stringify(value ?? "")], { type });
   };
 
   const downloadFile = (blob: Blob, filename: string) => {
@@ -37,7 +51,7 @@ export function useProjectExport(
   const handleBatchExport = async () => {
     try {
       ElMessage.info("正在生成导出文件，请稍候...");
-      const params: any = {};
+      const params: Record<string, string> = {};
 
       if (selectedRows.value.length > 0) {
         params.ids = selectedRows.value.map((row) => row.id).join(",");
@@ -48,8 +62,8 @@ export function useProjectExport(
         params.status = filters.status;
       }
 
-      const res: any = await exportProjects(params);
-      downloadFile(res, "项目数据.xlsx");
+      const res = await exportProjects(params);
+      downloadFile(toBlob(res, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"), "项目数据.xlsx");
       ElMessage.success("导出成功");
     } catch {
       ElMessage.error("导出失败");
@@ -59,7 +73,7 @@ export function useProjectExport(
   const handleBatchDownload = async () => {
     try {
       ElMessage.info("正在打包附件，请稍候...");
-      const params: any = {};
+      const params: Record<string, string> = {};
 
       if (selectedRows.value.length > 0) {
         params.ids = selectedRows.value.map((row) => row.id).join(",");
@@ -70,14 +84,14 @@ export function useProjectExport(
         params.status = filters.status;
       }
 
-      const res: any = await batchDownloadAttachments(params);
-      if (res.type === "application/json") {
+      const res = await batchDownloadAttachments(params);
+      if (res instanceof Blob && res.type === "application/json") {
         const text = await res.text();
         const json = JSON.parse(text);
         ElMessage.error(json.message || "下载失败");
         return;
       }
-      downloadFile(res, "项目附件.zip");
+      downloadFile(toBlob(res, "application/zip"), "项目附件.zip");
       ElMessage.success("下载成功");
     } catch {
       ElMessage.error("下载失败，可能没有可下载的附件");
@@ -89,8 +103,8 @@ export function useProjectExport(
     try {
       ElMessage.info("正在生成申报书，请稍候...");
       const ids = selectedRows.value.map((row) => row.id).join(",");
-      const res: any = await batchExportDocs({ ids });
-      downloadFile(res, "项目申报书.zip");
+      const res = await batchExportDocs({ ids });
+      downloadFile(toBlob(res, "application/zip"), "项目申报书.zip");
       ElMessage.success("导出成功");
     } catch {
       ElMessage.error("导出失败");
@@ -102,8 +116,8 @@ export function useProjectExport(
     try {
       ElMessage.info("正在生成立项通知书，请稍候...");
       const ids = selectedRows.value.map((row) => row.id).join(",");
-      const res: any = await batchExportNotices({ ids });
-      downloadFile(res, "立项通知书.zip");
+      const res = await batchExportNotices({ ids });
+      downloadFile(toBlob(res, "application/zip"), "立项通知书.zip");
       ElMessage.success("生成成功");
     } catch {
       ElMessage.error("生成失败");
@@ -115,8 +129,8 @@ export function useProjectExport(
     try {
       ElMessage.info("正在生成结题证书，请稍候...");
       const ids = selectedRows.value.map((row) => row.id).join(",");
-      const res: any = await batchExportCertificates({ ids });
-      downloadFile(res, "结题证书.zip");
+      const res = await batchExportCertificates({ ids });
+      downloadFile(toBlob(res, "application/zip"), "结题证书.zip");
       ElMessage.success("生成成功");
     } catch {
       ElMessage.error("生成失败");

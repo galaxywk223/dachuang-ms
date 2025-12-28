@@ -1,32 +1,32 @@
 <template>
   <el-form label-width="200px" class="config-form">
     <el-form-item label="指导教师最大数量">
-      <el-input-number v-model="limitRules.max_advisors" :min="0" :disabled="isProcessLocked" />
+    <el-input-number v-model="localLimitRules.max_advisors" :min="0" :disabled="isProcessLocked" />
     </el-form-item>
     <el-form-item label="项目成员最大数量">
-      <el-input-number v-model="limitRules.max_members" :min="0" :disabled="isProcessLocked" />
+      <el-input-number v-model="localLimitRules.max_members" :min="0" :disabled="isProcessLocked" />
     </el-form-item>
     <el-form-item label="导师在研项目上限">
-      <el-input-number v-model="limitRules.max_teacher_active" :min="0" :disabled="isProcessLocked" />
+      <el-input-number v-model="localLimitRules.max_teacher_active" :min="0" :disabled="isProcessLocked" />
     </el-form-item>
     <el-form-item label="学生作为负责人上限">
-      <el-input-number v-model="limitRules.max_student_active" :min="0" :disabled="isProcessLocked" />
+      <el-input-number v-model="localLimitRules.max_student_active" :min="0" :disabled="isProcessLocked" />
     </el-form-item>
     <el-form-item label="学生作为成员上限">
-      <el-input-number v-model="limitRules.max_student_member" :min="0" :disabled="isProcessLocked" />
+      <el-input-number v-model="localLimitRules.max_student_member" :min="0" :disabled="isProcessLocked" />
     </el-form-item>
     <el-form-item label="优秀结题加成数">
       <el-input-number
-        v-model="limitRules.teacher_excellent_bonus"
+        v-model="localLimitRules.teacher_excellent_bonus"
         :min="0"
         :disabled="isProcessLocked"
       />
     </el-form-item>
     <el-form-item label="项目名称查重">
-      <el-switch v-model="limitRules.dedupe_title" :disabled="isProcessLocked" />
+      <el-switch v-model="localLimitRules.dedupe_title" :disabled="isProcessLocked" />
     </el-form-item>
     <el-form-item label="指导教师职称必填">
-      <el-switch v-model="limitRules.advisor_title_required" :disabled="isProcessLocked" />
+      <el-switch v-model="localLimitRules.advisor_title_required" :disabled="isProcessLocked" />
     </el-form-item>
     <el-form-item label="学院名额配置(JSON)">
       <el-input
@@ -42,27 +42,27 @@
 
     <el-form-item label="项目名称最小长度">
       <el-input-number
-        v-model="validationRules.title_min_length"
+        v-model="localValidationRules.title_min_length"
         :min="0"
         :disabled="isProcessLocked"
       />
     </el-form-item>
     <el-form-item label="项目名称最大长度">
       <el-input-number
-        v-model="validationRules.title_max_length"
+        v-model="localValidationRules.title_max_length"
         :min="0"
         :disabled="isProcessLocked"
       />
     </el-form-item>
     <el-form-item label="项目名称正则">
       <el-input
-        v-model="validationRules.title_regex"
+        v-model="localValidationRules.title_regex"
         placeholder="例如: ^[\\u4e00-\\u9fa5A-Za-z0-9]+$"
         :disabled="isProcessLocked"
       />
     </el-form-item>
     <el-form-item label="学科分类必填">
-      <el-switch v-model="validationRules.discipline_required" :disabled="isProcessLocked" />
+      <el-switch v-model="localValidationRules.discipline_required" :disabled="isProcessLocked" />
     </el-form-item>
     <el-form-item label="允许项目类别(逗号分隔)">
       <el-input
@@ -94,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from "vue";
+import { computed, reactive, watch } from "vue";
 
 const props = defineProps<{
   limitRules: {
@@ -124,6 +124,8 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
+  (event: "update:limitRules", value: typeof props.limitRules): void;
+  (event: "update:validationRules", value: typeof props.validationRules): void;
   (event: "update:collegeQuotaText", value: string): void;
   (event: "update:allowedTypesByCollegeText", value: string): void;
   (event: "update:allowedLevelsByCollegeText", value: string): void;
@@ -144,11 +146,14 @@ const localAllowedLevelsByCollegeText = computed({
   set: (value: string) => emit("update:allowedLevelsByCollegeText", value),
 });
 
+const localLimitRules = reactive({ ...props.limitRules });
+const localValidationRules = reactive({ ...props.validationRules });
+
 const allowedTypesText = computed({
-  get: () => (props.validationRules.allowed_project_types || []).join(","),
+  get: () => (localValidationRules.allowed_project_types || []).join(","),
   set: (value: string) => {
     const list = value_toggle(value);
-    props.validationRules.allowed_project_types = list;
+    localValidationRules.allowed_project_types = list;
   },
 });
 
@@ -161,10 +166,42 @@ const value_toggle = (value: string) => {
 };
 
 watch(
-  () => props.validationRules.allowed_project_types,
+  () => props.validationRules,
+  (val) => {
+    Object.assign(localValidationRules, val);
+  },
+  { deep: true }
+);
+
+watch(
+  () => props.limitRules,
+  (val) => {
+    Object.assign(localLimitRules, val);
+  },
+  { deep: true }
+);
+
+watch(
+  localLimitRules,
+  (val) => {
+    emit("update:limitRules", { ...val });
+  },
+  { deep: true }
+);
+
+watch(
+  localValidationRules,
+  (val) => {
+    emit("update:validationRules", { ...val });
+  },
+  { deep: true }
+);
+
+watch(
+  () => localValidationRules.allowed_project_types,
   (val) => {
     if (!val || !Array.isArray(val)) {
-      props.validationRules.allowed_project_types = [];
+      localValidationRules.allowed_project_types = [];
     }
   }
 );

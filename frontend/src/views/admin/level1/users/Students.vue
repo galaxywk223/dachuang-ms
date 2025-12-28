@@ -261,12 +261,52 @@
 import { ref, reactive, onMounted, computed } from 'vue';
 import { Search, Plus, Upload, UploadFilled } from '@element-plus/icons-vue';
 import { getUsers, toggleUserStatus, createUser, deleteUser } from '@/api/users/admin';
-import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus';
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadFile } from 'element-plus';
 import { useDictionary } from '@/composables/useDictionary';
 import { DICT_CODES } from '@/api/dictionaries';
 
+defineOptions({ name: 'Level1StudentsView' });
+
+type StudentRow = {
+  id: number;
+  employee_id: string;
+  real_name: string;
+  phone?: string;
+  email?: string;
+  college?: string;
+  major?: string;
+  grade?: string;
+  class_name?: string;
+  department?: string;
+  is_active?: boolean;
+};
+
+type UserListResponse = {
+  code?: number;
+  data?: {
+    results?: StudentRow[];
+    count?: number;
+    total?: number;
+  };
+  results?: StudentRow[];
+  count?: number;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (!isRecord(error)) return fallback;
+  const response = error.response;
+  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === 'string') {
+    return response.data.message;
+  }
+  if (typeof error.message === 'string') return error.message;
+  return fallback;
+};
+
 const loading = ref(false);
-const tableData = ref<any[]>([]);
+const tableData = ref<StudentRow[]>([]);
 const total = ref(0);
 const currentPage = ref(1);
 const pageSize = ref(10);
@@ -332,17 +372,20 @@ const loadData = async () => {
     if (filters.search) params.search = filters.search;
     if (filters.college) params.college = filters.college;
 
-    const res = await getUsers(params);
+    const res = (await getUsers(params)) as UserListResponse;
     if (res.code === 200 && res.data) {
-      tableData.value = res.data.results || [];
+      tableData.value = res.data.results ?? [];
       const resultCount = res.data.count ?? res.data.total ?? tableData.value.length;
       total.value = Number.isFinite(resultCount) ? resultCount : 0;
-    } else if (res.results) {
-      tableData.value = res.results;
-      total.value = res.count || res.results.length;
-    } else {
-      tableData.value = Array.isArray(res) ? res : [];
+    } else if (Array.isArray(res.results)) {
+      tableData.value = res.results ?? [];
+      total.value = res.count ?? res.results.length;
+    } else if (Array.isArray(res as unknown)) {
+      tableData.value = res as StudentRow[];
       total.value = tableData.value.length;
+    } else {
+      tableData.value = [];
+      total.value = 0;
     }
   } catch (error) {
     console.error(error);
@@ -373,15 +416,15 @@ const handleCurrentChange = (val: number) => {
     loadData();
 };
 
-const handleView = (row: any) => {
+const handleView = (row: StudentRow) => {
     ElMessage.info('查看详情: ' + row.real_name);
 };
 
-const handleEdit = (row: any) => {
+const handleEdit = (row: StudentRow) => {
     ElMessage.info('编辑: ' + row.real_name);
 };
 
-const handleToggleStatus = async (row: any) => {
+const handleToggleStatus = async (row: StudentRow) => {
    try {
      const action = row.is_active ? '禁用' : '激活';
      await ElMessageBox.confirm(`确定要${action}该用户吗？`, '提示', {
@@ -389,7 +432,7 @@ const handleToggleStatus = async (row: any) => {
      });
      
      const res = await toggleUserStatus(row.id);
-     if (res.code === 200) {
+     if (isRecord(res) && res.code === 200) {
         ElMessage.success(`${action}成功`);
         loadData();
      }
@@ -398,7 +441,7 @@ const handleToggleStatus = async (row: any) => {
    }
 };
 
-const handleDelete = async (row: any) => {
+const handleDelete = async (row: StudentRow) => {
   try {
     await ElMessageBox.confirm(
       `确定要删除用户 "${row.real_name}" 吗？此操作不可恢复。`,
@@ -411,7 +454,7 @@ const handleDelete = async (row: any) => {
     );
 
     const res = await deleteUser(row.id);
-    if (res.code === 200 || res.code === 204) { // 204 No Content is also common for delete
+    if (isRecord(res) && (res.code === 200 || res.code === 204)) { // 204 No Content is also common for delete
       ElMessage.success('删除成功');
       loadData();
     } else {
@@ -422,7 +465,7 @@ const handleDelete = async (row: any) => {
   } catch (error) {
     if (error !== 'cancel') {
       console.error(error);
-      ElMessage.error('删除失败');
+      ElMessage.error(getErrorMessage(error, '删除失败'));
     }
   }
 };
@@ -459,7 +502,7 @@ const handleCreateStudent = async () => {
     const sanitizedId = studentForm.employee_id.replace(/[^a-zA-Z0-9]/g, '');
     const payload = { ...studentForm, employee_id: sanitizedId, role: 'STUDENT' };
     const res = await createUser(payload);
-    if (res.code === 200) {
+    if (isRecord(res) && res.code === 200) {
       ElMessage.success('学生添加成功，默认密码为 123456');
       addDialogVisible.value = false;
       resetStudentForm();
@@ -483,8 +526,8 @@ const handleImportClick = () => {
     importFile.value = null;
 };
 
-const handleFileChange = (file: any) => {
-    importFile.value = file.raw;
+const handleFileChange = (file: UploadFile) => {
+    importFile.value = file.raw ?? null;
 };
 
 const handleImportSubmit = async () => {
@@ -503,14 +546,14 @@ const handleImportSubmit = async () => {
         const { importUsers } = await import('@/api/users/admin');
         const res = await importUsers(formData);
         
-        if (res.code === 200) {
-            ElMessage.success(res.message);
+        if (isRecord(res) && res.code === 200) {
+            ElMessage.success((typeof res.message === "string" && res.message) || "导入成功");
             importDialogVisible.value = false;
             loadData();
         }
-    } catch (error: any) {
+    } catch (error) {
         console.error(error);
-        ElMessage.error(error.response?.data?.message || "导入失败");
+        ElMessage.error(getErrorMessage(error, "导入失败"));
     } finally {
         importLoading.value = false;
     }

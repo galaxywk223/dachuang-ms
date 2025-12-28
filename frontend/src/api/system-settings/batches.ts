@@ -1,6 +1,6 @@
 import request from "@/utils/request";
 
-export function listProjectBatches(params?: Record<string, any>) {
+export function listProjectBatches(params?: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/system-settings/batches/",
     method: "get",
@@ -8,14 +8,14 @@ export function listProjectBatches(params?: Record<string, any>) {
   });
 }
 
-export function getCurrentBatch() {
+export function getCurrentBatch(): Promise<unknown> {
   return request({
     url: "/system-settings/batches/current/",
     method: "get",
   });
 }
 
-export function createProjectBatch(data: any) {
+export function createProjectBatch(data: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/system-settings/batches/",
     method: "post",
@@ -23,7 +23,7 @@ export function createProjectBatch(data: any) {
   });
 }
 
-export function updateProjectBatch(id: number, data: any) {
+export function updateProjectBatch(id: number, data: Record<string, unknown>): Promise<unknown> {
   return request({
     url: `/system-settings/batches/${id}/`,
     method: "patch",
@@ -31,27 +31,27 @@ export function updateProjectBatch(id: number, data: any) {
   });
 }
 
-export function deleteProjectBatch(id: number) {
+export function deleteProjectBatch(id: number): Promise<unknown> {
   return request({
     url: `/system-settings/batches/${id}/`,
     method: "delete",
   });
 }
 
-export function getProjectBatch(id: number) {
+export function getProjectBatch(id: number): Promise<unknown> {
   return request({
     url: `/system-settings/batches/${id}/`,
     method: "get",
   });
 }
 
-export function setCurrentBatch(id: number) {
+export function setCurrentBatch(id: number): Promise<unknown> {
   return request({
     url: `/system-settings/batches/${id}/set-current/`,
     method: "post",
   });
 }
-export function restoreProjectBatch(id: number) {
+export function restoreProjectBatch(id: number): Promise<unknown> {
   return request({
     url: `/system-settings/batches/${id}/restore/`,
     method: "post",

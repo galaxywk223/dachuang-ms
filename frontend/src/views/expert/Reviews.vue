@@ -178,23 +178,127 @@ import dayjs from "dayjs";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionaries";
 
+defineOptions({
+  name: "ExpertReviewsView",
+});
+
+type ScoreItem = {
+  item_id: number;
+  title: string;
+  weight: number;
+  max_score: number;
+  is_required: boolean;
+  score: number | null;
+};
+
+type TemplateItem = {
+  id: number;
+  title: string;
+  weight: number;
+  max_score: number;
+  is_required: boolean;
+};
+
+type TemplateInfo = {
+  notice?: string;
+  items?: TemplateItem[];
+};
+
+type ScoreDetail = {
+  item_id: number;
+  title?: string;
+  score: number;
+  weight?: number;
+  weighted_score?: number;
+};
+
+type ReviewRow = {
+  id: number;
+  review_type?: string;
+  status?: string;
+  status_display?: string;
+  review_type_display?: string;
+  review_level_display?: string;
+  created_at?: string;
+  project_info?: { project_no?: string; title?: string };
+  template_info?: TemplateInfo;
+  score?: number | null;
+  comments?: string;
+  score_details?: ScoreDetail[];
+  project_no?: string;
+  project_title?: string;
+  closure_rating?: string;
+};
+
+type ReviewForm = {
+  score: number | null;
+  comments: string;
+  action: "approve" | "reject";
+};
+
+type ReviewPayload = {
+  comments: string;
+  action: "approve" | "reject";
+  score?: number | null;
+  score_details?: { item_id: number; score: number | null }[];
+};
+
+type BatchPayload = {
+  review_ids: number[];
+  action: "approve" | "reject";
+  comments: string;
+  score?: number;
+  closure_rating?: string;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const resolveList = <T,>(payload: unknown): T[] => {
+  if (Array.isArray(payload)) return payload as T[];
+  if (isRecord(payload) && Array.isArray(payload.results)) {
+    return payload.results as T[];
+  }
+  if (
+    isRecord(payload) &&
+    isRecord(payload.data) &&
+    Array.isArray(payload.data.results)
+  ) {
+    return payload.data.results as T[];
+  }
+  if (isRecord(payload) && Array.isArray(payload.data)) {
+    return payload.data as T[];
+  }
+  return [];
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+  if (typeof error === "string") {
+    return error || fallback;
+  }
+  return fallback;
+};
+
 const loading = ref(false);
 const submitting = ref(false);
 const batchSubmitting = ref(false);
-const reviews = ref<any[]>([]);
+const reviews = ref<ReviewRow[]>([]);
 const activeTab = ref("pending");
-const selectedRows = ref<any[]>([]);
+const selectedRows = ref<ReviewRow[]>([]);
 
 const dialogVisible = ref(false);
 const dialogMode = ref<"review" | "view" | "edit">("review");
-const currentReview = ref<any>(null);
+const currentReview = ref<ReviewRow | null>(null);
 const formRef = ref<FormInstance>();
-const form = reactive({
-    score: null as number | null,
-    comments: "",
-    action: "approve"
+const form = reactive<ReviewForm>({
+  score: null,
+  comments: "",
+  action: "approve",
 });
-const scoreItems = ref<any[]>([]);
+const scoreItems = ref<ScoreItem[]>([]);
 
 const isMidTerm = computed(() => currentReview.value?.review_type === "MID_TERM");
 const needsScore = computed(() => currentReview.value?.review_type !== "MID_TERM");
@@ -203,7 +307,7 @@ const hasTemplate = computed(() => !!currentReview.value?.template_info?.items?.
 const rules = reactive<FormRules>({
     score: [
       {
-        validator: (_rule: any, value: any, callback: any) => {
+        validator: (_rule, value, callback) => {
           if (!needsScore.value || hasTemplate.value) return callback();
           if (value === null || value === undefined || value === "") {
             return callback(new Error("请输入分数"));
@@ -216,7 +320,7 @@ const rules = reactive<FormRules>({
     comments: [{ required: true, message: "请输入评审意见", trigger: "blur" }],
     action: [
       {
-        validator: (_rule: any, value: any, callback: any) => {
+        validator: (_rule, value, callback) => {
           if (!isMidTerm.value) return callback();
           if (!value) return callback(new Error("请选择结果"));
           return callback();
@@ -239,9 +343,16 @@ const dialogTitle = computed(() => {
 
 const batchDialogVisible = ref(false);
 const batchFormRef = ref<FormInstance>();
-const batchForm = reactive({
+type BatchFormState = {
+  action: "approve" | "reject";
+  score: number | null;
+  comments: string;
+  closure_rating: string;
+};
+
+const batchForm = reactive<BatchFormState>({
   action: "approve",
-  score: null as number | null,
+  score: null,
   comments: "",
   closure_rating: "",
 });
@@ -261,24 +372,24 @@ const fetchReviews = async () => {
     loading.value = true;
     const currentToken = ++fetchToken.value;
     try {
-        const params: any = {};
-        if (activeTab.value === 'pending') {
-            params.status = 'PENDING';
+        const params: Record<string, string> = {};
+        if (activeTab.value === "pending") {
+            params.status = "PENDING";
         } else {
-             params.status_in = 'APPROVED,REJECTED';
+             params.status_in = "APPROVED,REJECTED";
         }
         
-        const res: any = await request.get('/reviews/', { params });
+        const res = await request.get("/reviews/", { params });
         if (currentToken !== fetchToken.value) return;
-        const payload = res.data || res;
-        const records = Array.isArray(payload) ? payload : (payload.results || payload.data?.results || payload.data || []);
-        reviews.value = (records || []).map((r: any) => ({
+        const payload = isRecord(res) && isRecord(res.data) ? res.data : res;
+        const records = resolveList<ReviewRow>(payload);
+        reviews.value = (records || []).map((r) => ({
             ...r,
             project_no: r.project_info?.project_no,
             project_title: r.project_info?.title,
         }));
         selectedRows.value = [];
-    } catch (error) {
+    } catch (error: unknown) {
         console.error(error);
         ElMessage.error("获取评审任务失败");
     } finally {
@@ -288,14 +399,14 @@ const fetchReviews = async () => {
     }
 };
 
-const handleReview = (review: any) => {
+const handleReview = (review: ReviewRow) => {
     dialogMode.value = "review";
     currentReview.value = review;
     form.score = null;
     form.comments = "";
     form.action = "approve";
     if (review.template_info?.items?.length) {
-        scoreItems.value = review.template_info.items.map((item: any) => ({
+        scoreItems.value = review.template_info.items.map((item) => ({
             item_id: item.id,
             title: item.title,
             weight: item.weight,
@@ -309,13 +420,13 @@ const handleReview = (review: any) => {
     dialogVisible.value = true;
 };
 
-const handleView = (review: any) => {
+const handleView = (review: ReviewRow) => {
     dialogMode.value = "view";
     currentReview.value = review;
     dialogVisible.value = true;
 };
 
-const handleEdit = (review: any) => {
+const handleEdit = (review: ReviewRow) => {
     dialogMode.value = "edit";
     currentReview.value = review;
     form.score = review.score ?? null;
@@ -323,9 +434,9 @@ const handleEdit = (review: any) => {
     form.action = review.status === "REJECTED" ? "reject" : "approve";
     if (review.template_info?.items?.length) {
         const detailMap = new Map(
-            (review.score_details || []).map((d: any) => [d.item_id, d.score])
+            (review.score_details || []).map((d) => [d.item_id, d.score])
         );
-        scoreItems.value = review.template_info.items.map((item: any) => ({
+        scoreItems.value = review.template_info.items.map((item) => ({
             item_id: item.id,
             title: item.title,
             weight: item.weight,
@@ -347,21 +458,23 @@ const handleClose = () => {
 
 const handleSubmit = async () => {
     if (!formRef.value) return;
+    const review = currentReview.value;
+    if (!review) return;
     await formRef.value.validate(async (valid) => {
         if (valid) {
             submitting.value = true;
             try {
                 const endpoint =
                   dialogMode.value === "edit"
-                    ? `/reviews/${currentReview.value.id}/revise/`
-                    : `/reviews/${currentReview.value.id}/review/`;
-                const payload: any = {
+                    ? `/reviews/${review.id}/revise/`
+                    : `/reviews/${review.id}/review/`;
+                const payload: ReviewPayload = {
                   comments: form.comments,
+                  action: "approve",
                 };
-                if (currentReview.value?.review_type === "MID_TERM") {
+                if (review.review_type === "MID_TERM") {
                   payload.action = form.action;
                 } else {
-                  payload.action = "approve";
                   if (!hasTemplate.value) {
                     payload.score = form.score;
                   }
@@ -369,7 +482,7 @@ const handleSubmit = async () => {
                 if (hasTemplate.value) {
                   const missing = scoreItems.value.find(
                     (item) =>
-                      item.is_required && (item.score === null || item.score === undefined || item.score === "")
+                      item.is_required && (item.score === null || item.score === undefined)
                   );
                   if (missing) {
                     ElMessage.warning(`评分项“${missing.title}”为必填`);
@@ -388,9 +501,9 @@ const handleSubmit = async () => {
                   activeTab.value = "reviewed";
                 }
                 fetchReviews();
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error(error);
-                ElMessage.error(error.response?.data?.message || "提交失败");
+                ElMessage.error(getErrorMessage(error, "提交失败"));
             } finally {
                 submitting.value = false;
             }
@@ -398,7 +511,7 @@ const handleSubmit = async () => {
     });
 };
 
-const handleSelectionChange = (rows: any[]) => {
+const handleSelectionChange = (rows: ReviewRow[]) => {
   selectedRows.value = rows;
 };
 
@@ -427,7 +540,7 @@ const submitBatchReview = async () => {
   if (selectedRows.value.length === 0) return;
   batchSubmitting.value = true;
   try {
-    const payload: any = {
+    const payload: BatchPayload = {
       review_ids: selectedRows.value.map((row) => row.id),
       action: isBatchMidTerm.value ? batchForm.action : "approve",
       comments: batchForm.comments,
@@ -443,8 +556,8 @@ const submitBatchReview = async () => {
     batchDialogVisible.value = false;
     selectedRows.value = [];
     fetchReviews();
-  } catch (error: any) {
-    ElMessage.error(error.response?.data?.message || "批量评审失败");
+  } catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, "批量评审失败"));
   } finally {
     batchSubmitting.value = false;
   }

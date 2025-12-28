@@ -1,6 +1,6 @@
 import request from "@/utils/request";
 
-export function getChangeRequests(params?: any) {
+export function getChangeRequests(params?: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/projects/change-requests/",
     method: "get",
@@ -8,7 +8,7 @@ export function getChangeRequests(params?: any) {
   });
 }
 
-export function createChangeRequest(data: any) {
+export function createChangeRequest(data: Record<string, unknown> | FormData): Promise<unknown> {
   return request({
     url: "/projects/change-requests/",
     method: "post",
@@ -19,7 +19,7 @@ export function createChangeRequest(data: any) {
   });
 }
 
-export function updateChangeRequest(id: number, data: any) {
+export function updateChangeRequest(id: number, data: Record<string, unknown> | FormData): Promise<unknown> {
   return request({
     url: `/projects/change-requests/${id}/`,
     method: "patch",
@@ -30,14 +30,14 @@ export function updateChangeRequest(id: number, data: any) {
   });
 }
 
-export function submitChangeRequest(id: number) {
+export function submitChangeRequest(id: number): Promise<unknown> {
   return request({
     url: `/projects/change-requests/${id}/submit/`,
     method: "post",
   });
 }
 
-export function reviewChangeRequest(id: number, data: any) {
+export function reviewChangeRequest(id: number, data: Record<string, unknown>): Promise<unknown> {
   return request({
     url: `/projects/change-requests/${id}/review/`,
     method: "post",

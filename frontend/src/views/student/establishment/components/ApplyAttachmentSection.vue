@@ -40,13 +40,13 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { Download, Upload } from "@element-plus/icons-vue";
-import type { UploadUserFile } from "element-plus";
+import type { UploadFile, UploadUserFile } from "element-plus";
 
 const props = defineProps<{
   fileList: UploadUserFile[];
   currentTemplateUrl: string | null;
   handleDownloadTemplate: () => void;
-  handleFileChange: (file: any) => void;
+  handleFileChange: (file: UploadFile) => void;
   handleFileRemove: () => void;
 }>();
 

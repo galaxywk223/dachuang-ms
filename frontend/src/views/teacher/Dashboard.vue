@@ -113,9 +113,78 @@ import dayjs from "dayjs";
 import { useUserStore } from "@/stores/user";
 import StatsSection from "@/components/dashboard/StatsSection.vue";
 
+defineOptions({
+  name: "TeacherDashboardView",
+});
+
+type ProjectInfo = {
+  project_no?: string;
+  title?: string;
+  leader_name?: string;
+  level_display?: string;
+  status?: string;
+  status_display?: string;
+  proposal_file_url?: string;
+  mid_term_report_url?: string;
+  final_report_url?: string;
+};
+
+type ReviewRecord = {
+  id: number;
+  review_type?: string;
+  review_type_display?: string;
+  created_at?: string;
+  project_info?: ProjectInfo;
+};
+
+type TeacherProjectRow = ProjectInfo & {
+  review_id?: number;
+  review_type?: string;
+  review_type_display?: string;
+  file_url?: string;
+  file_label?: string;
+  created_at?: string;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const resolveList = <T,>(payload: unknown): T[] => {
+  if (Array.isArray(payload)) return payload as T[];
+  if (isRecord(payload) && Array.isArray(payload.results)) {
+    return payload.results as T[];
+  }
+  if (isRecord(payload) && isRecord(payload.data) && Array.isArray(payload.data.results)) {
+    return payload.data.results as T[];
+  }
+  if (isRecord(payload) && Array.isArray(payload.data)) {
+    return payload.data as T[];
+  }
+  return [];
+};
+
+const getCount = (payload: unknown): number => {
+  if (!isRecord(payload)) return 0;
+  if (typeof payload.count === "number") return payload.count;
+  if (isRecord(payload.data) && typeof payload.data.count === "number") {
+    return payload.data.count;
+  }
+  return 0;
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+  if (typeof error === "string") {
+    return error || fallback;
+  }
+  return fallback;
+};
+
 const loading = ref(false);
 const submitting = ref(false);
-const projects = ref<any[]>([]);
+const projects = ref<TeacherProjectRow[]>([]);
 const activeTab = ref("pending");
 
 const userStore = useUserStore();
@@ -145,7 +214,7 @@ const inProgressStatuses = new Set([
 ]);
 
 const dialogVisible = ref(false);
-const currentProject = ref<any>(null);
+const currentProject = ref<TeacherProjectRow | null>(null);
 const currentReviewId = ref<number | null>(null);
 const formRef = ref<FormInstance>();
 const form = reactive({
@@ -158,27 +227,23 @@ const rules = reactive<FormRules>({
     comments: [{ required: true, message: "请输入审核意见", trigger: "blur" }],
 });
 
-const parseListResponse = (payload: any) => {
-    const data = payload?.data ?? payload;
-    const results =
-        data?.results ||
-        data?.data?.results ||
-        data?.data ||
-        (Array.isArray(data) ? data : []);
-    const count = data?.count ?? data?.data?.count ?? results.length;
+const parseListResponse = <T,>(payload: unknown) => {
+    const data = isRecord(payload) && isRecord(payload.data) ? payload.data : payload;
+    const results = resolveList<T>(data);
+    const count = getCount(data) || results.length;
     return { results, count };
 };
 
 const fetchPendingReviews = async () => {
-    const res: any = await request.get("/reviews/", {
+    const res = await request.get("/reviews/", {
         params: { status: "PENDING", review_level: "TEACHER" },
     });
-    return parseListResponse(res);
+    return parseListResponse<ReviewRecord>(res);
 };
 
 const fetchMyProjects = async () => {
-    const res: any = await request.get("/projects/");
-    return parseListResponse(res);
+    const res = await request.get("/projects/");
+    return parseListResponse<ProjectInfo>(res);
 };
 
 const refreshStats = async () => {
@@ -191,7 +256,7 @@ const refreshStats = async () => {
         statistics.pending = pendingRes.count;
         statistics.myProjects = projectsRes.count;
         statistics.inProgress = (projectsRes.results || []).filter(
-            (item: any) => inProgressStatuses.has(item.status)
+            (item) => inProgressStatuses.has(item.status || "")
         ).length;
         statistics.unreadNotifications =
           unreadRes?.data?.data?.count ?? unreadRes?.data?.count ?? 0;
@@ -205,7 +270,7 @@ const fetchProjects = async () => {
     try {
         if (activeTab.value === "pending") {
             const { results, count } = await fetchPendingReviews();
-            const rows = (results || []).map((r: any) => {
+            const rows = (results || []).map((r) => {
                 const fileUrl =
                     r.review_type === "MID_TERM"
                         ? r.project_info?.mid_term_report_url
@@ -226,7 +291,7 @@ const fetchProjects = async () => {
                     file_url: fileUrl,
                     file_label: fileLabel,
                     created_at: r.created_at,
-                };
+                } as TeacherProjectRow;
             });
             projects.value = rows;
             statistics.pending = count;
@@ -235,7 +300,7 @@ const fetchProjects = async () => {
             projects.value = results || [];
             statistics.myProjects = count;
             statistics.inProgress = (results || []).filter(
-                (item: any) => inProgressStatuses.has(item.status)
+                (item) => inProgressStatuses.has(item.status || "")
             ).length;
         }
     } catch (error) {
@@ -246,7 +311,7 @@ const fetchProjects = async () => {
     }
 };
 
-const handleReview = (project: any) => {
+const handleReview = (project: TeacherProjectRow) => {
     currentProject.value = project;
     // We need the Review ID. 
     // If we loaded from /reviews/, we have it.
@@ -260,7 +325,8 @@ const handleReview = (project: any) => {
     }
 };
 
-const handleView = (_project: any) => {
+const handleView = (row: TeacherProjectRow) => {
+    void row;
     // Navigate to detail?
 };
 
@@ -281,9 +347,9 @@ const handleSubmit = async () => {
                 activeTab.value = "my_projects";
                 fetchProjects();
                 refreshStats();
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error(error);
-                ElMessage.error(error.response?.data?.message || "提交失败");
+                ElMessage.error(getErrorMessage(error, "提交失败"));
             } finally {
                 submitting.value = false;
             }

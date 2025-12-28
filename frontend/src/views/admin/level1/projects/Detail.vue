@@ -361,6 +361,8 @@
 <script setup lang="ts">
 import { useProjectDetail } from "./hooks/useProjectDetail";
 
+defineOptions({ name: "Level1ProjectDetailView" });
+
 const {
   router,
   pageLoading,

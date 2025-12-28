@@ -52,7 +52,11 @@
 </template>
 
 <script setup lang="ts">
-import { Message, Location } from '@element-plus/icons-vue'
+import { Message, Location } from "@element-plus/icons-vue";
+
+defineOptions({
+  name: "HelpView",
+});
 </script>
 
 <style scoped lang="scss">

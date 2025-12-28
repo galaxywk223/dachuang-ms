@@ -312,6 +312,10 @@ import { UploadFilled } from "@element-plus/icons-vue";
 
 import { useAchievementsPage } from "./hooks/useAchievementsPage";
 
+defineOptions({
+  name: "StudentAchievementsView",
+});
+
 const {
   achievements,
   activeProject,

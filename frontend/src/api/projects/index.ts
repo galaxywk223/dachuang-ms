@@ -5,7 +5,7 @@ import request from "@/utils/request";
 /**
  * 创建项目申请
  */
-export function createProjectApplication(data: any) {
+export function createProjectApplication(data: Record<string, unknown> | FormData): Promise<unknown> {
   return request({
     url: "/projects/application/create/",
     method: "post",
@@ -16,7 +16,7 @@ export function createProjectApplication(data: any) {
 /**
  * 获取项目列表
  */
-export function getProjects(params?: any) {
+export function getProjects(params?: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/projects/",
     method: "get",
@@ -27,7 +27,7 @@ export function getProjects(params?: any) {
 /**
  * 更新项目申请
  */
-export function updateProjectApplication(id: number, data: any) {
+export function updateProjectApplication(id: number, data: Record<string, unknown> | FormData): Promise<unknown> {
   return request({
     url: `/projects/application/${id}/update/`,
     method: "put",
@@ -38,7 +38,7 @@ export function updateProjectApplication(id: number, data: any) {
 /**
  * 撤回项目申报
  */
-export function withdrawProjectApplication(id: number) {
+export function withdrawProjectApplication(id: number): Promise<unknown> {
   return request({
     url: `/projects/application/${id}/withdraw/`,
     method: "post",
@@ -48,7 +48,7 @@ export function withdrawProjectApplication(id: number) {
 /**
  * 删除已提交立项申请（进入回收站）
  */
-export function deleteProjectApplication(id: number) {
+export function deleteProjectApplication(id: number): Promise<unknown> {
   return request({
     url: `/projects/${id}/delete-application/`,
     method: "post",
@@ -58,7 +58,7 @@ export function deleteProjectApplication(id: number) {
 /**
  * 获取我的项目列表
  */
-export function getMyProjects(params?: any) {
+export function getMyProjects(params?: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/projects/my-projects/",
     method: "get",
@@ -69,7 +69,7 @@ export function getMyProjects(params?: any) {
 /**
  * 获取我的草稿箱
  */
-export function getMyDrafts(params?: any) {
+export function getMyDrafts(params?: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/projects/my-drafts/",
     method: "get",
@@ -80,7 +80,7 @@ export function getMyDrafts(params?: any) {
 /**
  * 获取项目详情
  */
-export function getProjectDetail(id: number) {
+export function getProjectDetail(id: number): Promise<unknown> {
   return request({
     url: `/projects/${id}/`,
     method: "get",
@@ -90,7 +90,7 @@ export function getProjectDetail(id: number) {
 /**
  * 获取项目成果列表（项目过程）
  */
-export function getProjectAchievementList(id: number) {
+export function getProjectAchievementList(id: number): Promise<unknown> {
   return request({
     url: `/projects/${id}/achievements/`,
     method: "get",
@@ -100,7 +100,7 @@ export function getProjectAchievementList(id: number) {
 /**
  * 添加项目成果
  */
-export function addProjectAchievement(id: number, data: any) {
+export function addProjectAchievement(id: number, data: Record<string, unknown> | FormData): Promise<unknown> {
   return request({
     url: `/projects/${id}/add-achievement/`,
     method: "post",
@@ -114,7 +114,7 @@ export function addProjectAchievement(id: number, data: any) {
 /**
  * 删除项目成果
  */
-export function removeProjectAchievement(projectId: number, achievementId: number) {
+export function removeProjectAchievement(projectId: number, achievementId: number): Promise<unknown> {
   return request({
     url: `/projects/${projectId}/remove-achievement/${achievementId}/`,
     method: "delete",
@@ -124,7 +124,7 @@ export function removeProjectAchievement(projectId: number, achievementId: numbe
 /**
  * 删除项目
  */
-export function deleteProject(id: number) {
+export function deleteProject(id: number): Promise<unknown> {
   return request({
     url: `/projects/${id}/`,
     method: "delete",
@@ -136,7 +136,7 @@ export function deleteProject(id: number) {
 /**
  * 获取待结题项目列表
  */
-export function getPendingClosureProjects(params?: any) {
+export function getPendingClosureProjects(params?: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/projects/closure/pending/",
     method: "get",
@@ -147,7 +147,7 @@ export function getPendingClosureProjects(params?: any) {
 /**
  * 获取已申请结题项目列表
  */
-export function getAppliedClosureProjects(params?: any) {
+export function getAppliedClosureProjects(params?: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/projects/closure/applied/",
     method: "get",
@@ -158,7 +158,7 @@ export function getAppliedClosureProjects(params?: any) {
 /**
  * 获取结题草稿箱
  */
-export function getClosureDrafts(params?: any) {
+export function getClosureDrafts(params?: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/projects/closure/drafts/",
     method: "get",
@@ -169,7 +169,7 @@ export function getClosureDrafts(params?: any) {
 /**
  * 创建结题申请
  */
-export function createClosureApplication(id: number, data: any) {
+export function createClosureApplication(id: number, data: Record<string, unknown> | FormData): Promise<unknown> {
   return request({
     url: `/projects/closure/${id}/create/`,
     method: "post",
@@ -180,7 +180,7 @@ export function createClosureApplication(id: number, data: any) {
 /**
  * 更新结题申请
  */
-export function updateClosureApplication(id: number, data: any) {
+export function updateClosureApplication(id: number, data: Record<string, unknown> | FormData): Promise<unknown> {
   return request({
     url: `/projects/closure/${id}/update/`,
     method: "put",
@@ -191,7 +191,7 @@ export function updateClosureApplication(id: number, data: any) {
 /**
  * 撤销结题申请
  */
-export function revokeClosureApplication(id: number) {
+export function revokeClosureApplication(id: number): Promise<unknown> {
   return request({
     url: `/projects/${id}/revoke-closure/`,
     method: "post",
@@ -201,7 +201,7 @@ export function revokeClosureApplication(id: number) {
 /**
  * 删除结题草稿
  */
-export function deleteClosureDraft(id: number) {
+export function deleteClosureDraft(id: number): Promise<unknown> {
   return request({
     url: `/projects/closure/${id}/delete/`,
     method: "delete",
@@ -211,7 +211,7 @@ export function deleteClosureDraft(id: number) {
 /**
  * 删除中期提交（进入回收站）
  */
-export function deleteMidTermSubmission(id: number) {
+export function deleteMidTermSubmission(id: number): Promise<unknown> {
   return request({
     url: `/projects/${id}/delete-mid-term/`,
     method: "post",
@@ -221,7 +221,7 @@ export function deleteMidTermSubmission(id: number) {
 /**
  * 删除结题提交（进入回收站）
  */
-export function deleteClosureSubmission(id: number) {
+export function deleteClosureSubmission(id: number): Promise<unknown> {
   return request({
     url: `/projects/${id}/delete-closure/`,
     method: "post",
@@ -231,7 +231,7 @@ export function deleteClosureSubmission(id: number) {
 /**
  * 获取项目成果列表
  */
-export function getProjectAchievements(id: number) {
+export function getProjectAchievements(id: number): Promise<unknown> {
   return request({
     url: `/projects/closure/${id}/achievements/`,
     method: "get",
@@ -241,7 +241,7 @@ export function getProjectAchievements(id: number) {
 /**
  * 获取结题证书（HTML）
  */
-export function getProjectCertificate(id: number) {
+export function getProjectCertificate(id: number): Promise<unknown> {
   return request({
     url: `/projects/${id}/certificate/`,
     method: "get",
@@ -252,7 +252,7 @@ export function getProjectCertificate(id: number) {
 /**
  * 导出项目申报书 (Word)
  */
-export function exportProjectDoc(id: number) {
+export function exportProjectDoc(id: number): Promise<unknown> {
   return request({
     url: `/projects/${id}/export-doc/`,
     method: "get",
@@ -263,7 +263,7 @@ export function exportProjectDoc(id: number) {
 /**
  * 获取回收站记录
  */
-export function getRecycleBin(params?: any) {
+export function getRecycleBin(params?: Record<string, unknown>): Promise<unknown> {
   return request({
     url: "/projects/recycle-bin/",
     method: "get",
@@ -274,7 +274,7 @@ export function getRecycleBin(params?: any) {
 /**
  * 恢复回收站记录
  */
-export function restoreRecycleBin(id: number) {
+export function restoreRecycleBin(id: number): Promise<unknown> {
   return request({
     url: `/projects/recycle-bin/${id}/restore/`,
     method: "post",
@@ -284,7 +284,7 @@ export function restoreRecycleBin(id: number) {
 /**
  * 获取项目进度
  */
-export function getProjectProgress(id: number) {
+export function getProjectProgress(id: number): Promise<unknown> {
   return request({
     url: `/projects/${id}/progress/`,
     method: "get",
@@ -294,7 +294,7 @@ export function getProjectProgress(id: number) {
 /**
  * 添加项目进度
  */
-export function addProjectProgress(id: number, data: any) {
+export function addProjectProgress(id: number, data: Record<string, unknown> | FormData): Promise<unknown> {
   return request({
     url: `/projects/${id}/add-progress/`,
     method: "post",
@@ -308,7 +308,7 @@ export function addProjectProgress(id: number, data: any) {
 /**
  * 删除项目进度（进入回收站）
  */
-export function removeProjectProgress(projectId: number, progressId: number) {
+export function removeProjectProgress(projectId: number, progressId: number): Promise<unknown> {
   return request({
     url: `/projects/${projectId}/remove-progress/${progressId}/`,
     method: "delete",
@@ -318,7 +318,7 @@ export function removeProjectProgress(projectId: number, progressId: number) {
 /**
  * 删除经费记录（进入回收站）
  */
-export function removeProjectExpenditure(id: number) {
+export function removeProjectExpenditure(id: number): Promise<unknown> {
   return request({
     url: `/projects/expenditures/${id}/`,
     method: "delete",
@@ -328,7 +328,7 @@ export function removeProjectExpenditure(id: number) {
 /**
  * 推送项目数据到外部平台
  */
-export function pushProjectToExternal(data: { project_ids: number[]; target: string }) {
+export function pushProjectToExternal(data: { project_ids: number[]; target: string }): Promise<unknown> {
   return request({
     url: `/projects/push-external/`,
     method: "post",

@@ -13,6 +13,30 @@ import { useProjectExport } from "./useProjectExport";
 import { useProjectSearch } from "./useProjectSearch";
 import { useProjectTable } from "./useProjectTable";
 
+type ProjectRow = {
+  id: number;
+  title?: string;
+  leader?: number | string;
+};
+
+type OptionItem = {
+  value: string;
+  label: string;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (!isRecord(error)) return fallback;
+  const response = error.response;
+  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === "string") {
+    return response.data.message;
+  }
+  if (typeof error.message === "string") return error.message;
+  return fallback;
+};
+
 export function useAllProjects() {
   const router = useRouter();
   const { loadDictionaries, getOptions } = useDictionary();
@@ -65,7 +89,7 @@ export function useAllProjects() {
   const categoryOptions = computed(() => getOptions(DICT_CODES.PROJECT_CATEGORY));
   const statusOptions = computed(() => getOptions(DICT_CODES.PROJECT_STATUS));
 
-  const handleView = (row: any) => {
+  const handleView = (row: ProjectRow) => {
     router.push({
       name: "level1-project-detail",
       params: { id: row.id },
@@ -73,7 +97,7 @@ export function useAllProjects() {
     });
   };
 
-  const handleEdit = (row: any) => {
+  const handleEdit = (row: ProjectRow) => {
     router.push({
       name: "level1-project-detail",
       params: { id: row.id },
@@ -81,7 +105,7 @@ export function useAllProjects() {
     });
   };
 
-  const handleDelete = async (row: any) => {
+  const handleDelete = async (row: ProjectRow) => {
     try {
       await ElMessageBox.confirm(
         `确定要删除项目"${row.title}"吗？此操作不可恢复！`,
@@ -123,15 +147,15 @@ export function useAllProjects() {
 
       loading.value = true;
       const ids = selectedRows.value.map((row) => row.id);
-      const res: any = await pushProjectToExternal({
+      const res = await pushProjectToExternal({
         project_ids: ids,
         target: "PROVINCIAL_PLATFORM",
       });
 
-      if (res.code === 200) {
-        ElMessage.success(res.message || "推送完成");
+      if (isRecord(res) && res.code === 200) {
+        ElMessage.success((typeof res.message === "string" && res.message) || "推送完成");
       } else {
-        ElMessage.warning(res.message || "推送部分失败");
+        ElMessage.warning((isRecord(res) && typeof res.message === "string" && res.message) || "推送部分失败");
       }
     } catch (error) {
       if (error !== "cancel") ElMessage.error("推送失败");
@@ -157,8 +181,8 @@ export function useAllProjects() {
         project_ids: selectedRows.value.map((row) => row.id),
         status: batchStatusForm.status,
       };
-      const res: any = await batchUpdateProjectStatus(payload);
-      if (res.code === 200) {
+      const res = await batchUpdateProjectStatus(payload);
+      if (isRecord(res) && res.code === 200) {
         ElMessage.success("状态更新成功");
         batchStatusDialogVisible.value = false;
         fetchProjects();
@@ -185,19 +209,23 @@ export function useAllProjects() {
     batchNotifyLoading.value = true;
     try {
       const recipients = Array.from(
-        new Set(selectedRows.value.map((row) => row.leader).filter(Boolean))
+        new Set(
+          selectedRows.value
+            .map((row) => row.leader)
+            .filter((id): id is number => typeof id === "number")
+        )
       );
-      const res: any = await batchSendNotifications({
+      const res = await batchSendNotifications({
         title: batchNotifyForm.title,
         content: batchNotifyForm.content,
         recipients,
       });
-      if (res.code === 200) {
+      if (isRecord(res) && res.code === 200) {
         ElMessage.success("通知已发送");
         batchNotifyDialogVisible.value = false;
       }
-    } catch (error: any) {
-      ElMessage.error(error.response?.data?.message || "发送失败");
+    } catch (error) {
+      ElMessage.error(getErrorMessage(error, "发送失败"));
     } finally {
       batchNotifyLoading.value = false;
     }
@@ -209,7 +237,7 @@ export function useAllProjects() {
     return "info";
   };
 
-  const getLabel = (options: any[], value: string) => {
+  const getLabel = (options: OptionItem[], value: string) => {
     const found = options.find((opt) => opt.value === value);
     return found ? found.label : value;
   };

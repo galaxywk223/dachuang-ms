@@ -94,12 +94,62 @@ import request from "@/utils/request";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { removeProjectExpenditure } from "@/api/projects";
 
+defineOptions({
+  name: "StudentFundsView",
+});
+
+type ProjectItem = {
+  id: number;
+  project_no?: string;
+  title?: string;
+};
+
+type ExpenditureItem = {
+  id: number;
+  expenditure_date?: string;
+  title?: string;
+  category_name?: string;
+  amount?: number | string;
+  proof_file_url?: string;
+  created_by_name?: string;
+};
+
+type CategoryItem = {
+  id: number;
+  label: string;
+  value: string;
+};
+
+type StatsPayload = {
+  total_budget?: number;
+  used_amount?: number;
+  remaining_amount?: number;
+  usage_rate?: number;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const resolveList = <T,>(payload: unknown): T[] => {
+  if (Array.isArray(payload)) return payload as T[];
+  if (isRecord(payload) && Array.isArray(payload.results)) {
+    return payload.results as T[];
+  }
+  if (isRecord(payload) && isRecord(payload.data) && Array.isArray(payload.data.results)) {
+    return payload.data.results as T[];
+  }
+  if (isRecord(payload) && Array.isArray(payload.data)) {
+    return payload.data as T[];
+  }
+  return [];
+};
+
 // 状态定义
 const loading = ref(false);
 const dialogVisible = ref(false);
-const project = ref<any>(null);
-const expenditures = ref<any[]>([]);
-const categories = ref<any[]>([]);
+const project = ref<ProjectItem | null>(null);
+const expenditures = ref<ExpenditureItem[]>([]);
+const categories = ref<CategoryItem[]>([]);
 
 const stats = reactive({
   total_budget: 0,
@@ -111,12 +161,16 @@ const stats = reactive({
 // 获取项目及相关数据
 const fetchProject = async () => {
   try {
-    const { data } = await request.get('/projects/', {
+    const { data } = await request.get("/projects/", {
         // 获取进行中或各种状态的项目
-         params: { status_in: 'IN_PROGRESS,MID_TERM_DRAFT,MID_TERM_SUBMITTED,MID_TERM_REVIEWING,MID_TERM_APPROVED,MID_TERM_REJECTED' }
+         params: {
+           status_in:
+             "IN_PROGRESS,MID_TERM_DRAFT,MID_TERM_SUBMITTED,MID_TERM_REVIEWING,MID_TERM_APPROVED,MID_TERM_REJECTED",
+         },
     });
-    if (data.results && data.results.length > 0) {
-        project.value = data.results[0]; // 默认取第一个
+    const list = resolveList<ProjectItem>(data);
+    if (list.length > 0) {
+        project.value = list[0]; // 默认取第一个
         return project.value.id;
     }
     return null;
@@ -129,7 +183,7 @@ const fetchProject = async () => {
 const fetchStats = async (projectId: number) => {
     try {
         const { data } = await request.get(`/projects/${projectId}/budget-stats/`);
-        Object.assign(stats, data);
+        Object.assign(stats, data as StatsPayload);
     } catch (error) {
         console.error("Failed to fetch stats", error);
     }
@@ -140,7 +194,7 @@ const fetchExpenditures = async (projectId: number) => {
         const { data } = await request.get(`/projects/expenditures/`, {
             params: { project: projectId }
         });
-        expenditures.value = data.results || data; // 兼容分页或不分页
+        expenditures.value = resolveList<ExpenditureItem>(data);
     } catch (error) {
         console.error("Failed to fetch expenditures", error);
     }
@@ -153,32 +207,30 @@ const fetchCategories = async () => {
         // Real logic: fetch by code 'EXPENDITURE_CATEGORY'
         // For now, let's mock or try to fetch if we had the endpoint
         // Let's assume we have /dictionaries/items/?type__code=EXPENDITURE_CATEGORY
-        const response = await request.get('/dictionaries/items/', {
-            params: { type_code: 'EXPENDITURE_CATEGORY' }
+        const response = await request.get("/dictionaries/items/", {
+            params: { type_code: "EXPENDITURE_CATEGORY" },
         });
-        const list =
-            (response as any)?.data?.results ??
-            (response as any)?.results ??
-            (response as any)?.data ??
-            response;
-        categories.value = Array.isArray(list) ? list : [];
+        const payload = isRecord(response) && isRecord(response.data)
+          ? response.data
+          : response;
+        categories.value = resolveList<CategoryItem>(payload);
         
         // Fail-safe mock if empty
         if (categories.value.length === 0) {
             categories.value = [
-                { id: 1, label: '设备费', value: 'EQUIPMENT' },
-                { id: 2, label: '材料费', value: 'MATERIAL' },
-                { id: 3, label: '差旅费', value: 'TRAVEL' },
-                { id: 4, label: '版面费', value: 'PUBLICATION' },
-                { id: 5, label: '服务费', value: 'SERVICE' },
-                { id: 6, label: '其他', value: 'OTHER' },
+                { id: 1, label: "设备费", value: "EQUIPMENT" },
+                { id: 2, label: "材料费", value: "MATERIAL" },
+                { id: 3, label: "差旅费", value: "TRAVEL" },
+                { id: 4, label: "版面费", value: "PUBLICATION" },
+                { id: 5, label: "服务费", value: "SERVICE" },
+                { id: 6, label: "其他", value: "OTHER" },
             ];
         }
-    } catch (error) {
+    } catch {
          // Fallback default
          categories.value = [
-            { id: 1, label: '设备费', value: 'EQUIPMENT' },
-            { id: 2, label: '材料费', value: 'MATERIAL' },
+            { id: 1, label: "设备费", value: "EQUIPMENT" },
+            { id: 2, label: "材料费", value: "MATERIAL" },
         ];
     }
 };
@@ -207,17 +259,18 @@ const showAddDialog = () => {
     dialogVisible.value = true;
 };
 
-const handleDelete = async (row: any) => {
+const handleDelete = async (row: ExpenditureItem) => {
   try {
     await ElMessageBox.confirm("确定删除该经费记录吗？删除后可在回收站恢复。", "提示", {
       type: "warning",
     });
-    const res: any = await removeProjectExpenditure(row.id);
-    if (res?.code === 200 || res?.status === 204) {
+    const res = await removeProjectExpenditure(row.id);
+    if (isRecord(res) && (res.code === 200 || res.status === 204)) {
       ElMessage.success("已移入回收站");
       fetchData();
     } else {
-      ElMessage.error(res?.message || "删除失败");
+      const message = isRecord(res) && typeof res.message === "string" ? res.message : "删除失败";
+      ElMessage.error(message);
     }
   } catch {
     // cancel
@@ -225,9 +278,9 @@ const handleDelete = async (row: any) => {
 };
 
 const getUsageStatus = (rate: number) => {
-    if (rate >= 100) return 'exception';
-    if (rate >= 80) return 'warning';
-    return 'success';
+    if (rate >= 100) return "exception";
+    if (rate >= 80) return "warning";
+    return "success";
 };
 
 onMounted(() => {

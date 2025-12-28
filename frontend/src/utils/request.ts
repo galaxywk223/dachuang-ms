@@ -9,6 +9,9 @@ import { ElMessage } from "element-plus";
 import type { ApiResponse } from "@/types";
 import { CONFIG } from "@/config";
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
 const request: AxiosInstance = axios.create({
   baseURL: `${CONFIG.api.BASE_URL}/api/${CONFIG.api.API_VERSION}`,
   timeout: CONFIG.api.TIMEOUT,
@@ -33,8 +36,10 @@ request.interceptors.request.use(
 
 // 响应拦截器：把 AxiosResponse 统一转换为后端的业务响应结构 { code, message, data }
 request.interceptors.response.use(
-  (response: AxiosResponse<ApiResponse>) => response.data as any,
-  async (error: AxiosError<ApiResponse>) => {
+  ((response: AxiosResponse<ApiResponse<unknown>>) => response.data) as unknown as (
+    value: AxiosResponse<ApiResponse<unknown>>
+  ) => AxiosResponse<ApiResponse<unknown>>,
+  async (error: AxiosError<ApiResponse<unknown>>) => {
     if (error.response) {
       switch (error.response.status) {
         case 401: {
@@ -59,16 +64,23 @@ request.interceptors.response.use(
           ElMessage.error("服务器错误");
           break;
         default: {
-          const data = error.response.data as any;
-          let msg = data?.message || "请求失败";
+          const data = error.response.data;
+          let msg =
+            (isRecord(data) && typeof data.message === "string" && data.message) ||
+            "请求失败";
 
           // Handle custom error format with 'errors' field
-          if (data?.errors) {
-            const details = Object.values(data.errors).flat().join('; ');
+          if (isRecord(data) && data.errors) {
+            const errors = data.errors;
+            const details = Array.isArray(errors)
+              ? errors.flat().join("; ")
+              : isRecord(errors)
+                ? Object.values(errors).flat().join("; ")
+                : "";
             if (details) msg = `${msg}: ${details}`;
           }
           // Handle standard DRF error format (dict of lists)
-          else if (data && typeof data === 'object' && !data.message) {
+          else if (isRecord(data) && !("message" in data)) {
             const values = Object.values(data);
             const hasArrayErrors = values.some((v) => Array.isArray(v));
             if (hasArrayErrors) {
@@ -92,7 +104,7 @@ request.interceptors.response.use(
 export default request;
 
 // 业务泛型封装：让调用端获得严格的 ApiResponse<T> 类型
-export function apiRequest<T = any>(
+export function apiRequest<T = unknown>(
   config: AxiosRequestConfig
 ): Promise<ApiResponse<T>> {
   // 响应拦截器已经把返回值从 AxiosResponse 转成 ApiResponse

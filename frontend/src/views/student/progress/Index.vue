@@ -112,11 +112,63 @@ import {
   removeProjectProgress,
 } from "@/api/projects";
 
+defineOptions({
+  name: "StudentProgressView",
+});
+
+type ProjectItem = {
+  id: number;
+  project_no?: string;
+  title?: string;
+};
+
+type ProgressItem = {
+  id: number;
+  title?: string;
+  content?: string;
+  creator_name?: string;
+  created_at?: string;
+  attachment?: string;
+};
+
+type ApiResponse<T> = {
+  code?: number;
+  data?: T;
+  message?: string;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const resolveList = <T,>(payload: unknown): T[] => {
+  if (Array.isArray(payload)) return payload as T[];
+  if (isRecord(payload) && Array.isArray(payload.results)) {
+    return payload.results as T[];
+  }
+  if (isRecord(payload) && isRecord(payload.data) && Array.isArray(payload.data.results)) {
+    return payload.data.results as T[];
+  }
+  if (isRecord(payload) && Array.isArray(payload.data)) {
+    return payload.data as T[];
+  }
+  return [];
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+  if (typeof error === "string") {
+    return error || fallback;
+  }
+  return fallback;
+};
+
 const loading = ref(false);
 const submitting = ref(false);
 const dialogVisible = ref(false);
-const projects = ref<any[]>([]);
-const progressList = ref<any[]>([]);
+const projects = ref<ProjectItem[]>([]);
+const progressList = ref<ProgressItem[]>([]);
 const activeProjectId = ref<number | null>(null);
 const fileList = ref<UploadUserFile[]>([]);
 const formRef = ref<FormInstance>();
@@ -143,12 +195,13 @@ const formatDate = (value?: string) => {
 
 const fetchProjects = async () => {
   try {
-    const res: any = await getProjects({ page_size: 200 });
-    projects.value = res?.data?.results || res?.data || res || [];
+    const res = (await getProjects({ page_size: 200 })) as ApiResponse<ProjectItem[]>;
+    const payload = isRecord(res) && isRecord(res.data) ? res.data : res;
+    projects.value = resolveList<ProjectItem>(payload);
     if (!activeProjectId.value && projects.value.length > 0) {
       activeProjectId.value = projects.value[0].id;
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error(error);
   }
 };
@@ -160,11 +213,13 @@ const fetchProgress = async () => {
   }
   loading.value = true;
   try {
-    const res: any = await getProjectProgress(activeProjectId.value);
-    const payload = res?.data || res;
-    progressList.value = payload?.data || payload || [];
-  } catch (error: any) {
-    ElMessage.error(error.message || "获取进度失败");
+    const res = (await getProjectProgress(
+      activeProjectId.value
+    )) as ApiResponse<ProgressItem[]>;
+    const payload = isRecord(res) && isRecord(res.data) ? res.data : res;
+    progressList.value = resolveList<ProgressItem>(payload);
+  } catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, "获取进度失败"));
   } finally {
     loading.value = false;
   }
@@ -212,7 +267,10 @@ const handleSubmit = async () => {
       payload.append("title", form.title);
       payload.append("content", form.content);
       if (form.attachment) payload.append("attachment", form.attachment);
-      const res: any = await addProjectProgress(activeProjectId.value as number, payload);
+      const res = (await addProjectProgress(
+        activeProjectId.value as number,
+        payload
+      )) as ApiResponse<unknown>;
       if (res?.code === 200) {
         ElMessage.success("进度已提交");
         dialogVisible.value = false;
@@ -220,26 +278,29 @@ const handleSubmit = async () => {
       } else {
         ElMessage.error(res?.message || "提交失败");
       }
-    } catch (error: any) {
-      ElMessage.error(error.message || "提交失败");
+    } catch (error: unknown) {
+      ElMessage.error(getErrorMessage(error, "提交失败"));
     } finally {
       submitting.value = false;
     }
   });
 };
 
-const handleDelete = async (row: any) => {
+const handleDelete = async (row: ProgressItem) => {
   if (!activeProjectId.value) return;
   try {
     await ElMessageBox.confirm("确定删除该进度记录吗？", "提示", { type: "warning" });
-    const res: any = await removeProjectProgress(activeProjectId.value, row.id);
+    const res = (await removeProjectProgress(
+      activeProjectId.value,
+      row.id
+    )) as ApiResponse<unknown>;
     if (res?.code === 200) {
       ElMessage.success("已移入回收站");
       fetchProgress();
     } else {
       ElMessage.error(res?.message || "删除失败");
     }
-  } catch (error) {
+  } catch {
     // cancel
   }
 };
