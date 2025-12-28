@@ -1,3 +1,4 @@
+# mypy: disable-error-code=var-annotated
 """
 审核模型定义
 """

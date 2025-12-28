@@ -160,7 +160,7 @@ class WorkflowService:
                 review_level=node.review_level,
                 scope=node.scope,
                 return_policy=node.return_policy,
-                review_template_id=node.review_template_id,
+                review_template_id=node.review_template.id if node.review_template else None,
             )
             for node in nodes
         ]

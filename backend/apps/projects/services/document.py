@@ -1,6 +1,6 @@
 import io
-from docx import Document
-from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx import Document  # type: ignore[import-untyped]
+from docx.enum.text import WD_ALIGN_PARAGRAPH  # type: ignore[import-untyped]
 from apps.projects.models import Project
 
 class DocumentService:

@@ -3,7 +3,7 @@ import os
 import zipfile
 from io import BytesIO
 from datetime import datetime
-import openpyxl
+import openpyxl  # type: ignore[import-untyped]
 from django.utils.timezone import localtime
 
 def generate_excel(data, headers, filename="export.xlsx"):

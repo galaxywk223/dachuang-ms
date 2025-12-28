@@ -90,9 +90,9 @@ class ReviewActionSerializer(serializers.Serializer):
         max_value=100,
         help_text="评分（0-100）",
     )
-    score_details = serializers.JSONField(
+    score_details = serializers.JSONField(  # type: ignore[arg-type]
         required=False,
-        default=list,
+        default=list,  # type: ignore[arg-type]
         help_text="评分明细（模板评分项）",
     )
     closure_rating = serializers.ChoiceField(

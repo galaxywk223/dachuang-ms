@@ -124,7 +124,7 @@ class ProjectBatchMixin:
                 {"code": 400, "message": "请上传文件"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        import openpyxl
+        import openpyxl  # type: ignore[import-untyped]
         from apps.users.models import User
         from apps.dictionaries.models import DictionaryItem
         from django.utils import timezone

@@ -1,3 +1,4 @@
+# mypy: disable-error-code=var-annotated
 """
 项目模型定义
 """

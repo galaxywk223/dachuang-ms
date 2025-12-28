@@ -1,3 +1,4 @@
+# mypy: disable-error-code=var-annotated
 """
 数据字典模型定义
 """

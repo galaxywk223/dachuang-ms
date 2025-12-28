@@ -3,11 +3,11 @@ URL configuration for dachuang management system project.
 """
 
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import URLPattern, URLResolver, include, path
 from django.conf import settings
 from django.conf.urls.static import static
 
-urlpatterns = [
+urlpatterns: list[URLPattern | URLResolver] = [
     path("admin/", admin.site.urls),
     path("api/v1/auth/", include("apps.users.urls")),
     path("api/v1/projects/", include("apps.projects.urls")),

@@ -67,25 +67,25 @@ class ProjectSerializer(serializers.ModelSerializer):
         source="leader.department", read_only=True, allow_blank=True
     )
     # 接收前端传入的字典项 value（字符串代码），自动转换为 DictionaryItem
-    level = serializers.SlugRelatedField(
+    level = serializers.SlugRelatedField(  # type: ignore[assignment]
         slug_field="value",
         queryset=DictionaryItem.objects.filter(dict_type__code="project_level"),
         required=False,
         allow_null=True,
     )
-    category = serializers.SlugRelatedField(
+    category = serializers.SlugRelatedField(  # type: ignore[assignment]
         slug_field="value",
         queryset=DictionaryItem.objects.filter(dict_type__code="project_type"),
         required=False,
         allow_null=True,
     )
-    source = serializers.SlugRelatedField(
+    source = serializers.SlugRelatedField(  # type: ignore[assignment]
         slug_field="value",
         queryset=DictionaryItem.objects.filter(dict_type__code="project_source"),
         required=False,
         allow_null=True,
     )
-    discipline = serializers.SlugRelatedField(
+    discipline = serializers.SlugRelatedField(  # type: ignore[assignment]
         slug_field="value",
         queryset=DictionaryItem.objects.filter(dict_type__code="discipline"),
         required=False,

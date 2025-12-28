@@ -5,7 +5,7 @@ Project export actions.
 from io import BytesIO
 import zipfile
 
-import openpyxl
+import openpyxl  # type: ignore[import-untyped]
 from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.decorators import action

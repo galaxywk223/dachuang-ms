@@ -149,7 +149,7 @@ class UserService:
         """
         批量导入用户
         """
-        import openpyxl
+        import openpyxl  # type: ignore[import-untyped]
         from django.db import transaction
         from apps.users.models import User
 

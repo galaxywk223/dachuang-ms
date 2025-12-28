@@ -1,3 +1,4 @@
+# mypy: disable-error-code=var-annotated
 """
 通知模型定义
 """

@@ -16,7 +16,7 @@ class PhaseContext:
     initial_step: str
 
 
-PHASE_CONTEXTS = {
+PHASE_CONTEXTS: dict[str, PhaseContext] = {
     ProjectPhaseInstance.Phase.APPLICATION: PhaseContext(
         phase=ProjectPhaseInstance.Phase.APPLICATION,
         initial_step="TEACHER_REVIEW",

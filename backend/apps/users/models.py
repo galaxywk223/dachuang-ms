@@ -1,3 +1,4 @@
+# mypy: disable-error-code=var-annotated
 """
 用户模型定义
 支持三种角色：学生、二级管理员（学院级）、一级管理员（校级）

@@ -1,3 +1,4 @@
+# mypy: disable-error-code=var-annotated
 """
 系统设置模型
 """
