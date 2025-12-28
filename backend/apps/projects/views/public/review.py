@@ -131,7 +131,6 @@ class ProjectReviewViewSet(viewsets.ViewSet):
             )
 
         comment = request.data.get("comment", "")
-        reject_to = request.data.get("reject_to")
         score = request.data.get("score")
         closure_rating = request.data.get("closure_rating")
         approved_budget = request.data.get("approved_budget")

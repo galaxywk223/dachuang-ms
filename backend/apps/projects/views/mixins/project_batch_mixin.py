@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from ...models import Project, ProjectMember, ProjectPushRecord
+from ...models import Project, ProjectArchive, ProjectMember, ProjectPushRecord
 from ...serializers import (
     ProjectArchiveSerializer,
     ProjectPushRecordSerializer,

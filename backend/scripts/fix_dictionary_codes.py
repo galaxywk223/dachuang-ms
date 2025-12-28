@@ -3,13 +3,15 @@ import os
 import sys
 import django
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
-django.setup()
-
-from apps.dictionaries.models import DictionaryType
+def setup_django():
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
+    django.setup()
 
 def fix_dictionary_codes():
+    setup_django()
+    from apps.dictionaries.models import DictionaryType
+
     # Map old uppercase codes to new lowercase codes (matching frontend)
     mapping = {
         "PROJECT_LEVEL": "project_level",

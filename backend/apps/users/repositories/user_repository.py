@@ -4,8 +4,6 @@
 
 from django.contrib.auth import get_user_model
 from django.db.models import Q
-from ..models import User
-
 User = get_user_model()
 
 

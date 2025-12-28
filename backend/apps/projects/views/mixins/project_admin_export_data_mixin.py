@@ -9,9 +9,6 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from ...models import Project
-
-
 class ProjectAdminExportDataMixin:
     @action(methods=["get"], detail=False, url_path="export")
     def export_data(self, request):

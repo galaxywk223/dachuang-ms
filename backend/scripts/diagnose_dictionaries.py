@@ -3,13 +3,15 @@ import os
 import sys
 import django
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
-django.setup()
-
-from apps.dictionaries.models import DictionaryType, DictionaryItem
+def setup_django():
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
+    django.setup()
 
 def diagnose():
+    setup_django()
+    from apps.dictionaries.models import DictionaryType, DictionaryItem
+
     print("--- Dictionary Types ---")
     for dt in DictionaryType.objects.all():
         print(f"Code: {dt.code}, Name: {dt.name}, ID: {dt.id}")

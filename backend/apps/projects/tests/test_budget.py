@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from apps.projects.models import Project, ProjectExpenditure
+from apps.projects.models import Project
 from apps.dictionaries.models import DictionaryItem, DictionaryType
 from apps.projects.services import ProjectService
 from decimal import Decimal

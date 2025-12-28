@@ -3,14 +3,16 @@ import os
 import sys
 import django
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
-django.setup()
-
-from apps.projects.models import Project
-from apps.dictionaries.models import DictionaryItem
+def setup_django():
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
+    django.setup()
 
 def migrate_project_levels():
+    setup_django()
+    from apps.projects.models import Project
+    from apps.dictionaries.models import DictionaryItem
+
     # Map Chinese values to English codes
     mapping = {
         "校级": "SCHOOL",

@@ -3,13 +3,15 @@ import os
 import sys
 import django
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
-django.setup()
-
-from apps.dictionaries.models import DictionaryType, DictionaryItem
+def setup_django():
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
+    django.setup()
 
 def seed_dictionaries():
+    setup_django()
+    from apps.dictionaries.models import DictionaryType, DictionaryItem
+
     # Project Level
     level_type, _ = DictionaryType.objects.get_or_create(
         code="PROJECT_LEVEL", defaults={"name": "项目级别"}

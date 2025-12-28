@@ -1,7 +1,5 @@
 import io
-from datetime import datetime
 from docx import Document
-from docx.shared import Pt, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from apps.projects.models import Project
 
@@ -19,7 +17,7 @@ class DocumentService:
             doc = Document()
             
             # Title
-            title = doc.add_heading(f'大学生创新创业训练计划项目申报书', 0)
+            title = doc.add_heading('大学生创新创业训练计划项目申报书', 0)
             title.alignment = WD_ALIGN_PARAGRAPH.CENTER
             
             # Basic Info

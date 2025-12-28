@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from apps.projects.models import Project, ProjectMember
+from apps.projects.models import Project
 from apps.projects.services import ProjectService
 from apps.reviews.services import ReviewService
 from apps.reviews.models import Review
@@ -31,10 +31,6 @@ class MidTermTestCase(TestCase):
         Test the full mid-term inspection flow
         """
         # 1. Apply (Draft)
-        report_file = None # Mock file not strictly needed for logic test if we bypass validation or mock it, 
-                           # but service checks for it on submit. 
-                           # We'll simulated file upload later or just mock the file field.
-        
         # Test Draft
         ProjectService.apply_mid_term(self.project, None, is_draft=True)
         self.project.refresh_from_db()

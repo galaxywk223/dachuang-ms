@@ -1,12 +1,10 @@
 
 import os
 import zipfile
-import tempfile
 from io import BytesIO
 from datetime import datetime
 import openpyxl
 from django.utils.timezone import localtime
-from django.conf import settings
 
 def generate_excel(data, headers, filename="export.xlsx"):
     """
