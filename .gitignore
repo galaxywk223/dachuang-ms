@@ -62,3 +62,6 @@ local_scripts/
 
 # Type check output
 frontend/type_check_output.txt
+
+# Temp
+temp/
