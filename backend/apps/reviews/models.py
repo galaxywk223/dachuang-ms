@@ -14,6 +14,7 @@ class Review(models.Model):
 
     class ReviewType(models.TextChoices):
         APPLICATION = "APPLICATION", "申报审核"
+        TASK_BOOK = "TASK_BOOK", "任务书审核"
         MID_TERM = "MID_TERM", "中期审核"
         CLOSURE = "CLOSURE", "结题审核"
 
@@ -74,9 +75,7 @@ class Review(models.Model):
     # 审核意见
     comments = models.TextField(blank=True, verbose_name="审核意见")
     score = models.IntegerField(null=True, blank=True, verbose_name="评分")
-    score_details = models.JSONField(
-        default=list, blank=True, verbose_name="评分明细"
-    )
+    score_details = models.JSONField(default=list, blank=True, verbose_name="评分明细")
 
     # 结题审核专用字段
     closure_rating = models.CharField(
@@ -118,24 +117,23 @@ class ExpertGroup(models.Model):
     """
     专家组模型
     """
+
     name = models.CharField(max_length=100, verbose_name="专家组名称")
     members = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
-        limit_choices_to={'role': 'EXPERT'},
+        limit_choices_to={"role": "EXPERT"},
         related_name="expert_groups",
-        verbose_name="专家成员"
+        verbose_name="专家成员",
     )
     # 区分专家组级别：SCHOOL (校级), COLLEGE (院级)
     scope = models.CharField(
-        max_length=20,
-        default="COLLEGE",
-        verbose_name="专家组级别"
+        max_length=20, default="COLLEGE", verbose_name="专家组级别"
     )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
         related_name="created_expert_groups",
-        verbose_name="创建人"
+        verbose_name="创建人",
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")

@@ -18,6 +18,7 @@ from ..models import Project, ProjectAdvisor, ProjectMember, ProjectPhaseInstanc
 from ..serializers import ProjectSerializer
 from ..services import ProjectService
 from ..services.phase_service import ProjectPhaseService
+from ..services.validation_service import ProjectValidationService
 
 
 def _generate_project_no(year, college_code=""):
@@ -112,15 +113,19 @@ def _validate_limits(user, advisors_data, members_data, project=None, batch=None
             )
 
         for advisor in advisors_data:
-            advisor_id = advisor.get("user") or advisor.get("user_id") or advisor.get("id")
+            advisor_id = (
+                advisor.get("user") or advisor.get("user_id") or advisor.get("id")
+            )
             if not advisor_id:
                 continue
             count = (
                 active_projects.filter(advisors__user_id=advisor_id).distinct().count()
             )
-            historical_unfinished = active_projects_all.filter(
-                advisors__user_id=advisor_id
-            ).distinct().exists()
+            historical_unfinished = (
+                active_projects_all.filter(advisors__user_id=advisor_id)
+                .distinct()
+                .exists()
+            )
             if historical_unfinished:
                 return False, "指导教师存在未结题项目，无法继续指导新项目"
             bonus = 0
@@ -152,9 +157,11 @@ def _validate_limits(user, advisors_data, members_data, project=None, batch=None
                 .distinct()
                 .count()
             )
-            historical_unfinished = active_projects_all.filter(
-                projectmember__user_id=member_id
-            ).distinct().exists()
+            historical_unfinished = (
+                active_projects_all.filter(projectmember__user_id=member_id)
+                .distinct()
+                .exists()
+            )
             if historical_unfinished:
                 return False, "成员存在未结题项目，无法继续参与新项目"
             if count >= max_student_member:
@@ -295,6 +302,29 @@ class ProjectApplicationService:
                     )
 
                 project = serializer.save()
+
+                # 如果不是草稿，则进行智能校验
+                if not is_draft:
+                    # 临时设置advisors和members列表供校验使用
+                    project._advisors_list = advisors_data
+                    project._members_list = members_data
+
+                    validation_result = (
+                        ProjectValidationService.validate_project_application(
+                            project, user, is_update=False
+                        )
+                    )
+                    if not validation_result["is_valid"]:
+                        # 校验失败，删除项目并返回错误
+                        project.delete()
+                        return (
+                            {
+                                "code": 400,
+                                "message": "项目申报校验失败",
+                                "errors": validation_result["errors"],
+                            },
+                            status.HTTP_400_BAD_REQUEST,
+                        )
 
                 if current_batch and not project.batch:
                     project.batch = current_batch
