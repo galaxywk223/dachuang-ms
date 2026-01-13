@@ -30,12 +30,27 @@
           </el-select>
         </el-form-item>
         <el-form-item label="类型">
-          <el-select v-model="filters.resource_type" placeholder="全部" clearable style="width: 200px">
-            <el-option v-for="item in resourceTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
+          <el-select
+            v-model="filters.resource_type"
+            placeholder="全部"
+            clearable
+            style="width: 200px"
+          >
+            <el-option
+              v-for="item in resourceTypeOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="filters.is_restored" placeholder="全部" clearable style="width: 160px">
+          <el-select
+            v-model="filters.is_restored"
+            placeholder="全部"
+            clearable
+            style="width: 160px"
+          >
             <el-option label="未恢复" value="false" />
             <el-option label="已恢复" value="true" />
           </el-select>
@@ -54,25 +69,46 @@
         style="width: 100%"
       >
         <el-table-column prop="project_no" label="项目编号" width="160" />
-        <el-table-column prop="project_title" label="项目名称" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="resource_type_display" label="资源类型" width="140" />
+        <el-table-column
+          prop="project_title"
+          label="项目名称"
+          min-width="200"
+          show-overflow-tooltip
+        />
+        <el-table-column
+          prop="resource_type_display"
+          label="资源类型"
+          width="140"
+        />
         <el-table-column prop="deleted_at" label="删除时间" width="180">
           <template #default="{ row }">
             {{ formatDate(row.deleted_at) }}
           </template>
         </el-table-column>
-        <el-table-column prop="is_restored" label="状态" width="120" align="center">
+        <el-table-column
+          prop="is_restored"
+          label="状态"
+          width="120"
+          align="center"
+        >
           <template #default="{ row }">
-            <el-tag :type="row.is_restored ? 'success' : 'warning'" size="small">
-              {{ row.is_restored ? '已恢复' : '待恢复' }}
+            <el-tag
+              :type="row.is_restored ? 'success' : 'warning'"
+              size="small"
+            >
+              {{ row.is_restored ? "已恢复" : "待恢复" }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="附件" min-width="180">
           <template #default="{ row }">
             <div v-if="(row.attachments || []).length">
-              <div v-for="(file, index) in row.attachments" :key="index" class="file-item">
-                {{ typeof file === 'string' ? file : file.name || '-' }}
+              <div
+                v-for="(file, index) in row.attachments"
+                :key="index"
+                class="file-item"
+              >
+                {{ typeof file === "string" ? file : file.name || "-" }}
               </div>
             </div>
             <span v-else>-</span>
@@ -159,7 +195,7 @@ type PaginationParams = {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
-const resolveList = <T,>(payload: unknown): T[] => {
+const resolveList = <T>(payload: unknown): T[] => {
   if (Array.isArray(payload)) return payload as T[];
   if (isRecord(payload) && Array.isArray(payload.results)) {
     return payload.results as T[];
@@ -230,7 +266,9 @@ const formatDate = (value?: string) => {
 
 const fetchProjects = async () => {
   try {
-    const res = (await getProjects({ page_size: 200 })) as ListResponse<ProjectItem>;
+    const res = (await getProjects({
+      page_size: 200,
+    })) as ListResponse<ProjectItem>;
     projects.value = resolveList<ProjectItem>(res);
   } catch (error: unknown) {
     console.error(error);
@@ -284,13 +322,18 @@ const handleCurrentChange = (page: number) => {
 
 const handleRestore = async (row: RecycleItem) => {
   try {
-    await ElMessageBox.confirm("确认恢复该记录吗？", "提示", { type: "warning" });
+    await ElMessageBox.confirm("确认恢复该记录吗？", "提示", {
+      type: "warning",
+    });
     const res = await restoreRecycleBin(row.id);
     if (isRecord(res) && res.code === 200) {
       ElMessage.success("恢复成功");
       fetchItems();
     } else {
-      ElMessage.error((isRecord(res) && typeof res.message === "string" && res.message) || "恢复失败");
+      ElMessage.error(
+        (isRecord(res) && typeof res.message === "string" && res.message) ||
+          "恢复失败"
+      );
     }
   } catch {
     // cancel
@@ -305,12 +348,51 @@ onMounted(async () => {
 
 <style scoped lang="scss">
 .recycle-bin-page {
-  .filter-bar {
-    margin-bottom: 16px;
+  padding: 20px;
+}
+
+.main-card {
+  border-radius: 8px;
+  :deep(.el-card__header) {
+    padding: 16px 20px;
+    font-weight: 600;
+    border-bottom: 1px solid #e2e8f0;
   }
-  .file-item {
-    font-size: 12px;
-    color: #64748b;
-  }
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.header-title {
+  font-size: 16px;
+  color: #1e293b;
+}
+
+.filter-bar {
+  margin-bottom: 16px;
+}
+
+.pagination-container {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.file-item {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.text-gray-400 {
+  color: #9ca3af;
 }
 </style>

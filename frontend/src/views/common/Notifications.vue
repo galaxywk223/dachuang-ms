@@ -7,18 +7,32 @@
             <span class="header-title">通知中心</span>
           </div>
           <div class="header-actions">
-            <el-button type="primary" plain @click="markAllRead">全部已读</el-button>
+            <el-button type="primary" plain @click="markAllRead"
+              >全部已读</el-button
+            >
           </div>
         </div>
       </template>
 
       <div class="filter-row">
-        <el-select v-model="filterType" placeholder="通知类型" clearable style="width: 200px" @change="fetchNotifications">
+        <el-select
+          v-model="filterType"
+          placeholder="通知类型"
+          clearable
+          style="width: 200px"
+          @change="fetchNotifications"
+        >
           <el-option label="系统通知" value="SYSTEM" />
           <el-option label="项目通知" value="PROJECT" />
           <el-option label="审核通知" value="REVIEW" />
         </el-select>
-        <el-select v-model="filterRead" placeholder="读取状态" clearable style="width: 200px" @change="fetchNotifications">
+        <el-select
+          v-model="filterRead"
+          placeholder="读取状态"
+          clearable
+          style="width: 200px"
+          @change="fetchNotifications"
+        >
           <el-option label="未读" value="false" />
           <el-option label="已读" value="true" />
         </el-select>
@@ -26,7 +40,11 @@
 
       <el-table :data="notifications" v-loading="loading" stripe border>
         <el-table-column prop="title" label="标题" min-width="200" />
-        <el-table-column prop="notification_type_display" label="类型" width="120" />
+        <el-table-column
+          prop="notification_type_display"
+          label="类型"
+          width="120"
+        />
         <el-table-column prop="created_at" label="时间" width="180">
           <template #default="{ row }">
             {{ formatDate(row.created_at) }}
@@ -35,14 +53,22 @@
         <el-table-column label="状态" width="120">
           <template #default="{ row }">
             <el-tag :type="row.is_read ? 'info' : 'warning'">
-              {{ row.is_read ? '已读' : '未读' }}
+              {{ row.is_read ? "已读" : "未读" }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="140" align="center" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" @click="openDetail(row)">查看</el-button>
-            <el-button link type="success" v-if="!row.is_read" @click="markRead(row)">标记已读</el-button>
+            <el-button link type="primary" @click="openDetail(row)"
+              >查看</el-button
+            >
+            <el-button
+              link
+              type="success"
+              v-if="!row.is_read"
+              @click="markRead(row)"
+              >标记已读</el-button
+            >
           </template>
         </el-table-column>
       </el-table>
@@ -136,8 +162,7 @@ const normalizeListPayload = (payload: unknown): NotificationListPayload => {
   const results = Array.isArray(payload.results)
     ? (payload.results as NotificationItem[])
     : undefined;
-  const count =
-    typeof payload.count === "number" ? payload.count : undefined;
+  const count = typeof payload.count === "number" ? payload.count : undefined;
   return { results, count };
 };
 
@@ -149,10 +174,8 @@ const normalizeResponse = (
     ? normalizeListPayload(response.data)
     : {};
 
-  const results =
-    dataPayload.results || rootPayload.results || [];
-  const count =
-    dataPayload.count ?? rootPayload.count ?? results.length;
+  const results = dataPayload.results || rootPayload.results || [];
+  const count = dataPayload.count ?? rootPayload.count ?? results.length;
 
   return { results, count };
 };
@@ -190,7 +213,10 @@ const markRead = async (row: NotificationItem) => {
 
 const markAllRead = async () => {
   await markAllNotificationsRead();
-  notifications.value = notifications.value.map((item) => ({ ...item, is_read: true }));
+  notifications.value = notifications.value.map((item) => ({
+    ...item,
+    is_read: true,
+  }));
   ElMessage.success("已全部标记为已读");
 };
 
@@ -202,24 +228,61 @@ onMounted(fetchNotifications);
 
 <style scoped lang="scss">
 .notifications-page {
-  .filter-row {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 16px;
+  padding: 20px;
+}
+
+.main-card {
+  border-radius: 8px;
+  :deep(.el-card__header) {
+    padding: 16px 20px;
+    font-weight: 600;
+    border-bottom: 1px solid #e2e8f0;
   }
-  .detail-content {
-    h4 {
-      margin-bottom: 4px;
-    }
-    .detail-time {
-      font-size: 12px;
-      color: #64748b;
-      margin-bottom: 12px;
-    }
-    .detail-text {
-      white-space: pre-line;
-      line-height: 1.6;
-    }
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.header-title {
+  font-size: 16px;
+  color: #1e293b;
+}
+
+.filter-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.pagination-container {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.detail-content {
+  h4 {
+    margin-bottom: 4px;
+    font-size: 16px;
+    color: #1e293b;
+  }
+  .detail-time {
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 12px;
+  }
+  .detail-text {
+    white-space: pre-line;
+    line-height: 1.6;
+    color: #334155;
   }
 }
 </style>

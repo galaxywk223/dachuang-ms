@@ -37,27 +37,54 @@
           class="sidebar-menu"
         >
           <!-- Dynamic Menu Generation -->
-          <template v-for="item in currentMenus" :key="item.index">
-            <!-- Submenu -->
-            <el-sub-menu v-if="item.children" :index="item.index">
-              <template #title>
-                <el-icon><component :is="item.icon" /></el-icon>
-                <span>{{ item.title }}</span>
-              </template>
-              <el-menu-item
-                v-for="child in item.children"
-                :key="child.index"
-                :index="child.index"
-              >
-                {{ child.title }}
-              </el-menu-item>
-            </el-sub-menu>
+          <template v-for="item in currentMenus" :key="menuEntryKey(item)">
+            <el-menu-item-group v-if="isMenuGroup(item)" :title="item.groupTitle">
+              <template v-for="groupItem in item.items" :key="groupItem.index">
+                <!-- Submenu -->
+                <el-sub-menu v-if="groupItem.children" :index="groupItem.index">
+                  <template #title>
+                    <el-icon><component :is="groupItem.icon" /></el-icon>
+                    <span>{{ groupItem.title }}</span>
+                  </template>
+                  <el-menu-item
+                    v-for="child in groupItem.children"
+                    :key="child.index"
+                    :index="child.index"
+                  >
+                    {{ child.title }}
+                  </el-menu-item>
+                </el-sub-menu>
 
-            <!-- Regular Item -->
-            <el-menu-item v-else :index="item.index">
-              <el-icon><component :is="item.icon" /></el-icon>
-              <template #title>{{ item.title }}</template>
-            </el-menu-item>
+                <!-- Regular Item -->
+                <el-menu-item v-else :index="groupItem.index">
+                  <el-icon><component :is="groupItem.icon" /></el-icon>
+                  <template #title>{{ groupItem.title }}</template>
+                </el-menu-item>
+              </template>
+            </el-menu-item-group>
+
+            <template v-else>
+              <!-- Submenu -->
+              <el-sub-menu v-if="item.children" :index="item.index">
+                <template #title>
+                  <el-icon><component :is="item.icon" /></el-icon>
+                  <span>{{ item.title }}</span>
+                </template>
+                <el-menu-item
+                  v-for="child in item.children"
+                  :key="child.index"
+                  :index="child.index"
+                >
+                  {{ child.title }}
+                </el-menu-item>
+              </el-sub-menu>
+
+              <!-- Regular Item -->
+              <el-menu-item v-else :index="item.index">
+                <el-icon><component :is="item.icon" /></el-icon>
+                <template #title>{{ item.title }}</template>
+              </el-menu-item>
+            </template>
           </template>
         </el-menu>
       </el-scrollbar>
@@ -193,7 +220,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted, watch } from "vue";
+import { ref, computed, reactive, onMounted, watch, type Component } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "@/stores/user";
 import {
@@ -231,8 +258,27 @@ type ApiResponse = {
   data?: unknown;
 };
 
+type MenuItem = {
+  index: string;
+  title: string;
+  icon?: Component;
+  children?: MenuItem[];
+};
+
+type MenuGroup = {
+  groupTitle: string;
+  items: MenuItem[];
+};
+
+type MenuEntry = MenuItem | MenuGroup;
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
+
+const isMenuGroup = (item: MenuEntry): item is MenuGroup => "items" in item;
+
+const menuEntryKey = (item: MenuEntry) =>
+  isMenuGroup(item) ? `group-${item.groupTitle}` : item.index;
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (!isRecord(error)) return fallback;
@@ -343,73 +389,88 @@ const loadCurrentBatch = async () => {
 };
 
 // Definition of Menus
-const currentMenus = computed(() => {
+const currentMenus = computed<MenuEntry[]>(() => {
   switch (userRole.value) {
     case "student":
       return [
         {
-          index: "establishment",
-          title: "立项管理",
-          icon: DocumentAdd,
-          children: [
-            { index: "/establishment/apply", title: "申请项目" },
-            { index: "/establishment/my-projects", title: "我的项目" },
-            { index: "/establishment/drafts", title: "草稿箱" },
+          groupTitle: "项目流程",
+          items: [
+            {
+              index: "establishment",
+              title: "立项管理",
+              icon: DocumentAdd,
+              children: [
+                { index: "/establishment/apply", title: "申请项目" },
+                { index: "/establishment/my-projects", title: "我的项目" },
+                { index: "/establishment/drafts", title: "草稿箱" },
+              ],
+            },
+            {
+              index: "midterm",
+              title: "中期检查",
+              icon: DocumentChecked,
+              children: [
+                { index: "/midterm/list", title: "提交报告" },
+                { index: "/midterm/drafts", title: "草稿箱" },
+              ],
+            },
+            {
+              index: "closure",
+              title: "结题管理",
+              icon: DocumentChecked,
+              children: [
+                { index: "/closure/pending", title: "待结题项目" },
+                { index: "/closure/applied", title: "已申请结题" },
+                { index: "/closure/drafts", title: "草稿箱" },
+              ],
+            },
           ],
         },
         {
-          index: "midterm",
-          title: "中期检查",
-          icon: DocumentChecked,
-          children: [
-            { index: "/midterm/list", title: "提交报告" },
-            { index: "/midterm/drafts", title: "草稿箱" },
+          groupTitle: "项目管理",
+          items: [
+            {
+              index: "/progress",
+              title: "项目进度",
+              icon: Folder,
+            },
+            {
+              index: "/change-requests",
+              title: "项目异动",
+              icon: DocumentAdd,
+            },
+            {
+              index: "/funds",
+              title: "经费管理",
+              icon: Folder,
+            },
+            {
+              index: "/achievements",
+              title: "成果管理",
+              icon: Folder,
+            },
           ],
         },
         {
-          index: "closure",
-          title: "结题管理",
-          icon: DocumentChecked,
-          children: [
-            { index: "/closure/pending", title: "待结题项目" },
-            { index: "/closure/applied", title: "已申请结题" },
-            { index: "/closure/drafts", title: "草稿箱" },
+          groupTitle: "消息与支持",
+          items: [
+            {
+              index: "/notifications",
+              title: "通知中心",
+              icon: Bell,
+            },
+            {
+              index: "/recycle-bin",
+              title: "回收站",
+              icon: Folder,
+            },
+            {
+              index: "/help",
+              title: "使用帮助",
+              icon: QuestionFilled,
+            },
           ],
-        },
-        {
-          index: "/funds",
-          title: "经费管理",
-          icon: Folder,
-        },
-        {
-          index: "/achievements",
-          title: "成果管理",
-          icon: Folder,
-        },
-        {
-          index: "/progress",
-          title: "项目进度",
-          icon: Folder,
-        },
-        {
-          index: "/change-requests",
-          title: "项目异动",
-          icon: DocumentAdd,
-        },
-        {
-          index: "/notifications",
-          title: "通知中心",
-          icon: Bell,
-        },
-        {
-          index: "/recycle-bin",
-          title: "回收站",
-          icon: Folder,
-        },
-        {
-          index: "help",
-          title: "使用帮助",
-          icon: QuestionFilled,
         },
       ];
     case "level2_admin":

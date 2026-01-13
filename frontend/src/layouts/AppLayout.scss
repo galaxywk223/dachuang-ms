@@ -62,6 +62,13 @@
     border-right: none;
     padding-top: 16px;
 
+    :deep(.el-menu-item-group__title) {
+      padding: 12px 20px 4px;
+      color: $color-sidebar-text;
+      font-size: 12px;
+      letter-spacing: 0.6px;
+    }
+
     /* Standard Menu Item Styles */
     :deep(.el-menu-item),
     :deep(.el-sub-menu__title) {
@@ -91,6 +98,10 @@
         display: flex;
         justify-content: center;
         align-items: center;
+      }
+
+      :deep(.el-menu-item-group__title) {
+        display: none;
       }
 
       :deep(.el-menu-item.is-active),
