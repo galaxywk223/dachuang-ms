@@ -25,40 +25,28 @@ export const adminRoutes: RouteRecordRaw[] = [
       {
         path: "users/teachers",
         name: "level1-users-teachers",
-        component: () => import("@/views/admin/level1/users/TeacherManagement.vue"),
+        component: () =>
+          import("@/views/admin/level1/users/TeacherManagement.vue"),
         meta: { title: "指导教师管理" },
       },
       {
         path: "users/experts",
         name: "level1-users-experts",
-        component: () => import("@/views/admin/level1/users/ExpertManagement.vue"),
+        component: () =>
+          import("@/views/admin/level1/users/ExpertManagement.vue"),
         meta: { title: "专家库管理" },
       },
       {
-        path: "data/colleges",
-        name: "level1-data-colleges",
-        component: () => import("@/views/admin/level1/data/Colleges.vue"),
-        meta: { title: "学院信息维护" },
+        path: "expert/groups",
+        name: "level1-expert-groups",
+        component: () => import("@/views/admin/shared/expert/Groups.vue"),
+        meta: { title: "校级专家组管理" },
       },
       {
-        path: "expert",
-        name: "level1-expert",
-        redirect: "/level1-admin/expert/groups",
-        meta: { title: "专家管理" },
-        children: [
-          {
-            path: "groups",
-            name: "level1-expert-groups",
-        component: () => import("@/views/admin/shared/expert/Groups.vue"),
-            meta: { title: "校级专家组管理" },
-          },
-          {
-            path: "assignment",
-            name: "level1-expert-assignment",
+        path: "expert/assignment",
+        name: "level1-expert-assignment",
         component: () => import("@/views/admin/shared/expert/Assignment.vue"),
-            meta: { title: "校级评审分配" },
-          },
-        ],
+        meta: { title: "校级评审分配" },
       },
       {
         path: "projects/all",
@@ -79,28 +67,17 @@ export const adminRoutes: RouteRecordRaw[] = [
         meta: { title: "统计概览" },
       },
       {
-        path: "review/establishment",
-        name: "level1-review-establishment",
-        component: () => import("@/views/admin/level1/review/Establishment.vue"),
-        meta: { title: "校级立项审核" },
-      },
-      {
-        path: "review/closure",
-        name: "level1-review-closure",
-        component: () => import("@/views/admin/level1/review/Closure.vue"),
-        meta: { title: "校级结题审核" },
+        path: "review",
+        name: "level1-review",
+        component: () =>
+          import("@/views/admin/level1/review/ReviewManagement.vue"),
+        meta: { title: "审核管理" },
       },
       {
         path: "projects/:id",
         name: "level1-project-detail",
         component: () => import("@/views/admin/level1/projects/Detail.vue"),
         meta: { title: "项目详情" },
-      },
-      {
-        path: "change/review",
-        name: "level1-change-review",
-        component: () => import("@/views/admin/level1/change/Reviews.vue"),
-        meta: { title: "项目异动审核" },
       },
       {
         path: "settings",
@@ -111,56 +88,44 @@ export const adminRoutes: RouteRecordRaw[] = [
           {
             path: "batches",
             name: "level1-settings-batches",
-            component: () => import("@/views/admin/level1/settings/Batches.vue"),
+            component: () =>
+              import("@/views/admin/level1/settings/Batches.vue"),
             meta: { title: "批次管理" },
           },
           {
             path: "batches/:id",
             name: "level1-settings-batch-config",
-            component: () => import("@/views/admin/level1/settings/SystemConfig.vue"),
+            component: () =>
+              import("@/views/admin/level1/settings/SystemConfig.vue"),
             meta: { title: "批次配置" },
           },
           {
             path: "certificate",
             name: "level1-settings-certificate",
-            component: () => import("@/views/admin/level1/settings/CertificateSettings.vue"),
+            component: () =>
+              import("@/views/admin/level1/settings/CertificateSettings.vue"),
             meta: { title: "结题证书" },
           },
           {
             path: "workflows",
             name: "level1-settings-workflows",
-            component: () => import("@/views/admin/level1/settings/WorkflowConfig.vue"),
+            component: () =>
+              import("@/views/admin/level1/settings/WorkflowConfig.vue"),
             meta: { title: "流程配置" },
           },
           {
             path: "review-templates",
             name: "level1-settings-review-templates",
-            component: () => import("@/views/admin/level1/settings/ReviewTemplates.vue"),
+            component: () =>
+              import("@/views/admin/level1/settings/ReviewTemplates.vue"),
             meta: { title: "评审模板" },
           },
           {
-            path: "project-dictionaries",
-            name: "level1-settings-project-dictionaries",
-            component: () => import("@/views/admin/level1/settings/SystemDictionaries.vue"),
-            meta: { title: "项目参数", category: "project" },
-          },
-          {
-            path: "org-dictionaries",
-            name: "level1-settings-org-dictionaries",
-            component: () => import("@/views/admin/level1/settings/SystemDictionaries.vue"),
-            meta: { title: "组织参数", category: "org" },
-          },
-          {
-            path: "achievement-dictionaries",
-            name: "level1-settings-achievement-dictionaries",
-            component: () => import("@/views/admin/level1/settings/SystemDictionaries.vue"),
-            meta: { title: "成果参数", category: "achievement" },
-          },
-          {
-            path: "other-dictionaries",
-            name: "level1-settings-other-dictionaries",
-            component: () => import("@/views/admin/level1/settings/SystemDictionaries.vue"),
-            meta: { title: "通用参数", category: "other" },
+            path: "dictionaries",
+            name: "level1-settings-dictionaries",
+            component: () =>
+              import("@/views/admin/level1/settings/DictionaryManagement.vue"),
+            meta: { title: "字典参数" },
           },
         ],
       },

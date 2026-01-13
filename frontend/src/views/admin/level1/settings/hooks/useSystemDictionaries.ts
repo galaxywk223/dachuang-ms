@@ -37,7 +37,8 @@ interface DictionaryItem {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
-const resolveList = <T,>(response: unknown): T[] => {
+const resolveList = <T>(response: unknown): T[] => {
+  if (Array.isArray(response)) return response as T[];
   if (!isRecord(response)) return [];
   if (Array.isArray(response.results)) return response.results as T[];
   if (isRecord(response.data) && Array.isArray(response.data.results)) {
@@ -53,26 +54,14 @@ const CATEGORY_GROUPS: Record<string, string[]> = {
     DICT_CODES.PROJECT_CATEGORY,
     DICT_CODES.PROJECT_SOURCE,
     DICT_CODES.KEY_FIELD_CODE,
-    DICT_CODES.PROJECT_STATUS,
-    DICT_CODES.CLOSURE_RATING,
   ],
-  org: [
-    DICT_CODES.COLLEGE,
-    DICT_CODES.MAJOR_CATEGORY,
-    DICT_CODES.TITLE,
-    DICT_CODES.USER_ROLE,
-    DICT_CODES.MEMBER_ROLE,
-  ],
+  org: [DICT_CODES.COLLEGE, DICT_CODES.MAJOR_CATEGORY, DICT_CODES.TITLE],
   achievement: [DICT_CODES.ACHIEVEMENT_TYPE],
-  other: [
-    DICT_CODES.REVIEW_TYPE,
-    DICT_CODES.REVIEW_LEVEL,
-    DICT_CODES.REVIEW_STATUS,
-    DICT_CODES.NOTIFICATION_TYPE,
-  ],
 };
 
-export function useSystemDictionaries(options: { category?: string } = {}) {
+export function useSystemDictionaries(
+  options: { category?: string; dictTypeCode?: string } = {}
+) {
   const dictionaryTypes = ref<DictionaryType[]>([]);
   const currentType = ref<DictionaryType | null>(null);
   const items = ref<DictionaryItem[]>([]);
@@ -86,14 +75,20 @@ export function useSystemDictionaries(options: { category?: string } = {}) {
   const selectedFile = ref<File | null>(null);
   const fileList = ref<UploadUserFile[]>([]);
 
-  const CODE_BASED_TYPES = ["major_category", "key_field_code", "project_level"];
+  const CODE_BASED_TYPES = [
+    "major_category",
+    "key_field_code",
+    "project_level",
+  ];
 
   const showCode = computed(() => {
     if (!currentType.value) return false;
     return CODE_BASED_TYPES.includes(currentType.value.code);
   });
 
-  const showBudget = computed(() => currentType.value?.code === "project_level");
+  const showBudget = computed(
+    () => currentType.value?.code === "project_level"
+  );
   const showTemplate = computed(
     () => currentType.value?.code === DICT_CODES.PROJECT_CATEGORY
   );
@@ -112,7 +107,9 @@ export function useSystemDictionaries(options: { category?: string } = {}) {
     };
 
     if (showCode.value) {
-      baseRules.value = [{ required: true, message: "请输入代码", trigger: "blur" }];
+      baseRules.value = [
+        { required: true, message: "请输入代码", trigger: "blur" },
+      ];
     }
 
     return baseRules;
@@ -133,9 +130,25 @@ export function useSystemDictionaries(options: { category?: string } = {}) {
         dictionaryTypes.value = allTypes;
       }
 
-      currentType.value = dictionaryTypes.value.length
-        ? dictionaryTypes.value[0]
-        : null;
+      // 如果提供了dictTypeCode，直接选中该类型
+      if (options.dictTypeCode) {
+        const targetType = allTypes.find(
+          (t: DictionaryType) => t.code === options.dictTypeCode
+        );
+        currentType.value = targetType || null;
+        // 立即加载该类型的数据
+        if (targetType) {
+          await fetchItems(targetType.code);
+        }
+      } else {
+        currentType.value = dictionaryTypes.value.length
+          ? dictionaryTypes.value[0]
+          : null;
+        // 立即加载第一个类型的数据
+        if (currentType.value) {
+          await fetchItems(currentType.value.code);
+        }
+      }
     } catch (error) {
       console.error("Failed to fetch dictionary types:", error);
       ElMessage.error("获取参数类型失败");
@@ -305,10 +318,11 @@ export function useSystemDictionaries(options: { category?: string } = {}) {
     }
   };
 
-  watch(currentType, async (newType) => {
-    if (newType) {
+  watch(currentType, async (newType, oldType) => {
+    // 只有当类型真正改变时才重新加载（避免初始化时重复加载）
+    if (newType && newType.code !== oldType?.code) {
       await fetchItems(newType.code);
-    } else {
+    } else if (!newType) {
       items.value = [];
     }
   });

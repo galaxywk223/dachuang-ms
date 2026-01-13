@@ -86,7 +86,6 @@
           </el-table-column>
           <el-table-column label="操作" fixed="right" min-width="150">
             <template #default="scope">
-              <el-button link type="primary" size="small" @click="handleView(scope.row)">查看</el-button>
               <el-button link type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
               <el-button 
                   link 
@@ -125,7 +124,7 @@
 
     <el-dialog
       v-model="addDialogVisible"
-      title="添加学生"
+      :title="isEditMode ? '编辑学生' : '添加学生'"
       width="720px"
       :close-on-click-modal="false"
       @closed="resetStudentForm"
@@ -140,7 +139,11 @@
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="学号" prop="employee_id">
-              <el-input v-model="studentForm.employee_id" placeholder="请输入学号" />
+              <el-input
+                v-model="studentForm.employee_id"
+                placeholder="请输入学号"
+                :disabled="isEditMode"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -148,7 +151,7 @@
               <el-input v-model="studentForm.real_name" placeholder="请输入姓名" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="12" v-if="!isEditMode">
             <el-form-item label="密码" prop="password">
               <el-input
                 v-model="studentForm.password"
@@ -211,7 +214,7 @@
             :loading="submitLoading"
             @click="handleCreateStudent"
           >
-            确认添加
+            {{ isEditMode ? '保存修改' : '确认添加' }}
           </el-button>
         </span>
       </template>
@@ -260,7 +263,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue';
 import { Search, Plus, Upload, UploadFilled } from '@element-plus/icons-vue';
-import { getUsers, toggleUserStatus, createUser, deleteUser } from '@/api/users/admin';
+import { getUsers, toggleUserStatus, createUser, updateUser, deleteUser } from '@/api/users/admin';
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadFile } from 'element-plus';
 import { useDictionary } from '@/composables/useDictionary';
 import { DICT_CODES } from '@/api/dictionaries';
@@ -313,6 +316,8 @@ const pageSize = ref(10);
 const addDialogVisible = ref(false);
 const submitLoading = ref(false);
 const studentFormRef = ref<FormInstance>();
+const isEditMode = ref(false);
+const currentId = ref<number | null>(null);
 const { loadDictionaries, getOptions, getLabel } = useDictionary();
 const studentForm = reactive({
   employee_id: '',
@@ -416,12 +421,22 @@ const handleCurrentChange = (val: number) => {
     loadData();
 };
 
-const handleView = (row: StudentRow) => {
-    ElMessage.info('查看详情: ' + row.real_name);
-};
-
 const handleEdit = (row: StudentRow) => {
-    ElMessage.info('编辑: ' + row.real_name);
+    isEditMode.value = true;
+    currentId.value = row.id;
+    Object.assign(studentForm, {
+      employee_id: row.employee_id,
+      real_name: row.real_name,
+      phone: row.phone ?? '',
+      email: row.email ?? '',
+      college: row.college ?? '',
+      major: row.major ?? '',
+      grade: row.grade ?? '',
+      class_name: row.class_name ?? '',
+      department: row.department ?? '',
+      password: ''
+    });
+    addDialogVisible.value = true;
 };
 
 const handleToggleStatus = async (row: StudentRow) => {
@@ -471,6 +486,9 @@ const handleDelete = async (row: StudentRow) => {
 };
 
 const resetStudentForm = () => {
+  addDialogVisible.value = false;
+  isEditMode.value = false;
+  currentId.value = null;
   Object.assign(studentForm, {
     employee_id: '',
     real_name: '',
@@ -487,6 +505,8 @@ const resetStudentForm = () => {
 };
 
 const openCreateDialog = () => {
+  isEditMode.value = false;
+  currentId.value = null;
   resetStudentForm();
   addDialogVisible.value = true;
 };
@@ -501,9 +521,14 @@ const handleCreateStudent = async () => {
     // Sanitize employee_id: remove any non-alphanumeric characters (e.g. quotes, spaces)
     const sanitizedId = studentForm.employee_id.replace(/[^a-zA-Z0-9]/g, '');
     const payload = { ...studentForm, employee_id: sanitizedId, role: 'STUDENT' };
-    const res = await createUser(payload);
+    let res;
+    if (isEditMode.value && currentId.value) {
+      res = await updateUser(currentId.value, payload);
+    } else {
+      res = await createUser(payload);
+    }
     if (isRecord(res) && res.code === 200) {
-      ElMessage.success('学生添加成功，默认密码为 123456');
+      ElMessage.success(isEditMode.value ? '学生修改成功' : '学生添加成功，默认密码为 123456');
       addDialogVisible.value = false;
       resetStudentForm();
       loadData();

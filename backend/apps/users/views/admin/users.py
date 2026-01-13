@@ -12,6 +12,7 @@ from django.conf import settings
 
 from ...models import User
 from ...serializers import UserSerializer, UserCreateSerializer
+from ...services import UserService
 
 
 class AdminUserViewSet(viewsets.ModelViewSet):
@@ -22,6 +23,10 @@ class AdminUserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user_service = UserService()
 
     def get_serializer_class(self):
         """Use the create serializer when creating users so we can set passwords and defaults."""
@@ -105,6 +110,14 @@ class AdminUserViewSet(viewsets.ModelViewSet):
                 },
             }
         )
+
+    def retrieve(self, request, *args, **kwargs):
+        """
+        获取用户详情
+        """
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response({"code": 200, "message": "获取成功", "data": serializer.data})
 
     def create(self, request, *args, **kwargs):
         """
@@ -306,9 +319,7 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         user.password = make_password(new_password)
         user.save()
 
-        return Response(
-            {"code": 200, "message": f"密码已重置为: {new_password}"}
-        )
+        return Response({"code": 200, "message": f"密码已重置为: {new_password}"})
 
     @action(methods=["get"], detail=False, url_path="statistics")
     def get_statistics(self, request):
@@ -332,3 +343,61 @@ class AdminUserViewSet(viewsets.ModelViewSet):
                 },
             }
         )
+
+    @action(methods=["post"], detail=False, url_path="import_data")
+    def import_data(self, request):
+        """
+        批量导入用户数据
+        """
+        file = request.FILES.get("file")
+        role = request.data.get("role", "STUDENT")
+        expert_scope = request.data.get("expert_scope")
+
+        if not file:
+            return Response(
+                {"code": 400, "message": "未上传文件"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            current_user = request.user
+            default_college = None
+
+            # 二级管理员权限检查
+            if current_user.is_level2_admin:
+                if role != User.UserRole.EXPERT:
+                    return Response(
+                        {"code": 403, "message": "二级管理员仅可导入院级专家"},
+                        status=status.HTTP_403_FORBIDDEN,
+                    )
+                if not current_user.college:
+                    return Response(
+                        {"code": 400, "message": "当前账号未设置学院信息"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                expert_scope = User.ExpertScope.COLLEGE
+                default_college = current_user.college
+            elif role == User.UserRole.EXPERT:
+                expert_scope = expert_scope or User.ExpertScope.COLLEGE
+                if expert_scope == User.ExpertScope.SCHOOL:
+                    default_college = ""
+
+            result = self.user_service.import_users(
+                file,
+                role,
+                expert_scope=expert_scope,
+                default_college=default_college,
+            )
+
+            return Response(
+                {
+                    "code": 200,
+                    "message": f"成功导入 {result['created']} 个用户",
+                    "data": result,
+                }
+            )
+        except Exception as e:
+            return Response(
+                {"code": 500, "message": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

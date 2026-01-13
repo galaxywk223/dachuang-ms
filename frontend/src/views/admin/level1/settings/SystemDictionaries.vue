@@ -1,15 +1,15 @@
 <template>
   <div class="dictionary-page">
-    <div class="page-header-wrapper">
+    <div class="page-header-wrapper" v-if="!dictTypeCode">
       <div class="title-bar">
-        <span class="title">{{ route.meta.title || '系统字典管理' }}</span>
+        <span class="title">{{ route.meta.title || "系统字典管理" }}</span>
       </div>
     </div>
 
     <div class="content-container">
       <el-row :gutter="20">
-        <!-- Dictionary Types List -->
-        <el-col :span="6">
+        <!-- Dictionary Types List - 只在未指定dictTypeCode时显示 -->
+        <el-col :span="6" v-if="!dictTypeCode">
           <el-card
             class="types-card"
             shadow="never"
@@ -37,7 +37,7 @@
         </el-col>
 
         <!-- Dictionary Items Management -->
-        <el-col :span="18">
+        <el-col :span="dictTypeCode ? 24 : 18">
           <el-card class="items-card main-card" shadow="never">
             <template #header>
               <div class="card-header">
@@ -197,7 +197,24 @@ import { useRoute } from "vue-router";
 import { Plus, Collection, ArrowRight } from "@element-plus/icons-vue";
 import { useSystemDictionaries } from "./hooks/useSystemDictionaries";
 
+// 支持props传入，也支持从route.meta获取
+const props = withDefaults(
+  defineProps<{
+    category?: string;
+    dictTypeCode?: string;
+  }>(),
+  {
+    category: undefined,
+    dictTypeCode: undefined,
+  }
+);
+
 const route = useRoute();
+
+// 优先使用props，其次使用route.meta
+const effectiveCategory = props.category || (route.meta.category as string);
+const effectiveDictTypeCode = props.dictTypeCode;
+
 const {
   dictionaryTypes,
   currentType,
@@ -221,7 +238,10 @@ const {
   handleRemoveFile,
   submitForm,
   deleteItem,
-} = useSystemDictionaries({ category: route.meta.category as string });
+} = useSystemDictionaries({
+  category: effectiveCategory,
+  dictTypeCode: effectiveDictTypeCode,
+});
 void formRef;
 </script>
 
