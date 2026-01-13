@@ -5,7 +5,7 @@
 from django.db.models import Q, Count, Sum, Avg
 from django.utils import timezone
 from datetime import timedelta
-from ..models import Project, ProjectExpenditure, ProjectAchievement
+from ..models import Project, ProjectAchievement
 from apps.reviews.models import Review
 from apps.users.models import User
 

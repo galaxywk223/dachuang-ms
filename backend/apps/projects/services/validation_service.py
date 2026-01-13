@@ -2,8 +2,6 @@
 项目申报智能校验服务
 """
 
-from django.db.models import Q, Count
-from django.core.exceptions import ValidationError
 from ..models import Project, ProjectMember
 from apps.system_settings.services import SystemSettingService
 from apps.users.models import User

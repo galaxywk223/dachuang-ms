@@ -8,17 +8,15 @@
 import os
 import sys
 import django
-from datetime import datetime, timedelta
+from datetime import timedelta
+from django.utils import timezone
+from apps.projects.models import Project, ProjectArchive
+from apps.projects.services.archive_service import ArchiveService
 
 # 设置Django环境
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
-
-from django.db import transaction
-from django.utils import timezone
-from apps.projects.models import Project, ProjectArchive
-from apps.projects.services.archive_service import ArchiveService
 
 
 def auto_archive_projects(months_after_closure=6, dry_run=False):
@@ -63,7 +61,7 @@ def auto_archive_projects(months_after_closure=6, dry_run=False):
                 print(f"  ✓ 归档成功 (归档ID: {archive.id})")
                 success_count += 1
             else:
-                print(f"  [模拟] 将被归档")
+                print("  [模拟] 将被归档")
                 success_count += 1
 
             print()
@@ -135,7 +133,7 @@ def archive_by_batch(batch_code, dry_run=False):
                 print(f"  ✓ 成功 (归档ID: {archive.id})\n")
                 success_count += 1
             else:
-                print(f"  [模拟] 将被归档\n")
+                print("  [模拟] 将被归档\n")
                 success_count += 1
 
         except Exception as e:

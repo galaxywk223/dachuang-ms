@@ -164,7 +164,6 @@ class BatchOperationService:
                     )
                     continue
 
-                old_status = project.status
                 project.status = new_status
                 project.save()
 
@@ -330,25 +329,5 @@ def _is_valid_status_transition(from_status, to_status):
     """
     检查状态转换是否合法
     """
-    # 定义允许的状态转换规则
-    valid_transitions = {
-        Project.ProjectStatus.DRAFT: [
-            Project.ProjectStatus.SUBMITTED,
-            Project.ProjectStatus.TERMINATED,
-        ],
-        Project.ProjectStatus.SUBMITTED: [
-            Project.ProjectStatus.TEACHER_AUDITING,
-            Project.ProjectStatus.APPLICATION_RETURNED,
-            Project.ProjectStatus.DRAFT,
-        ],
-        Project.ProjectStatus.IN_PROGRESS: [
-            Project.ProjectStatus.TASK_BOOK_DRAFT,
-            Project.ProjectStatus.MID_TERM_DRAFT,
-            Project.ProjectStatus.TERMINATED,
-        ],
-        # 可以继续添加更多规则...
-    }
-
-    # 管理员可以强制转换到任何状态（特殊情况）
-    # 这里简化处理，实际应根据角色权限判断
-    return True  # 暂时允许所有转换
+    # 任意状态转换都允许（根据实际业务需求调整）
+    return True

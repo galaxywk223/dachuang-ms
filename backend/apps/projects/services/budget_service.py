@@ -3,6 +3,7 @@
 """
 
 from django.db import transaction
+from django.db import models
 from django.utils import timezone
 from ..models import Project, ProjectExpenditure, BudgetChangeRequest
 from apps.notifications.services import NotificationService
@@ -250,6 +251,3 @@ class BudgetService:
             "remaining": float(remaining),
             "usage_rate": round(usage_rate, 2),
         }
-
-
-from django.db import models
