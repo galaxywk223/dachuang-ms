@@ -152,6 +152,32 @@
     >
       <el-form :model="reviewForm" label-position="top">
         <el-form-item
+          label="退回至"
+          v-if="reviewType === 'reject' && rejectTargets.length > 0"
+        >
+          <el-select
+            v-model="reviewForm.target_node_id"
+            placeholder="请选择退回节点"
+            style="width: 100%"
+            clearable
+          >
+            <el-option
+              v-for="node in rejectTargets"
+              :key="node.id"
+              :label="node.name"
+              :value="node.id"
+            >
+              <span>{{ node.name }}</span>
+              <span style="float: right; color: var(--el-text-color-secondary); font-size: 12px">
+                {{ node.role }}
+              </span>
+            </el-option>
+          </el-select>
+          <div style="color: var(--el-text-color-secondary); font-size: 12px; margin-top: 4px">
+            未选择时将退回到默认节点
+          </div>
+        </el-form-item>
+        <el-form-item
           :label="
             reviewType === 'approve' ? '审核意见 (可选)' : '驳回原因 (必填)'
           "
@@ -211,6 +237,7 @@ import { Search, RefreshLeft, Download } from "@element-plus/icons-vue";
 import { batchDownloadAttachments } from "@/api/projects/admin";
 import ProjectStatusBadge from "@/components/business/project/StatusBadge.vue";
 import request from "@/utils/request";
+import { getRejectTargetsByProject, type WorkflowNode } from "@/api/reviews";
 
 defineOptions({ name: "Level2ClosureReviewView" });
 
@@ -268,7 +295,9 @@ const reviewType = ref<"approve" | "reject">("approve");
 const reviewForm = ref({
   projectId: 0,
   comment: "",
+  target_node_id: null as number | null,
 });
+const rejectTargets = ref<WorkflowNode[]>([]);
 
 const batchDialogVisible = ref(false);
 const batchSubmitting = ref(false);
@@ -352,10 +381,23 @@ const handleApprove = (row: ProjectRow) => {
   reviewDialogVisible.value = true;
 };
 
-const handleReject = (row: ProjectRow) => {
+const handleReject = async (row: ProjectRow) => {
   reviewType.value = "reject";
   reviewForm.value.projectId = row.id;
   reviewForm.value.comment = "";
+  reviewForm.value.target_node_id = null;
+  rejectTargets.value = [];
+
+  // 加载可退回节点
+  try {
+    const res = await getRejectTargetsByProject(row.id);
+    if (res.code === 200) {
+      rejectTargets.value = res.data || [];
+    }
+  } catch (error) {
+    console.error("获取退回节点失败", error);
+    rejectTargets.value = [];
+  }
   reviewDialogVisible.value = true;
 };
 
@@ -378,9 +420,20 @@ const confirmReview = async () => {
         return;
       }
     } else {
+      const payload: {
+        phase: "CLOSURE";
+        reason: string;
+        target_node_id?: number | null;
+      } = {
+        phase: "CLOSURE",
+        reason: reviewForm.value.comment,
+      };
+      if (reviewForm.value.target_node_id) {
+        payload.target_node_id = reviewForm.value.target_node_id;
+      }
       const res = await request.post(
         `/projects/${reviewForm.value.projectId}/workflow/return-to-student/`,
-        { phase: "CLOSURE", reason: reviewForm.value.comment }
+        payload
       );
       if (isRecord(res) && res.code === 200) {
         ElMessage.success("已退回学生修改");

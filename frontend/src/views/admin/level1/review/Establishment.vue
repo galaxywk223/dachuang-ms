@@ -3,12 +3,13 @@
     <el-card class="main-card" shadow="never">
       <template #header>
         <div class="card-header">
-           <div class="header-left">
-             <span class="header-title">校级立项审核</span>
-             <el-tag type="info" size="small" effect="plain" round class="ml-2">共 {{ total }} 项</el-tag>
-           </div>
-           <div class="header-actions">
-           </div>
+          <div class="header-left">
+            <span class="header-title">校级立项审核</span>
+            <el-tag type="info" size="small" effect="plain" round class="ml-2"
+              >共 {{ total }} 项</el-tag
+            >
+          </div>
+          <div class="header-actions"></div>
         </div>
       </template>
 
@@ -33,7 +34,9 @@
       </div>
 
       <div class="action-bar mb-4">
-          <el-button type="danger" plain @click="openBatchDialog">批量驳回</el-button>
+        <el-button type="danger" plain @click="openBatchDialog"
+          >批量驳回</el-button
+        >
       </div>
 
       <el-table
@@ -112,7 +115,10 @@
         </el-table-column>
         <el-table-column label="审核节点" width="120" align="center">
           <template #default="{ row }">
-            <ProjectStatusBadge :status="row.status" :label="row.status_display" />
+            <ProjectStatusBadge
+              :status="row.status"
+              :label="row.status_display"
+            />
           </template>
         </el-table-column>
 
@@ -189,11 +195,7 @@
       destroy-on-close
     >
       <el-form :model="reviewForm" label-position="top">
-        <el-form-item
-          v-if="reviewType === 'approve'"
-          label="批准经费"
-          required
-        >
+        <el-form-item v-if="reviewType === 'approve'" label="批准经费" required>
           <el-input-number
             v-model="reviewForm.approved_budget"
             :min="0"
@@ -201,6 +203,43 @@
             class="w-full"
             controls-position="right"
           />
+        </el-form-item>
+        <el-form-item
+          label="退回至"
+          v-if="reviewType === 'reject' && rejectTargets.length > 0"
+        >
+          <el-select
+            v-model="reviewForm.target_node_id"
+            placeholder="请选择退回节点"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="node in rejectTargets"
+              :key="node.id"
+              :label="node.name"
+              :value="node.id"
+            >
+              <span>{{ node.name }}</span>
+              <span
+                style="
+                  float: right;
+                  color: var(--el-text-color-secondary);
+                  font-size: 12px;
+                "
+              >
+                {{ node.role }}
+              </span>
+            </el-option>
+          </el-select>
+          <div
+            style="
+              color: var(--el-text-color-secondary);
+              font-size: 12px;
+              margin-top: 4px;
+            "
+          >
+            未选择时将退回到默认节点
+          </div>
         </el-form-item>
         <el-form-item
           :label="
@@ -234,13 +273,22 @@
     <el-dialog v-model="batchDialogVisible" title="批量驳回" width="520px">
       <el-form label-position="top">
         <el-form-item label="驳回原因（必填）">
-          <el-input v-model="batchForm.comments" type="textarea" :rows="4" placeholder="请输入驳回原因" />
+          <el-input
+            v-model="batchForm.comments"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入驳回原因"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="batchDialogVisible = false">取消</el-button>
-          <el-button type="danger" :loading="batchSubmitting" @click="submitBatchReject">
+          <el-button
+            type="danger"
+            :loading="batchSubmitting"
+            @click="submitBatchReject"
+          >
             提交驳回
           </el-button>
         </span>
@@ -252,15 +300,15 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { ElMessage } from "element-plus";
+import { Search, Check, Close, ArrowDown } from "@element-plus/icons-vue";
 import {
-  Search,
-  Check,
-  Close,
-  ArrowDown,
-} from "@element-plus/icons-vue";
-import { getReviewProjects, approveProject, rejectProject } from "@/api/projects/admin";
+  getReviewProjects,
+  approveProject,
+  rejectProject,
+} from "@/api/projects/admin";
 import ProjectStatusBadge from "@/components/business/project/StatusBadge.vue";
 import request from "@/utils/request";
+import { getRejectTargetsByProject, type WorkflowNode } from "@/api/reviews";
 
 defineOptions({ name: "Level1EstablishmentReviewView" });
 
@@ -297,7 +345,11 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (!isRecord(error)) return fallback;
   const response = error.response;
-  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === "string") {
+  if (
+    isRecord(response) &&
+    isRecord(response.data) &&
+    typeof response.data.message === "string"
+  ) {
     return response.data.message;
   }
   if (typeof error.message === "string") return error.message;
@@ -318,7 +370,9 @@ const reviewForm = ref({
   projectId: 0,
   comment: "",
   approved_budget: null as number | null,
+  target_node_id: null as number | null,
 });
+const rejectTargets = ref<WorkflowNode[]>([]);
 
 const batchDialogVisible = ref(false);
 const batchSubmitting = ref(false);
@@ -389,11 +443,23 @@ const handleApprove = (row: ProjectRow) => {
   reviewDialogVisible.value = true;
 };
 
-const handleReject = (row: ProjectRow) => {
+const handleReject = async (row: ProjectRow) => {
   reviewType.value = "reject";
   reviewForm.value.projectId = row.id;
   reviewForm.value.comment = "";
   reviewForm.value.approved_budget = null;
+  reviewForm.value.target_node_id = null;
+  rejectTargets.value = [];
+  // 加载可退回节点
+  try {
+    const res = await getRejectTargetsByProject(row.id);
+    if (res.code === 200) {
+      rejectTargets.value = res.data || [];
+    }
+  } catch (error) {
+    console.error("获取退回节点失败", error);
+    rejectTargets.value = [];
+  }
   reviewDialogVisible.value = true;
 };
 
@@ -402,21 +468,38 @@ const confirmReview = async () => {
     ElMessage.warning("请输入驳回原因");
     return;
   }
-  if (reviewType.value === "approve" && reviewForm.value.approved_budget === null) {
+  if (
+    reviewType.value === "approve" &&
+    reviewForm.value.approved_budget === null
+  ) {
     ElMessage.warning("请填写批准经费");
     return;
   }
 
   try {
-    const data: { comment: string; approved_budget?: number | null } = {
+    const data: {
+      comment: string;
+      approved_budget?: number | null;
+      target_node_id?: number | null;
+    } = {
       comment: reviewForm.value.comment,
     };
     let response: ReviewProjectsResponse;
     if (reviewType.value === "approve") {
       data.approved_budget = reviewForm.value.approved_budget;
-      response = (await approveProject(reviewForm.value.projectId, data)) as ReviewProjectsResponse;
+      response = (await approveProject(
+        reviewForm.value.projectId,
+        data
+      )) as ReviewProjectsResponse;
     } else {
-      response = (await rejectProject(reviewForm.value.projectId, data)) as ReviewProjectsResponse;
+      // 如果是退回且选择了目标节点
+      if (reviewForm.value.target_node_id) {
+        data.target_node_id = reviewForm.value.target_node_id;
+      }
+      response = (await rejectProject(
+        reviewForm.value.projectId,
+        data
+      )) as ReviewProjectsResponse;
     }
 
     if (response.code === 200) {
@@ -485,9 +568,9 @@ onMounted(() => {
 .main-card {
   border-radius: 8px;
   :deep(.el-card__header) {
-      padding: 16px 20px;
-      font-weight: 600;
-      border-bottom: 1px solid $color-border-light;
+    padding: 16px 20px;
+    font-weight: 600;
+    border-bottom: 1px solid $color-border-light;
   }
 }
 
@@ -498,32 +581,37 @@ onMounted(() => {
 }
 
 .header-left {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .header-title {
-    font-size: 16px;
-    color: $slate-800;
+  font-size: 16px;
+  color: $slate-800;
 }
 
 .header-actions {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .action-bar {
-    display: flex;
-    justify-content: flex-end;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .pagination-container {
-    display: flex;
-    justify-content: flex-end;
+  display: flex;
+  justify-content: flex-end;
 }
 
-.ml-2 { margin-left: 8px; }
-.mb-4 { margin-bottom: 16px; }
-.mt-4 { margin-top: 16px; }
-
+.ml-2 {
+  margin-left: 8px;
+}
+.mb-4 {
+  margin-bottom: 16px;
+}
+.mt-4 {
+  margin-top: 16px;
+}
 </style>

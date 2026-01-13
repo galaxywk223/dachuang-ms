@@ -14,15 +14,23 @@ from .views import (
     ReviewTemplateViewSet,
     ReviewTemplateItemViewSet,
 )
+from .views.batch_workflow import BatchWorkflowViewSet
 
 router = DefaultRouter()
 router.register(r"settings", SystemSettingViewSet, basename="system-settings")
-router.register(r"certificates", CertificateSettingViewSet, basename="certificate-settings")
+router.register(
+    r"certificates", CertificateSettingViewSet, basename="certificate-settings"
+)
 router.register(r"batches", ProjectBatchViewSet, basename="project-batches")
 router.register(r"workflows", WorkflowConfigViewSet, basename="workflow-configs")
 router.register(r"workflow-nodes", WorkflowNodeViewSet, basename="workflow-nodes")
 router.register(r"review-templates", ReviewTemplateViewSet, basename="review-templates")
-router.register(r"review-template-items", ReviewTemplateItemViewSet, basename="review-template-items")
+router.register(
+    r"review-template-items",
+    ReviewTemplateItemViewSet,
+    basename="review-template-items",
+)
+router.register(r"batch-workflows", BatchWorkflowViewSet, basename="batch-workflows")
 
 urlpatterns = [
     path("", include(router.urls)),

@@ -5,20 +5,28 @@
         <div class="custom-header">
           <div class="header-left">
             <span class="header-title">批次配置</span>
-            <span v-if="batchTitle" class="batch-title ml-2">{{ batchTitle }}</span>
-            <el-tag v-if="batchStatusLabel" :type="batchStatusType" effect="plain" class="ml-2" size="small">
+            <span v-if="batchTitle" class="batch-title ml-2">{{
+              batchTitle
+            }}</span>
+            <el-tag
+              v-if="batchStatusLabel"
+              :type="batchStatusType"
+              effect="plain"
+              class="ml-2"
+              size="small"
+            >
               {{ batchStatusLabel }}
             </el-tag>
           </div>
           <div class="header-right">
             <el-button @click="goBack" class="mr-2">返回</el-button>
             <el-button
-                type="primary"
-                :loading="savingAll"
-                :disabled="!batchId || isReadOnly"
-                @click="saveAll"
+              type="primary"
+              :loading="savingAll"
+              :disabled="!batchId || isReadOnly"
+              @click="saveAll"
             >
-                保存全部
+              保存全部
             </el-button>
           </div>
         </div>
@@ -35,7 +43,6 @@
         </el-alert>
 
         <el-tabs v-model="activeTab">
-
           <el-tab-pane label="日期配置" name="dates">
             <SystemConfigDatesTab
               v-model:global-date-range="globalDateRange"
@@ -46,11 +53,21 @@
               :closure-window="closureWindow"
               :expert-review-window="expertReviewWindow"
               :review-window="reviewWindow"
-              @update:application-window="(value) => Object.assign(applicationWindow, value)"
-              @update:midterm-window="(value) => Object.assign(midtermWindow, value)"
-              @update:closure-window="(value) => Object.assign(closureWindow, value)"
-              @update:expert-review-window="(value) => Object.assign(expertReviewWindow, value)"
-              @update:review-window="(value) => Object.assign(reviewWindow, value)"
+              @update:application-window="
+                (value) => Object.assign(applicationWindow, value)
+              "
+              @update:midterm-window="
+                (value) => Object.assign(midtermWindow, value)
+              "
+              @update:closure-window="
+                (value) => Object.assign(closureWindow, value)
+              "
+              @update:expert-review-window="
+                (value) => Object.assign(expertReviewWindow, value)
+              "
+              @update:review-window="
+                (value) => Object.assign(reviewWindow, value)
+              "
             />
           </el-tab-pane>
 
@@ -60,10 +77,14 @@
               :validation-rules="validationRules"
               v-model:college-quota-text="collegeQuotaText"
               v-model:allowed-types-by-college-text="allowedTypesByCollegeText"
-              v-model:allowed-levels-by-college-text="allowedLevelsByCollegeText"
+              v-model:allowed-levels-by-college-text="
+                allowedLevelsByCollegeText
+              "
               :is-process-locked="isProcessLocked"
               @update:limit-rules="(value) => Object.assign(limitRules, value)"
-              @update:validation-rules="(value) => Object.assign(validationRules, value)"
+              @update:validation-rules="
+                (value) => Object.assign(validationRules, value)
+              "
             />
           </el-tab-pane>
 
@@ -72,9 +93,17 @@
               :process-rules="processRules"
               :review-rules="reviewRules"
               :is-process-locked="isProcessLocked"
-              @update:process-rules="(value) => Object.assign(processRules, value)"
-              @update:review-rules="(value) => Object.assign(reviewRules, value)"
+              @update:process-rules="
+                (value) => Object.assign(processRules, value)
+              "
+              @update:review-rules="
+                (value) => Object.assign(reviewRules, value)
+              "
             />
+          </el-tab-pane>
+
+          <el-tab-pane label="工作流配置" name="workflow">
+            <BatchWorkflowConfig v-if="batchId" :batch-id="batchId" />
           </el-tab-pane>
         </el-tabs>
       </template>
@@ -86,11 +115,15 @@
 import { reactive, ref, computed, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { getEffectiveSettings, updateSettingByCode } from "@/api/system-settings";
+import {
+  getEffectiveSettings,
+  updateSettingByCode,
+} from "@/api/system-settings";
 import { getProjectBatch } from "@/api/system-settings/batches";
 import SystemConfigDatesTab from "./components/SystemConfigDatesTab.vue";
 import SystemConfigLimitsTab from "./components/SystemConfigLimitsTab.vue";
 import SystemConfigProcessTab from "./components/SystemConfigProcessTab.vue";
+import BatchWorkflowConfig from "@/components/business/BatchWorkflowConfig.vue";
 
 defineOptions({ name: "Level1SystemConfigView" });
 
@@ -109,7 +142,11 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (!isRecord(error)) return fallback;
   const response = error.response;
-  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === "string") {
+  if (
+    isRecord(response) &&
+    isRecord(response.data) &&
+    typeof response.data.message === "string"
+  ) {
     return response.data.message;
   }
   if (typeof error.message === "string") return error.message;
@@ -131,7 +168,6 @@ const batchId = computed(() => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
 });
-
 
 const batchStatusOptions = [
   { value: "draft", label: "草稿" },
@@ -166,7 +202,9 @@ const batchTitle = computed(() => {
 const batchStatusLabel = computed(() =>
   batchInfo.value ? getStatusLabel(batchInfo.value.status) : ""
 );
-const batchStatusType = computed(() => getStatusTagType(batchInfo.value?.status));
+const batchStatusType = computed(() =>
+  getStatusTagType(batchInfo.value?.status)
+);
 const isArchived = computed(() => batchInfo.value?.status === "archived");
 const isFinished = computed(() => batchInfo.value?.status === "finished");
 const isActive = computed(() => batchInfo.value?.status === "active");
@@ -235,13 +273,18 @@ const goBack = () => {
   router.push({ name: "level1-settings-batches" });
 };
 
-const fillRange = (target: { range: string[] }, data: { start?: string; end?: string }) => {
+const fillRange = (
+  target: { range: string[] },
+  data: { start?: string; end?: string }
+) => {
   target.range = data.start && data.end ? [data.start, data.end] : [];
 };
 
 const getWindowSegment = (source: Record<string, unknown>, key: string) => {
   const segment = source[key];
-  return isRecord(segment) ? (segment as { enabled?: boolean; start?: string; end?: string }) : {};
+  return isRecord(segment)
+    ? (segment as { enabled?: boolean; start?: string; end?: string })
+    : {};
 };
 
 const loadBatch = async () => {
@@ -251,7 +294,9 @@ const loadBatch = async () => {
   }
   try {
     const res = await getProjectBatch(batchId.value);
-    batchInfo.value = (isRecord(res) && "data" in res ? res.data : res) as BatchInfo | null;
+    batchInfo.value = (
+      isRecord(res) && "data" in res ? res.data : res
+    ) as BatchInfo | null;
   } catch (error) {
     console.error(error);
     ElMessage.error(getErrorMessage(error, "加载批次失败"));
@@ -262,7 +307,9 @@ const loadSettings = async () => {
   if (!batchId.value) return;
   try {
     const res = await getEffectiveSettings(batchId.value);
-    const data = (isRecord(res) && "data" in res ? res.data : res) as SettingsPayload;
+    const data = (
+      isRecord(res) && "data" in res ? res.data : res
+    ) as SettingsPayload;
 
     const app = (data.APPLICATION_WINDOW as Record<string, unknown>) || {};
     applicationWindow.enabled = !!app.enabled;
@@ -313,7 +360,11 @@ const loadSettings = async () => {
     fillRange(reviewWindow.closure.level1, cloLevel1);
 
     Object.assign(limitRules, data.LIMIT_RULES || {});
-    collegeQuotaText.value = JSON.stringify(limitRules.college_quota || {}, null, 2);
+    collegeQuotaText.value = JSON.stringify(
+      limitRules.college_quota || {},
+      null,
+      2
+    );
 
     Object.assign(processRules, data.PROCESS_RULES || {});
     Object.assign(reviewRules, data.REVIEW_RULES || {});
@@ -375,8 +426,12 @@ const saveAll = async () => {
     let allowedTypesByCollege = {};
     let allowedLevelsByCollege = {};
     try {
-      allowedTypesByCollege = JSON.parse(allowedTypesByCollegeText.value || "{}");
-      allowedLevelsByCollege = JSON.parse(allowedLevelsByCollegeText.value || "{}");
+      allowedTypesByCollege = JSON.parse(
+        allowedTypesByCollegeText.value || "{}"
+      );
+      allowedLevelsByCollege = JSON.parse(
+        allowedLevelsByCollegeText.value || "{}"
+      );
     } catch {
       ElMessage.error("项目类型/级别限制配置不是有效的JSON");
       return;
@@ -479,7 +534,7 @@ const saveAll = async () => {
 
 const applyBatchDates = async () => {
   if (!globalDateRange.value || globalDateRange.value.length !== 2) return;
-  
+
   try {
     await ElMessageBox.confirm(
       "确定要将所有配置项的时间段都设置为当前选中时间吗？这会覆盖原有的时间设置。",
@@ -492,7 +547,7 @@ const applyBatchDates = async () => {
     );
 
     const range = [...globalDateRange.value];
-    
+
     // Submissions
     applicationWindow.range = [...range];
     midtermWindow.range = [...range];

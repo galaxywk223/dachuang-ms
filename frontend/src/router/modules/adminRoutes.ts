@@ -13,13 +13,15 @@ export const adminRoutes: RouteRecordRaw[] = [
       {
         path: "users",
         name: "level1-users",
-        component: () => import("@/views/admin/level1/users/UserManagement.vue"),
+        component: () =>
+          import("@/views/admin/level1/users/UserManagement.vue"),
         meta: { title: "用户管理" },
       },
       {
         path: "roles",
         name: "level1-roles",
-        component: () => import("@/views/admin/level1/users/RoleManagement.vue"),
+        component: () =>
+          import("@/views/admin/level1/users/RoleManagement.vue"),
         meta: { title: "角色管理" },
       },
       {
@@ -30,7 +32,10 @@ export const adminRoutes: RouteRecordRaw[] = [
       {
         path: "users/admins",
         name: "level1-users-admins",
-        redirect: { path: "/level1-admin/users", query: { role: "LEVEL2_ADMIN" } },
+        redirect: {
+          path: "/level1-admin/users",
+          query: { role: "LEVEL2_ADMIN" },
+        },
       },
       {
         path: "users/teachers",
@@ -114,10 +119,8 @@ export const adminRoutes: RouteRecordRaw[] = [
           },
           {
             path: "workflows",
-            name: "level1-settings-workflows",
-            component: () =>
-              import("@/views/admin/level1/settings/WorkflowConfig.vue"),
-            meta: { title: "流程配置" },
+            redirect: { name: "level1-settings-batches" },
+            meta: { title: "流程配置（已迁移）" },
           },
           {
             path: "review-templates",

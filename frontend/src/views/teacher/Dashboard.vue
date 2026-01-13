@@ -14,39 +14,53 @@
         <el-tab-pane label="我指导的项目" name="my_projects"></el-tab-pane>
       </el-tabs>
 
-      <el-table v-loading="loading" :data="projects" style="width: 100%" stripe border>
+      <el-table
+        v-loading="loading"
+        :data="projects"
+        style="width: 100%"
+        stripe
+        border
+      >
         <el-table-column prop="project_no" label="项目编号" width="150" />
-        <el-table-column prop="title" label="项目名称" min-width="200" show-overflow-tooltip />
+        <el-table-column
+          prop="title"
+          label="项目名称"
+          min-width="200"
+          show-overflow-tooltip
+        />
         <el-table-column prop="leader_name" label="负责人" width="120" />
         <el-table-column prop="level_display" label="级别" width="100" />
-        <el-table-column prop="review_type_display" label="审核类型" width="120" />
+        <el-table-column
+          prop="review_type_display"
+          label="审核类型"
+          width="120"
+        />
         <el-table-column prop="status_display" label="当前状态" width="150">
-           <template #default="scope">
-              <el-tag>{{ scope.row.status_display }}</el-tag>
-           </template>
+          <template #default="scope">
+            <el-tag>{{ scope.row.status_display }}</el-tag>
+          </template>
         </el-table-column>
         <el-table-column prop="created_at" label="创建时间" width="180">
-            <template #default="scope">
-                {{ formatDate(scope.row.created_at) }}
-            </template>
+          <template #default="scope">
+            {{ formatDate(scope.row.created_at) }}
+          </template>
         </el-table-column>
         <el-table-column label="操作" width="150" align="center" fixed="right">
           <template #default="scope">
-             <el-button 
-                v-if="activeTab === 'pending' || scope.row.status === 'TEACHER_AUDITING'"
-                size="small" 
-                type="primary" 
-                @click="handleReview(scope.row)"
-             >
-                审核
-             </el-button>
-             <el-button 
-                v-else
-                size="small" 
-                @click="handleView(scope.row)"
-             >
-                查看
-             </el-button>
+            <el-button
+              v-if="
+                activeTab === 'pending' ||
+                scope.row.status === 'TEACHER_AUDITING'
+              "
+              size="small"
+              type="primary"
+              @click="handleReview(scope.row)"
+            >
+              审核
+            </el-button>
+            <el-button v-else size="small" @click="handleView(scope.row)">
+              查看
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -60,35 +74,78 @@
       @close="handleClose"
     >
       <el-descriptions title="项目信息" :column="1" border class="mb-4">
-          <el-descriptions-item label="项目名称">{{ currentProject?.title }}</el-descriptions-item>
-          <el-descriptions-item label="项目编号">{{ currentProject?.project_no }}</el-descriptions-item>
-           <el-descriptions-item label="负责人">{{ currentProject?.leader_name }}</el-descriptions-item>
-          <el-descriptions-item label="材料">
-             <a
-               v-if="currentProject?.file_url"
-               :href="currentProject.file_url"
-               target="_blank"
-             >
-               {{ currentProject.file_label }}
-             </a>
-             <span v-else>无</span>
-          </el-descriptions-item>
+        <el-descriptions-item label="项目名称">{{
+          currentProject?.title
+        }}</el-descriptions-item>
+        <el-descriptions-item label="项目编号">{{
+          currentProject?.project_no
+        }}</el-descriptions-item>
+        <el-descriptions-item label="负责人">{{
+          currentProject?.leader_name
+        }}</el-descriptions-item>
+        <el-descriptions-item label="材料">
+          <a
+            v-if="currentProject?.file_url"
+            :href="currentProject.file_url"
+            target="_blank"
+          >
+            {{ currentProject.file_label }}
+          </a>
+          <span v-else>无</span>
+        </el-descriptions-item>
       </el-descriptions>
 
       <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="审核结果" prop="action">
-             <el-radio-group v-model="form.action">
-                 <el-radio label="approve">通过</el-radio>
-                 <el-radio label="reject">驳回</el-radio>
-             </el-radio-group>
+          <el-radio-group v-model="form.action">
+            <el-radio label="approve">通过</el-radio>
+            <el-radio label="reject">驳回</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item
+          label="退回至"
+          v-if="form.action === 'reject' && rejectTargets.length > 0"
+        >
+          <el-select
+            v-model="form.target_node_id"
+            placeholder="请选择退回节点"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="node in rejectTargets"
+              :key="node.id"
+              :label="node.name"
+              :value="node.id"
+            >
+              <span>{{ node.name }}</span>
+              <span
+                style="
+                  float: right;
+                  color: var(--el-text-color-secondary);
+                  font-size: 12px;
+                "
+              >
+                {{ node.role }}
+              </span>
+            </el-option>
+          </el-select>
+          <div
+            style="
+              color: var(--el-text-color-secondary);
+              font-size: 12px;
+              margin-top: 4px;
+            "
+          >
+            未选择时将退回到默认节点
+          </div>
         </el-form-item>
         <el-form-item label="审核意见" prop="comments">
-           <el-input 
-              v-model="form.comments" 
-              type="textarea" 
-              :rows="4" 
-              placeholder="请输入审核意见"
-           />
+          <el-input
+            v-model="form.comments"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入审核意见"
+          />
         </el-form-item>
       </el-form>
 
@@ -112,6 +169,16 @@ import request from "@/utils/request";
 import dayjs from "dayjs";
 import { useUserStore } from "@/stores/user";
 import StatsSection from "@/components/dashboard/StatsSection.vue";
+import {
+  reviewAction,
+  getRejectTargets,
+  type WorkflowNode,
+} from "@/api/reviews";
+import {
+  reviewAction,
+  getRejectTargets,
+  type WorkflowNode,
+} from "@/api/reviews";
 
 defineOptions({
   name: "TeacherDashboardView",
@@ -149,12 +216,16 @@ type TeacherProjectRow = ProjectInfo & {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
-const resolveList = <T,>(payload: unknown): T[] => {
+const resolveList = <T>(payload: unknown): T[] => {
   if (Array.isArray(payload)) return payload as T[];
   if (isRecord(payload) && Array.isArray(payload.results)) {
     return payload.results as T[];
   }
-  if (isRecord(payload) && isRecord(payload.data) && Array.isArray(payload.data.results)) {
+  if (
+    isRecord(payload) &&
+    isRecord(payload.data) &&
+    Array.isArray(payload.data.results)
+  ) {
     return payload.data.results as T[];
   }
   if (isRecord(payload) && Array.isArray(payload.data)) {
@@ -191,26 +262,26 @@ const userStore = useUserStore();
 const welcomeUser = computed(() => userStore.user ?? undefined);
 
 const statistics = reactive({
-    myProjects: 0,
-    pending: 0,
-    inProgress: 0,
-    unreadNotifications: 0,
+  myProjects: 0,
+  pending: 0,
+  inProgress: 0,
+  unreadNotifications: 0,
 });
 const inProgressStatuses = new Set([
-    "IN_PROGRESS",
-    "MID_TERM_DRAFT",
-    "MID_TERM_SUBMITTED",
-    "MID_TERM_REVIEWING",
-    "MID_TERM_APPROVED",
-    "MID_TERM_REJECTED",
-    "CLOSURE_DRAFT",
-    "CLOSURE_SUBMITTED",
-    "CLOSURE_LEVEL2_REVIEWING",
-    "CLOSURE_LEVEL2_APPROVED",
-    "CLOSURE_LEVEL2_REJECTED",
-    "CLOSURE_LEVEL1_REVIEWING",
-    "CLOSURE_LEVEL1_APPROVED",
-    "CLOSURE_LEVEL1_REJECTED",
+  "IN_PROGRESS",
+  "MID_TERM_DRAFT",
+  "MID_TERM_SUBMITTED",
+  "MID_TERM_REVIEWING",
+  "MID_TERM_APPROVED",
+  "MID_TERM_REJECTED",
+  "CLOSURE_DRAFT",
+  "CLOSURE_SUBMITTED",
+  "CLOSURE_LEVEL2_REVIEWING",
+  "CLOSURE_LEVEL2_APPROVED",
+  "CLOSURE_LEVEL2_REJECTED",
+  "CLOSURE_LEVEL1_REVIEWING",
+  "CLOSURE_LEVEL1_APPROVED",
+  "CLOSURE_LEVEL1_REJECTED",
 ]);
 
 const dialogVisible = ref(false);
@@ -218,152 +289,176 @@ const currentProject = ref<TeacherProjectRow | null>(null);
 const currentReviewId = ref<number | null>(null);
 const formRef = ref<FormInstance>();
 const form = reactive({
-    action: "approve",
-    comments: "",
+  action: "approve",
+  comments: "",
+  target_node_id: null as number | null,
 });
+const rejectTargets = ref<WorkflowNode[]>([]);
 
 const rules = reactive<FormRules>({
-    action: [{ required: true, message: "请选择结果", trigger: "change" }],
-    comments: [{ required: true, message: "请输入审核意见", trigger: "blur" }],
+  action: [{ required: true, message: "请选择结果", trigger: "change" }],
+  comments: [{ required: true, message: "请输入审核意见", trigger: "blur" }],
 });
 
-const parseListResponse = <T,>(payload: unknown) => {
-    const data = isRecord(payload) && isRecord(payload.data) ? payload.data : payload;
-    const results = resolveList<T>(data);
-    const count = getCount(data) || results.length;
-    return { results, count };
+const parseListResponse = <T>(payload: unknown) => {
+  const data =
+    isRecord(payload) && isRecord(payload.data) ? payload.data : payload;
+  const results = resolveList<T>(data);
+  const count = getCount(data) || results.length;
+  return { results, count };
 };
 
 const fetchPendingReviews = async () => {
-    const res = await request.get("/reviews/", {
-        params: { status: "PENDING", review_level: "TEACHER" },
-    });
-    return parseListResponse<ReviewRecord>(res);
+  const res = await request.get("/reviews/", {
+    params: { status: "PENDING", review_level: "TEACHER" },
+  });
+  return parseListResponse<ReviewRecord>(res);
 };
 
 const fetchMyProjects = async () => {
-    const res = await request.get("/projects/");
-    return parseListResponse<ProjectInfo>(res);
+  const res = await request.get("/projects/");
+  return parseListResponse<ProjectInfo>(res);
 };
 
 const refreshStats = async () => {
-    try {
-        const [pendingRes, projectsRes, unreadRes] = await Promise.all([
-            fetchPendingReviews(),
-            fetchMyProjects(),
-            request.get("/notifications/unread_count/"),
-        ]);
-        statistics.pending = pendingRes.count;
-        statistics.myProjects = projectsRes.count;
-        statistics.inProgress = (projectsRes.results || []).filter(
-            (item) => inProgressStatuses.has(item.status || "")
-        ).length;
-        statistics.unreadNotifications =
-          unreadRes?.data?.data?.count ?? unreadRes?.data?.count ?? 0;
-    } catch (error) {
-        console.error(error);
-    }
+  try {
+    const [pendingRes, projectsRes, unreadRes] = await Promise.all([
+      fetchPendingReviews(),
+      fetchMyProjects(),
+      request.get("/notifications/unread_count/"),
+    ]);
+    statistics.pending = pendingRes.count;
+    statistics.myProjects = projectsRes.count;
+    statistics.inProgress = (projectsRes.results || []).filter((item) =>
+      inProgressStatuses.has(item.status || "")
+    ).length;
+    statistics.unreadNotifications =
+      unreadRes?.data?.data?.count ?? unreadRes?.data?.count ?? 0;
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 const fetchProjects = async () => {
-    loading.value = true;
-    try {
-        if (activeTab.value === "pending") {
-            const { results, count } = await fetchPendingReviews();
-            const rows = (results || []).map((r) => {
-                const fileUrl =
-                    r.review_type === "MID_TERM"
-                        ? r.project_info?.mid_term_report_url
-                        : r.review_type === "CLOSURE"
-                            ? r.project_info?.final_report_url
-                            : r.project_info?.proposal_file_url;
-                const fileLabel =
-                    r.review_type === "MID_TERM"
-                        ? "下载中期报告"
-                        : r.review_type === "CLOSURE"
-                            ? "下载结题报告"
-                            : "下载申报书";
-                return {
-                    ...r.project_info,
-                    review_id: r.id,
-                    review_type: r.review_type,
-                    review_type_display: r.review_type_display,
-                    file_url: fileUrl,
-                    file_label: fileLabel,
-                    created_at: r.created_at,
-                } as TeacherProjectRow;
-            });
-            projects.value = rows;
-            statistics.pending = count;
-        } else {
-            const { results, count } = await fetchMyProjects();
-            projects.value = results || [];
-            statistics.myProjects = count;
-            statistics.inProgress = (results || []).filter(
-                (item) => inProgressStatuses.has(item.status || "")
-            ).length;
-        }
-    } catch (error) {
-        console.error(error);
-        // ElMessage.error("获取项目列表失败"); // Silencing for dev
-    } finally {
-        loading.value = false;
+  loading.value = true;
+  try {
+    if (activeTab.value === "pending") {
+      const { results, count } = await fetchPendingReviews();
+      const rows = (results || []).map((r) => {
+        const fileUrl =
+          r.review_type === "MID_TERM"
+            ? r.project_info?.mid_term_report_url
+            : r.review_type === "CLOSURE"
+            ? r.project_info?.final_report_url
+            : r.project_info?.proposal_file_url;
+        const fileLabel =
+          r.review_type === "MID_TERM"
+            ? "下载中期报告"
+            : r.review_type === "CLOSURE"
+            ? "下载结题报告"
+            : "下载申报书";
+        return {
+          ...r.project_info,
+          review_id: r.id,
+          review_type: r.review_type,
+          review_type_display: r.review_type_display,
+          file_url: fileUrl,
+          file_label: fileLabel,
+          created_at: r.created_at,
+        } as TeacherProjectRow;
+      });
+      projects.value = rows;
+      statistics.pending = count;
+    } else {
+      const { results, count } = await fetchMyProjects();
+      projects.value = results || [];
+      statistics.myProjects = count;
+      statistics.inProgress = (results || []).filter((item) =>
+        inProgressStatuses.has(item.status || "")
+      ).length;
     }
+  } catch (error) {
+    console.error(error);
+    // ElMessage.error("获取项目列表失败"); // Silencing for dev
+  } finally {
+    loading.value = false;
+  }
 };
 
-const handleReview = (project: TeacherProjectRow) => {
-    currentProject.value = project;
-    // We need the Review ID. 
-    // If we loaded from /reviews/, we have it.
-    if (project.review_id) {
-        currentReviewId.value = project.review_id;
-        form.action = "approve";
-        form.comments = "";
-        dialogVisible.value = true;
-    } else {
-        ElMessage.warning("未找到审核记录ID");
+const handleReview = async (project: TeacherProjectRow) => {
+  currentProject.value = project;
+  // We need the Review ID.
+  // If we loaded from /reviews/, we have it.
+  if (project.review_id) {
+    currentReviewId.value = project.review_id;
+    form.action = "approve";
+    form.comments = "";
+    form.target_node_id = null;
+    rejectTargets.value = [];
+    // 加载可退回节点
+    try {
+      const res = await getRejectTargets(project.review_id);
+      if (res.code === 200) {
+        rejectTargets.value = res.data || [];
+      }
+    } catch (error) {
+      console.error("获取退回节点失败", error);
+      rejectTargets.value = [];
     }
+    dialogVisible.value = true;
+  } else {
+    ElMessage.warning("未找到审核记录ID");
+  }
 };
 
 const handleView = (row: TeacherProjectRow) => {
-    void row;
-    // Navigate to detail?
+  void row;
+  // Navigate to detail?
 };
 
 const handleClose = () => {
-    dialogVisible.value = false;
-    formRef.value?.resetFields();
+  dialogVisible.value = false;
+  formRef.value?.resetFields();
+  rejectTargets.value = [];
 };
 
 const handleSubmit = async () => {
-    if (!formRef.value || !currentReviewId.value) return;
-    await formRef.value.validate(async (valid) => {
-        if (valid) {
-            submitting.value = true;
-            try {
-                await request.post(`/reviews/${currentReviewId.value}/review/`, form);
-                ElMessage.success("审核提交成功");
-                dialogVisible.value = false;
-                activeTab.value = "my_projects";
-                fetchProjects();
-                refreshStats();
-            } catch (error: unknown) {
-                console.error(error);
-                ElMessage.error(getErrorMessage(error, "提交失败"));
-            } finally {
-                submitting.value = false;
-            }
+  if (!formRef.value || !currentReviewId.value) return;
+  await formRef.value.validate(async (valid) => {
+    if (valid) {
+      submitting.value = true;
+      try {
+        const payload: Record<string, unknown> = {
+          action: form.action,
+          comments: form.comments,
+        };
+        // 如果是退回且选择了目标节点
+        if (form.action === "reject" && form.target_node_id) {
+          payload.target_node_id = form.target_node_id;
         }
-    });
+        await reviewAction(currentReviewId.value, payload);
+        ElMessage.success("审核提交成功");
+        dialogVisible.value = false;
+        activeTab.value = "my_projects";
+        fetchProjects();
+        refreshStats();
+      } catch (error: unknown) {
+        console.error(error);
+        ElMessage.error(getErrorMessage(error, "提交失败"));
+      } finally {
+        submitting.value = false;
+      }
+    }
+  });
 };
 
 const formatDate = (date: string) => {
-    return dayjs(date).format("YYYY-MM-DD HH:mm");
+  return dayjs(date).format("YYYY-MM-DD HH:mm");
 };
 
 onMounted(() => {
-    fetchProjects();
-    refreshStats();
+  fetchProjects();
+  refreshStats();
 });
 
 watch(
@@ -378,6 +473,9 @@ watch(
 <style scoped lang="scss">
 .teacher-dashboard {
   padding: 20px;
-  .title { font-size: 18px; font-weight: bold; }
+  .title {
+    font-size: 18px;
+    font-weight: bold;
+  }
 }
 </style>

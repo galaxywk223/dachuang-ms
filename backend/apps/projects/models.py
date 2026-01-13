@@ -343,6 +343,13 @@ class ProjectPhaseInstance(models.Model):
     phase = models.CharField(max_length=20, choices=Phase.choices, verbose_name="阶段")
     attempt_no = models.PositiveIntegerField(default=1, verbose_name="轮次")
     step = models.CharField(max_length=50, default="", verbose_name="当前环节")
+    # 当前流程节点ID，用于跟踪动态工作流位置
+    current_node_id = models.IntegerField(
+        null=True,
+        blank=True,
+        verbose_name="当前流程节点ID",
+        help_text="关联到 WorkflowNode.id，用于动态工作流引擎",
+    )
     state = models.CharField(
         max_length=20,
         choices=State.choices,

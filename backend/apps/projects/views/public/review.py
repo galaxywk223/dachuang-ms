@@ -42,7 +42,10 @@ class ProjectReviewViewSet(viewsets.ViewSet):
 
         if review_type == "closure":
             return Response(
-                {"code": 400, "message": "结题流程需先分配校级专家评审，管理员不能直接审核（请到专家评审分配/校级结题审核页操作）"},
+                {
+                    "code": 400,
+                    "message": "结题流程需先分配校级专家评审，管理员不能直接审核（请到专家评审分配/校级结题审核页操作）",
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -126,7 +129,10 @@ class ProjectReviewViewSet(viewsets.ViewSet):
 
         if review.review_type == Review.ReviewType.CLOSURE:
             return Response(
-                {"code": 400, "message": "结题流程需先分配专家评审，管理员不能直接审核"},
+                {
+                    "code": 400,
+                    "message": "结题流程需先分配专家评审，管理员不能直接审核",
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -161,7 +167,9 @@ class ProjectReviewViewSet(viewsets.ViewSet):
             review.project.approved_budget = approved_budget
             review.project.save(update_fields=["approved_budget", "updated_at"])
 
-        ReviewService.approve_review(review, request.user, comment, score, closure_rating)
+        ReviewService.approve_review(
+            review, request.user, comment, score, closure_rating
+        )
 
         return Response(
             {
@@ -197,9 +205,13 @@ class ProjectReviewViewSet(viewsets.ViewSet):
 
         comment = request.data.get("comment", "")
         reject_to = request.data.get("reject_to")
+        target_node_id = request.data.get("target_node_id")  # 新参数：退回到指定节点
         if review.review_type == Review.ReviewType.CLOSURE:
             return Response(
-                {"code": 400, "message": "结题流程需先分配专家评审，管理员不能直接审核"},
+                {
+                    "code": 400,
+                    "message": "结题流程需先分配专家评审，管理员不能直接审核",
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -209,7 +221,9 @@ class ProjectReviewViewSet(viewsets.ViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        ReviewService.reject_review(review, request.user, comment, reject_to)
+        ReviewService.reject_review(
+            review, request.user, comment, reject_to, target_node_id
+        )
 
         return Response(
             {
@@ -218,6 +232,42 @@ class ProjectReviewViewSet(viewsets.ViewSet):
                 "data": ProjectSerializer(review.project).data,
             }
         )
+
+    @action(methods=["get"], detail=True, url_path="reject-targets")
+    def get_reject_targets(self, request, pk=None):
+        """
+        获取可退回的目标节点列表（管理员审核）
+        """
+        from apps.system_settings.services.workflow_service import WorkflowService
+
+        review = self._get_pending_review_for_user(request.user, pk)
+        if not review:
+            return Response(
+                {"code": 404, "message": "未找到待审核记录或无权限"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        phase_instance = review.phase_instance
+        if not phase_instance or not phase_instance.current_node_id:
+            return Response(
+                {"code": 200, "message": "该审核记录未配置工作流节点", "data": []}
+            )
+
+        reject_targets = WorkflowService.get_reject_target_nodes(
+            phase_instance.current_node_id
+        )
+        target_list = [
+            {
+                "id": t.id,
+                "code": t.code,
+                "name": t.name,
+                "node_type": t.node_type,
+                "role": t.role,
+            }
+            for t in reject_targets
+        ]
+
+        return Response({"code": 200, "message": "获取成功", "data": target_list})
 
     def _get_pending_review_for_user(self, user, project_id):
         """

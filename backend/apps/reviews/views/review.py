@@ -25,7 +25,13 @@ class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = [IsAuthenticated]
-    filterset_fields = ["status", "review_type", "review_level", "project", "project__status"]
+    filterset_fields = [
+        "status",
+        "review_type",
+        "review_level",
+        "project",
+        "project__status",
+    ]
     search_fields = ["project__project_no", "project__title"]
     ordering_fields = ["created_at", "reviewed_at"]
 
@@ -50,14 +56,15 @@ class ReviewViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(review_level=Review.ReviewLevel.LEVEL1)
         # 指导教师只能看到分配给自己的审核
         elif user.is_teacher:
-             queryset = queryset.filter(
-                 project__advisors__user=user,
-                 review_level=Review.ReviewLevel.TEACHER
-             ).distinct()
+            queryset = queryset.filter(
+                project__advisors__user=user, review_level=Review.ReviewLevel.TEACHER
+            ).distinct()
         elif user.is_expert:
             queryset = queryset.filter(reviewer=user)
 
-        status_in = self.request.query_params.get("status_in") or self.request.query_params.get("status__in")
+        status_in = self.request.query_params.get(
+            "status_in"
+        ) or self.request.query_params.get("status__in")
         if status_in:
             status_list = [s.strip() for s in status_in.split(",") if s.strip()]
             if status_list:
@@ -88,9 +95,14 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
         if (
             review.reviewer_id is None
-            and review.review_level in (Review.ReviewLevel.LEVEL2, Review.ReviewLevel.LEVEL1)
+            and review.review_level
+            in (Review.ReviewLevel.LEVEL2, Review.ReviewLevel.LEVEL1)
             and review.review_type
-            in (Review.ReviewType.APPLICATION, Review.ReviewType.MID_TERM, Review.ReviewType.CLOSURE)
+            in (
+                Review.ReviewType.APPLICATION,
+                Review.ReviewType.MID_TERM,
+                Review.ReviewType.CLOSURE,
+            )
             and (user.is_level2_admin or user.is_level1_admin)
         ):
             return Response(
@@ -122,6 +134,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
         score_details = serializer.validated_data.get("score_details")
         closure_rating = serializer.validated_data.get("closure_rating")
         reject_to = serializer.validated_data.get("reject_to")
+        target_node_id = serializer.validated_data.get(
+            "target_node_id"
+        )  # 新增：退回目标节点ID
 
         if user.is_expert:
             ok, msg = SystemSettingService.check_window(
@@ -172,7 +187,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
                     review, user, comments, score, closure_rating, score_details
                 )
             else:
-                result = ReviewService.reject_review(review, user, comments, reject_to)
+                result = ReviewService.reject_review(
+                    review, user, comments, reject_to, target_node_id
+                )
         except ValueError as exc:
             return Response(
                 {"code": 400, "message": str(exc)},
@@ -180,7 +197,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
             )
 
         if result:
-            NotificationService.notify_review_result(review.project, action_type == "approve", comments)
+            NotificationService.notify_review_result(
+                review.project, action_type == "approve", comments
+            )
             return Response(
                 {
                     "code": 200,
@@ -193,6 +212,52 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 {"code": 500, "message": "审核失败"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+    @action(methods=["get"], detail=True, url_path="reject-targets")
+    def get_reject_targets(self, request, pk=None):
+        """
+        获取当前审核记录可退回的目标节点列表
+        """
+        from apps.system_settings.services.workflow_service import WorkflowService
+        from apps.system_settings.serializers.workflow_serializers import (
+            WorkflowNodeSerializer,
+        )
+
+        review = self.get_object()
+
+        # 检查权限
+        if not self.check_review_permission(review, request.user):
+            return Response(
+                {"code": 403, "message": "无权限查看此审核的退回选项"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # 获取 phase_instance 和 current_node_id
+        phase_instance = review.phase_instance
+        if not phase_instance or not phase_instance.current_node_id:
+            return Response(
+                {"code": 200, "message": "该审核记录未配置工作流节点", "data": []}
+            )
+
+        # 获取可退回的节点
+        reject_targets = WorkflowService.get_reject_target_nodes(
+            phase_instance.current_node_id
+        )
+
+        # 转换为可序列化的格式
+        target_list = []
+        for target in reject_targets:
+            target_list.append(
+                {
+                    "id": target.id,
+                    "code": target.code,
+                    "name": target.name,
+                    "node_type": target.node_type,
+                    "role": target.role,
+                }
+            )
+
+        return Response({"code": 200, "message": "获取成功", "data": target_list})
 
     @action(methods=["post"], detail=True, url_path="revise")
     def revise(self, request, pk=None):
@@ -271,8 +336,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
         review.comments = comments
         if score_details is not None:
             try:
-                total_score, normalized_details = ReviewService._normalize_score_details(
-                    review, score, score_details
+                total_score, normalized_details = (
+                    ReviewService._normalize_score_details(review, score, score_details)
                 )
             except ValueError as exc:
                 return Response(
@@ -353,7 +418,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
         if review.review_level == Review.ReviewLevel.LEVEL2:
             # 二级审核：必须是二级管理员且是同一学院
             project_college = (
-                review.project.leader.college if review.project and review.project.leader else None
+                review.project.leader.college
+                if review.project and review.project.leader
+                else None
             )
             return user.is_level2_admin and user.college == project_college
         elif review.review_level == Review.ReviewLevel.LEVEL1:
@@ -362,7 +429,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
         elif review.review_level == Review.ReviewLevel.TEACHER:
             # 导师审核：必须是该项目的导师
             # Check if user is in project advisors
-            return user.is_teacher and review.project.advisors.filter(user=user).exists()
+            return (
+                user.is_teacher and review.project.advisors.filter(user=user).exists()
+            )
         return False
 
     @action(methods=["post"], detail=False, url_path="batch-review")
@@ -391,10 +460,13 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
         success = 0
         failed = []
-        for review in Review.objects.filter(id__in=review_ids, status=Review.ReviewStatus.PENDING):
+        for review in Review.objects.filter(
+            id__in=review_ids, status=Review.ReviewStatus.PENDING
+        ):
             if (
                 review.reviewer_id is None
-                and review.review_level in (Review.ReviewLevel.LEVEL2, Review.ReviewLevel.LEVEL1)
+                and review.review_level
+                in (Review.ReviewLevel.LEVEL2, Review.ReviewLevel.LEVEL1)
                 and review.review_type
                 in (
                     Review.ReviewType.APPLICATION,
@@ -415,7 +487,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
                     batch=review.project.batch,
                 )
                 if not ok:
-                    failed.append({"id": review.id, "reason": msg or "不在评审时间范围内"})
+                    failed.append(
+                        {"id": review.id, "reason": msg or "不在评审时间范围内"}
+                    )
                     continue
             ok, msg = SystemSettingService.check_review_window(
                 review.review_type,
@@ -429,10 +503,17 @@ class ReviewViewSet(viewsets.ModelViewSet):
             try:
                 if action_type == "approve":
                     ReviewService.approve_review(
-                        review, request.user, comments, score, closure_rating, score_details
+                        review,
+                        request.user,
+                        comments,
+                        score,
+                        closure_rating,
+                        score_details,
                     )
                 else:
-                    ReviewService.reject_review(review, request.user, comments, reject_to)
+                    ReviewService.reject_review(
+                        review, request.user, comments, reject_to
+                    )
             except ValueError as exc:
                 failed.append({"id": review.id, "reason": str(exc)})
                 continue
@@ -473,6 +554,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
             # 检查二级审核是否已通过
             from ..models import Review
+
             level2_passed = Review.objects.filter(
                 project=project,
                 review_type=Review.ReviewType.APPLICATION,

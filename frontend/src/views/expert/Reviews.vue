@@ -5,13 +5,17 @@
         <div class="card-header">
           <span class="title">我的评审任务</span>
           <div class="header-actions" v-if="activeTab === 'pending'">
-            <el-button type="primary" :disabled="selectedRows.length === 0" @click="openBatchDialog">
+            <el-button
+              type="primary"
+              :disabled="selectedRows.length === 0"
+              @click="openBatchDialog"
+            >
               批量评审
             </el-button>
           </div>
         </div>
       </template>
-      
+
       <el-tabs v-model="activeTab">
         <el-tab-pane label="待评审" name="pending"></el-tab-pane>
         <el-tab-pane label="已评审" name="reviewed"></el-tab-pane>
@@ -25,38 +29,65 @@
         border
         @selection-change="handleSelectionChange"
       >
-        <el-table-column v-if="activeTab === 'pending'" type="selection" width="55" align="center" />
+        <el-table-column
+          v-if="activeTab === 'pending'"
+          type="selection"
+          width="55"
+          align="center"
+        />
         <el-table-column prop="project_no" label="项目编号" width="150" />
-        <el-table-column prop="project_title" label="项目名称" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="review_type_display" label="评审类型" width="120" />
-        <el-table-column prop="review_level_display" label="评审级别" width="120" />
+        <el-table-column
+          prop="project_title"
+          label="项目名称"
+          min-width="200"
+          show-overflow-tooltip
+        />
+        <el-table-column
+          prop="review_type_display"
+          label="评审类型"
+          width="120"
+        />
+        <el-table-column
+          prop="review_level_display"
+          label="评审级别"
+          width="120"
+        />
         <el-table-column prop="status_display" label="状态" width="100">
-           <template #default="scope">
-              <el-tag :type="scope.row.status === 'PENDING' ? 'warning' : 'success'">
-                  {{ scope.row.status_display }}
-              </el-tag>
-           </template>
+          <template #default="scope">
+            <el-tag
+              :type="scope.row.status === 'PENDING' ? 'warning' : 'success'"
+            >
+              {{ scope.row.status_display }}
+            </el-tag>
+          </template>
         </el-table-column>
         <el-table-column prop="created_at" label="分配时间" width="180">
-            <template #default="scope">
-                {{ formatDate(scope.row.created_at) }}
-            </template>
+          <template #default="scope">
+            {{ formatDate(scope.row.created_at) }}
+          </template>
         </el-table-column>
         <el-table-column label="操作" width="150" align="center" fixed="right">
           <template #default="scope">
             <div class="op-cell">
-             <el-button 
+              <el-button
                 v-if="scope.row.status === 'PENDING'"
-                size="small" 
-                type="primary" 
+                size="small"
+                type="primary"
                 @click="handleReview(scope.row)"
-             >
+              >
                 开始评审
-             </el-button>
-             <template v-else>
-               <el-button size="small" @click="handleView(scope.row)">查看详情</el-button>
-               <el-button size="small" type="primary" @click="handleEdit(scope.row)">修改评审</el-button>
-             </template>
+              </el-button>
+              <template v-else>
+                <el-button size="small" @click="handleView(scope.row)"
+                  >查看详情</el-button
+                >
+                <el-button
+                  size="small"
+                  type="primary"
+                  @click="handleEdit(scope.row)"
+                  >修改评审</el-button
+                >
+              </template>
             </div>
           </template>
         </el-table-column>
@@ -64,18 +95,40 @@
     </el-card>
 
     <!-- Review Dialog -->
-    <el-dialog :title="dialogTitle" v-model="dialogVisible" width="600px" @close="handleClose">
+    <el-dialog
+      :title="dialogTitle"
+      v-model="dialogVisible"
+      width="600px"
+      @close="handleClose"
+    >
       <el-descriptions title="项目信息" :column="1" border class="mb-4">
-          <el-descriptions-item label="项目名称">{{ currentReview?.project_title }}</el-descriptions-item>
-          <el-descriptions-item label="项目编号">{{ currentReview?.project_no }}</el-descriptions-item>
-          <!-- Could add link to project detail or attachment -->
+        <el-descriptions-item label="项目名称">{{
+          currentReview?.project_title
+        }}</el-descriptions-item>
+        <el-descriptions-item label="项目编号">{{
+          currentReview?.project_no
+        }}</el-descriptions-item>
+        <!-- Could add link to project detail or attachment -->
       </el-descriptions>
 
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px" v-if="!isViewMode">
-        <el-form-item label="分数" prop="score" v-if="needsScore && !hasTemplate">
-           <el-input-number v-model="form.score" :min="0" :max="100" />
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-width="100px"
+        v-if="!isViewMode"
+      >
+        <el-form-item
+          label="分数"
+          prop="score"
+          v-if="needsScore && !hasTemplate"
+        >
+          <el-input-number v-model="form.score" :min="0" :max="100" />
         </el-form-item>
-        <el-form-item v-if="hasTemplate && currentReview?.template_info?.notice" label="注意事项">
+        <el-form-item
+          v-if="hasTemplate && currentReview?.template_info?.notice"
+          label="注意事项"
+        >
           <el-alert
             :title="currentReview?.template_info?.notice"
             type="info"
@@ -85,59 +138,129 @@
         </el-form-item>
         <el-form-item v-if="hasTemplate" label="评分项">
           <div class="score-items">
-            <div v-for="item in scoreItems" :key="item.item_id" class="score-row">
+            <div
+              v-for="item in scoreItems"
+              :key="item.item_id"
+              class="score-row"
+            >
               <div class="score-title">
                 <span>{{ item.title }}</span>
                 <span class="score-meta">
                   权重 {{ item.weight }} / 满分 {{ item.max_score }}
-                  <span v-if="item.is_required" class="required-flag">必填</span>
+                  <span v-if="item.is_required" class="required-flag"
+                    >必填</span
+                  >
                 </span>
               </div>
-              <el-input-number v-model="item.score" :min="0" :max="item.max_score" />
+              <el-input-number
+                v-model="item.score"
+                :min="0"
+                :max="item.max_score"
+              />
             </div>
           </div>
         </el-form-item>
-        <el-form-item :label="isMidTerm ? '审核意见' : '评审意见'" prop="comments">
-           <el-input 
-              v-model="form.comments" 
-              type="textarea" 
-              :rows="4" 
-              placeholder="请输入评审意见"
-           />
+        <el-form-item
+          :label="isMidTerm ? '审核意见' : '评审意见'"
+          prop="comments"
+        >
+          <el-input
+            v-model="form.comments"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入评审意见"
+          />
         </el-form-item>
-         <el-form-item label="审核结果" prop="action" v-if="isMidTerm">
-             <el-radio-group v-model="form.action">
-                 <el-radio label="approve">通过</el-radio>
-                 <el-radio label="reject">不通过</el-radio>
-             </el-radio-group>
+        <el-form-item label="审核结果" prop="action" v-if="isMidTerm">
+          <el-radio-group v-model="form.action" @change="handleActionChange">
+            <el-radio label="approve">通过</el-radio>
+            <el-radio label="reject">不通过</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item
+          label="退回至"
+          v-if="
+            isMidTerm && form.action === 'reject' && rejectTargets.length > 0
+          "
+        >
+          <el-select
+            v-model="form.target_node_id"
+            placeholder="请选择退回节点"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="node in rejectTargets"
+              :key="node.id"
+              :label="node.name"
+              :value="node.id"
+            >
+              <span>{{ node.name }}</span>
+              <span
+                style="
+                  float: right;
+                  color: var(--el-text-color-secondary);
+                  font-size: 12px;
+                "
+              >
+                {{ node.role }}
+              </span>
+            </el-option>
+          </el-select>
+          <div
+            style="
+              color: var(--el-text-color-secondary);
+              font-size: 12px;
+              margin-top: 4px;
+            "
+          >
+            未选择时将退回到默认节点
+          </div>
         </el-form-item>
       </el-form>
-      
+
       <div v-else>
-          <div v-if="currentReview?.score_details?.length" class="score-view">
-            <p class="score-title"><strong>评分明细:</strong></p>
-            <ul>
-              <li v-for="detail in currentReview.score_details" :key="detail.item_id">
-                {{ detail.title }}：{{ detail.score }}（权重 {{ detail.weight }}，加权 {{ detail.weighted_score }}）
-              </li>
-            </ul>
-          </div>
-          <p v-if="currentReview?.review_type !== 'MID_TERM'"><strong>分数:</strong> {{ currentReview?.score }}</p>
-          <p><strong>意见:</strong> {{ currentReview?.comments }}</p>
-          <p><strong>状态:</strong> {{ currentReview?.status_display }}</p>
+        <div v-if="currentReview?.score_details?.length" class="score-view">
+          <p class="score-title"><strong>评分明细:</strong></p>
+          <ul>
+            <li
+              v-for="detail in currentReview.score_details"
+              :key="detail.item_id"
+            >
+              {{ detail.title }}：{{ detail.score }}（权重
+              {{ detail.weight }}，加权 {{ detail.weighted_score }}）
+            </li>
+          </ul>
+        </div>
+        <p v-if="currentReview?.review_type !== 'MID_TERM'">
+          <strong>分数:</strong> {{ currentReview?.score }}
+        </p>
+        <p><strong>意见:</strong> {{ currentReview?.comments }}</p>
+        <p><strong>状态:</strong> {{ currentReview?.status_display }}</p>
       </div>
 
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="handleClose">{{ isViewMode ? '关闭' : '取消' }}</el-button>
-          <el-button type="primary" :loading="submitting" @click="handleSubmit" v-if="!isViewMode">
-            {{ isEditMode ? '保存修改' : '提交评审' }}
+          <el-button @click="handleClose">{{
+            isViewMode ? "关闭" : "取消"
+          }}</el-button>
+          <el-button
+            type="primary"
+            :loading="submitting"
+            @click="handleSubmit"
+            v-if="!isViewMode"
+          >
+            {{ isEditMode ? "保存修改" : "提交评审" }}
           </el-button>
         </span>
       </template>
     </el-dialog>
 
-    <el-dialog v-model="batchDialogVisible" title="批量评审" width="520px" @close="resetBatchForm">
+    <el-dialog
+      v-model="batchDialogVisible"
+      title="批量评审"
+      width="520px"
+      @close="resetBatchForm"
+    >
       <el-form ref="batchFormRef" :model="batchForm" label-width="100px">
         <el-form-item label="审核结果" v-if="isBatchMidTerm">
           <el-radio-group v-model="batchForm.action">
@@ -145,22 +268,70 @@
             <el-radio label="reject">不通过</el-radio>
           </el-radio-group>
         </el-form-item>
+        <el-form-item
+          label="退回至"
+          v-if="
+            isBatchMidTerm &&
+            batchForm.action === 'reject' &&
+            batchRejectTargets.length > 0
+          "
+        >
+          <el-select
+            v-model="batchForm.target_node_id"
+            placeholder="请选择退回节点"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="node in batchRejectTargets"
+              :key="node.id"
+              :label="node.name"
+              :value="node.id"
+            />
+          </el-select>
+          <div
+            style="
+              color: var(--el-text-color-secondary);
+              font-size: 12px;
+              margin-top: 4px;
+            "
+          >
+            未选择时将退回到默认节点
+          </div>
+        </el-form-item>
         <el-form-item label="分数" v-if="!isBatchMidTerm">
           <el-input-number v-model="batchForm.score" :min="0" :max="100" />
         </el-form-item>
         <el-form-item label="评审意见">
-          <el-input v-model="batchForm.comments" type="textarea" :rows="4" placeholder="请输入评审意见" />
+          <el-input
+            v-model="batchForm.comments"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入评审意见"
+          />
         </el-form-item>
         <el-form-item label="结题评价" v-if="isBatchClosure">
-          <el-select v-model="batchForm.closure_rating" placeholder="请选择" style="width: 100%">
-            <el-option v-for="item in closureRatingOptions" :key="item.value" :label="item.label" :value="item.value" />
+          <el-select
+            v-model="batchForm.closure_rating"
+            placeholder="请选择"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="item in closureRatingOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
           </el-select>
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="batchDialogVisible = false">取消</el-button>
-          <el-button type="primary" :loading="batchSubmitting" @click="submitBatchReview">
+          <el-button
+            type="primary"
+            :loading="batchSubmitting"
+            @click="submitBatchReview"
+          >
             提交
           </el-button>
         </span>
@@ -177,6 +348,7 @@ import request from "@/utils/request";
 import dayjs from "dayjs";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionaries";
+import { reviewAction, reviseReview, getRejectTargets, type WorkflowNode } from "@/api/reviews";
 
 defineOptions({
   name: "ExpertReviewsView",
@@ -234,6 +406,7 @@ type ReviewForm = {
   score: number | null;
   comments: string;
   action: "approve" | "reject";
+  target_node_id?: number | null;
 };
 
 type ReviewPayload = {
@@ -297,8 +470,11 @@ const form = reactive<ReviewForm>({
   score: null,
   comments: "",
   action: "approve",
+  target_node_id: null,
 });
 const scoreItems = ref<ScoreItem[]>([]);
+const rejectTargets = ref<WorkflowNode[]>([]);
+const batchRejectTargets = ref<WorkflowNode[]>([]);
 
 const isMidTerm = computed(() => currentReview.value?.review_type === "MID_TERM");
 const needsScore = computed(() => currentReview.value?.review_type !== "MID_TERM");
@@ -348,6 +524,7 @@ type BatchFormState = {
   score: number | null;
   comments: string;
   closure_rating: string;
+  target_node_id?: number | null;
 };
 
 const batchForm = reactive<BatchFormState>({
@@ -355,6 +532,7 @@ const batchForm = reactive<BatchFormState>({
   score: null,
   comments: "",
   closure_rating: "",
+  target_node_id: null,
 });
 const fetchToken = ref(0);
 
@@ -378,7 +556,7 @@ const fetchReviews = async () => {
         } else {
              params.status_in = "APPROVED,REJECTED";
         }
-        
+
         const res = await request.get("/reviews/", { params });
         if (currentToken !== fetchToken.value) return;
         const payload = isRecord(res) && isRecord(res.data) ? res.data : res;
@@ -405,6 +583,8 @@ const handleReview = (review: ReviewRow) => {
     form.score = null;
     form.comments = "";
     form.action = "approve";
+    form.target_node_id = null;
+    rejectTargets.value = [];
     if (review.template_info?.items?.length) {
         scoreItems.value = review.template_info.items.map((item) => ({
             item_id: item.id,
@@ -416,6 +596,10 @@ const handleReview = (review: ReviewRow) => {
         }));
     } else {
         scoreItems.value = [];
+    }
+    // 如果是中期审核，预加载退回节点
+    if (review.review_type === "MID_TERM") {
+        loadRejectTargets(review.id);
     }
     dialogVisible.value = true;
 };
@@ -432,6 +616,29 @@ const handleEdit = (review: ReviewRow) => {
     form.score = review.score ?? null;
     form.comments = review.comments || "";
     form.action = review.status === "REJECTED" ? "reject" : "approve";
+    form.target_node_id = null;
+    rejectTargets.value = [];
+    if (review.template_info?.items?.length) {
+        const detailMap = new Map(
+            (review.score_details || []).map((d) => [d.item_id, d.score])
+        );
+        scoreItems.value = review.template_info.items.map((item) => ({
+            item_id: item.id,
+            title: item.title,
+            weight: item.weight,
+            max_score: item.max_score,
+            is_required: item.is_required,
+            score: detailMap.get(item.id) ?? 0,
+        }));
+    } else {
+        scoreItems.value = [];
+    }
+    // 如果是中期审核，预加载退回节点
+    if (review.review_type === "MID_TERM") {
+        loadRejectTargets(review.id);
+    }
+    dialogVisible.value = true;
+};
     if (review.template_info?.items?.length) {
         const detailMap = new Map(
             (review.score_details || []).map((d) => [d.item_id, d.score])
@@ -454,6 +661,28 @@ const handleClose = () => {
     dialogVisible.value = false;
     formRef.value?.resetFields();
     scoreItems.value = [];
+    rejectTargets.value = [];
+};
+
+// 加载可退回的节点
+const loadRejectTargets = async (reviewId: number) => {
+  try {
+    const res = await getRejectTargets(reviewId);
+    if (res.code === 200) {
+      rejectTargets.value = res.data || [];
+    }
+  } catch (error) {
+    console.error("获取退回节点失败", error);
+    rejectTargets.value = [];
+  }
+};
+
+// 处理审核结果变化
+const handleActionChange = (action: "approve" | "reject") => {
+  // 切换为通过时，清除target_node_id
+  if (action === "approve") {
+    form.target_node_id = null;
+  }
 };
 
 const handleSubmit = async () => {
@@ -474,6 +703,10 @@ const handleSubmit = async () => {
                 };
                 if (review.review_type === "MID_TERM") {
                   payload.action = form.action;
+                  // 如果是退回且选择了目标节点，传递target_node_id
+                  if (form.action === "reject" && form.target_node_id) {
+                    payload.target_node_id = form.target_node_id;
+                  }
                 } else {
                   if (!hasTemplate.value) {
                     payload.score = form.score;
@@ -494,7 +727,12 @@ const handleSubmit = async () => {
                     score: item.score,
                   }));
                 }
-                await request.post(endpoint, payload);
+                // 使用新的API函数
+                if (dialogMode.value === "edit") {
+                  await reviseReview(review.id, payload);
+                } else {
+                  await reviewAction(review.id, payload);
+                }
                 ElMessage.success(dialogMode.value === "edit" ? "评审已更新" : "评审提交成功");
                 dialogVisible.value = false;
                 if (dialogMode.value === "review") {
@@ -521,9 +759,11 @@ const resetBatchForm = () => {
   batchForm.score = null;
   batchForm.comments = "";
   batchForm.closure_rating = "";
+  batchForm.target_node_id = null;
+  batchRejectTargets.value = [];
 };
 
-const openBatchDialog = () => {
+const openBatchDialog = async () => {
   if (selectedRows.value.length === 0) {
     ElMessage.warning("请先勾选评审任务");
     return;
@@ -533,6 +773,18 @@ const openBatchDialog = () => {
     return;
   }
   resetBatchForm();
+  // 如果是批量中期审核，加载退回节点
+  if (isBatchMidTerm.value && selectedRows.value.length > 0) {
+    try {
+      const res = await getRejectTargets(selectedRows.value[0].id);
+      if (res.code === 200) {
+        batchRejectTargets.value = res.data || [];
+      }
+    } catch (error) {
+      console.error("获取退回节点失败", error);
+      batchRejectTargets.value = [];
+    }
+  }
   batchDialogVisible.value = true;
 };
 
@@ -550,6 +802,10 @@ const submitBatchReview = async () => {
     }
     if (isBatchClosure.value && batchForm.closure_rating) {
       payload.closure_rating = batchForm.closure_rating;
+    }
+    // 如果是中期审核退回且选择了目标节点
+    if (isBatchMidTerm.value && batchForm.action === "reject" && batchForm.target_node_id) {
+      payload.target_node_id = batchForm.target_node_id;
     }
     await request.post("/reviews/batch-review/", payload);
     ElMessage.success("批量评审完成");
@@ -582,52 +838,53 @@ watch(
 
 <style scoped lang="scss">
 .expert-reviews-container {
-    padding: 20px;
-    .card-header {
-       font-size: 18px; font-weight: bold;
+  padding: 20px;
+  .card-header {
+    font-size: 18px;
+    font-weight: bold;
+  }
+  .op-cell {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+  }
+  .score-items {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+  .score-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #f8fafc;
+  }
+  .score-title {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-weight: 500;
+  }
+  .score-meta {
+    font-size: 12px;
+    color: #64748b;
+  }
+  .required-flag {
+    margin-left: 6px;
+    color: #ef4444;
+  }
+  .score-view {
+    margin-bottom: 12px;
+    ul {
+      margin: 6px 0 0;
+      padding-left: 16px;
+      color: #475569;
     }
-    .op-cell {
-        display: flex;
-        justify-content: center;
-        gap: 8px;
-    }
-    .score-items {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        width: 100%;
-    }
-    .score-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        padding: 8px 12px;
-        border: 1px solid #e2e8f0;
-        border-radius: 6px;
-        background: #f8fafc;
-    }
-    .score-title {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        font-weight: 500;
-    }
-    .score-meta {
-        font-size: 12px;
-        color: #64748b;
-    }
-    .required-flag {
-        margin-left: 6px;
-        color: #ef4444;
-    }
-    .score-view {
-        margin-bottom: 12px;
-        ul {
-            margin: 6px 0 0;
-            padding-left: 16px;
-            color: #475569;
-        }
-    }
+  }
 }
 </style>

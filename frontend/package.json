@@ -11,6 +11,8 @@
     "lint": "eslint . --fix"
   },
   "dependencies": {
+    "@antv/x6": "^3.1.4",
+    "@antv/x6-vue-shape": "^3.0.2",
     "@element-plus/icons-vue": "^2.3.1",
     "@headlessui/vue": "^1.7.23",
     "@heroicons/vue": "^2.2.0",

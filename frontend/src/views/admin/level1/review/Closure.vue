@@ -3,12 +3,13 @@
     <el-card class="main-card" shadow="never">
       <template #header>
         <div class="card-header">
-           <div class="header-left">
-             <span class="header-title">校级结题审核列表</span>
-             <el-tag type="info" size="small" effect="plain" round class="ml-2">共 {{ total }} 项</el-tag>
-           </div>
-           <div class="header-actions">
-           </div>
+          <div class="header-left">
+            <span class="header-title">校级结题审核列表</span>
+            <el-tag type="info" size="small" effect="plain" round class="ml-2"
+              >共 {{ total }} 项</el-tag
+            >
+          </div>
+          <div class="header-actions"></div>
         </div>
       </template>
 
@@ -31,10 +32,18 @@
           </el-form-item>
         </el-form>
       </div>
-      
+
       <div class="action-bar mb-4">
-          <el-button type="primary" plain @click="openBatchDialog">批量审核</el-button>
-          <el-button type="warning" plain :icon="Download" @click="handleBatchDownload">下载附件</el-button>
+        <el-button type="primary" plain @click="openBatchDialog"
+          >批量审核</el-button
+        >
+        <el-button
+          type="warning"
+          plain
+          :icon="Download"
+          @click="handleBatchDownload"
+          >下载附件</el-button
+        >
       </div>
 
       <el-table
@@ -57,19 +66,33 @@
             <span class="project-title">{{ row.title }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="level_display" label="项目级别" width="100" align="center">
+        <el-table-column
+          prop="level_display"
+          label="项目级别"
+          width="100"
+          align="center"
+        >
           <template #default="{ row }">
             <el-tag size="small" effect="plain">{{ row.level_display }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="category_display" label="项目类别" width="120" align="center">
+        <el-table-column
+          prop="category_display"
+          label="项目类别"
+          width="120"
+          align="center"
+        >
           <template #default="{ row }">
-            <el-tag effect="light" size="small" type="info">{{ row.category_display }}</el-tag>
+            <el-tag effect="light" size="small" type="info">{{
+              row.category_display
+            }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="重点领域项目" width="110" align="center">
           <template #default="{ row }">
-            <el-tag v-if="row.is_key_field" type="success" size="small">是</el-tag>
+            <el-tag v-if="row.is_key_field" type="success" size="small"
+              >是</el-tag
+            >
             <span v-else>-</span>
           </template>
         </el-table-column>
@@ -78,12 +101,44 @@
             <span>{{ row.key_domain_code || "-" }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="leader_name" label="负责人姓名" width="100" align="center" />
-        <el-table-column prop="leader_student_id" label="负责人学号" width="120" align="center" />
-        <el-table-column prop="college" label="学院" width="140" show-overflow-tooltip align="center" />
-        <el-table-column prop="leader_contact" label="联系电话" width="120" align="center" />
-        <el-table-column prop="leader_email" label="邮箱" width="180" show-overflow-tooltip align="center" />
-        <el-table-column prop="budget" label="项目经费" width="100" align="center">
+        <el-table-column
+          prop="leader_name"
+          label="负责人姓名"
+          width="100"
+          align="center"
+        />
+        <el-table-column
+          prop="leader_student_id"
+          label="负责人学号"
+          width="120"
+          align="center"
+        />
+        <el-table-column
+          prop="college"
+          label="学院"
+          width="140"
+          show-overflow-tooltip
+          align="center"
+        />
+        <el-table-column
+          prop="leader_contact"
+          label="联系电话"
+          width="120"
+          align="center"
+        />
+        <el-table-column
+          prop="leader_email"
+          label="邮箱"
+          width="180"
+          show-overflow-tooltip
+          align="center"
+        />
+        <el-table-column
+          prop="budget"
+          label="项目经费"
+          width="100"
+          align="center"
+        >
           <template #default="{ row }">
             {{ row.budget }}
           </template>
@@ -91,7 +146,10 @@
 
         <el-table-column label="审核节点" width="120" align="center">
           <template #default="{ row }">
-            <ProjectStatusBadge :status="row.status" :label="row.status_display" />
+            <ProjectStatusBadge
+              :status="row.status"
+              :label="row.status_display"
+            />
           </template>
         </el-table-column>
         <el-table-column label="操作" width="180" align="center" fixed="right">
@@ -143,6 +201,44 @@
             resize="none"
           />
         </el-form-item>
+        <el-form-item
+          label="退回至"
+          v-if="reviewType === 'reject' && rejectTargets.length > 0"
+        >
+          <el-select
+            v-model="reviewForm.target_node_id"
+            placeholder="请选择退回节点"
+            style="width: 100%"
+            clearable
+          >
+            <el-option
+              v-for="node in rejectTargets"
+              :key="node.id"
+              :label="node.name"
+              :value="node.id"
+            >
+              <span>{{ node.name }}</span>
+              <span
+                style="
+                  float: right;
+                  color: var(--el-text-color-secondary);
+                  font-size: 12px;
+                "
+              >
+                {{ node.role }}
+              </span>
+            </el-option>
+          </el-select>
+          <div
+            style="
+              color: var(--el-text-color-secondary);
+              font-size: 12px;
+              margin-top: 4px;
+            "
+          >
+            未选择时将使用下方的退回规则
+          </div>
+        </el-form-item>
         <el-form-item v-if="reviewType === 'reject'" label="退回到">
           <el-radio-group v-model="reviewForm.return_to">
             <el-radio label="student">退回学生</el-radio>
@@ -172,7 +268,12 @@
           </el-radio-group>
         </el-form-item>
         <el-form-item label="审核意见">
-          <el-input v-model="batchForm.comments" type="textarea" :rows="4" placeholder="请输入审核意见" />
+          <el-input
+            v-model="batchForm.comments"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入审核意见"
+          />
         </el-form-item>
         <el-form-item v-if="batchForm.action === 'reject'" label="退回到">
           <el-radio-group v-model="batchForm.return_to">
@@ -184,7 +285,11 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="batchDialogVisible = false">取消</el-button>
-          <el-button type="primary" :loading="batchSubmitting" @click="submitBatchReview">
+          <el-button
+            type="primary"
+            :loading="batchSubmitting"
+            @click="submitBatchReview"
+          >
             提交
           </el-button>
         </span>
@@ -200,6 +305,7 @@ import { Search, Download } from "@element-plus/icons-vue";
 import { batchDownloadAttachments } from "@/api/projects/admin";
 import ProjectStatusBadge from "@/components/business/project/StatusBadge.vue";
 import request from "@/utils/request";
+import { getRejectTargetsByProject, type WorkflowNode } from "@/api/reviews";
 
 defineOptions({ name: "Level1ClosureReviewView" });
 
@@ -237,7 +343,11 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (!isRecord(error)) return fallback;
   const response = error.response;
-  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === "string") {
+  if (
+    isRecord(response) &&
+    isRecord(response.data) &&
+    typeof response.data.message === "string"
+  ) {
     return response.data.message;
   }
   if (typeof error.message === "string") return error.message;
@@ -258,7 +368,9 @@ const reviewForm = ref({
   projectId: 0,
   comment: "",
   return_to: "student",
+  target_node_id: null as number | null,
 });
+const rejectTargets = ref<WorkflowNode[]>([]);
 
 const batchDialogVisible = ref(false);
 const batchSubmitting = ref(false);
@@ -268,7 +380,6 @@ const batchForm = ref({
   return_to: "student",
 });
 
-
 const resolveList = (payload: unknown): ProjectRow[] => {
   if (Array.isArray(payload)) return payload as ProjectRow[];
   if (!isRecord(payload)) return [];
@@ -277,7 +388,8 @@ const resolveList = (payload: unknown): ProjectRow[] => {
   if (isRecord(typed.data) && Array.isArray(typed.data?.results)) {
     return typed.data?.results ?? [];
   }
-  if (Array.isArray(typed.data as ProjectRow[])) return typed.data as ProjectRow[];
+  if (Array.isArray(typed.data as ProjectRow[]))
+    return typed.data as ProjectRow[];
   return [];
 };
 
@@ -306,7 +418,10 @@ const fetchProjects = async () => {
       },
     });
 
-    const data = isRecord(projectRes) && "data" in projectRes ? projectRes.data : projectRes;
+    const data =
+      isRecord(projectRes) && "data" in projectRes
+        ? projectRes.data
+        : projectRes;
     projects.value = resolveList(data);
     total.value = resolveCount(data) || projects.value.length;
     selectedRows.value = [];
@@ -344,11 +459,23 @@ const handleApprove = (row: ProjectRow) => {
   reviewDialogVisible.value = true;
 };
 
-const handleReject = (row: ProjectRow) => {
+const handleReject = async (row: ProjectRow) => {
   reviewType.value = "reject";
   reviewForm.value.projectId = row.id;
   reviewForm.value.comment = "";
   reviewForm.value.return_to = "student";
+  reviewForm.value.target_node_id = null;
+  rejectTargets.value = [];
+  // 加载可退回节点
+  try {
+    const res = await getRejectTargetsByProject(row.id);
+    if (res.code === 200) {
+      rejectTargets.value = res.data || [];
+    }
+  } catch (error) {
+    console.error("获取退回节点失败", error);
+    rejectTargets.value = [];
+  }
   reviewDialogVisible.value = true;
 };
 
@@ -367,18 +494,42 @@ const confirmReview = async () => {
       if (isRecord(res) && res.code === 200) {
         ElMessage.success("结题已通过");
       } else {
-        ElMessage.error((isRecord(res) && typeof res.message === "string" && res.message) || "操作失败");
+        ElMessage.error(
+          (isRecord(res) && typeof res.message === "string" && res.message) ||
+            "操作失败"
+        );
         return;
       }
     } else {
+      const payload: {
+        action: "return";
+        reason: string;
+        return_to?: string;
+        target_node_id?: number | null;
+      } = {
+        action: "return",
+        reason: reviewForm.value.comment,
+      };
+      if (reviewForm.value.target_node_id) {
+        payload.target_node_id = reviewForm.value.target_node_id;
+      } else {
+        payload.return_to = reviewForm.value.return_to;
+      }
       const res = await request.post(
         `/projects/${reviewForm.value.projectId}/workflow/finalize-closure/`,
-        { action: "return", reason: reviewForm.value.comment, return_to: reviewForm.value.return_to }
+        payload
       );
       if (isRecord(res) && res.code === 200) {
-        ElMessage.success(reviewForm.value.return_to === "teacher" ? "已退回导师修改" : "已退回学生修改");
+        ElMessage.success(
+          reviewForm.value.return_to === "teacher"
+            ? "已退回导师修改"
+            : "已退回学生修改"
+        );
       } else {
-        ElMessage.error((isRecord(res) && typeof res.message === "string" && res.message) || "操作失败");
+        ElMessage.error(
+          (isRecord(res) && typeof res.message === "string" && res.message) ||
+            "操作失败"
+        );
         return;
       }
     }
@@ -416,14 +567,20 @@ const submitBatchReview = async () => {
     for (const row of selectedRows.value) {
       try {
         if (batchForm.value.action === "approve") {
-          const res = await request.post(`/projects/${row.id}/workflow/finalize-closure/`, { action: 'approve' });
+          const res = await request.post(
+            `/projects/${row.id}/workflow/finalize-closure/`,
+            { action: "approve" }
+          );
           if (isRecord(res) && res.code === 200) okCount += 1;
         } else {
-          const res = await request.post(`/projects/${row.id}/workflow/finalize-closure/`, {
-            action: 'return',
-            reason: batchForm.value.comments,
-            return_to: batchForm.value.return_to,
-          });
+          const res = await request.post(
+            `/projects/${row.id}/workflow/finalize-closure/`,
+            {
+              action: "return",
+              reason: batchForm.value.comments,
+              return_to: batchForm.value.return_to,
+            }
+          );
           if (isRecord(res) && res.code === 200) okCount += 1;
         }
       } catch {
@@ -431,7 +588,9 @@ const submitBatchReview = async () => {
       }
     }
 
-    ElMessage.success(`批量处理完成：成功 ${okCount}/${selectedRows.value.length}`);
+    ElMessage.success(
+      `批量处理完成：成功 ${okCount}/${selectedRows.value.length}`
+    );
     batchDialogVisible.value = false;
     selectedRows.value = [];
     fetchProjects();
@@ -483,13 +642,14 @@ const handleBatchDownload = async () => {
       typeof res === "string"
         ? res
         : res instanceof ArrayBuffer
-          ? res
-          : ArrayBuffer.isView(res)
-            ? (res.buffer as ArrayBuffer)
-            : JSON.stringify(res ?? "");
-    const blob = res instanceof Blob
-      ? res
-      : new Blob([blobPart], { type: "application/zip" });
+        ? res
+        : ArrayBuffer.isView(res)
+        ? (res.buffer as ArrayBuffer)
+        : JSON.stringify(res ?? "");
+    const blob =
+      res instanceof Blob
+        ? res
+        : new Blob([blobPart], { type: "application/zip" });
     downloadFile(blob, "校级结题审核附件.zip");
     ElMessage.success("下载成功");
   } catch {
@@ -522,9 +682,9 @@ onMounted(() => {
 .main-card {
   border-radius: 8px;
   :deep(.el-card__header) {
-      padding: 16px 20px;
-      font-weight: 600;
-      border-bottom: 1px solid $color-border-light;
+    padding: 16px 20px;
+    font-weight: 600;
+    border-bottom: 1px solid $color-border-light;
   }
 }
 
@@ -535,38 +695,43 @@ onMounted(() => {
 }
 
 .header-left {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .header-title {
-    font-size: 16px;
-    color: $slate-800;
+  font-size: 16px;
+  color: $slate-800;
 }
 
 .header-actions {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .action-bar {
-    display: flex;
-    justify-content: flex-end;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .pagination-container {
-    display: flex;
-    justify-content: flex-end;
+  display: flex;
+  justify-content: flex-end;
 }
 
-.ml-2 { margin-left: 8px; }
-.mb-4 { margin-bottom: 16px; }
-.mt-4 { margin-top: 16px; }
+.ml-2 {
+  margin-left: 8px;
+}
+.mb-4 {
+  margin-bottom: 16px;
+}
+.mt-4 {
+  margin-top: 16px;
+}
 
 .project-title {
   font-weight: 500;
   color: $slate-800;
   font-size: 14px;
 }
-
 </style>

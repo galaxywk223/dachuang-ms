@@ -302,6 +302,7 @@ class WorkflowNode(models.Model):
     """
 
     class NodeType(models.TextChoices):
+        SUBMIT = "SUBMIT", "提交"
         REVIEW = "REVIEW", "审核"
         EXPERT_REVIEW = "EXPERT_REVIEW", "专家评审"
         APPROVAL = "APPROVAL", "管理员确认"
@@ -357,6 +358,13 @@ class WorkflowNode(models.Model):
         choices=ReturnPolicy.choices,
         default=ReturnPolicy.NONE,
         verbose_name="退回规则",
+    )
+    # 允许退回的目标节点ID列表（JSON格式）
+    allowed_reject_to = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name="允许退回的节点ID列表",
+        help_text="存储可以退回到的节点ID数组",
     )
     review_template = models.ForeignKey(
         ReviewTemplate,
