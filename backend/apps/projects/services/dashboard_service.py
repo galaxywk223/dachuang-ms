@@ -344,10 +344,10 @@ class DashboardService:
                 "total_projects": all_projects.count(),
                 "recent_projects": recent_projects,
                 "total_students": User.objects.filter(
-                    role=User.UserRole.STUDENT, is_active=True
+                    role_fk__code=User.UserRole.STUDENT, is_active=True
                 ).count(),
                 "total_teachers": User.objects.filter(
-                    role=User.UserRole.TEACHER, is_active=True
+                    role_fk__code=User.UserRole.TEACHER, is_active=True
                 ).count(),
             },
             "status_stats": status_stats,

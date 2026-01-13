@@ -28,7 +28,7 @@ class ProjectRecycleBinViewSet(viewsets.ReadOnlyModelViewSet):
         qs = super().get_queryset()
         if user.is_student:
             return qs.filter(project__leader=user)
-        if user.role == "TEACHER":
+        if user.is_teacher:
             return qs.filter(project__advisors__user=user).distinct()
         if user.is_level2_admin:
             return qs.filter(project__leader__college=user.college)

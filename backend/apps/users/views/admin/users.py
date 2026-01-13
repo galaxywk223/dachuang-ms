@@ -57,14 +57,14 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         # 按角色筛选
         role = self.request.query_params.get("role", "")
         if role:
-            queryset = queryset.filter(role=role)
+            queryset = queryset.filter(role_fk__code=role)
 
         expert_scope = self.request.query_params.get("expert_scope", "")
         if expert_scope:
             queryset = queryset.filter(expert_scope=expert_scope)
 
         if current_user.is_level2_admin:
-            queryset = queryset.filter(role=User.UserRole.EXPERT)
+            queryset = queryset.filter(role_fk__code=User.UserRole.EXPERT)
             if current_user.college:
                 queryset = queryset.filter(
                     college=current_user.college,
@@ -125,8 +125,8 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         """
         if not (
             request.user.is_superuser
-            or request.user.role == User.UserRole.LEVEL1_ADMIN
-            or request.user.role == User.UserRole.LEVEL2_ADMIN
+            or request.user.is_level1_admin
+            or request.user.is_level2_admin
         ):
             return Response(
                 {"code": 403, "message": "无权限创建用户"},
@@ -136,7 +136,7 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         data = request.data.copy()
         data.setdefault("role", User.UserRole.STUDENT)
 
-        if request.user.role == User.UserRole.LEVEL2_ADMIN:
+        if request.user.is_level2_admin:
             if data.get("role") != User.UserRole.EXPERT:
                 return Response(
                     {"code": 403, "message": "二级管理员仅可创建院级专家"},
@@ -195,7 +195,7 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
         if request.user.is_level2_admin:
-            if instance.role != User.UserRole.EXPERT:
+            if not instance.is_expert:
                 return Response(
                     {"code": 403, "message": "二级管理员仅可管理院级专家"},
                     status=status.HTTP_403_FORBIDDEN,
@@ -212,7 +212,7 @@ class AdminUserViewSet(viewsets.ModelViewSet):
             data["role"] = User.UserRole.EXPERT
             data["college"] = request.user.college
             data["expert_scope"] = User.ExpertScope.COLLEGE
-        elif instance.role == User.UserRole.EXPERT:
+        elif instance.is_expert:
             data.setdefault("expert_scope", instance.expert_scope)
             if data.get("expert_scope") == User.ExpertScope.SCHOOL:
                 data["college"] = ""
@@ -238,7 +238,7 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         """
         instance = self.get_object()
         if request.user.is_level2_admin:
-            if instance.role != User.UserRole.EXPERT:
+            if not instance.is_expert:
                 return Response(
                     {"code": 403, "message": "二级管理员仅可管理院级专家"},
                     status=status.HTTP_403_FORBIDDEN,
@@ -266,7 +266,7 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         """
         user = self.get_object()
         if request.user.is_level2_admin:
-            if user.role != User.UserRole.EXPERT:
+            if not user.is_expert:
                 return Response(
                     {"code": 403, "message": "二级管理员仅可管理院级专家"},
                     status=status.HTTP_403_FORBIDDEN,
@@ -298,7 +298,7 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         """
         user = self.get_object()
         if request.user.is_level2_admin:
-            if user.role != User.UserRole.EXPERT:
+            if not user.is_expert:
                 return Response(
                     {"code": 403, "message": "二级管理员仅可管理院级专家"},
                     status=status.HTTP_403_FORBIDDEN,
@@ -327,9 +327,9 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         获取用户统计数据
         """
         total_users = User.objects.count()
-        student_count = User.objects.filter(role="STUDENT").count()
+        student_count = User.objects.filter(role_fk__code="STUDENT").count()
         admin_count = User.objects.filter(
-            role__in=["LEVEL1_ADMIN", "LEVEL2_ADMIN"]
+            role_fk__code__in=["LEVEL1_ADMIN", "LEVEL2_ADMIN"]
         ).count()
 
         return Response(

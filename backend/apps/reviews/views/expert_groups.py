@@ -29,7 +29,7 @@ class ExpertGroupViewSet(viewsets.ModelViewSet):
              # 院级管理员管理本院专家组 (created_by handles college implication usually, or we filter by creator)
              # Better: Filter by scope COLLEGE and created_by college (if we had college field, but created_by is proxy)
              return queryset.filter(scope="COLLEGE", created_by__college=user.college)
-        elif user.role == "EXPERT":
+        elif user.is_expert:
             # 专家只能看自己在的组? Or generic access? Let's say experts only see groups they are in if needed.
              return queryset.filter(members=user)
         return queryset.none()
@@ -53,5 +53,4 @@ class ExpertGroupViewSet(viewsets.ModelViewSet):
         if user.is_level2_admin and serializer.instance.scope != "COLLEGE":
             raise PermissionDenied("无权限修改该专家组")
         serializer.save()
-
 

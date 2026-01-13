@@ -76,9 +76,7 @@ class UserRepository:
             "role_info": role_info,
             "permissions": permissions,
             "default_route": default_route,
-            "expert_scope": user.expert_scope
-            if user.role and user.get_role_code() == "EXPERT"
-            else None,
+            "expert_scope": user.expert_scope if user.is_expert else None,
             "college": user.college,
             "department": user.department,
             "phone": user.phone,
@@ -98,6 +96,15 @@ class UserRepository:
         Returns:
             User: 更新后的用户对象
         """
+        from apps.users.models import Role
+
+        role_code = data.pop("role", None)
+        if role_code:
+            role = Role.objects.filter(code=role_code).first()
+            if not role:
+                raise ValueError("角色不存在")
+            data["role_fk"] = role
+
         for key, value in data.items():
             if hasattr(user, key):
                 setattr(user, key, value)
@@ -120,7 +127,7 @@ class UserRepository:
         if filters:
             # 按角色过滤
             if "role" in filters:
-                queryset = queryset.filter(role=filters["role"])
+                queryset = queryset.filter(role_fk__code=filters["role"])
 
             # 按学院过滤
             if "college" in filters:
@@ -155,6 +162,14 @@ class UserRepository:
         Returns:
             User: 创建的用户对象
         """
+        from apps.users.models import Role
+
+        role_code = data.pop("role", None)
+        if role_code and "role_fk" not in data:
+            role = Role.objects.filter(code=role_code).first()
+            if not role:
+                raise ValueError("角色不存在")
+            data["role_fk"] = role
         user = User.objects.create(**data)
         return user
 

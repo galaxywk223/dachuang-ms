@@ -32,7 +32,7 @@ class ProjectChangeRequestViewSet(viewsets.ModelViewSet):
 
         if user.is_student:
             return queryset.filter(created_by=user)
-        if user.role == "TEACHER":
+        if user.is_teacher:
             return queryset.filter(project__advisors__user=user).distinct()
         if user.is_level2_admin:
             return queryset.filter(project__leader__college=user.college)
@@ -153,7 +153,7 @@ class ProjectChangeRequestViewSet(viewsets.ModelViewSet):
         return Response({"code": 200, "message": "已驳回"})
 
     def _get_pending_review(self, change_request, user):
-        if user.role == "TEACHER":
+        if user.is_teacher:
             if not change_request.project.advisors.filter(user=user).exists():
                 return None
             return ProjectChangeReview.objects.filter(

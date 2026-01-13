@@ -3,41 +3,36 @@
     <div class="login-wrapper">
       <!-- Atmospheric Left Panel -->
       <div class="brand-side">
-        <div class="brand-content">
-          <div class="logo-area">
-            <div class="logo-circle">
+        <div class="brand-main">
+          <h1 class="app-title">
+            <div class="university-wrapper">
               <img
                 src="@/assets/ahut_logo.jpg"
                 alt="AHUT Logo"
-                class="brand-logo-img"
+                class="university-logo"
               />
+              <span class="title-primary">安徽工业大学</span>
             </div>
-            <h1 class="app-title">安徽工业大学<br />大创项目管理系统</h1>
-          </div>
+            <span class="title-secondary">大创项目管理系统</span>
+          </h1>
+          <div class="title-decoration"></div>
           <p class="brand-slogan">创新驱动发展 &nbsp;•&nbsp; 实践成就梦想</p>
-          <div class="brand-footer">
-            <span>© 2025 Anhui University of Technology</span>
-          </div>
         </div>
-        <!-- Decorative Background Elements -->
-        <div class="bg-shape shape-1"></div>
-        <div class="bg-shape shape-2"></div>
+
+        <div class="brand-footer">
+          <p>© 2025 Anhui University of Technology. All Rights Reserved.</p>
+        </div>
+
+        <!-- Decorative Background -->
+        <div class="bg-circles">
+          <div class="circle c1"></div>
+          <div class="circle c2"></div>
+        </div>
       </div>
 
       <!-- Minimalist Right Panel -->
       <div class="form-side">
-        <div class="form-header">
-          <h2>欢迎登录</h2>
-          <p>请使用您的学号/工号进行身份验证</p>
-        </div>
-
         <LoginForm :loading="loading" @submit="handleLogin" />
-
-        <div class="form-footer">
-          <el-button link type="info" size="small">忘记密码?</el-button>
-          <el-divider direction="vertical" />
-          <el-button link type="primary" size="small">帮助中心</el-button>
-        </div>
       </div>
     </div>
   </div>
@@ -79,7 +74,7 @@ const handleLogin = async (formData: LoginFormData) => {
       });
 
       // 根据后端返回的 default_route 进行跳转
-      const defaultRoute = userStore.user?.default_route || "/";
+      const defaultRoute = userStore.roleInfo?.default_route || "/";
       router.push(defaultRoute);
     }
   } catch (error: unknown) {
@@ -124,99 +119,125 @@ const handleLogin = async (formData: LoginFormData) => {
   }
 }
 
-// Left Panel: Atmospheric
+// Left Panel: Premium & Clean
 .brand-side {
   flex: 1;
-  background: linear-gradient(
-    135deg,
-    $primary-800 0%,
-    $primary-600 100%
-  ); // Royal Blue Gradient
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   color: #ffffff;
   position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 60px;
+  justify-content: space-between;
+  padding: 48px;
   overflow: hidden;
 
-  .brand-content {
-    position: relative;
+  // Main Center Content
+  .brand-main {
     z-index: 10;
-  }
+    margin-bottom: 20px;
 
-  .logo-area {
-    margin-bottom: 40px;
-
-    .logo-circle {
-      width: 64px;
-      height: 64px;
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(12px);
-      border-radius: 50%;
+    .app-title {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 24px;
-      border: 4px solid rgba(255, 255, 255, 0.2); // Thicker border for avatar look
-      overflow: hidden; // Ensure image stays inside
+      flex-direction: column;
+      margin: 0 0 24px 0;
 
-      .brand-logo-img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        // border-radius: 50%; // Handled by parent overflow
+      .university-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+
+        .university-logo {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          // border: 2px solid rgba(255, 255, 255, 0.2);
+          object-fit: cover;
+        }
+
+        .title-primary {
+          font-size: 28px;
+          font-weight: 500;
+          opacity: 0.95;
+          letter-spacing: 2px;
+          line-height: 1;
+          margin-bottom: 0; // Reset margin
+        }
+      }
+
+      .title-secondary {
+        font-size: 36px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        background: linear-gradient(to right, #fff, #94a3b8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
       }
     }
 
-    .app-title {
-      font-size: 32px;
-      font-weight: 700;
-      line-height: 1.3;
+    .title-decoration {
+      width: 60px;
+      height: 4px;
+      background: $primary-500;
+      border-radius: 2px;
+      margin-bottom: 24px;
+    }
+
+    .brand-slogan {
+      font-size: 16px;
+      font-weight: 300;
+      color: $slate-300;
+      letter-spacing: 2px;
       margin: 0;
-      letter-spacing: 0.5px;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
   }
 
-  .brand-slogan {
-    font-size: 16px;
-    opacity: 0.9;
-    font-weight: 300;
-    letter-spacing: 2px;
-  }
-
+  // Footer
   .brand-footer {
+    z-index: 10;
+    p {
+      font-size: 12px;
+      color: $slate-400;
+      margin: 0;
+      font-family: monospace;
+      opacity: 0.7;
+    }
+  }
+
+  // Background Decorations
+  .bg-circles {
     position: absolute;
-    bottom: 40px;
-    left: 60px;
-    font-size: 12px;
-    opacity: 0.6;
-    font-family: monospace;
-  }
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;
 
-  // Abstract Shapes
-  .bg-shape {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.4;
-  }
+    .circle {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.15;
+    }
 
-  .shape-1 {
-    width: 300px;
-    height: 300px;
-    background: color.adjust($primary-400, $lightness: 10%);
-    top: -50px;
-    right: -50px;
-  }
+    .c1 {
+      width: 300px;
+      height: 300px;
+      background: $primary-400;
+      top: -100px;
+      right: -100px;
+    }
 
-  .shape-2 {
-    width: 400px;
-    height: 400px;
-    background: color.adjust($primary-800, $lightness: -5%);
-    bottom: -100px;
-    left: -100px;
+    .c2 {
+      width: 400px;
+      height: 400px;
+      background: $primary-600;
+      bottom: -150px;
+      left: -150px;
+    }
   }
 }
 
@@ -228,29 +249,6 @@ const handleLogin = async (formData: LoginFormData) => {
   flex-direction: column;
   justify-content: center;
   background: #ffffff;
-
-  .form-header {
-    margin-bottom: 40px;
-    text-align: center;
-
-    h2 {
-      font-size: 24px;
-      color: $slate-800;
-      margin: 0 0 12px 0;
-      font-weight: 600;
-    }
-
-    p {
-      color: $slate-500;
-      font-size: 14px;
-      margin: 0;
-    }
-  }
-
-  .form-footer {
-    margin-top: 30px;
-    text-align: center;
-  }
 }
 
 // User Experience & Responsive

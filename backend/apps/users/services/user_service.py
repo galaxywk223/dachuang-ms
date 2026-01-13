@@ -158,7 +158,7 @@ class UserService:
         """
         import openpyxl  # type: ignore[import-untyped]
         from django.db import transaction
-        from apps.users.models import User
+        from apps.users.models import User, Role
 
         wb = openpyxl.load_workbook(file)
         sheet = wb.active
@@ -169,6 +169,12 @@ class UserService:
         # Assuming headers: 工号/学号, 姓名, 学院, 专业, 班级, 手机号, 邮箱
         # Row 1 is header
         
+        role_obj = Role.objects.filter(code=default_role).first()
+        if not role_obj:
+            role_obj = Role.objects.filter(code=User.UserRole.STUDENT).first()
+        if not role_obj:
+            raise ValueError("默认角色不存在")
+
         with transaction.atomic():
             for row_idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
                 employee_id = str(row[0]).strip() if row[0] else None
@@ -186,14 +192,14 @@ class UserService:
                         "employee_id": employee_id,
                         "real_name": real_name,
                         "username": employee_id,
-                        "role": default_role,
+                        "role_fk": role_obj,
                         "college": str(row[2]).strip() if len(row) > 2 and row[2] else "",
                         "major": str(row[3]).strip() if len(row) > 3 and row[3] else "",
                         "class_name": str(row[4]).strip() if len(row) > 4 and row[4] else "",
                         "phone": str(row[5]).strip() if len(row) > 5 and row[5] else "",
                         "email": str(row[6]).strip() if len(row) > 6 and row[6] else "",
                     }
-                    if default_role == User.UserRole.EXPERT:
+                    if role_obj.code == User.UserRole.EXPERT:
                         user_data["expert_scope"] = expert_scope or User.ExpertScope.COLLEGE
                         if user_data["expert_scope"] == User.ExpertScope.SCHOOL:
                             user_data["college"] = ""

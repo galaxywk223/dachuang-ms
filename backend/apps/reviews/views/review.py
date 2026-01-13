@@ -49,12 +49,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
         elif user.is_level1_admin:
             queryset = queryset.filter(review_level=Review.ReviewLevel.LEVEL1)
         # 指导教师只能看到分配给自己的审核
-        elif user.role == "TEACHER":
+        elif user.is_teacher:
              queryset = queryset.filter(
                  project__advisors__user=user,
                  review_level=Review.ReviewLevel.TEACHER
              ).distinct()
-        elif user.role == "EXPERT":
+        elif user.is_expert:
             queryset = queryset.filter(reviewer=user)
 
         status_in = self.request.query_params.get("status_in") or self.request.query_params.get("status__in")
@@ -123,7 +123,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         closure_rating = serializer.validated_data.get("closure_rating")
         reject_to = serializer.validated_data.get("reject_to")
 
-        if user.role == "EXPERT":
+        if user.is_expert:
             ok, msg = SystemSettingService.check_window(
                 "EXPERT_REVIEW_WINDOW",
                 timezone.now().date(),
@@ -214,7 +214,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if user.role == "EXPERT":
+        if user.is_expert:
             ok, msg = SystemSettingService.check_window(
                 "EXPERT_REVIEW_WINDOW",
                 timezone.now().date(),
@@ -362,7 +362,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         elif review.review_level == Review.ReviewLevel.TEACHER:
             # 导师审核：必须是该项目的导师
             # Check if user is in project advisors
-            return user.role == "TEACHER" and review.project.advisors.filter(user=user).exists()
+            return user.is_teacher and review.project.advisors.filter(user=user).exists()
         return False
 
     @action(methods=["post"], detail=False, url_path="batch-review")
@@ -408,7 +408,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
             if not self.check_review_permission(review, request.user):
                 failed.append({"id": review.id, "reason": "无权限"})
                 continue
-            if request.user.role == "EXPERT":
+            if request.user.is_expert:
                 ok, msg = SystemSettingService.check_window(
                     "EXPERT_REVIEW_WINDOW",
                     timezone.now().date(),

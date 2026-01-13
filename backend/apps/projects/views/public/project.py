@@ -76,9 +76,9 @@ class ProjectViewSet(
         elif user.is_level1_admin:
             pass
         # 指导教师只能看到自己指导的项目
-        elif user.role == "TEACHER":
+        elif user.is_teacher:
             queryset = queryset.filter(advisors__user=user).distinct()
-        elif user.role == "EXPERT":
+        elif user.is_expert:
             queryset = queryset.none()
         else:
             queryset = queryset.none()

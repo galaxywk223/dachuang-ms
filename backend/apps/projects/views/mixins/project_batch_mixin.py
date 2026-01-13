@@ -125,7 +125,7 @@ class ProjectBatchMixin:
                 status=status.HTTP_400_BAD_REQUEST,
             )
         import openpyxl  # type: ignore[import-untyped]
-        from apps.users.models import User
+        from apps.users.models import User, Role
         from apps.dictionaries.models import DictionaryItem
         from django.utils import timezone
 
@@ -133,6 +133,12 @@ class ProjectBatchMixin:
         sheet = wb.active
         created = 0
         errors = []
+        student_role = Role.objects.filter(code=User.UserRole.STUDENT).first()
+        if not student_role:
+            return Response(
+                {"code": 400, "message": "默认学生角色不存在"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         header = [
             str(cell.value).strip() if cell.value is not None else ""
@@ -175,7 +181,7 @@ class ProjectBatchMixin:
                         username=leader_id,
                         employee_id=leader_id,
                         real_name=leader_name or leader_id,
-                        role=User.UserRole.STUDENT,
+                        role_fk=student_role,
                         college=college_code or "",
                     )
                     leader.set_unusable_password()

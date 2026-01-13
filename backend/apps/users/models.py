@@ -1,7 +1,7 @@
 # mypy: disable-error-code=var-annotated
 """
 用户模型定义
-支持三种角色：学生、二级管理员（学院级）、一级管理员（校级）
+角色通过 Role 表自定义配置
 """
 
 from django.contrib.auth.models import AbstractUser
@@ -96,7 +96,7 @@ class User(AbstractUser):
     """
 
     class UserRole(models.TextChoices):
-        """保留用于数据迁移和向后兼容"""
+        """系统内置角色代码"""
 
         STUDENT = "STUDENT", "学生"
         LEVEL2_ADMIN = "LEVEL2_ADMIN", "二级管理员"
@@ -116,14 +116,6 @@ class User(AbstractUser):
         verbose_name="角色",
         null=True,  # 用于迁移过程
         blank=True,
-    )
-
-    # 保留旧的 role 字段用于迁移
-    role = models.CharField(
-        max_length=20,
-        choices=UserRole.choices,
-        default=UserRole.STUDENT,
-        verbose_name="角色（旧）",
     )
 
     # 学生使用学号，管理员使用工号
@@ -177,15 +169,11 @@ class User(AbstractUser):
 
     def get_role_code(self):
         """获取角色代码，用于向后兼容"""
-        if self.role_fk:
-            return self.role_fk.code
-        return self.role if hasattr(self, "role") else None
+        return self.role_fk.code if self.role_fk else None
 
     def get_permissions(self):
         """获取用户的所有权限代码列表"""
-        if not self.role_fk:
-            return []
-        return self.role_fk.get_permissions()
+        return self.role_fk.get_permissions() if self.role_fk else []
 
     def has_permission(self, permission_code):
         """检查用户是否拥有某个权限"""
@@ -194,37 +182,33 @@ class User(AbstractUser):
     @property
     def is_student(self):
         """向后兼容的角色判断"""
-        if self.role_fk:
-            return self.role_fk.code == self.UserRole.STUDENT
-        return self.role == self.UserRole.STUDENT
+        return self.role_fk is not None and self.role_fk.code == self.UserRole.STUDENT
 
     @property
     def is_level2_admin(self):
         """向后兼容的角色判断"""
-        if self.role_fk:
-            return self.role_fk.code == self.UserRole.LEVEL2_ADMIN
-        return self.role == self.UserRole.LEVEL2_ADMIN
+        return (
+            self.role_fk is not None
+            and self.role_fk.code == self.UserRole.LEVEL2_ADMIN
+        )
 
     @property
     def is_level1_admin(self):
         """向后兼容的角色判断"""
-        if self.role_fk:
-            return self.role_fk.code == self.UserRole.LEVEL1_ADMIN
-        return self.role == self.UserRole.LEVEL1_ADMIN
+        return (
+            self.role_fk is not None
+            and self.role_fk.code == self.UserRole.LEVEL1_ADMIN
+        )
 
     @property
     def is_teacher(self):
         """向后兼容的角色判断"""
-        if self.role_fk:
-            return self.role_fk.code == self.UserRole.TEACHER
-        return self.role == self.UserRole.TEACHER
+        return self.role_fk is not None and self.role_fk.code == self.UserRole.TEACHER
 
     @property
     def is_expert(self):
         """向后兼容的角色判断"""
-        if self.role_fk:
-            return self.role_fk.code == self.UserRole.EXPERT
-        return self.role == self.UserRole.EXPERT
+        return self.role_fk is not None and self.role_fk.code == self.UserRole.EXPERT
 
 
 class LoginLog(models.Model):

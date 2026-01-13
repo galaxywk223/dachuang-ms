@@ -4,6 +4,7 @@ from apps.projects.models import Project
 from apps.projects.services import ProjectService
 from apps.reviews.services import ReviewService
 from apps.reviews.models import Review
+from apps.users.models import Role
 from django.utils.crypto import get_random_string
 
 User = get_user_model()
@@ -12,24 +13,27 @@ class MidTermTestCase(TestCase):
     def setUp(self):
         # Create users
         password = get_random_string(12)
+        student_role = Role.objects.get(code="STUDENT")
+        teacher_role = Role.objects.get(code="TEACHER")
+        level2_role = Role.objects.get(code="LEVEL2_ADMIN")
         self.student = User.objects.create_user(
             username='student',
             password=password,
-            role='STUDENT',
+            role_fk=student_role,
             real_name='Student',
             employee_id='1001',
         )
         self.teacher = User.objects.create_user(
             username='teacher',
             password=password,
-            role='TEACHER',
+            role_fk=teacher_role,
             real_name='Teacher',
             employee_id='2001',
         )
         self.admin = User.objects.create_user(
             username='admin',
             password=password,
-            role='LEVEL2_ADMIN',
+            role_fk=level2_role,
             real_name='Admin',
             employee_id='3001',
             college='CS',

@@ -4,6 +4,7 @@ from apps.projects.models import Project
 from apps.reviews.models import Review, ExpertGroup
 from apps.reviews.services import ReviewService
 from apps.dictionaries.models import DictionaryItem, DictionaryType
+from apps.users.models import Role
 from django.utils.crypto import get_random_string
 
 User = get_user_model()
@@ -16,10 +17,13 @@ class ExpertGroupTestCase(TestCase):
 
         # Create Admin
         password = get_random_string(12)
+        level2_role = Role.objects.get(code="LEVEL2_ADMIN")
+        expert_role = Role.objects.get(code="EXPERT")
+        student_role = Role.objects.get(code="STUDENT")
         self.admin = User.objects.create_user(
             username='admin',
             password=password,
-            role='LEVEL2_ADMIN',
+            role_fk=level2_role,
             real_name='Admin',
             employee_id='9999',
             college='CS',
@@ -29,14 +33,14 @@ class ExpertGroupTestCase(TestCase):
         self.expert1 = User.objects.create_user(
             username='expert1',
             password=password,
-            role='EXPERT',
+            role_fk=expert_role,
             real_name='Expert1',
             employee_id='E001',
         )
         self.expert2 = User.objects.create_user(
             username='expert2',
             password=password,
-            role='EXPERT',
+            role_fk=expert_role,
             real_name='Expert2',
             employee_id='E002',
         )
@@ -49,7 +53,7 @@ class ExpertGroupTestCase(TestCase):
         self.student = User.objects.create_user(
             username='student',
             password=password,
-            role='STUDENT',
+            role_fk=student_role,
             real_name='Student',
             employee_id='1001',
         )

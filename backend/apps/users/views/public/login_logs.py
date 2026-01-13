@@ -25,6 +25,6 @@ class LoginLogViewSet(viewsets.ReadOnlyModelViewSet):
         user = self.request.user
 
         # 管理员可以查看所有日志，普通用户只能查看自己的日志
-        if user.role in ["LEVEL1_ADMIN", "LEVEL2_ADMIN"]:
+        if user.is_level1_admin or user.is_level2_admin:
             return self.queryset
         return self.queryset.filter(user=user)

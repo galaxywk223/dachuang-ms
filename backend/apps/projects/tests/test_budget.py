@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from apps.projects.models import Project
 from apps.dictionaries.models import DictionaryItem, DictionaryType
 from apps.projects.services import ProjectService
+from apps.users.models import Role
 from django.utils.crypto import get_random_string
 from decimal import Decimal
 import datetime
@@ -13,10 +14,11 @@ class BudgetTestCase(TestCase):
     def setUp(self):
         # Create users
         password = get_random_string(12)
+        student_role = Role.objects.get(code="STUDENT")
         self.student = User.objects.create_user(
             username='student',
             password=password,
-            role='STUDENT',
+            role_fk=student_role,
             real_name='Student',
             employee_id='1001',
         )

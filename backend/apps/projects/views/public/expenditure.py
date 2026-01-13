@@ -26,7 +26,7 @@ class ProjectExpenditureViewSet(viewsets.ModelViewSet):
             return True
         if user.is_student:
             return project.leader_id == user.id or project.members.filter(id=user.id).exists()
-        if user.role == "TEACHER":
+        if user.is_teacher:
             return project.advisors.filter(user=user).exists()
         return False
 
@@ -116,7 +116,7 @@ class ProjectExpenditureViewSet(viewsets.ModelViewSet):
             return ProjectExpenditure.objects.filter(
                 Q(project__leader=user) | Q(project__members=user)
             ).distinct()
-        if user.role == "TEACHER":
+        if user.is_teacher:
             return ProjectExpenditure.objects.filter(
                 project__advisors__user=user
             ).distinct()

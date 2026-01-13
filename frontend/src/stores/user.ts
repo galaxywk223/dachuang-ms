@@ -22,9 +22,11 @@ export const useUserStore = defineStore("user", () => {
     if (typeof data.role === "string") {
       const normalized = data.role.toLowerCase();
       const roles = Object.values(UserRole);
-      return roles.includes(normalized as UserRole)
-        ? { ...data, role: normalized as UserRole }
-        : data;
+      if (roles.includes(normalized as UserRole)) {
+        const normalizedUser = { ...data, role: normalized as UserRole };
+        localStorage.setItem("user_role", normalized);
+        return normalizedUser;
+      }
     }
     return data;
   };
@@ -92,6 +94,9 @@ export const useUserStore = defineStore("user", () => {
             JSON.stringify(userData.permissions)
           );
         }
+        if (user.value?.role) {
+          localStorage.setItem("user_role", user.value.role);
+        }
         return true;
       }
       return false;
@@ -113,6 +118,7 @@ export const useUserStore = defineStore("user", () => {
       localStorage.removeItem("refresh_token");
       localStorage.removeItem("role_info");
       localStorage.removeItem("permissions");
+      localStorage.removeItem("user_role");
     }
   }
 
@@ -142,6 +148,9 @@ export const useUserStore = defineStore("user", () => {
         // 更新权限列表
         if (userData?.permissions) {
           permissions.value = userData.permissions;
+        }
+        if (user.value?.role) {
+          localStorage.setItem("user_role", user.value.role);
         }
       }
     } catch (error) {

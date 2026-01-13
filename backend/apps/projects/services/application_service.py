@@ -177,6 +177,7 @@ def _get_or_create_user_by_identity(
     依据工号/学号或姓名查找/创建用户，用于草稿保存需要回显指导教师/成员。
     """
     User = get_user_model()
+    from apps.users.models import Role
     user = None
     if employee_id:
         user = User.objects.filter(employee_id=employee_id).first()
@@ -202,11 +203,16 @@ def _get_or_create_user_by_identity(
     employee_id_val = employee_id or username
     real_name = name or employee_id_val
     role_val = role or User.UserRole.STUDENT
+    role_obj = Role.objects.filter(code=role_val).first()
+    if not role_obj:
+        role_obj = Role.objects.filter(code=User.UserRole.STUDENT).first()
+    if not role_obj:
+        raise ValueError("默认角色不存在")
     user = User(
         username=username,
         employee_id=employee_id_val,
         real_name=real_name,
-        role=role_val,
+        role_fk=role_obj,
         phone=phone or "",
         email=email or "",
         department=department or "",

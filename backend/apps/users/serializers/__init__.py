@@ -3,14 +3,30 @@
 """
 
 from rest_framework import serializers
-from ..models import User, LoginLog
+from ..models import User, LoginLog, Role
 
 
-class UserSerializer(serializers.ModelSerializer):
+class RoleAssignMixin:
+    def _resolve_role_fk(self, attrs):
+        if attrs.get("role_fk"):
+            attrs.pop("role", None)
+            return attrs
+
+        role_code = attrs.pop("role", None)
+        if role_code:
+            role = Role.objects.filter(code=role_code).first()
+            if not role:
+                raise serializers.ValidationError({"role": "角色不存在"})
+            attrs["role_fk"] = role
+        return attrs
+
+
+class UserSerializer(RoleAssignMixin, serializers.ModelSerializer):
     """
     用户序列化器
     """
 
+    role = serializers.CharField(required=False, allow_blank=True, write_only=True)
     role_info = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField()
 
@@ -41,6 +57,11 @@ class UserSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "created_at", "updated_at"]
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["role"] = instance.role_fk.code if instance.role_fk else None
+        return data
+
     def get_role_info(self, obj):
         """获取角色信息"""
         if obj.role_fk:
@@ -55,6 +76,14 @@ class UserSerializer(serializers.ModelSerializer):
     def get_permissions(self, obj):
         """获取用户权限列表"""
         return obj.get_permissions()
+
+    def create(self, validated_data):
+        validated_data = self._resolve_role_fk(validated_data)
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data = self._resolve_role_fk(validated_data)
+        return super().update(instance, validated_data)
 
 
 class LoginSerializer(serializers.Serializer):
@@ -117,12 +146,13 @@ class ChangePasswordSerializer(serializers.Serializer):
         return attrs
 
 
-class UserCreateSerializer(serializers.ModelSerializer):
+class UserCreateSerializer(RoleAssignMixin, serializers.ModelSerializer):
     """
     用户创建序列化器
     """
 
     password = serializers.CharField(write_only=True, default="123456")
+    role = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = User
@@ -130,6 +160,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
             "employee_id",
             "real_name",
             "role",
+            "role_fk",
             "expert_scope",
             "password",
             "phone",
@@ -144,7 +175,15 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         password = validated_data.pop("password", "123456")
-        if validated_data.get("role") != User.UserRole.EXPERT:
+        validated_data = self._resolve_role_fk(validated_data)
+        if not validated_data.get("role_fk"):
+            default_role = Role.objects.filter(code=User.UserRole.STUDENT).first()
+            if not default_role:
+                raise serializers.ValidationError({"role": "默认角色不存在"})
+            validated_data["role_fk"] = default_role
+
+        role_code = validated_data["role_fk"].code if validated_data.get("role_fk") else None
+        if role_code != User.UserRole.EXPERT:
             validated_data.pop("expert_scope", None)
         elif not validated_data.get("expert_scope"):
             validated_data["expert_scope"] = User.ExpertScope.COLLEGE
