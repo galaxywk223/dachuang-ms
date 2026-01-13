@@ -11,30 +11,36 @@ export const adminRoutes: RouteRecordRaw[] = [
         redirect: "/level1-admin/statistics",
       },
       {
+        path: "users",
+        name: "level1-users",
+        component: () => import("@/views/admin/level1/users/UserManagement.vue"),
+        meta: { title: "用户管理" },
+      },
+      {
+        path: "roles",
+        name: "level1-roles",
+        component: () => import("@/views/admin/level1/users/RoleManagement.vue"),
+        meta: { title: "角色管理" },
+      },
+      {
         path: "users/students",
         name: "level1-users-students",
-        component: () => import("@/views/admin/level1/users/Students.vue"),
-        meta: { title: "学生管理" },
+        redirect: { path: "/level1-admin/users", query: { role: "STUDENT" } },
       },
       {
         path: "users/admins",
         name: "level1-users-admins",
-        component: () => import("@/views/admin/level1/users/Admins.vue"),
-        meta: { title: "学院管理员管理" },
+        redirect: { path: "/level1-admin/users", query: { role: "LEVEL2_ADMIN" } },
       },
       {
         path: "users/teachers",
         name: "level1-users-teachers",
-        component: () =>
-          import("@/views/admin/level1/users/TeacherManagement.vue"),
-        meta: { title: "指导教师管理" },
+        redirect: { path: "/level1-admin/users", query: { role: "TEACHER" } },
       },
       {
         path: "users/experts",
         name: "level1-users-experts",
-        component: () =>
-          import("@/views/admin/level1/users/ExpertManagement.vue"),
-        meta: { title: "专家库管理" },
+        redirect: { path: "/level1-admin/users", query: { role: "EXPERT" } },
       },
       {
         path: "expert/groups",

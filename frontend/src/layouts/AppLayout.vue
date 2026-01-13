@@ -594,15 +594,14 @@ const currentMenus = computed<MenuEntry[]>(() => {
           groupTitle: "用户管理",
           items: [
             {
-              index: "users",
+              index: "/level1-admin/users",
               title: "用户管理",
               icon: User,
-              children: [
-                { index: "/level1-admin/users/students", title: "学生管理" },
-                { index: "/level1-admin/users/teachers", title: "指导教师管理" },
-                { index: "/level1-admin/users/experts", title: "专家库管理" },
-                { index: "/level1-admin/users/admins", title: "学院管理员管理" },
-              ],
+            },
+            {
+              index: "/level1-admin/roles",
+              title: "角色管理",
+              icon: User,
             },
           ],
         },
