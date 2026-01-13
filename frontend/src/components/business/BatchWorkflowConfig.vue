@@ -589,7 +589,7 @@ async function handleSaveNode() {
       const prefix = nodeTypePrefix[nodeForm.value.node_type] || "NODE";
       const timestamp = Date.now().toString().slice(-6);
       nodeForm.value.code = `${prefix}_${timestamp}`;
-      
+
       await createWorkflowNode(
         props.batchId,
         activePhase.value,
