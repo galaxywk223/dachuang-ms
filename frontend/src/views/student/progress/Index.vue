@@ -5,7 +5,12 @@
         <div class="card-header">
           <div class="header-left">
             <span class="header-title">项目进度</span>
-            <el-tag v-if="activeProject" size="small" effect="plain" class="ml-2">
+            <el-tag
+              v-if="activeProject"
+              size="small"
+              effect="plain"
+              class="ml-2"
+            >
               {{ activeProject.title }}
             </el-tag>
           </div>
@@ -26,7 +31,12 @@
                 :value="item.id"
               />
             </el-select>
-            <el-button type="primary" :disabled="!activeProjectId" @click="openDialog">新增进度</el-button>
+            <el-button
+              type="primary"
+              :disabled="!activeProjectId"
+              @click="openDialog"
+              >新增进度</el-button
+            >
           </div>
         </div>
       </template>
@@ -41,9 +51,25 @@
         </div>
 
         <div v-else>
-          <el-table v-loading="loading" :data="progressList" stripe border style="width: 100%">
-            <el-table-column prop="title" label="进度标题" min-width="200" show-overflow-tooltip />
-            <el-table-column prop="content" label="进度内容" min-width="240" show-overflow-tooltip />
+          <el-table
+            v-loading="loading"
+            :data="progressList"
+            stripe
+            border
+            style="width: 100%"
+          >
+            <el-table-column
+              prop="title"
+              label="进度标题"
+              min-width="200"
+              show-overflow-tooltip
+            />
+            <el-table-column
+              prop="content"
+              label="进度内容"
+              min-width="240"
+              show-overflow-tooltip
+            />
             <el-table-column prop="creator_name" label="提交人" width="120" />
             <el-table-column prop="created_at" label="提交时间" width="180">
               <template #default="{ row }">
@@ -52,13 +78,30 @@
             </el-table-column>
             <el-table-column label="附件" width="120" align="center">
               <template #default="{ row }">
-                <el-link v-if="row.attachment" :href="row.attachment" target="_blank" type="primary">查看</el-link>
+                <el-link
+                  v-if="row.attachment"
+                  :href="row.attachment"
+                  target="_blank"
+                  type="primary"
+                  >查看</el-link
+                >
                 <span v-else>-</span>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="120" align="center" fixed="right">
+            <el-table-column
+              label="操作"
+              width="120"
+              align="center"
+              fixed="right"
+            >
               <template #default="{ row }">
-                <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+                <el-button
+                  link
+                  type="danger"
+                  size="small"
+                  @click="handleDelete(row)"
+                  >删除</el-button
+                >
               </template>
             </el-table-column>
           </el-table>
@@ -73,13 +116,23 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" title="新增进度" width="520px" @closed="resetForm">
+    <el-dialog
+      v-model="dialogVisible"
+      title="新增进度"
+      width="520px"
+      @closed="resetForm"
+    >
       <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
         <el-form-item label="标题" prop="title">
           <el-input v-model="form.title" placeholder="请输入进度标题" />
         </el-form-item>
         <el-form-item label="内容" prop="content">
-          <el-input v-model="form.content" type="textarea" :rows="4" placeholder="请输入进度内容" />
+          <el-input
+            v-model="form.content"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入进度内容"
+          />
         </el-form-item>
         <el-form-item label="附件">
           <el-upload
@@ -95,7 +148,9 @@
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="handleSubmit">提交</el-button>
+        <el-button type="primary" :loading="submitting" @click="handleSubmit"
+          >提交</el-button
+        >
       </template>
     </el-dialog>
   </div>
@@ -103,7 +158,12 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from "vue";
-import { ElMessage, ElMessageBox, type FormInstance, type UploadUserFile } from "element-plus";
+import {
+  ElMessage,
+  ElMessageBox,
+  type FormInstance,
+  type UploadUserFile,
+} from "element-plus";
 import dayjs from "dayjs";
 import {
   addProjectProgress,
@@ -140,12 +200,16 @@ type ApiResponse<T> = {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
-const resolveList = <T,>(payload: unknown): T[] => {
+const resolveList = <T>(payload: unknown): T[] => {
   if (Array.isArray(payload)) return payload as T[];
   if (isRecord(payload) && Array.isArray(payload.results)) {
     return payload.results as T[];
   }
-  if (isRecord(payload) && isRecord(payload.data) && Array.isArray(payload.data.results)) {
+  if (
+    isRecord(payload) &&
+    isRecord(payload.data) &&
+    Array.isArray(payload.data.results)
+  ) {
     return payload.data.results as T[];
   }
   if (isRecord(payload) && Array.isArray(payload.data)) {
@@ -195,7 +259,9 @@ const formatDate = (value?: string) => {
 
 const fetchProjects = async () => {
   try {
-    const res = (await getProjects({ page_size: 200 })) as ApiResponse<ProjectItem[]>;
+    const res = (await getProjects({ page_size: 200 })) as ApiResponse<
+      ProjectItem[]
+    >;
     const payload = isRecord(res) && isRecord(res.data) ? res.data : res;
     projects.value = resolveList<ProjectItem>(payload);
     if (!activeProjectId.value && projects.value.length > 0) {
@@ -289,7 +355,9 @@ const handleSubmit = async () => {
 const handleDelete = async (row: ProgressItem) => {
   if (!activeProjectId.value) return;
   try {
-    await ElMessageBox.confirm("确定删除该进度记录吗？", "提示", { type: "warning" });
+    await ElMessageBox.confirm("确定删除该进度记录吗？", "提示", {
+      type: "warning",
+    });
     const res = (await removeProjectProgress(
       activeProjectId.value,
       row.id
@@ -313,10 +381,50 @@ onMounted(async () => {
 
 <style scoped lang="scss">
 .progress-page {
-  .header-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+  padding: 20px;
+}
+
+.main-card {
+  border-radius: 8px;
+  :deep(.el-card__header) {
+    padding: 16px 20px;
+    font-weight: 600;
+    border-bottom: 1px solid #e2e8f0;
   }
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.header-title {
+  font-size: 16px;
+  color: #1e293b;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.ml-2 {
+  margin-left: 8px;
+}
+
+.mr-2 {
+  margin-right: 8px;
+}
+
+.mt-4 {
+  margin-top: 16px;
 }
 </style>

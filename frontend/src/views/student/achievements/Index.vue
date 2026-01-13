@@ -5,7 +5,13 @@
         <div class="card-header">
           <div class="header-left">
             <span class="header-title">成果管理</span>
-            <el-tag v-if="activeProject" size="small" effect="plain" type="info" class="ml-3">
+            <el-tag
+              v-if="activeProject"
+              size="small"
+              effect="plain"
+              type="info"
+              class="ml-3"
+            >
               {{ activeProject.title }}
             </el-tag>
           </div>
@@ -58,12 +64,32 @@
           style="width: 100%"
           :header-cell-style="{ background: '#f8fafc', color: '#475569' }"
         >
-          <el-table-column prop="achievement_type_display" label="类型" width="140" />
-          <el-table-column prop="title" label="成果名称" min-width="220" show-overflow-tooltip />
-          <el-table-column prop="description" label="成果描述" min-width="240" show-overflow-tooltip />
+          <el-table-column
+            prop="achievement_type_display"
+            label="类型"
+            width="140"
+          />
+          <el-table-column
+            prop="title"
+            label="成果名称"
+            min-width="220"
+            show-overflow-tooltip
+          />
+          <el-table-column
+            prop="description"
+            label="成果描述"
+            min-width="240"
+            show-overflow-tooltip
+          />
           <el-table-column label="附件" width="120" align="center">
             <template #default="{ row }">
-              <el-link v-if="row.attachment" :href="row.attachment" target="_blank" type="primary">查看</el-link>
+              <el-link
+                v-if="row.attachment"
+                :href="row.attachment"
+                target="_blank"
+                type="primary"
+                >查看</el-link
+              >
               <span v-else>-</span>
             </template>
           </el-table-column>
@@ -72,10 +98,19 @@
               {{ formatDate(row.created_at) }}
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="160" align="center" fixed="right">
+          <el-table-column
+            label="操作"
+            width="160"
+            align="center"
+            fixed="right"
+          >
             <template #default="{ row }">
-              <el-button link type="primary" @click="handleView(row)">详情</el-button>
-              <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
+              <el-button link type="primary" @click="handleView(row)"
+                >详情</el-button
+              >
+              <el-button link type="danger" @click="handleDelete(row)"
+                >删除</el-button
+              >
             </template>
           </el-table-column>
         </el-table>
@@ -98,7 +133,11 @@
     >
       <el-form :ref="formRef" :model="form" :rules="rules" label-width="110px">
         <el-form-item label="成果类型" prop="achievement_type">
-          <el-select v-model="form.achievement_type" placeholder="请选择类型" style="width: 100%">
+          <el-select
+            v-model="form.achievement_type"
+            placeholder="请选择类型"
+            style="width: 100%"
+          >
             <el-option
               v-for="item in achievementTypeOptions"
               :key="item.id || item.value"
@@ -159,16 +198,25 @@
             <el-input v-model="form.copyright_no" placeholder="请输入登记号" />
           </el-form-item>
           <el-form-item label="著作权人" required>
-            <el-input v-model="form.copyright_owner" placeholder="请输入著作权人" />
+            <el-input
+              v-model="form.copyright_owner"
+              placeholder="请输入著作权人"
+            />
           </el-form-item>
         </template>
 
         <template v-if="selectedTypeValue === 'COMPETITION_AWARD'">
           <el-form-item label="竞赛名称" required>
-            <el-input v-model="form.competition_name" placeholder="请输入竞赛名称" />
+            <el-input
+              v-model="form.competition_name"
+              placeholder="请输入竞赛名称"
+            />
           </el-form-item>
           <el-form-item label="获奖等级" required>
-            <el-input v-model="form.award_level" placeholder="如：国家级一等奖" />
+            <el-input
+              v-model="form.award_level"
+              placeholder="如：国家级一等奖"
+            />
           </el-form-item>
           <el-form-item label="获奖日期">
             <el-date-picker
@@ -183,10 +231,16 @@
 
         <template v-if="isCompanyType">
           <el-form-item label="公司名称" required>
-            <el-input v-model="form.company_name" placeholder="请输入公司名称" />
+            <el-input
+              v-model="form.company_name"
+              placeholder="请输入公司名称"
+            />
           </el-form-item>
           <el-form-item label="角色/职责">
-            <el-input v-model="form.company_role" placeholder="如：法人/技术负责人" />
+            <el-input
+              v-model="form.company_role"
+              placeholder="如：法人/技术负责人"
+            />
           </el-form-item>
           <el-form-item label="成立日期">
             <el-date-picker
@@ -201,10 +255,16 @@
 
         <template v-if="isConferenceType">
           <el-form-item label="会议名称" required>
-            <el-input v-model="form.conference_name" placeholder="请输入会议名称" />
+            <el-input
+              v-model="form.conference_name"
+              placeholder="请输入会议名称"
+            />
           </el-form-item>
           <el-form-item label="会议级别">
-            <el-input v-model="form.conference_level" placeholder="如：国际会议/国内会议" />
+            <el-input
+              v-model="form.conference_level"
+              placeholder="如：国际会议/国内会议"
+            />
           </el-form-item>
           <el-form-item label="会议日期">
             <el-date-picker
@@ -219,10 +279,16 @@
 
         <template v-if="isReportType">
           <el-form-item label="报告名称" required>
-            <el-input v-model="form.report_title" placeholder="请输入报告名称" />
+            <el-input
+              v-model="form.report_title"
+              placeholder="请输入报告名称"
+            />
           </el-form-item>
           <el-form-item label="报告类型">
-            <el-input v-model="form.report_type" placeholder="如：研究报告/调查报告" />
+            <el-input
+              v-model="form.report_type"
+              placeholder="如：研究报告/调查报告"
+            />
           </el-form-item>
         </template>
 
@@ -231,10 +297,16 @@
             <el-input v-model="form.media_title" placeholder="请输入作品名称" />
           </el-form-item>
           <el-form-item label="作品形式">
-            <el-input v-model="form.media_format" placeholder="如：视频/音频/多媒体" />
+            <el-input
+              v-model="form.media_format"
+              placeholder="如：视频/音频/多媒体"
+            />
           </el-form-item>
           <el-form-item label="作品链接">
-            <el-input v-model="form.media_link" placeholder="可填写网盘或展示链接" />
+            <el-input
+              v-model="form.media_link"
+              placeholder="可填写网盘或展示链接"
+            />
           </el-form-item>
         </template>
 
@@ -250,7 +322,9 @@
             :limit="1"
           >
             <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-            <div class="el-upload__text">拖拽文件到此处或 <em>点击上传</em></div>
+            <div class="el-upload__text">
+              拖拽文件到此处或 <em>点击上传</em>
+            </div>
             <template #tip>
               <div class="el-upload__tip">支持PDF/图片/压缩包</div>
             </template>
@@ -261,7 +335,12 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" :loading="submitting" @click="submitAchievement">提交</el-button>
+          <el-button
+            type="primary"
+            :loading="submitting"
+            @click="submitAchievement"
+            >提交</el-button
+          >
         </span>
       </template>
     </el-dialog>
@@ -269,34 +348,47 @@
     <el-dialog v-model="viewDialogVisible" title="成果详情" width="640px">
       <el-descriptions :column="1" border>
         <el-descriptions-item label="成果类型">
-          {{ currentAchievement?.achievement_type_display || '-' }}
+          {{ currentAchievement?.achievement_type_display || "-" }}
         </el-descriptions-item>
         <el-descriptions-item label="成果名称">
-          {{ currentAchievement?.title || '-' }}
+          {{ currentAchievement?.title || "-" }}
         </el-descriptions-item>
         <el-descriptions-item label="成果描述">
-          {{ currentAchievement?.description || '-' }}
+          {{ currentAchievement?.description || "-" }}
         </el-descriptions-item>
         <el-descriptions-item label="作者/申请人">
-          {{ currentAchievement?.authors || currentAchievement?.applicant || '-' }}
+          {{
+            currentAchievement?.authors || currentAchievement?.applicant || "-"
+          }}
         </el-descriptions-item>
         <el-descriptions-item label="期刊/会议">
-          {{ currentAchievement?.journal || '-' }}
+          {{ currentAchievement?.journal || "-" }}
         </el-descriptions-item>
         <el-descriptions-item label="专利/软著信息">
-          {{ currentAchievement?.patent_no || currentAchievement?.copyright_no || '-' }}
+          {{
+            currentAchievement?.patent_no ||
+            currentAchievement?.copyright_no ||
+            "-"
+          }}
         </el-descriptions-item>
         <el-descriptions-item label="竞赛信息">
-          {{ currentAchievement?.competition_name || '-' }}
+          {{ currentAchievement?.competition_name || "-" }}
         </el-descriptions-item>
         <el-descriptions-item label="附件">
-          <el-link v-if="currentAchievement?.attachment" :href="currentAchievement.attachment" target="_blank" type="primary">
+          <el-link
+            v-if="currentAchievement?.attachment"
+            :href="currentAchievement.attachment"
+            target="_blank"
+            type="primary"
+          >
             点击查看
           </el-link>
           <span v-else>-</span>
         </el-descriptions-item>
         <el-descriptions-item label="扩展信息">
-          <pre v-if="currentAchievement?.extra_data" class="extra-data">{{ JSON.stringify(currentAchievement.extra_data, null, 2) }}</pre>
+          <pre v-if="currentAchievement?.extra_data" class="extra-data">{{
+            JSON.stringify(currentAchievement.extra_data, null, 2)
+          }}</pre>
           <span v-else>-</span>
         </el-descriptions-item>
         <el-descriptions-item label="登记时间">
@@ -350,8 +442,7 @@ const {
 } = useAchievementsPage();
 </script>
 
-@use "@/styles/variables.scss" as *;
-
+<style scoped lang="scss">
 .achievements-page {
   padding: 20px;
 }
@@ -359,9 +450,9 @@ const {
 .main-card {
   border-radius: 8px;
   :deep(.el-card__header) {
-      padding: 16px 20px;
-      font-weight: 600;
-      border-bottom: 1px solid $color-border-light;
+    padding: 16px 20px;
+    font-weight: 600;
+    border-bottom: 1px solid #e2e8f0;
   }
 }
 
@@ -374,37 +465,38 @@ const {
 }
 
 .header-left {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .header-title {
-    font-size: 16px;
-    color: $slate-800;
+  font-size: 16px;
+  color: #1e293b;
 }
 
 .header-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .ml-3 {
-    margin-left: 12px;
+  margin-left: 12px;
 }
 
 .mb-4 {
-    margin-bottom: 16px;
+  margin-bottom: 16px;
 }
 
 .mt-4 {
-    margin-top: 16px;
+  margin-top: 16px;
 }
 
 .extra-data {
-    margin: 0;
-    white-space: pre-wrap;
-    word-break: break-word;
-    font-size: 12px;
-    color: #64748b;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 12px;
+  color: #64748b;
 }
+</style>
