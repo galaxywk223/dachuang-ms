@@ -7,7 +7,7 @@
             <span class="header-title">帮助中心</span>
           </div>
         </template>
-        
+
         <div class="help-content">
           <h3 class="section-title">常见问题</h3>
           <el-collapse>
@@ -60,54 +60,48 @@ defineOptions({
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables.scss" as *;
-
 .help-page {
   padding: 20px;
-  .page-content {
-      max-width: 1200px;
-      margin: 0 auto;
-  }
 }
 
 .main-card {
   border-radius: 8px;
   :deep(.el-card__header) {
-      padding: 16px 20px;
-      font-weight: 600;
-      border-bottom: 1px solid $color-border-light;
+    padding: 16px 20px;
+    font-weight: 600;
+    border-bottom: 1px solid #e2e8f0;
   }
 }
 
 .section-title {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 20px;
-    color: $slate-800;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #1e293b;
 }
 
 .faq-content {
-    color: $slate-600;
-    line-height: 1.6;
-    padding: 10px 0;
+  color: #475569;
+  line-height: 1.6;
+  padding: 10px 0;
 }
 
 .contact-info {
+  display: flex;
+  gap: 40px;
+  margin-top: 20px;
+
+  .contact-item {
     display: flex;
-    gap: 40px;
-    margin-top: 20px;
-    
-    .contact-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        color: $slate-700;
-        font-size: 15px;
-        
-        .el-icon {
-            font-size: 18px;
-            color: $primary-600;
-        }
+    align-items: center;
+    gap: 8px;
+    color: #334155;
+    font-size: 15px;
+
+    .el-icon {
+      font-size: 18px;
+      color: var(--el-color-primary);
     }
+  }
 }
 </style>

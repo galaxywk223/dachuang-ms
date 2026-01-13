@@ -546,74 +546,99 @@ const currentMenus = computed<MenuEntry[]>(() => {
     case "level1_admin":
       return [
         {
-          index: "/level1-admin/statistics",
-          title: "统计概览",
-          icon: Folder,
-        },
-        {
-          index: "/level1-admin/review",
-          title: "审核管理",
-          icon: DocumentChecked,
-        },
-        {
-          index: "/level1-admin/projects/all",
-          title: "项目库管理",
-          icon: Folder,
-        },
-        {
-          index: "/level1-admin/funds",
-          title: "经费管理",
-          icon: Folder,
-        },
-        {
-          index: "users",
-          title: "用户管理",
-          icon: User,
-          children: [
-            { index: "/level1-admin/users/students", title: "学生管理" },
-            { index: "/level1-admin/users/teachers", title: "指导教师管理" },
-            { index: "/level1-admin/users/experts", title: "专家库管理" },
-            { index: "/level1-admin/users/admins", title: "学院管理员管理" },
+          groupTitle: "概览与审核",
+          items: [
+            {
+              index: "/level1-admin/statistics",
+              title: "统计概览",
+              icon: Folder,
+            },
+            {
+              index: "/level1-admin/review",
+              title: "审核管理",
+              icon: DocumentChecked,
+            },
           ],
         },
         {
-          index: "/level1-admin/expert/groups",
-          title: "校级专家组管理",
-          icon: User,
-        },
-        {
-          index: "/level1-admin/expert/assignment",
-          title: "校级评审分配",
-          icon: User,
-        },
-        {
-          index: "/level1-admin/expert/assignment",
-          title: "校级评审分配",
-          icon: User,
-        },
-        {
-          index: "/notifications",
-          title: "通知中心",
-          icon: Bell,
-        },
-        {
-          index: "/recycle-bin",
-          title: "回收站",
-          icon: Folder,
-        },
-        {
-          index: "settings",
-          title: "系统配置",
-          icon: Setting,
-          children: [
-            { index: "/level1-admin/settings/batches", title: "批次管理" },
-            { index: "/level1-admin/settings/certificate", title: "结题证书" },
-            { index: "/level1-admin/settings/workflows", title: "流程配置" },
+          groupTitle: "项目与经费",
+          items: [
             {
-              index: "/level1-admin/settings/review-templates",
-              title: "评审模板",
+              index: "/level1-admin/projects/all",
+              title: "项目库管理",
+              icon: Folder,
             },
-            { index: "/level1-admin/settings/dictionaries", title: "字典参数" },
+            {
+              index: "/level1-admin/funds",
+              title: "经费管理",
+              icon: Folder,
+            },
+          ],
+        },
+        {
+          groupTitle: "专家与评审",
+          items: [
+            {
+              index: "/level1-admin/expert/groups",
+              title: "校级专家组管理",
+              icon: User,
+            },
+            {
+              index: "/level1-admin/expert/assignment",
+              title: "校级评审分配",
+              icon: User,
+            },
+          ],
+        },
+        {
+          groupTitle: "用户管理",
+          items: [
+            {
+              index: "users",
+              title: "用户管理",
+              icon: User,
+              children: [
+                { index: "/level1-admin/users/students", title: "学生管理" },
+                { index: "/level1-admin/users/teachers", title: "指导教师管理" },
+                { index: "/level1-admin/users/experts", title: "专家库管理" },
+                { index: "/level1-admin/users/admins", title: "学院管理员管理" },
+              ],
+            },
+          ],
+        },
+        {
+          groupTitle: "系统配置",
+          items: [
+            {
+              index: "settings",
+              title: "系统配置",
+              icon: Setting,
+              children: [
+                { index: "/level1-admin/settings/batches", title: "批次管理" },
+                { index: "/level1-admin/settings/certificate", title: "结题证书" },
+                { index: "/level1-admin/settings/workflows", title: "流程配置" },
+                {
+                  index: "/level1-admin/settings/review-templates",
+                  title: "评审模板",
+                },
+                { index: "/level1-admin/settings/dictionaries", title: "字典参数" },
+              ],
+            },
+          ],
+        },
+        {
+          groupTitle: "消息与回收",
+          items: [
+            {
+              index: "/notifications",
+              title: "通知中心",
+              icon: Bell,
+            },
+            {
+              index: "/recycle-bin",
+              title: "回收站",
+              icon: Folder,
+            },
           ],
         },
       ];
