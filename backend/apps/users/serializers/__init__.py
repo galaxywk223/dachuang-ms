@@ -11,6 +11,9 @@ class UserSerializer(serializers.ModelSerializer):
     用户序列化器
     """
 
+    role_info = serializers.SerializerMethodField()
+    permissions = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = [
@@ -19,6 +22,9 @@ class UserSerializer(serializers.ModelSerializer):
             "employee_id",
             "real_name",
             "role",
+            "role_fk",
+            "role_info",
+            "permissions",
             "expert_scope",
             "phone",
             "email",
@@ -35,33 +41,44 @@ class UserSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "created_at", "updated_at"]
 
+    def get_role_info(self, obj):
+        """获取角色信息"""
+        if obj.role_fk:
+            return {
+                "id": obj.role_fk.id,
+                "code": obj.role_fk.code,
+                "name": obj.role_fk.name,
+                "default_route": obj.role_fk.default_route,
+            }
+        return None
+
+    def get_permissions(self, obj):
+        """获取用户权限列表"""
+        return obj.get_permissions()
+
 
 class LoginSerializer(serializers.Serializer):
-    """登录序列化器（仅允许使用学号/工号 employee_id 登录）"""
+    """登录序列化器（使用学号/工号和密码直接登录）"""
 
     employee_id = serializers.CharField(required=True, help_text="学号/工号")
     password = serializers.CharField(required=True, write_only=True, help_text="密码")
-    role = serializers.CharField(
-        required=False, default="student", help_text="登录角色"
-    )
 
     default_error_messages = {
         "invalid_credentials": "学号/工号或密码错误",
         "inactive": "用户账号已被禁用",
         "required": "必须提供学号/工号和密码",
-        "role_mismatch": "登录身份与账号角色不匹配",
+        "no_role": "用户未分配角色，请联系管理员",
     }
 
     def validate(self, attrs):
         employee_id = attrs.get("employee_id")
         password = attrs.get("password")
-        role = attrs.get("role", "student")
 
         if not (employee_id and password):
             raise serializers.ValidationError(self.error_messages["required"])
 
         try:
-            user = User.objects.get(employee_id=employee_id)
+            user = User.objects.select_related("role_fk").get(employee_id=employee_id)
         except User.DoesNotExist:
             raise serializers.ValidationError(
                 self.error_messages["invalid_credentials"]
@@ -75,19 +92,9 @@ class LoginSerializer(serializers.Serializer):
         if not user.is_active:
             raise serializers.ValidationError(self.error_messages["inactive"])
 
-        # 验证角色匹配
-        if role == "student" and user.role != "STUDENT":
-            raise serializers.ValidationError(self.error_messages["role_mismatch"])
-        elif role == "level1_admin" and user.role != "LEVEL1_ADMIN":
-            raise serializers.ValidationError(self.error_messages["role_mismatch"])
-        elif role == "level2_admin" and user.role != "LEVEL2_ADMIN":
-            raise serializers.ValidationError(self.error_messages["role_mismatch"])
-        elif role == "teacher" and user.role != "TEACHER":
-            raise serializers.ValidationError(self.error_messages["role_mismatch"])
-        elif role == "expert" and user.role != "EXPERT":
-            raise serializers.ValidationError(self.error_messages["role_mismatch"])
-        elif role == "admin" and user.role not in ["LEVEL1_ADMIN", "LEVEL2_ADMIN"]:
-            raise serializers.ValidationError(self.error_messages["role_mismatch"])
+        # 检查用户是否有角色
+        if not user.role_fk:
+            raise serializers.ValidationError(self.error_messages["no_role"])
 
         attrs["user"] = user
         return attrs

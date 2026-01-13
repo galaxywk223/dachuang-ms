@@ -6,13 +6,15 @@
         <div class="brand-content">
           <div class="logo-area">
             <div class="logo-circle">
-              <img src="@/assets/ahut_logo.jpg" alt="AHUT Logo" class="brand-logo-img" />
+              <img
+                src="@/assets/ahut_logo.jpg"
+                alt="AHUT Logo"
+                class="brand-logo-img"
+              />
             </div>
-            <h1 class="app-title">安徽工业大学<br>大创项目管理系统</h1>
+            <h1 class="app-title">安徽工业大学<br />大创项目管理系统</h1>
           </div>
-          <p class="brand-slogan">
-            创新驱动发展 &nbsp;•&nbsp; 实践成就梦想
-          </p>
+          <p class="brand-slogan">创新驱动发展 &nbsp;•&nbsp; 实践成就梦想</p>
           <div class="brand-footer">
             <span>© 2025 Anhui University of Technology</span>
           </div>
@@ -28,9 +30,9 @@
           <h2>欢迎登录</h2>
           <p>请使用您的学号/工号进行身份验证</p>
         </div>
-        
+
         <LoginForm :loading="loading" @submit="handleLogin" />
-        
+
         <div class="form-footer">
           <el-button link type="info" size="small">忘记密码?</el-button>
           <el-divider direction="vertical" />
@@ -59,47 +61,29 @@ const userStore = useUserStore();
 type LoginFormData = {
   employeeId: string;
   password: string;
-  role?: string;
 };
 
 const handleLogin = async (formData: LoginFormData) => {
   loading.value = true;
   try {
-    // Correct store action usage with destructured args
+    // 使用新的登录接口，不再需要 role 参数
     const success = await userStore.loginAction(
-      formData.employeeId, 
-      formData.password, 
-      formData.role
+      formData.employeeId,
+      formData.password
     );
-    
+
     if (success) {
       ElMessage.success({
-        message: `欢迎回来，${userStore.user?.real_name || '用户'}`,
+        message: `欢迎回来，${userStore.user?.real_name || "用户"}`,
         duration: 2000,
       });
-      // Redirect based on role
-      switch (formData.role) {
-        case 'level1_admin':
-          router.push('/level1-admin/users/students');
-          break;
-        case 'level2_admin':
-          router.push('/level2-admin/projects');
-          break;
-        case 'expert':
-          router.push('/expert/reviews');
-          break;
-        case 'teacher':
-          router.push('/teacher/dashboard');
-          break;
-        case 'student':
-        default:
-          router.push('/');
-          break;
-      }
+
+      // 根据后端返回的 default_route 进行跳转
+      const defaultRoute = userStore.user?.default_route || "/";
+      router.push(defaultRoute);
     }
   } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : "登录服务暂不可用";
+    const message = error instanceof Error ? error.message : "登录服务暂不可用";
     ElMessage.error(message);
   } finally {
     loading.value = false;
@@ -143,7 +127,11 @@ const handleLogin = async (formData: LoginFormData) => {
 // Left Panel: Atmospheric
 .brand-side {
   flex: 1;
-  background: linear-gradient(135deg, $primary-800 0%, $primary-600 100%); // Royal Blue Gradient
+  background: linear-gradient(
+    135deg,
+    $primary-800 0%,
+    $primary-600 100%
+  ); // Royal Blue Gradient
   color: #ffffff;
   position: relative;
   display: flex;
@@ -159,7 +147,7 @@ const handleLogin = async (formData: LoginFormData) => {
 
   .logo-area {
     margin-bottom: 40px;
-    
+
     .logo-circle {
       width: 64px;
       height: 64px;
@@ -172,7 +160,7 @@ const handleLogin = async (formData: LoginFormData) => {
       margin-bottom: 24px;
       border: 4px solid rgba(255, 255, 255, 0.2); // Thicker border for avatar look
       overflow: hidden; // Ensure image stays inside
-      
+
       .brand-logo-img {
         width: 100%;
         height: 100%;
@@ -187,7 +175,7 @@ const handleLogin = async (formData: LoginFormData) => {
       line-height: 1.3;
       margin: 0;
       letter-spacing: 0.5px;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
   }
 
@@ -214,7 +202,7 @@ const handleLogin = async (formData: LoginFormData) => {
     filter: blur(80px);
     opacity: 0.4;
   }
-  
+
   .shape-1 {
     width: 300px;
     height: 300px;
@@ -222,7 +210,7 @@ const handleLogin = async (formData: LoginFormData) => {
     top: -50px;
     right: -50px;
   }
-  
+
   .shape-2 {
     width: 400px;
     height: 400px;

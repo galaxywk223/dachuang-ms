@@ -98,7 +98,9 @@ class CertificateSetting(models.Model):
     name = models.CharField(max_length=100, verbose_name="模板名称")
     school_name = models.CharField(max_length=100, verbose_name="学校名称")
     issuer_name = models.CharField(max_length=100, verbose_name="证书发放单位")
-    template_code = models.CharField(max_length=50, default="DEFAULT", verbose_name="模板编码")
+    template_code = models.CharField(
+        max_length=50, default="DEFAULT", verbose_name="模板编码"
+    )
     background_image = models.ImageField(
         upload_to="certificates/backgrounds/",
         null=True,
@@ -305,6 +307,8 @@ class WorkflowNode(models.Model):
         APPROVAL = "APPROVAL", "管理员确认"
 
     class Role(models.TextChoices):
+        """保留用于向后兼容"""
+
         TEACHER = "TEACHER", "导师"
         LEVEL2_ADMIN = "LEVEL2_ADMIN", "二级管理员"
         LEVEL1_ADMIN = "LEVEL1_ADMIN", "一级管理员"
@@ -327,7 +331,21 @@ class WorkflowNode(models.Model):
     node_type = models.CharField(
         max_length=20, choices=NodeType.choices, verbose_name="节点类型"
     )
-    role = models.CharField(max_length=20, choices=Role.choices, verbose_name="角色")
+
+    # 新的角色外键字段
+    role_fk = models.ForeignKey(
+        "users.Role",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="workflow_nodes",
+        verbose_name="执行角色",
+    )
+
+    # 保留旧的角色字段用于迁移
+    role = models.CharField(
+        max_length=20, choices=Role.choices, blank=True, verbose_name="角色（旧）"
+    )
     review_level = models.CharField(
         max_length=20, blank=True, default="", verbose_name="审核级别"
     )
@@ -363,3 +381,9 @@ class WorkflowNode(models.Model):
 
     def __str__(self):
         return f"{self.workflow.name} - {self.name}"
+
+    def get_role_code(self):
+        """获取角色代码（向后兼容）"""
+        if self.role_fk:
+            return self.role_fk.code
+        return self.role if self.role else None

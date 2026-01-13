@@ -43,26 +43,10 @@
       </el-form-item>
     </div>
 
-    <div class="input-group">
-      <label class="input-label">身份选择</label>
-      <el-form-item prop="role">
-        <el-select 
-            v-model="loginForm.role" 
-            placeholder="请选择登录身份" 
-            size="large"
-            class="modern-select"
-        >
-          <el-option label="学生" value="student" />
-          <el-option label="指导教师" value="teacher" />
-          <el-option label="二级学院管理员" value="level2_admin" />
-          <el-option label="校级管理员" value="level1_admin" />
-          <el-option label="评审专家" value="expert" />
-        </el-select>
-      </el-form-item>
-    </div>
-
     <div class="form-actions">
-      <el-checkbox v-model="loginForm.rememberMe" class="custom-checkbox">记住我</el-checkbox>
+      <el-checkbox v-model="loginForm.rememberMe" class="custom-checkbox"
+        >记住我</el-checkbox
+      >
       <a href="#" class="forgot-link">忘记密码？</a>
     </div>
 
@@ -77,12 +61,12 @@
     </el-button>
 
     <div class="demo-tips">
-      <el-alert 
-        title="演示账号默认密码：123456" 
-        type="info" 
-        show-icon 
+      <el-alert
+        title="演示账号默认密码：123456"
+        type="info"
+        show-icon
         :closable="false"
-        class="custom-alert" 
+        class="custom-alert"
       />
     </div>
   </el-form>
@@ -106,7 +90,6 @@ const loginFormRef = ref(null);
 const loginForm = reactive({
   employeeId: "",
   password: "",
-  role: "student",
   rememberMe: false,
 });
 
@@ -118,7 +101,6 @@ const rules = {
     { required: true, message: "请输入密码", trigger: "blur" },
     { min: 6, message: "密码长度不能少于6位", trigger: "blur" },
   ],
-  role: [{ required: true, message: "请选择登录身份", trigger: "change" }],
 };
 
 const handleSubmit = async () => {
@@ -129,7 +111,6 @@ const handleSubmit = async () => {
       emit("submit", {
         employeeId: loginForm.employeeId,
         password: loginForm.password,
-        role: loginForm.role,
       });
     }
   });
@@ -165,8 +146,9 @@ const handleSubmit = async () => {
   padding: 12px 16px;
   // height: auto; // Element size="large" handles this usually
   transition: all 0.2s;
-  
-  &:hover, &.is-focus {
+
+  &:hover,
+  &.is-focus {
     background-color: white;
     border-color: $primary-500;
     box-shadow: 0 0 0 3px rgba($primary-500, 0.1) !important;
@@ -174,10 +156,8 @@ const handleSubmit = async () => {
 }
 
 :deep(.modern-select) {
-    width: 100%;
+  width: 100%;
 }
-
-
 
 :deep(.modern-input .el-input__inner) {
   font-weight: 500;
@@ -203,7 +183,7 @@ const handleSubmit = async () => {
   color: $primary-600;
   text-decoration: none;
   font-weight: 500;
-  
+
   &:hover {
     text-decoration: underline;
     color: $primary-700;
@@ -222,13 +202,13 @@ const handleSubmit = async () => {
   // border-color: $primary-600;
   margin-bottom: 24px;
   transition: all 0.2s;
-  
+
   &:hover {
     // background-color: $primary-700;
     transform: translateY(-1px);
     box-shadow: $shadow-md; // Using shadow variable
   }
-  
+
   &:active {
     transform: translateY(0);
   }

@@ -2,12 +2,11 @@ import request from "@/utils/request";
 import type { ApiResponse, User, LoginResponse } from "@/types";
 
 /**
- * 用户登录
+ * 用户登录（移除 role 参数）
  */
 export function login(
   employeeId: string,
-  password: string,
-  role: string = "student"
+  password: string
 ): Promise<ApiResponse<LoginResponse>> {
   return request({
     url: "/auth/login/",
@@ -15,7 +14,6 @@ export function login(
     data: {
       employee_id: employeeId,
       password,
-      role,
     },
   });
 }

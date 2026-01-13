@@ -4,6 +4,7 @@
 
 from django.contrib.auth import get_user_model
 from django.db.models import Q
+
 User = get_user_model()
 
 
@@ -52,11 +53,33 @@ class UserRepository:
         Returns:
             dict: 用户数据字典
         """
+        # 获取角色信息
+        role_info = None
+        permissions = []
+        default_route = "/"
+
+        if user.role_fk:
+            role_info = {
+                "id": user.role_fk.id,
+                "code": user.role_fk.code,
+                "name": user.role_fk.name,
+                "default_route": user.role_fk.default_route,
+            }
+            permissions = user.get_permissions()
+            default_route = user.role_fk.default_route or "/"
+
         return {
             "id": user.id,
             "employee_id": user.employee_id,
             "real_name": user.real_name,
-            "role": user.role,
+            "role": user.get_role_code(),  # 兼容旧的角色代码字段
+            "role_info": role_info,
+            "permissions": permissions,
+            "default_route": default_route,
+            "expert_scope": user.expert_scope
+            if user.role and user.get_role_code() == "EXPERT"
+            else None,
+            "college": user.college,
             "department": user.department,
             "phone": user.phone,
             "email": user.email,
