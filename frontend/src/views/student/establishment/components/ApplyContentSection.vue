@@ -3,78 +3,97 @@
     <div class="section-header">
       <span class="section-title">申报内容</span>
     </div>
-    <el-row>
-      <el-col :span="24">
-        <el-form-item label="预期成果" prop="expected_results">
-          <el-input
-            v-model="localFormData.expected_results"
-            type="textarea"
-            :rows="3"
-            maxlength="200"
-            show-word-limit
-            placeholder="请列出具体成果形式，如：发表论文1篇、软件著作权1项等"
-          />
-        </el-form-item>
-      </el-col>
-      <el-col :span="24">
-        <el-form-item label="预期成果清单">
-          <div class="expected-grid">
-            <el-select
-              v-model="localExpectedForm.achievement_type"
-              placeholder="成果类型"
-              class="expected-select"
-            >
-              <el-option
-                v-for="item in achievementTypeOptions"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              />
-            </el-select>
-            <el-input-number
-            v-model="localExpectedForm.expected_count"
-              :min="1"
-              controls-position="right"
-              class="expected-count"
+    <div class="form-container">
+      <el-row :gutter="24">
+        <el-col :span="24">
+          <el-form-item label="预期成果" prop="expected_results">
+            <el-input
+              v-model="localFormData.expected_results"
+              type="textarea"
+              :rows="3"
+              maxlength="200"
+              show-word-limit
+              placeholder="请列出具体成果形式，如：发表论文1篇、软件著作权1项等"
             />
-            <el-button type="primary" plain @click="addExpectedResult">
-              <el-icon class="mr-1"><Plus /></el-icon> 添加
-            </el-button>
-          </div>
-          <el-table
-            v-if="localFormData.expected_results_data.length"
-            :data="localFormData.expected_results_data"
-            border
-            style="width: 100%; margin-top: 12px;"
-            :header-cell-style="{ background: '#f8fafc', color: '#475569' }"
-          >
-            <el-table-column label="成果类型">
-              <template #default="{ row }">
-                {{ getLabel(achievementTypeOptions, row.achievement_type) }}
-              </template>
-            </el-table-column>
-            <el-table-column prop="expected_count" label="数量" width="120" />
-            <el-table-column label="操作" width="100" align="center">
-              <template #default="{ $index }">
-                <el-button link type="danger" @click="removeExpectedResult($index)">删除</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-        </el-form-item>
-      </el-col>
-      <el-col :span="24">
-        <el-form-item label="项目简介" prop="description">
-          <el-input
-            v-model="localFormData.description"
-            type="textarea"
-            :rows="6"
-            maxlength="500"
-            show-word-limit
-            placeholder="请简要介绍项目背景、创新点及研究内容"
-          />
-        </el-form-item>
-      </el-col>
-    </el-row>
+          </el-form-item>
+        </el-col>
+        <el-col :span="24">
+          <el-form-item label="预期成果清单">
+            <div class="expected-grid-container">
+              <div class="expected-grid">
+                <el-select
+                  v-model="localExpectedForm.achievement_type"
+                  placeholder="成果类型"
+                  class="expected-select"
+                >
+                  <el-option
+                    v-for="item in achievementTypeOptions"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+                <el-input-number
+                  v-model="localExpectedForm.expected_count"
+                  :min="1"
+                  controls-position="right"
+                  class="expected-count"
+                />
+                <el-button
+                  type="primary"
+                  class="add-btn"
+                  @click="addExpectedResult"
+                >
+                  <el-icon class="mr-1"><Plus /></el-icon> 添加
+                </el-button>
+              </div>
+            </div>
+            <el-table
+              v-if="localFormData.expected_results_data.length"
+              :data="localFormData.expected_results_data"
+              border
+              style="width: 100%; margin-top: 16px"
+              :header-cell-style="{
+                background: '#f1f5f9',
+                color: '#475569',
+                fontWeight: '600',
+              }"
+              class="content-table"
+            >
+              <el-table-column label="成果类型">
+                <template #default="{ row }">
+                  {{ getLabel(achievementTypeOptions, row.achievement_type) }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="expected_count" label="数量" width="120" />
+              <el-table-column label="操作" width="100" align="center">
+                <template #default="{ $index }">
+                  <el-button
+                    link
+                    type="danger"
+                    size="small"
+                    @click="removeExpectedResult($index)"
+                    >删除</el-button
+                  >
+                </template>
+              </el-table-column>
+            </el-table>
+          </el-form-item>
+        </el-col>
+        <el-col :span="24">
+          <el-form-item label="项目简介" prop="description">
+            <el-input
+              v-model="localFormData.description"
+              type="textarea"
+              :rows="6"
+              maxlength="500"
+              show-word-limit
+              placeholder="请简要介绍项目背景、创新点及研究内容"
+            />
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </div>
   </div>
 </template>
 
@@ -160,3 +179,60 @@ watch(
   { deep: true }
 );
 </script>
+
+<style scoped>
+.form-container {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  transition: all 0.3s ease;
+}
+
+.form-container:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.expected-grid-container {
+  background-color: #ffffff;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px dashed #e2e8f0;
+  margin-bottom: 8px;
+  width: 100%;
+}
+
+.expected-grid {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.expected-select {
+  flex: 1;
+}
+
+.expected-count {
+  width: 120px;
+}
+
+.add-btn {
+  /* height: 32px; match default input height */
+}
+
+:deep(.el-input__wrapper),
+:deep(.el-textarea__inner) {
+  box-shadow: 0 0 0 1px #e2e8f0 inset;
+}
+
+:deep(.el-input__wrapper:hover),
+:deep(.el-textarea__inner:hover) {
+  box-shadow: 0 0 0 1px #94a3b8 inset;
+}
+
+:deep(.el-input__wrapper.is-focus),
+:deep(.el-textarea__inner:focus) {
+  box-shadow: 0 0 0 1px #409eff inset;
+}
+</style>

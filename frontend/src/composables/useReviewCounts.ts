@@ -1,12 +1,5 @@
 import { ref, onMounted, onUnmounted } from "vue";
-import { getPendingCounts } from "@/api/reviews/statistics";
-
-export interface ReviewCounts {
-  establishment: number;
-  midterm: number;
-  closure: number;
-  change: number;
-}
+import { getPendingCounts, type ReviewCounts } from "@/api/reviews/statistics";
 
 /**
  * 使用待审核数量

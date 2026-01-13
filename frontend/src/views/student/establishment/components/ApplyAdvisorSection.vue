@@ -3,10 +3,14 @@
     <div class="section-header">
       <span class="section-title">指导教师</span>
     </div>
-    <div class="dynamic-input-row">
-      <el-row :gutter="16" class="mb-3">
+    <div class="advisor-selection-container">
+      <el-row :gutter="20" class="mb-4">
         <el-col :span="4">
-          <el-select v-model="localNewAdvisor.order" placeholder="指导次序" style="width: 100%">
+          <el-select
+            v-model="localNewAdvisor.order"
+            placeholder="指导次序"
+            style="width: 100%"
+          >
             <el-option label="第一指导老师" :value="1" />
             <el-option label="第二指导老师" :value="2" />
           </el-select>
@@ -24,21 +28,36 @@
           </el-input>
         </el-col>
         <el-col :span="6">
-          <el-input v-model="localNewAdvisor.name" placeholder="姓名" disabled />
+          <el-input
+            v-model="localNewAdvisor.name"
+            placeholder="姓名"
+            disabled
+          />
         </el-col>
         <el-col :span="6">
-          <el-input v-model="localNewAdvisor.title" placeholder="职称" disabled />
+          <el-input
+            v-model="localNewAdvisor.title"
+            placeholder="职称"
+            disabled
+          />
         </el-col>
       </el-row>
-      <el-row :gutter="16">
+      <el-row :gutter="20">
         <el-col :span="10">
           <el-input v-model="localNewAdvisor.email" placeholder="电子邮箱" />
         </el-col>
         <el-col :span="10">
-          <el-input v-model="localNewAdvisor.contact" placeholder="联系电话 (选填)" />
+          <el-input
+            v-model="localNewAdvisor.contact"
+            placeholder="联系电话 (选填)"
+          />
         </el-col>
         <el-col :span="4">
-          <el-button type="primary" plain @click="handleAddNewAdvisor" style="width: 100%">
+          <el-button
+            type="primary"
+            class="add-btn"
+            @click="handleAddNewAdvisor"
+          >
             <el-icon class="mr-1"><Plus /></el-icon> 添加
           </el-button>
         </el-col>
@@ -47,14 +66,23 @@
 
     <el-table
       :data="formData.advisors"
-      style="width: 100%; margin-top: 12px;"
+      style="width: 100%; margin-top: 16px"
       border
-      :header-cell-style="{ background: '#f8fafc', color: '#475569' }"
+      :header-cell-style="{
+        background: '#f1f5f9',
+        color: '#475569',
+        fontWeight: '600',
+      }"
+      class="advisor-table"
     >
       <el-table-column label="次序" width="120">
         <template #default="scope">
-          <el-tag :type="scope.row.order === 1 ? 'primary' : 'success'" effect="plain">
-            {{ scope.row.order === 1 ? '第一指导老师' : '第二指导老师' }}
+          <el-tag
+            :type="scope.row.order === 1 ? 'primary' : 'success'"
+            effect="light"
+            round
+          >
+            {{ scope.row.order === 1 ? "第一指导老师" : "第二指导老师" }}
           </el-tag>
         </template>
       </el-table-column>
@@ -69,11 +97,17 @@
       <el-table-column prop="email" label="邮箱" />
       <el-table-column label="操作" width="80" align="center">
         <template #default="scope">
-          <el-button link type="danger" size="small" @click="removeAdvisor(scope.$index)">删除</el-button>
+          <el-button
+            link
+            type="danger"
+            size="small"
+            @click="removeAdvisor(scope.$index)"
+            >删除</el-button
+          >
         </template>
       </el-table-column>
       <template #empty>
-        <div class="empty-text">暂无指导教师，请在上方添加</div>
+        <div class="py-8 text-gray-400">暂无指导教师，请在上方添加</div>
       </template>
     </el-table>
   </div>
@@ -140,3 +174,39 @@ watch(
   { deep: true }
 );
 </script>
+
+<style scoped>
+.advisor-selection-container {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  transition: all 0.3s ease;
+}
+
+.advisor-selection-container:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.mb-4 {
+  margin-bottom: 20px;
+}
+
+.add-btn {
+  width: 100%;
+  height: 32px; /* Match input height default */
+}
+
+/* Make inputs look a bit more polished if needed, but Element Plus defaults are usually okay */
+:deep(.el-input__wrapper) {
+  box-shadow: 0 0 0 1px #e2e8f0 inset;
+}
+:deep(.el-input__wrapper:hover) {
+  box-shadow: 0 0 0 1px #94a3b8 inset;
+}
+:deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 1px #409eff inset;
+}
+</style>

@@ -106,7 +106,7 @@ request.interceptors.response.use(
   ((response: AxiosResponse<ApiResponse<unknown>>) => response.data) as unknown as (
     value: AxiosResponse<ApiResponse<unknown>>
   ) => AxiosResponse<ApiResponse<unknown>>,
-  async (error: AxiosError<ApiResponse<unknown>>) => {
+  async (error: AxiosError<unknown>) => {
     if (error.response) {
       const configUrl = error.config?.url || "";
       const isDictionaryRequest =
