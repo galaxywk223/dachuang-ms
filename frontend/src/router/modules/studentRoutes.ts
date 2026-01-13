@@ -25,7 +25,8 @@ export const studentRoutes: RouteRecordRaw[] = [
           {
             path: "my-projects",
             name: "establishment-my-projects",
-            component: () => import("@/views/student/establishment/MyProjects.vue"),
+            component: () =>
+              import("@/views/student/establishment/MyProjects.vue"),
             meta: { title: "我的项目" },
           },
           {
@@ -109,6 +110,12 @@ export const studentRoutes: RouteRecordRaw[] = [
             name: "closure-applied",
             component: () => import("@/views/student/closure/Applied.vue"),
             meta: { title: "已申请结题项目" },
+          },
+          {
+            path: "detail",
+            name: "closure-detail",
+            component: () => import("@/views/student/closure/Detail.vue"),
+            meta: { title: "结题详情" },
           },
           {
             path: "drafts",

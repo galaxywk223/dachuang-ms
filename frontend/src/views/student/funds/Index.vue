@@ -7,7 +7,9 @@
             <span class="header-title">经费管理</span>
           </div>
           <div class="header-actions">
-             <el-button type="primary" @click="showAddDialog">录入支出</el-button>
+            <el-button type="primary" @click="showAddDialog"
+              >录入支出</el-button
+            >
           </div>
         </div>
       </template>
@@ -21,18 +23,38 @@
         <div class="stats-panel mb-4">
           <el-row :gutter="20">
             <el-col :span="6">
-              <el-statistic title="总预算" :value="stats.total_budget" :precision="2" suffix="元" />
+              <el-statistic
+                title="总预算"
+                :value="stats.total_budget"
+                :precision="2"
+                suffix="元"
+              />
             </el-col>
             <el-col :span="6">
-              <el-statistic title="已使用" :value="stats.used_amount" :precision="2" suffix="元" value-style="color: var(--el-color-danger)" />
+              <el-statistic
+                title="已使用"
+                :value="stats.used_amount"
+                :precision="2"
+                suffix="元"
+                value-style="color: var(--el-color-danger)"
+              />
             </el-col>
             <el-col :span="6">
-              <el-statistic title="剩余额度" :value="stats.remaining_amount" :precision="2" suffix="元" value-style="color: var(--el-color-success)" />
+              <el-statistic
+                title="剩余额度"
+                :value="stats.remaining_amount"
+                :precision="2"
+                suffix="元"
+                value-style="color: var(--el-color-success)"
+              />
             </el-col>
             <el-col :span="6">
               <div class="statistic-card">
-                 <div class="statistic-title">使用率</div>
-                 <el-progress :percentage="stats.usage_rate" :status="getUsageStatus(stats.usage_rate)" />
+                <div class="statistic-title">使用率</div>
+                <el-progress
+                  :percentage="stats.usage_rate"
+                  :status="getUsageStatus(stats.usage_rate)"
+                />
               </div>
             </el-col>
           </el-row>
@@ -41,43 +63,85 @@
         <el-divider />
 
         <!-- 支出列表 -->
-        <el-table :data="expenditures" style="width: 100%" stripe header-cell-class-name="table-header-cell">
-          <el-table-column prop="expenditure_date" label="日期" width="120" sortable />
+        <el-table
+          :data="expenditures"
+          style="width: 100%"
+          stripe
+          header-cell-class-name="table-header-cell"
+        >
+          <el-table-column
+            prop="expenditure_date"
+            label="日期"
+            width="120"
+            sortable
+          />
           <el-table-column prop="title" label="支出事项" min-width="180" />
           <el-table-column prop="category_name" label="类别" width="120">
-             <template #default="scope">
-                <el-tag>{{ scope.row.category_name || '未分类' }}</el-tag>
-             </template>
-          </el-table-column>
-          <el-table-column prop="amount" label="金额 (元)" width="150" align="right">
             <template #default="scope">
-               {{ Number(scope.row.amount).toFixed(2) }}
+              <el-tag>{{ scope.row.category_name || "未分类" }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="proof_file_url" label="凭证" width="100" align="center">
+          <el-table-column
+            prop="amount"
+            label="金额 (元)"
+            width="150"
+            align="right"
+          >
             <template #default="scope">
-              <el-link v-if="scope.row.proof_file_url" type="primary" :href="scope.row.proof_file_url" target="_blank" :underline="false">
-                 <el-icon><Document /></el-icon> 查看
+              {{ Number(scope.row.amount).toFixed(2) }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            prop="proof_file_url"
+            label="凭证"
+            width="100"
+            align="center"
+          >
+            <template #default="scope">
+              <el-link
+                v-if="scope.row.proof_file_url"
+                type="primary"
+                :href="scope.row.proof_file_url"
+                target="_blank"
+                :underline="false"
+              >
+                <el-icon><Document /></el-icon> 查看
               </el-link>
               <span v-else class="text-gray-400">无</span>
             </template>
           </el-table-column>
-          <el-table-column prop="status" label="状态" width="100" align="center">
+          <el-table-column
+            prop="status"
+            label="状态"
+            width="100"
+            align="center"
+          >
             <template #default>
-               <el-tag type="info">已录入</el-tag>
+              <el-tag type="info">已录入</el-tag>
             </template>
           </el-table-column>
           <el-table-column prop="created_by_name" label="录入人" width="120" />
-          <el-table-column label="操作" width="120" align="center" fixed="right">
+          <el-table-column
+            label="操作"
+            width="120"
+            align="center"
+            fixed="right"
+          >
             <template #default="scope">
-              <el-button link type="danger" size="small" @click="handleDelete(scope.row)">删除</el-button>
+              <el-button
+                link
+                type="danger"
+                size="small"
+                @click="handleDelete(scope.row)"
+                >删除</el-button
+              >
             </template>
           </el-table-column>
         </el-table>
       </div>
     </el-card>
 
-    <AddExpenseDialog 
+    <AddExpenseDialog
       v-model:visible="dialogVisible"
       :project-id="project?.id || null"
       :categories="categories"
@@ -88,7 +152,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, reactive } from "vue";
-import { Document } from '@element-plus/icons-vue';
+import { Document } from "@element-plus/icons-vue";
 import AddExpenseDialog from "./components/AddExpenseDialog.vue";
 import request from "@/utils/request";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -130,12 +194,16 @@ type StatsPayload = {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
-const resolveList = <T,>(payload: unknown): T[] => {
+const resolveList = <T>(payload: unknown): T[] => {
   if (Array.isArray(payload)) return payload as T[];
   if (isRecord(payload) && Array.isArray(payload.results)) {
     return payload.results as T[];
   }
-  if (isRecord(payload) && isRecord(payload.data) && Array.isArray(payload.data.results)) {
+  if (
+    isRecord(payload) &&
+    isRecord(payload.data) &&
+    Array.isArray(payload.data.results)
+  ) {
     return payload.data.results as T[];
   }
   if (isRecord(payload) && Array.isArray(payload.data)) {
@@ -162,16 +230,16 @@ const stats = reactive({
 const fetchProject = async () => {
   try {
     const { data } = await request.get("/projects/", {
-        // 获取进行中或各种状态的项目
-         params: {
-           status_in:
-             "IN_PROGRESS,MID_TERM_DRAFT,MID_TERM_SUBMITTED,MID_TERM_REVIEWING,MID_TERM_APPROVED,MID_TERM_REJECTED",
-         },
+      // 获取进行中或各种状态的项目
+      params: {
+        status_in:
+          "IN_PROGRESS,MID_TERM_DRAFT,MID_TERM_SUBMITTED,MID_TERM_REVIEWING,MID_TERM_APPROVED,MID_TERM_REJECTED",
+      },
     });
     const list = resolveList<ProjectItem>(data);
     if (list.length > 0) {
-        project.value = list[0]; // 默认取第一个
-        return project.value.id;
+      project.value = list[0]; // 默认取第一个
+      return project.value.id;
     }
     return null;
   } catch (error) {
@@ -181,95 +249,98 @@ const fetchProject = async () => {
 };
 
 const fetchStats = async (projectId: number) => {
-    try {
-        const { data } = await request.get(`/projects/${projectId}/budget-stats/`);
-        Object.assign(stats, data as StatsPayload);
-    } catch (error) {
-        console.error("Failed to fetch stats", error);
-    }
+  try {
+    const { data } = await request.get(`/projects/${projectId}/budget-stats/`);
+    Object.assign(stats, data as StatsPayload);
+  } catch (error) {
+    console.error("Failed to fetch stats", error);
+  }
 };
 
 const fetchExpenditures = async (projectId: number) => {
-    try {
-        const { data } = await request.get(`/projects/expenditures/`, {
-            params: { project: projectId }
-        });
-        expenditures.value = resolveList<ExpenditureItem>(data);
-    } catch (error) {
-        console.error("Failed to fetch expenditures", error);
-    }
+  try {
+    const { data } = await request.get(`/projects/expenditures/`, {
+      params: { project: projectId },
+    });
+    expenditures.value = resolveList<ExpenditureItem>(data);
+  } catch (error) {
+    console.error("Failed to fetch expenditures", error);
+  }
 };
 
 const fetchCategories = async () => {
-    try {
-        // Code hardcoded for now or fetch by type code
-        // Assuming we have a dictionary API or we just mock it for now if strict logic not enforced
-        // Real logic: fetch by code 'EXPENDITURE_CATEGORY'
-        // For now, let's mock or try to fetch if we had the endpoint
-        // Let's assume we have /dictionaries/items/?type__code=EXPENDITURE_CATEGORY
-        const response = await request.get("/dictionaries/items/", {
-            params: { type_code: "EXPENDITURE_CATEGORY" },
-        });
-        const payload = isRecord(response) && isRecord(response.data)
-          ? response.data
-          : response;
-        categories.value = resolveList<CategoryItem>(payload);
-        
-        // Fail-safe mock if empty
-        if (categories.value.length === 0) {
-            categories.value = [
-                { id: 1, label: "设备费", value: "EQUIPMENT" },
-                { id: 2, label: "材料费", value: "MATERIAL" },
-                { id: 3, label: "差旅费", value: "TRAVEL" },
-                { id: 4, label: "版面费", value: "PUBLICATION" },
-                { id: 5, label: "服务费", value: "SERVICE" },
-                { id: 6, label: "其他", value: "OTHER" },
-            ];
-        }
-    } catch {
-         // Fallback default
-         categories.value = [
-            { id: 1, label: "设备费", value: "EQUIPMENT" },
-            { id: 2, label: "材料费", value: "MATERIAL" },
-        ];
+  try {
+    // Code hardcoded for now or fetch by type code
+    // Assuming we have a dictionary API or we just mock it for now if strict logic not enforced
+    // Real logic: fetch by code 'EXPENDITURE_CATEGORY'
+    // For now, let's mock or try to fetch if we had the endpoint
+    // Let's assume we have /dictionaries/items/?type__code=EXPENDITURE_CATEGORY
+    const response = await request.get("/dictionaries/items/", {
+      params: { type_code: "EXPENDITURE_CATEGORY" },
+    });
+    const payload =
+      isRecord(response) && isRecord(response.data) ? response.data : response;
+    categories.value = resolveList<CategoryItem>(payload);
+
+    // Fail-safe mock if empty
+    if (categories.value.length === 0) {
+      categories.value = [
+        { id: 1, label: "设备费", value: "EQUIPMENT" },
+        { id: 2, label: "材料费", value: "MATERIAL" },
+        { id: 3, label: "差旅费", value: "TRAVEL" },
+        { id: 4, label: "版面费", value: "PUBLICATION" },
+        { id: 5, label: "服务费", value: "SERVICE" },
+        { id: 6, label: "其他", value: "OTHER" },
+      ];
     }
+  } catch {
+    // Fallback default
+    categories.value = [
+      { id: 1, label: "设备费", value: "EQUIPMENT" },
+      { id: 2, label: "材料费", value: "MATERIAL" },
+    ];
+  }
 };
 
 const fetchData = async () => {
-    loading.value = true;
-    try {
-        const projectId = project.value?.id || await fetchProject();
-        if (projectId) {
-            await Promise.all([
-                fetchStats(projectId),
-                fetchExpenditures(projectId)
-            ]);
-        }
-        await fetchCategories(); // One time ideally
-    } finally {
-        loading.value = false;
+  loading.value = true;
+  try {
+    const projectId = project.value?.id || (await fetchProject());
+    if (projectId) {
+      await Promise.all([fetchStats(projectId), fetchExpenditures(projectId)]);
     }
+    await fetchCategories(); // One time ideally
+  } finally {
+    loading.value = false;
+  }
 };
 
 const showAddDialog = () => {
-    if (!project.value) {
-        ElMessage.warning("未找到有效项目");
-        return;
-    }
-    dialogVisible.value = true;
+  if (!project.value) {
+    ElMessage.warning("未找到有效项目");
+    return;
+  }
+  dialogVisible.value = true;
 };
 
 const handleDelete = async (row: ExpenditureItem) => {
   try {
-    await ElMessageBox.confirm("确定删除该经费记录吗？删除后可在回收站恢复。", "提示", {
-      type: "warning",
-    });
+    await ElMessageBox.confirm(
+      "确定删除该经费记录吗？删除后可在回收站恢复。",
+      "提示",
+      {
+        type: "warning",
+      }
+    );
     const res = await removeProjectExpenditure(row.id);
     if (isRecord(res) && (res.code === 200 || res.status === 204)) {
       ElMessage.success("已移入回收站");
       fetchData();
     } else {
-      const message = isRecord(res) && typeof res.message === "string" ? res.message : "删除失败";
+      const message =
+        isRecord(res) && typeof res.message === "string"
+          ? res.message
+          : "删除失败";
       ElMessage.error(message);
     }
   } catch {
@@ -278,27 +349,27 @@ const handleDelete = async (row: ExpenditureItem) => {
 };
 
 const getUsageStatus = (rate: number) => {
-    if (rate >= 100) return "exception";
-    if (rate >= 80) return "warning";
-    return "success";
+  if (rate >= 100) return "exception";
+  if (rate >= 80) return "warning";
+  return "success";
 };
 
 onMounted(() => {
-    fetchData();
+  fetchData();
 });
-
 </script>
 
+<style scoped lang="scss">
 .funds-list-container {
-    padding: 20px;
+  padding: 20px;
 }
 
 .main-card {
   border-radius: 8px;
   :deep(.el-card__header) {
-      padding: 16px 20px;
-      font-weight: 600;
-      border-bottom: 1px solid $color-border-light;
+    padding: 16px 20px;
+    font-weight: 600;
+    border-bottom: 1px solid #e2e8f0;
   }
 }
 
@@ -311,30 +382,38 @@ onMounted(() => {
 }
 
 .header-left {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .header-title {
-    font-size: 16px;
-    color: $slate-800;
+  font-size: 16px;
+  color: #1e293b;
 }
 
 .header-actions {
-    display: flex;
-    gap: 12px;
+  display: flex;
+  gap: 12px;
+}
+
+.statistic-card {
+  background-color: #f8fafc;
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
 }
 
 .statistic-title {
-    font-size: 12px; 
-    color: var(--el-text-color-secondary); 
-    margin-bottom: 4px;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  margin-bottom: 4px;
 }
 
 .mb-4 {
-    margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 
 .text-gray-400 {
-    color: #9ca3af;
+  color: #9ca3af;
 }
+</style>

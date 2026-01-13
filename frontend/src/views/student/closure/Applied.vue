@@ -3,12 +3,18 @@
     <el-card class="main-card" shadow="never">
       <template #header>
         <div class="card-header">
-           <div class="header-left">
-             <span class="header-title">已申请结题项目</span>
-             <el-tag type="info" size="small" effect="plain" round class="ml-2">{{ pagination.total }}</el-tag>
-           </div>
-           <div class="header-actions">
-           </div>
+          <div class="header-left">
+            <span class="header-title">已申请结题项目</span>
+            <el-tag
+              type="info"
+              size="small"
+              effect="plain"
+              round
+              class="ml-2"
+              >{{ pagination.total }}</el-tag
+            >
+          </div>
+          <div class="header-actions"></div>
         </div>
       </template>
 
@@ -109,7 +115,7 @@
           </template>
         </el-table-column>
 
-          <el-table-column label="操作" width="220" align="center" fixed="right">
+        <el-table-column label="操作" width="220" align="center" fixed="right">
           <template #default="{ row }">
             <el-button
               type="primary"
@@ -120,7 +126,11 @@
               查看详情
             </el-button>
             <el-button
-              v-if="['CLOSURE_LEVEL2_REJECTED', 'CLOSURE_LEVEL1_REJECTED'].includes(row.status)"
+              v-if="
+                ['CLOSURE_LEVEL2_REJECTED', 'CLOSURE_LEVEL1_REJECTED'].includes(
+                  row.status
+                )
+              "
               type="danger"
               size="small"
               link
@@ -186,7 +196,12 @@
 import { ref, reactive, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { useRouter } from "vue-router";
-import { getAppliedClosureProjects, getProjectCertificate, revokeClosureApplication, deleteClosureSubmission } from "@/api/projects";
+import {
+  getAppliedClosureProjects,
+  getProjectCertificate,
+  revokeClosureApplication,
+  deleteClosureSubmission,
+} from "@/api/projects";
 
 defineOptions({
   name: "StudentClosureAppliedView",
@@ -316,8 +331,8 @@ const handleCurrentChange = (page: number) => {
 
 // 查看详情
 const handleView = (row: ProjectRow) => {
-  void row;
-  ElMessage.info("查看结题详情功能待开发");
+  if (!row?.id) return;
+  router.push({ path: "/closure/detail", query: { projectId: row.id } });
 };
 
 const handleReapply = (row: ProjectRow) => {
@@ -344,9 +359,13 @@ const handleRevoke = async (row: ProjectRow) => {
 
 const handleDeleteSubmission = async (row: ProjectRow) => {
   try {
-    await ElMessageBox.confirm("确定删除该结题提交吗？删除后可在回收站恢复。", "提示", {
-      type: "warning",
-    });
+    await ElMessageBox.confirm(
+      "确定删除该结题提交吗？删除后可在回收站恢复。",
+      "提示",
+      {
+        type: "warning",
+      }
+    );
     const res = (await deleteClosureSubmission(row.id)) as ApiResponse;
     if (res?.code === 200) {
       ElMessage.success("已移入回收站");
@@ -365,9 +384,12 @@ const handleCertificate = async (row: ProjectRow) => {
     const blob =
       res instanceof Blob
         ? res
-        : new Blob([typeof res === "string" ? res : JSON.stringify(res ?? "")], {
-            type: "text/html",
-          });
+        : new Blob(
+            [typeof res === "string" ? res : JSON.stringify(res ?? "")],
+            {
+              type: "text/html",
+            }
+          );
     const url = window.URL.createObjectURL(blob);
     window.open(url, "_blank");
     window.setTimeout(() => URL.revokeObjectURL(url), 10000);
