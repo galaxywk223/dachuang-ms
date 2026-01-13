@@ -256,7 +256,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import {
   ElMessage,
   ElMessageBox,
@@ -267,7 +267,6 @@ import { Plus, CircleCheck } from "@element-plus/icons-vue";
 import WorkflowGraph from "@/components/business/WorkflowGraph.vue";
 import {
   getBatchWorkflow,
-  getBatchWorkflowNodes,
   initBatchWorkflow,
   createWorkflowNode,
   updateWorkflowNode,
@@ -277,11 +276,20 @@ import {
   type WorkflowNode,
   type WorkflowNodeInput,
 } from "@/api/system-settings/batch-workflow";
-import { getRoles, type Role } from "@/api/users/roles";
+import { getRoles } from "@/api/users/roles";
 
 const props = defineProps<{
   batchId: number;
 }>();
+
+type Role = {
+  id: number;
+  name: string;
+  code?: string;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
 
 const activePhase = ref<"APPLICATION" | "MID_TERM" | "CLOSURE">("APPLICATION");
 const loading = ref(false);
@@ -318,8 +326,15 @@ onMounted(() => {
 async function loadRoles() {
   try {
     const res = await getRoles();
-    availableRoles.value = res.data || [];
-  } catch (error) {
+    const payload = isRecord(res) && "data" in res ? res.data : res;
+    if (isRecord(payload) && Array.isArray(payload.results)) {
+      availableRoles.value = payload.results as Role[];
+    } else if (Array.isArray(payload)) {
+      availableRoles.value = payload as Role[];
+    } else {
+      availableRoles.value = [];
+    }
+  } catch {
     ElMessage.error("加载角色列表失败");
   }
 }
@@ -333,8 +348,10 @@ async function loadWorkflow() {
 
     // 自动验证
     await handleValidate(false);
-  } catch (error: any) {
-    if (error?.response?.status === 404) {
+  } catch (error: unknown) {
+    const response = isRecord(error) ? error.response : null;
+    const status = isRecord(response) ? response.status : null;
+    if (status === 404) {
       workflow.value = null;
       nodes.value = [];
     } else {
@@ -363,7 +380,7 @@ async function handleInitWorkflow() {
     await initBatchWorkflow(props.batchId, activePhase.value);
     ElMessage.success("初始化成功");
     await loadWorkflow();
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error !== "cancel") {
       ElMessage.error("初始化失败");
     }
@@ -425,7 +442,7 @@ async function handleSaveNode() {
 
     nodeDialogVisible.value = false;
     await loadWorkflow();
-  } catch (error) {
+  } catch {
     ElMessage.error("保存失败");
   }
 }
@@ -439,7 +456,7 @@ async function handleDeleteNode(node: WorkflowNode) {
     await deleteWorkflowNode(props.batchId, activePhase.value, node.id);
     ElMessage.success("删除成功");
     await loadWorkflow();
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error !== "cancel") {
       ElMessage.error("删除失败");
     }
@@ -456,7 +473,7 @@ async function handleValidate(showSuccess = true) {
     } else if (!res.data.valid) {
       ElMessage.warning("流程配置存在问题，请检查");
     }
-  } catch (error) {
+  } catch {
     ElMessage.error("验证失败");
   }
 }
@@ -476,7 +493,7 @@ function getNodeTypeName(type: string) {
 }
 
 function getNodeTypeTag(type: string) {
-  const tags: Record<string, any> = {
+  const tags: Record<string, "" | "success" | "warning" | "danger"> = {
     SUBMIT: "success",
     REVIEW: "",
     EXPERT_REVIEW: "warning",

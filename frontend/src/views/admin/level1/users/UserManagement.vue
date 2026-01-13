@@ -486,7 +486,7 @@ const loadData = async () => {
     const { results, total: totalCount } = normalizeList(res);
     tableData.value = results;
     total.value = Number.isFinite(totalCount) ? totalCount : results.length;
-  } catch (error) {
+  } catch {
     ElMessage.error("获取用户列表失败");
     tableData.value = [];
     total.value = 0;
@@ -586,7 +586,7 @@ const handleSubmit = async () => {
     }
     formDialogVisible.value = false;
     loadData();
-  } catch (error) {
+  } catch {
     ElMessage.error("操作失败，请检查输入");
   } finally {
     submitLoading.value = false;
@@ -664,7 +664,7 @@ const handleImport = async () => {
     ElMessage.success("导入成功");
     importDialogVisible.value = false;
     loadData();
-  } catch (error) {
+  } catch {
     ElMessage.error("导入失败");
   } finally {
     importLoading.value = false;

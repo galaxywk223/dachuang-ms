@@ -3,9 +3,7 @@ Workflow configuration helper.
 """
 
 from dataclasses import dataclass
-from typing import List, Optional, Dict
-
-from django.core.exceptions import ValidationError
+from typing import List, Optional, Dict, Any, cast
 
 from apps.system_settings.models import WorkflowConfig, WorkflowNode, ProjectBatch
 
@@ -220,7 +218,7 @@ class WorkflowService:
             return DEFAULT_WORKFLOWS.get(phase, [])
         return [
             WorkflowNodeDef(
-                id=node.id,
+                id=cast(Any, node).id,
                 code=node.code,
                 name=node.name,
                 node_type=node.node_type,
@@ -234,7 +232,7 @@ class WorkflowService:
                 review_template_id=node.review_template.id
                 if node.review_template
                 else None,
-                role_fk_id=node.role_fk_id,
+                role_fk_id=cast(Any, node).role_fk_id,
             )
             for node in nodes
         ]
@@ -341,7 +339,7 @@ class WorkflowService:
 
         return [
             WorkflowNodeDef(
-                id=node.id,
+                id=cast(Any, node).id,
                 code=node.code,
                 name=node.name,
                 node_type=node.node_type,
@@ -355,13 +353,13 @@ class WorkflowService:
                 review_template_id=node.review_template.id
                 if node.review_template
                 else None,
-                role_fk_id=node.role_fk_id,
+                role_fk_id=cast(Any, node).role_fk_id,
             )
             for node in target_nodes
         ]
 
     @staticmethod
-    def validate_workflow_nodes(workflow_id: int) -> Dict[str, any]:
+    def validate_workflow_nodes(workflow_id: int) -> Dict[str, Any]:
         """
         验证工作流节点配置的合法性
         返回: {'valid': bool, 'errors': List[str]}
@@ -401,7 +399,7 @@ class WorkflowService:
 
                 # 验证退回目标节点存在
                 if node.allowed_reject_to:
-                    node_ids = {n.id for n in nodes}
+                    node_ids = {cast(Any, n).id for n in nodes}
                     for target_id in node.allowed_reject_to:
                         if target_id not in node_ids:
                             errors.append(

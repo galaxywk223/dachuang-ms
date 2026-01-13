@@ -414,6 +414,7 @@ type ReviewPayload = {
   action: "approve" | "reject";
   score?: number | null;
   score_details?: { item_id: number; score: number | null }[];
+  target_node_id?: number | null;
 };
 
 type BatchPayload = {
@@ -422,6 +423,7 @@ type BatchPayload = {
   comments: string;
   score?: number;
   closure_rating?: string;
+  target_node_id?: number | null;
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -639,23 +641,6 @@ const handleEdit = (review: ReviewRow) => {
     }
     dialogVisible.value = true;
 };
-    if (review.template_info?.items?.length) {
-        const detailMap = new Map(
-            (review.score_details || []).map((d) => [d.item_id, d.score])
-        );
-        scoreItems.value = review.template_info.items.map((item) => ({
-            item_id: item.id,
-            title: item.title,
-            weight: item.weight,
-            max_score: item.max_score,
-            is_required: item.is_required,
-            score: detailMap.get(item.id) ?? 0,
-        }));
-    } else {
-        scoreItems.value = [];
-    }
-    dialogVisible.value = true;
-};
 
 const handleClose = () => {
     dialogVisible.value = false;
@@ -693,10 +678,6 @@ const handleSubmit = async () => {
         if (valid) {
             submitting.value = true;
             try {
-                const endpoint =
-                  dialogMode.value === "edit"
-                    ? `/reviews/${review.id}/revise/`
-                    : `/reviews/${review.id}/review/`;
                 const payload: ReviewPayload = {
                   comments: form.comments,
                   action: "approve",

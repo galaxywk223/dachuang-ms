@@ -219,10 +219,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
         获取当前审核记录可退回的目标节点列表
         """
         from apps.system_settings.services.workflow_service import WorkflowService
-        from apps.system_settings.serializers.workflow_serializers import (
-            WorkflowNodeSerializer,
-        )
-
         review = self.get_object()
 
         # 检查权限

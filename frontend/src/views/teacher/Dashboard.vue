@@ -173,11 +173,7 @@ import {
   reviewAction,
   getRejectTargets,
   type WorkflowNode,
-} from "@/api/reviews";
-import {
-  reviewAction,
-  getRejectTargets,
-  type WorkflowNode,
+  type ReviewActionParams,
 } from "@/api/reviews";
 
 defineOptions({
@@ -288,10 +284,14 @@ const dialogVisible = ref(false);
 const currentProject = ref<TeacherProjectRow | null>(null);
 const currentReviewId = ref<number | null>(null);
 const formRef = ref<FormInstance>();
-const form = reactive({
+const form = reactive<{
+  action: "approve" | "reject";
+  comments: string;
+  target_node_id: number | null;
+}>({
   action: "approve",
   comments: "",
-  target_node_id: null as number | null,
+  target_node_id: null,
 });
 const rejectTargets = ref<WorkflowNode[]>([]);
 
@@ -423,12 +423,14 @@ const handleClose = () => {
 };
 
 const handleSubmit = async () => {
-  if (!formRef.value || !currentReviewId.value) return;
+  if (!formRef.value) return;
+  const reviewId = currentReviewId.value;
+  if (reviewId === null) return;
   await formRef.value.validate(async (valid) => {
     if (valid) {
       submitting.value = true;
       try {
-        const payload: Record<string, unknown> = {
+        const payload: ReviewActionParams = {
           action: form.action,
           comments: form.comments,
         };
@@ -436,7 +438,7 @@ const handleSubmit = async () => {
         if (form.action === "reject" && form.target_node_id) {
           payload.target_node_id = form.target_node_id;
         }
-        await reviewAction(currentReviewId.value, payload);
+        await reviewAction(reviewId, payload);
         ElMessage.success("审核提交成功");
         dialogVisible.value = false;
         activeTab.value = "my_projects";

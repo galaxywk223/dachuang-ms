@@ -319,7 +319,7 @@ const loadRolesList = async () => {
     const { results, total: totalCount } = normalizeList(res);
     tableData.value = results;
     total.value = Number.isFinite(totalCount) ? totalCount : results.length;
-  } catch (error) {
+  } catch {
     ElMessage.error("获取角色列表失败");
     tableData.value = [];
     total.value = 0;
@@ -374,7 +374,7 @@ const openEditDialog = async (row: RoleRow) => {
         formData.permission_ids = detail.permission_ids as number[];
       }
     }
-  } catch (error) {
+  } catch {
     ElMessage.error("获取角色详情失败");
   }
 };
@@ -415,7 +415,7 @@ const handleSubmit = async () => {
     }
     formDialogVisible.value = false;
     loadRolesList();
-  } catch (error) {
+  } catch {
     ElMessage.error("操作失败，请检查输入");
   } finally {
     submitLoading.value = false;
@@ -427,7 +427,7 @@ const handleToggleStatus = async (row: RoleRow) => {
     await toggleRoleStatus(row.id);
     ElMessage.success("状态已更新");
     loadRolesList();
-  } catch (error) {
+  } catch {
     ElMessage.error("操作失败");
   }
 };

@@ -4,9 +4,7 @@
 """
 
 from django.core.management.base import BaseCommand
-from django.db import transaction
-from apps.projects.models import Project, ProjectPhaseInstance
-from apps.system_settings.models import WorkflowNode
+from apps.projects.models import ProjectPhaseInstance
 from apps.system_settings.services.workflow_service import WorkflowService
 
 
@@ -85,7 +83,7 @@ class Command(BaseCommand):
                 error_count += 1
                 continue
 
-        self.stdout.write(self.style.SUCCESS(f"\n迁移完成:"))
+        self.stdout.write(self.style.SUCCESS("\n迁移完成:"))
         self.stdout.write(f"  成功更新: {updated_count}")
         self.stdout.write(f"  跳过: {skipped_count}")
         self.stdout.write(f"  失败: {error_count}")

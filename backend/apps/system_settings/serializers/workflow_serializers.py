@@ -4,7 +4,6 @@
 
 from rest_framework import serializers
 from apps.system_settings.models import WorkflowConfig, WorkflowNode
-from apps.users.models import Role
 
 
 class WorkflowNodeSerializer(serializers.ModelSerializer):

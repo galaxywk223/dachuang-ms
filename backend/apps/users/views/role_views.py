@@ -8,7 +8,6 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q, Count
 from itertools import groupby
-from operator import itemgetter
 
 from apps.users.models import Role, Permission
 from apps.users.permissions import IsLevel1Admin
@@ -134,14 +133,14 @@ class RoleViewSet(viewsets.ModelViewSet):
         # 分页
         page = self.paginate_queryset(users)
         if page is not None:
-            from apps.users.serializers.user_serializers import UserListSerializer
+            from apps.users.serializers import UserSerializer
 
-            serializer = UserListSerializer(page, many=True)
+            serializer = UserSerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
-        from apps.users.serializers.user_serializers import UserListSerializer
+        from apps.users.serializers import UserSerializer
 
-        serializer = UserListSerializer(users, many=True)
+        serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=["get"])

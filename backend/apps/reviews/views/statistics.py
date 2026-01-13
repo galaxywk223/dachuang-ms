@@ -8,7 +8,6 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
 from apps.projects.models import Project, ProjectChangeRequest
-from apps.users.models import User
 
 
 class ReviewStatisticsViewSet(viewsets.ViewSet):
