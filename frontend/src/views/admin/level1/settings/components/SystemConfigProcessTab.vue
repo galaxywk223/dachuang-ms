@@ -1,11 +1,17 @@
 <template>
   <el-form label-width="200px" class="config-form">
     <el-form-item label="在研项目允许继续申报">
-      <el-switch v-model="localProcessRules.allow_active_reapply" :disabled="isProcessLocked" />
+      <el-switch
+        v-model="localProcessRules.allow_active_reapply"
+        :disabled="isProcessLocked"
+      />
       <div class="form-hint">开启后，已有在研项目的学生仍可提交新申报。</div>
     </el-form-item>
     <el-form-item label="审核退回上一级">
-      <el-switch v-model="localProcessRules.reject_to_previous" :disabled="isProcessLocked" />
+      <el-switch
+        v-model="localProcessRules.reject_to_previous"
+        :disabled="isProcessLocked"
+      />
       <div class="form-hint">开启后，退回会返回到上一级角色重新审核。</div>
     </el-form-item>
     <el-form-item label="结题评审可见立项材料">
@@ -60,14 +66,23 @@ watch(
   { deep: true }
 );
 
-watch(
-  localProcessRules,
-  (val) => emit("update:processRules", { ...val }),
-  { deep: true }
-);
-watch(
-  localReviewRules,
-  (val) => emit("update:reviewRules", { ...val }),
-  { deep: true }
-);
+watch(localProcessRules, (val) => emit("update:processRules", { ...val }), {
+  deep: true,
+});
+watch(localReviewRules, (val) => emit("update:reviewRules", { ...val }), {
+  deep: true,
+});
 </script>
+<style scoped lang="scss">
+.config-form {
+  max-width: 800px;
+  padding-top: 20px;
+}
+
+.form-hint {
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+</style>

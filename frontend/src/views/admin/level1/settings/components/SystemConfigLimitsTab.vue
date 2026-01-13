@@ -1,19 +1,39 @@
 <template>
   <el-form label-width="200px" class="config-form">
     <el-form-item label="指导教师最大数量">
-    <el-input-number v-model="localLimitRules.max_advisors" :min="0" :disabled="isProcessLocked" />
+      <el-input-number
+        v-model="localLimitRules.max_advisors"
+        :min="0"
+        :disabled="isProcessLocked"
+      />
     </el-form-item>
     <el-form-item label="项目成员最大数量">
-      <el-input-number v-model="localLimitRules.max_members" :min="0" :disabled="isProcessLocked" />
+      <el-input-number
+        v-model="localLimitRules.max_members"
+        :min="0"
+        :disabled="isProcessLocked"
+      />
     </el-form-item>
     <el-form-item label="导师在研项目上限">
-      <el-input-number v-model="localLimitRules.max_teacher_active" :min="0" :disabled="isProcessLocked" />
+      <el-input-number
+        v-model="localLimitRules.max_teacher_active"
+        :min="0"
+        :disabled="isProcessLocked"
+      />
     </el-form-item>
     <el-form-item label="学生作为负责人上限">
-      <el-input-number v-model="localLimitRules.max_student_active" :min="0" :disabled="isProcessLocked" />
+      <el-input-number
+        v-model="localLimitRules.max_student_active"
+        :min="0"
+        :disabled="isProcessLocked"
+      />
     </el-form-item>
     <el-form-item label="学生作为成员上限">
-      <el-input-number v-model="localLimitRules.max_student_member" :min="0" :disabled="isProcessLocked" />
+      <el-input-number
+        v-model="localLimitRules.max_student_member"
+        :min="0"
+        :disabled="isProcessLocked"
+      />
     </el-form-item>
     <el-form-item label="优秀结题加成数">
       <el-input-number
@@ -23,10 +43,16 @@
       />
     </el-form-item>
     <el-form-item label="项目名称查重">
-      <el-switch v-model="localLimitRules.dedupe_title" :disabled="isProcessLocked" />
+      <el-switch
+        v-model="localLimitRules.dedupe_title"
+        :disabled="isProcessLocked"
+      />
     </el-form-item>
     <el-form-item label="指导教师职称必填">
-      <el-switch v-model="localLimitRules.advisor_title_required" :disabled="isProcessLocked" />
+      <el-switch
+        v-model="localLimitRules.advisor_title_required"
+        :disabled="isProcessLocked"
+      />
     </el-form-item>
     <el-form-item label="学院名额配置(JSON)">
       <el-input
@@ -62,7 +88,10 @@
       />
     </el-form-item>
     <el-form-item label="学科分类必填">
-      <el-switch v-model="localValidationRules.discipline_required" :disabled="isProcessLocked" />
+      <el-switch
+        v-model="localValidationRules.discipline_required"
+        :disabled="isProcessLocked"
+      />
     </el-form-item>
     <el-form-item label="允许项目类别(逗号分隔)">
       <el-input
@@ -206,3 +235,16 @@ watch(
   }
 );
 </script>
+<style scoped lang="scss">
+.config-form {
+  max-width: 800px;
+  padding-top: 20px;
+}
+
+.form-hint {
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+</style>

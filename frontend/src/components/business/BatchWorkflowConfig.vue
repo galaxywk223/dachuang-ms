@@ -78,11 +78,30 @@
                     </el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column
-                  prop="role_name"
-                  label="执行角色"
-                  width="120"
-                />
+                <el-table-column label="执行角色" width="120" align="center">
+                  <template #default="{ row }">
+                    {{
+                      row.role_name ||
+                      (row.node_type === "SUBMIT" ? "学生" : "-")
+                    }}
+                  </template>
+                </el-table-column>
+                <el-table-column label="日期范围" width="180" align="center">
+                  <template #default="{ row }">
+                    <div
+                      v-if="row.start_date || row.end_date"
+                      class="date-range"
+                    >
+                      <div v-if="row.start_date" class="date-item">
+                        开始: {{ row.start_date }}
+                      </div>
+                      <div v-if="row.end_date" class="date-item">
+                        结束: {{ row.end_date }}
+                      </div>
+                    </div>
+                    <span v-else class="text-gray">未设置</span>
+                  </template>
+                </el-table-column>
                 <el-table-column label="退回设置" width="100" align="center">
                   <template #default="{ row }">
                     <el-tag
@@ -115,6 +134,15 @@
                       编辑
                     </el-button>
                     <el-button
+                      v-if="!row.can_edit && !workflow.is_locked"
+                      link
+                      type="primary"
+                      size="small"
+                      @click="handleEditNodeDates(row)"
+                    >
+                      配置日期
+                    </el-button>
+                    <el-button
                       v-if="row.can_edit && !workflow.is_locked"
                       link
                       type="danger"
@@ -123,7 +151,11 @@
                     >
                       删除
                     </el-button>
-                    <span v-if="!row.can_edit" class="text-gray">不可编辑</span>
+                    <span
+                      v-if="!row.can_edit && workflow.is_locked"
+                      class="text-gray"
+                      >不可编辑</span
+                    >
                   </template>
                 </el-table-column>
               </el-table>
@@ -194,9 +226,6 @@
         :rules="nodeRules"
         label-width="120px"
       >
-        <el-form-item label="节点编码" prop="code">
-          <el-input v-model="nodeForm.code" placeholder="如: TEACHER_REVIEW" />
-        </el-form-item>
         <el-form-item label="节点名称" prop="name">
           <el-input v-model="nodeForm.name" placeholder="如: 导师审核" />
         </el-form-item>
@@ -237,6 +266,26 @@
             />
           </el-select>
         </el-form-item>
+        <el-form-item label="开始日期">
+          <el-date-picker
+            v-model="nodeForm.start_date"
+            type="date"
+            placeholder="请选择开始日期"
+            format="YYYY-MM-DD"
+            value-format="YYYY-MM-DD"
+            style="width: 100%"
+          />
+        </el-form-item>
+        <el-form-item label="结束日期">
+          <el-date-picker
+            v-model="nodeForm.end_date"
+            type="date"
+            placeholder="请选择结束日期"
+            format="YYYY-MM-DD"
+            value-format="YYYY-MM-DD"
+            style="width: 100%"
+          />
+        </el-form-item>
         <el-form-item label="审核注意事项">
           <el-input
             v-model="nodeForm.notice"
@@ -250,6 +299,41 @@
       <template #footer>
         <el-button @click="nodeDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleSaveNode">确定</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 日期配置对话框 -->
+    <el-dialog
+      v-model="dateDialogVisible"
+      :title="`配置日期 - ${editingNode?.name || ''}`"
+      width="500px"
+    >
+      <el-form :model="dateForm" label-width="100px">
+        <el-form-item label="开始日期">
+          <el-date-picker
+            v-model="dateForm.start_date"
+            type="date"
+            placeholder="请选择开始日期"
+            format="YYYY-MM-DD"
+            value-format="YYYY-MM-DD"
+            style="width: 100%"
+          />
+        </el-form-item>
+        <el-form-item label="结束日期">
+          <el-date-picker
+            v-model="dateForm.end_date"
+            type="date"
+            placeholder="请选择结束日期"
+            format="YYYY-MM-DD"
+            value-format="YYYY-MM-DD"
+            style="width: 100%"
+          />
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <el-button @click="dateDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSaveDates">确定</el-button>
       </template>
     </el-dialog>
   </div>
@@ -305,18 +389,29 @@ const nodeForm = ref<WorkflowNodeInput>({
   code: "",
   name: "",
   node_type: "REVIEW",
-  role_fk: 0,
+  role_fk: undefined,
   allowed_reject_to: [],
   notice: "",
+  start_date: undefined,
+  end_date: undefined,
   sort_order: 0,
 });
 
 const nodeRules: FormRules = {
-  code: [{ required: true, message: "请输入节点编码", trigger: "blur" }],
   name: [{ required: true, message: "请输入节点名称", trigger: "blur" }],
   node_type: [{ required: true, message: "请选择节点类型", trigger: "change" }],
   role_fk: [{ required: true, message: "请选择执行角色", trigger: "change" }],
 };
+
+// 日期配置对话框
+const dateDialogVisible = ref(false);
+const dateForm = ref<{
+  start_date?: string;
+  end_date?: string;
+}>({
+  start_date: undefined,
+  end_date: undefined,
+});
 
 onMounted(() => {
   loadRoles();
@@ -342,15 +437,27 @@ async function loadRoles() {
 async function loadWorkflow() {
   loading.value = true;
   try {
+    console.log(
+      `[BatchWorkflowConfig] 加载工作流: batchId=${props.batchId}, phase=${activePhase.value}`
+    );
     const res = await getBatchWorkflow(props.batchId, activePhase.value);
-    workflow.value = res.data;
-    nodes.value = res.data.nodes || [];
+    console.log("[BatchWorkflowConfig] 工作流加载成功:", res);
+    // 后端直接返回工作流对象，不是包装在 data 里
+    workflow.value = res as unknown as WorkflowConfig;
+    nodes.value = (res as unknown as WorkflowConfig).nodes || [];
 
     // 自动验证
     await handleValidate(false);
   } catch (error: unknown) {
+    console.error("[BatchWorkflowConfig] 工作流加载失败:", error);
     const response = isRecord(error) ? error.response : null;
     const status = isRecord(response) ? response.status : null;
+    const data = isRecord(response) ? response.data : null;
+    console.log(
+      `[BatchWorkflowConfig] 错误详情: status=${status}, data=`,
+      data
+    );
+
     if (status === 404) {
       workflow.value = null;
       nodes.value = [];
@@ -382,7 +489,14 @@ async function handleInitWorkflow() {
     await loadWorkflow();
   } catch (error: unknown) {
     if (error !== "cancel") {
-      ElMessage.error("初始化失败");
+      // 提取后端返回的详细错误信息
+      const response = isRecord(error) ? error.response : null;
+      const data = isRecord(response) ? response.data : null;
+      const detail =
+        isRecord(data) && typeof data.detail === "string"
+          ? data.detail
+          : "初始化失败";
+      ElMessage.error(detail);
     }
   } finally {
     loading.value = false;
@@ -395,9 +509,11 @@ function handleAddNode() {
     code: "",
     name: "",
     node_type: "REVIEW",
-    role_fk: 0,
+    role_fk: undefined,
     allowed_reject_to: [],
     notice: "",
+    start_date: undefined,
+    end_date: undefined,
     sort_order: nodes.value.length,
   };
   nodeDialogVisible.value = true;
@@ -409,12 +525,44 @@ function handleEditNode(node: WorkflowNode) {
     code: node.code,
     name: node.name,
     node_type: node.node_type,
-    role_fk: node.role_fk || 0,
+    role_fk: node.role_fk || undefined,
     allowed_reject_to: node.allowed_reject_to || [],
     notice: node.notice || "",
+    start_date: node.start_date || undefined,
+    end_date: node.end_date || undefined,
     sort_order: node.sort_order,
   };
   nodeDialogVisible.value = true;
+}
+
+function handleEditNodeDates(node: WorkflowNode) {
+  editingNode.value = node;
+  dateForm.value = {
+    start_date: node.start_date || undefined,
+    end_date: node.end_date || undefined,
+  };
+  dateDialogVisible.value = true;
+}
+
+async function handleSaveDates() {
+  if (!editingNode.value) return;
+
+  try {
+    await updateWorkflowNode(
+      props.batchId,
+      activePhase.value,
+      editingNode.value.id,
+      {
+        start_date: dateForm.value.start_date,
+        end_date: dateForm.value.end_date,
+      }
+    );
+    ElMessage.success("日期配置成功");
+    dateDialogVisible.value = false;
+    await loadWorkflow();
+  } catch (error: unknown) {
+    ElMessage.error("配置失败");
+  }
 }
 
 async function handleSaveNode() {
@@ -432,6 +580,16 @@ async function handleSaveNode() {
       );
       ElMessage.success("更新成功");
     } else {
+      // 新增节点时自动生成节点编码
+      const nodeTypePrefix: Record<string, string> = {
+        REVIEW: "REVIEW",
+        EXPERT_REVIEW: "EXPERT",
+        APPROVAL: "APPROVAL",
+      };
+      const prefix = nodeTypePrefix[nodeForm.value.node_type] || "NODE";
+      const timestamp = Date.now().toString().slice(-6);
+      nodeForm.value.code = `${prefix}_${timestamp}`;
+      
       await createWorkflowNode(
         props.batchId,
         activePhase.value,
@@ -466,15 +624,22 @@ async function handleDeleteNode(node: WorkflowNode) {
 async function handleValidate(showSuccess = true) {
   try {
     const res = await validateBatchWorkflow(props.batchId, activePhase.value);
-    validationErrors.value = res.data.errors || [];
+    // 后端直接返回验证结果，不是包装在 data 里
+    const result = res as unknown as { valid: boolean; errors: string[] };
+    validationErrors.value = result.errors || [];
 
-    if (res.data.valid && showSuccess) {
+    if (result.valid && showSuccess) {
       ElMessage.success("流程配置验证通过");
-    } else if (!res.data.valid) {
+    } else if (!result.valid) {
       ElMessage.warning("流程配置存在问题，请检查");
     }
-  } catch {
-    ElMessage.error("验证失败");
+  } catch (error: unknown) {
+    // 只在用户主动验证时显示错误，自动验证时静默失败
+    if (showSuccess) {
+      ElMessage.error("验证失败");
+    }
+    // 清空验证错误，避免显示过期的错误信息
+    validationErrors.value = [];
   }
 }
 
@@ -529,10 +694,21 @@ function getNodeTypeTag(type: string) {
 
     .nodes-card,
     .graph-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+
+      :deep(.el-card__header) {
+        padding: 12px 16px;
+        background-color: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+      }
+
       .card-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        font-weight: 600;
+        color: #334155;
       }
     }
 
@@ -542,17 +718,18 @@ function getNodeTypeTag(type: string) {
         gap: 16px;
         margin-top: 16px;
         padding-top: 16px;
-        border-top: 1px solid #e8e8e8;
+        border-top: 1px solid #e2e8f0;
 
         .legend-item {
           display: flex;
           align-items: center;
           gap: 6px;
           font-size: 13px;
+          color: #475569;
 
           .legend-color {
-            width: 16px;
-            height: 16px;
+            width: 12px;
+            height: 12px;
             border-radius: 3px;
           }
         }
@@ -561,7 +738,16 @@ function getNodeTypeTag(type: string) {
   }
 
   .text-gray {
-    color: #999;
+    color: #94a3b8;
+  }
+
+  .date-range {
+    font-size: 12px;
+    line-height: 1.5;
+
+    .date-item {
+      color: #475569;
+    }
   }
 }
 </style>

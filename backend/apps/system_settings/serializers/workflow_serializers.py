@@ -34,6 +34,8 @@ class WorkflowNodeSerializer(serializers.ModelSerializer):
             "allowed_reject_to",
             "review_template",
             "notice",
+            "start_date",
+            "end_date",
             "sort_order",
             "is_active",
             "can_edit",
@@ -63,6 +65,8 @@ class WorkflowNodeCreateUpdateSerializer(serializers.ModelSerializer):
             "allowed_reject_to",
             "review_template",
             "notice",
+            "start_date",
+            "end_date",
             "sort_order",
             "is_active",
         ]
@@ -92,8 +96,8 @@ class WorkflowNodeCreateUpdateSerializer(serializers.ModelSerializer):
 class WorkflowConfigSerializer(serializers.ModelSerializer):
     """工作流配置序列化器"""
 
-    nodes = WorkflowNodeSerializer(many=True, read_only=True)
-    node_count = serializers.IntegerField(source="nodes.count", read_only=True)
+    nodes = serializers.SerializerMethodField()
+    node_count = serializers.SerializerMethodField()
     batch_name = serializers.CharField(
         source="batch.name", read_only=True, allow_null=True
     )
@@ -124,6 +128,15 @@ class WorkflowConfigSerializer(serializers.ModelSerializer):
             "created_by",
             "updated_by",
         ]
+
+    def get_nodes(self, obj):
+        """只返回活跃的节点"""
+        active_nodes = obj.nodes.filter(is_active=True).order_by("sort_order")
+        return WorkflowNodeSerializer(active_nodes, many=True).data
+
+    def get_node_count(self, obj):
+        """统计活跃节点数量"""
+        return obj.nodes.filter(is_active=True).count()
 
 
 class WorkflowConfigCreateSerializer(serializers.ModelSerializer):

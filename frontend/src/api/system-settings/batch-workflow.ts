@@ -19,6 +19,8 @@ export interface WorkflowNode {
   allowed_reject_to: number[];
   review_template: number | null;
   notice: string;
+  start_date: string | null;
+  end_date: string | null;
   sort_order: number;
   is_active: boolean;
   can_edit: boolean;
@@ -60,13 +62,15 @@ export interface WorkflowNodeInput {
   code: string;
   name: string;
   node_type: "SUBMIT" | "REVIEW" | "EXPERT_REVIEW" | "APPROVAL";
-  role_fk: number;
+  role_fk?: number;
   review_level?: string;
   scope?: string;
   return_policy?: string;
   allowed_reject_to?: number[];
   review_template?: number | null;
   notice?: string;
+  start_date?: string;
+  end_date?: string;
   sort_order: number;
   is_active?: boolean;
 }

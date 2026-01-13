@@ -43,34 +43,6 @@
         </el-alert>
 
         <el-tabs v-model="activeTab">
-          <el-tab-pane label="日期配置" name="dates">
-            <SystemConfigDatesTab
-              v-model:global-date-range="globalDateRange"
-              :apply-batch-dates="applyBatchDates"
-              :is-read-only="isReadOnly"
-              :application-window="applicationWindow"
-              :midterm-window="midtermWindow"
-              :closure-window="closureWindow"
-              :expert-review-window="expertReviewWindow"
-              :review-window="reviewWindow"
-              @update:application-window="
-                (value) => Object.assign(applicationWindow, value)
-              "
-              @update:midterm-window="
-                (value) => Object.assign(midtermWindow, value)
-              "
-              @update:closure-window="
-                (value) => Object.assign(closureWindow, value)
-              "
-              @update:expert-review-window="
-                (value) => Object.assign(expertReviewWindow, value)
-              "
-              @update:review-window="
-                (value) => Object.assign(reviewWindow, value)
-              "
-            />
-          </el-tab-pane>
-
           <el-tab-pane label="限制与校验" name="limits">
             <SystemConfigLimitsTab
               :limit-rules="limitRules"
@@ -84,20 +56,6 @@
               @update:limit-rules="(value) => Object.assign(limitRules, value)"
               @update:validation-rules="
                 (value) => Object.assign(validationRules, value)
-              "
-            />
-          </el-tab-pane>
-
-          <el-tab-pane label="流程配置" name="process">
-            <SystemConfigProcessTab
-              :process-rules="processRules"
-              :review-rules="reviewRules"
-              :is-process-locked="isProcessLocked"
-              @update:process-rules="
-                (value) => Object.assign(processRules, value)
-              "
-              @update:review-rules="
-                (value) => Object.assign(reviewRules, value)
               "
             />
           </el-tab-pane>

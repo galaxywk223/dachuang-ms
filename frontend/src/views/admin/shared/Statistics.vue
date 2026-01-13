@@ -85,7 +85,7 @@
           </el-table>
         </el-card>
 
-        <el-card class="tool-card mt-4">
+        <el-card v-if="showProjectNoTool" class="tool-card mt-4">
           <template #header>
             <div class="card-header">
               <span class="title">结题归档</span>
@@ -110,11 +110,18 @@
               <span class="title">项目编号工具</span>
               <div class="actions">
                 <el-button type="primary" plain @click="exportProjectNos">导出编号清单</el-button>
-                <el-button type="warning" plain @click="fetchDuplicateNos">编号查重</el-button>
+                <el-button
+                  v-if="showProjectNoTool"
+                  type="warning"
+                  plain
+                  @click="fetchDuplicateNos"
+                >
+                  编号查重
+                </el-button>
               </div>
             </div>
           </template>
-          <el-table :data="duplicateNos" border stripe>
+          <el-table v-if="showProjectNoTool" :data="duplicateNos" border stripe>
             <el-table-column prop="project_no" label="重复编号" width="200" />
             <el-table-column prop="cnt" label="重复数量" width="100" />
           </el-table>
@@ -249,10 +256,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, computed } from "vue";
 import { ElMessage, type UploadFile, type UploadInstance } from "element-plus";
 import { Folder, Check, Clock } from "@element-plus/icons-vue";
 import StatCard from "@/components/common/StatCard.vue";
+import { useUserStore } from "@/stores/user";
 import {
   getProjectStatistics,
   getProjectStatisticsReport,
@@ -338,6 +346,11 @@ const stats = reactive<StatsSummary>({
   approved_projects: 0,
   pending_review: 0,
 });
+const userStore = useUserStore();
+const userRole = computed(() =>
+  String(userStore.user?.role || localStorage.getItem("user_role") || "").toLowerCase()
+);
+const showProjectNoTool = computed(() => userRole.value !== "level1_admin");
 
 const importing = ref(false);
 const importFile = ref<File | null>(null);
@@ -558,7 +571,11 @@ const refreshAll = () => {
   fetchStatistics();
   fetchArchives();
   fetchPushRecords();
-  fetchDuplicateNos();
+  if (showProjectNoTool.value) {
+    fetchDuplicateNos();
+  } else {
+    duplicateNos.value = [];
+  }
   fetchReport();
 };
 

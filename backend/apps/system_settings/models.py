@@ -366,6 +366,19 @@ class WorkflowNode(models.Model):
         verbose_name="允许退回的节点ID列表",
         help_text="存储可以退回到的节点ID数组",
     )
+    # 节点的日期窗口配置
+    start_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="开始日期",
+        help_text="该节点可以开始执行的日期",
+    )
+    end_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="结束日期",
+        help_text="该节点必须完成的日期",
+    )
     review_template = models.ForeignKey(
         ReviewTemplate,
         on_delete=models.SET_NULL,

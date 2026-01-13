@@ -619,11 +619,6 @@ const currentMenus = computed<MenuEntry[]>(() => {
               icon: Setting,
             },
             {
-              index: "/level1-admin/settings/workflows",
-              title: "流程配置",
-              icon: Setting,
-            },
-            {
               index: "/level1-admin/settings/review-templates",
               title: "评审模板",
               icon: Setting,

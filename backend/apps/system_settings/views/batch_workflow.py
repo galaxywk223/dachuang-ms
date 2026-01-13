@@ -224,11 +224,18 @@ class BatchWorkflowViewSet(viewsets.ViewSet):
 
     @action(
         detail=True,
-        methods=["patch"],
+        methods=["patch", "delete"],
         url_path="workflows/(?P<phase>[^/.]+)/nodes/(?P<node_id>[^/.]+)",
     )
     @transaction.atomic
-    def update_node(self, request, pk=None, phase=None, node_id=None):
+    def manage_node(self, request, pk=None, phase=None, node_id=None):
+        """更新或删除工作流节点"""
+        if request.method == "PATCH":
+            return self._update_node(request, pk, phase, node_id)
+        elif request.method == "DELETE":
+            return self._delete_node(request, pk, phase, node_id)
+
+    def _update_node(self, request, pk, phase, node_id):
         """更新工作流节点"""
         batch = get_object_or_404(ProjectBatch, pk=pk)
         node = get_object_or_404(WorkflowNode, pk=node_id)
@@ -243,11 +250,15 @@ class BatchWorkflowViewSet(viewsets.ViewSet):
                 {"detail": "工作流已锁定，无法修改"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 学生提交节点不可编辑
+        # 学生提交节点只允许修改日期字段
         if node.node_type == "SUBMIT":
-            return Response(
-                {"detail": "学生提交节点不可修改"}, status=status.HTTP_400_BAD_REQUEST
-            )
+            allowed_fields = {"start_date", "end_date"}
+            request_fields = set(request.data.keys())
+            if not request_fields.issubset(allowed_fields):
+                return Response(
+                    {"detail": "学生提交节点只能修改日期字段"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         serializer = WorkflowNodeCreateUpdateSerializer(
             node, data=request.data, partial=True
@@ -258,13 +269,7 @@ class BatchWorkflowViewSet(viewsets.ViewSet):
         result_serializer = WorkflowNodeSerializer(node)
         return Response(result_serializer.data)
 
-    @action(
-        detail=True,
-        methods=["delete"],
-        url_path="workflows/(?P<phase>[^/.]+)/nodes/(?P<node_id>[^/.]+)",
-    )
-    @transaction.atomic
-    def delete_node(self, request, pk=None, phase=None, node_id=None):
+    def _delete_node(self, request, pk, phase, node_id):
         """删除工作流节点（软删除）"""
         batch = get_object_or_404(ProjectBatch, pk=pk)
         node = get_object_or_404(WorkflowNode, pk=node_id)

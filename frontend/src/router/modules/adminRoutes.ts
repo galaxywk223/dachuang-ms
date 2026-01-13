@@ -118,11 +118,6 @@ export const adminRoutes: RouteRecordRaw[] = [
             meta: { title: "结题证书" },
           },
           {
-            path: "workflows",
-            redirect: { name: "level1-settings-batches" },
-            meta: { title: "流程配置（已迁移）" },
-          },
-          {
             path: "review-templates",
             name: "level1-settings-review-templates",
             component: () =>
