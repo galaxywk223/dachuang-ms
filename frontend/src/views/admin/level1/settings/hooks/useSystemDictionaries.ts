@@ -233,6 +233,18 @@ export function useSystemDictionaries(
 
     await formRef.value.validate(async (valid) => {
       if (!valid) return;
+      if (type.code === DICT_CODES.MAJOR_CATEGORY) {
+        const normalizedLabel = form.label.trim();
+        const duplicateLabel = items.value.some(
+          (item) =>
+            item.id !== editingId.value &&
+            item.label.trim() === normalizedLabel
+        );
+        if (duplicateLabel) {
+          ElMessage.error("专业大类显示名称不能重复");
+          return;
+        }
+      }
       submitting.value = true;
       try {
         const finalValue = showCode.value ? form.value : form.label;

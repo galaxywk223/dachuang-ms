@@ -96,8 +96,6 @@ const handleLogin = async (formData: LoginFormData) => {
           router.push('/');
           break;
       }
-    } else {
-      ElMessage.error("登录失败，请检查用户名或密码");
     }
   } catch (error: unknown) {
     const message =
