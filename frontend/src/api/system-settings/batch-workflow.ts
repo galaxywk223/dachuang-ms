@@ -17,7 +17,6 @@ export interface WorkflowNode {
   scope: string;
   return_policy: string;
   allowed_reject_to: number[];
-  review_template: number | null;
   notice: string;
   start_date: string | null;
   end_date: string | null;
@@ -67,7 +66,6 @@ export interface WorkflowNodeInput {
   scope?: string;
   return_policy?: string;
   allowed_reject_to?: number[];
-  review_template?: number | null;
   notice?: string;
   start_date?: string;
   end_date?: string;

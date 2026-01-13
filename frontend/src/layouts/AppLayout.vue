@@ -38,7 +38,10 @@
         >
           <!-- Dynamic Menu Generation -->
           <template v-for="item in currentMenus" :key="menuEntryKey(item)">
-            <el-menu-item-group v-if="isMenuGroup(item)" :title="item.groupTitle">
+            <el-menu-item-group
+              v-if="isMenuGroup(item)"
+              :title="item.groupTitle"
+            >
               <template v-for="groupItem in item.items" :key="groupItem.index">
                 <!-- Submenu -->
                 <el-sub-menu v-if="groupItem.children" :index="groupItem.index">
@@ -616,11 +619,6 @@ const currentMenus = computed<MenuEntry[]>(() => {
             {
               index: "/level1-admin/settings/certificate",
               title: "结题证书",
-              icon: Setting,
-            },
-            {
-              index: "/level1-admin/settings/review-templates",
-              title: "评审模板",
               icon: Setting,
             },
             {

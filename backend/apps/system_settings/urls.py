@@ -11,8 +11,6 @@ from .views import (
     ProjectBatchViewSet,
     WorkflowConfigViewSet,
     WorkflowNodeViewSet,
-    ReviewTemplateViewSet,
-    ReviewTemplateItemViewSet,
 )
 from .views.batch_workflow import BatchWorkflowViewSet
 
@@ -24,12 +22,6 @@ router.register(
 router.register(r"batches", ProjectBatchViewSet, basename="project-batches")
 router.register(r"workflows", WorkflowConfigViewSet, basename="workflow-configs")
 router.register(r"workflow-nodes", WorkflowNodeViewSet, basename="workflow-nodes")
-router.register(r"review-templates", ReviewTemplateViewSet, basename="review-templates")
-router.register(
-    r"review-template-items",
-    ReviewTemplateItemViewSet,
-    basename="review-template-items",
-)
 router.register(r"batch-workflows", BatchWorkflowViewSet, basename="batch-workflows")
 
 urlpatterns = [

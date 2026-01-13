@@ -93,7 +93,6 @@ class ReviewService:
             scope=target_node_obj.scope,
             return_policy=target_node_obj.return_policy,
             allowed_reject_to=target_node_obj.allowed_reject_to or [],
-            review_template_id=target_node_obj.review_template_id,
             role_fk_id=target_node_obj.role_fk_id,
         )
 
@@ -167,14 +166,9 @@ class ReviewService:
     @staticmethod
     def _normalize_score_details(review, score, score_details):
         """
-        根据评审模板计算总分，并规范评分明细
+        规范评分明细
         """
-        if not review.review_template:
-            return score, []
-
-        items = list(review.review_template.items.all())
-        if not items:
-            return score, score_details or []
+        return score, score_details or []
 
         detail_map = {}
         for item in score_details or []:
@@ -226,7 +220,6 @@ class ReviewService:
         review_level,
         *,
         phase_instance: ProjectPhaseInstance | None = None,
-        review_template_id=None,
     ):
         """
         创建审核记录
@@ -236,7 +229,6 @@ class ReviewService:
             phase_instance=phase_instance,
             review_type=review_type,
             review_level=review_level,
-            review_template_id=review_template_id,
             status=Review.ReviewStatus.PENDING,
         )
 
@@ -253,9 +245,6 @@ class ReviewService:
         review_level = (
             initial_node.review_level if initial_node else Review.ReviewLevel.TEACHER
         )
-        template = None
-        if initial_node and initial_node.review_template_id:
-            template = initial_node.review_template_id
         phase_instance = ProjectPhaseService.ensure_current(
             project, ProjectPhaseInstance.Phase.APPLICATION, step=step
         )
@@ -267,7 +256,6 @@ class ReviewService:
             review_type=Review.ReviewType.APPLICATION,
             review_level=review_level or Review.ReviewLevel.TEACHER,
             phase_instance=phase_instance,
-            review_template_id=template if template else None,
         )
 
     @staticmethod
@@ -297,7 +285,6 @@ class ReviewService:
             review_type=Review.ReviewType.APPLICATION,
             review_level=Review.ReviewLevel.LEVEL2,
             phase_instance=phase_instance,
-            review_template_id=node.review_template_id if node else None,
         )
 
     @staticmethod
@@ -334,7 +321,6 @@ class ReviewService:
             review_type=Review.ReviewType.APPLICATION,
             review_level=Review.ReviewLevel.LEVEL1,
             phase_instance=phase_instance,
-            review_template_id=node.review_template_id if node else None,
         )
 
     @staticmethod
@@ -369,7 +355,7 @@ class ReviewService:
         review.save()
 
         # 专家评审只更新记录，不流转状态
-        if reviewer.role == "EXPERT":
+        if reviewer.is_expert:
             return True
 
         # 使用动态流程引擎流转到下一节点
@@ -521,7 +507,7 @@ class ReviewService:
         review.save()
 
         # 专家评审只更新记录，不流转状态
-        if reviewer.role == "EXPERT":
+        if reviewer.is_expert:
             return True
 
         project = review.project
@@ -704,7 +690,6 @@ class ReviewService:
             review_type=Review.ReviewType.CLOSURE,
             review_level=Review.ReviewLevel.LEVEL2,
             phase_instance=phase_instance,
-            review_template_id=node.review_template_id if node else None,
         )
 
     @staticmethod
@@ -743,7 +728,6 @@ class ReviewService:
             review_type=Review.ReviewType.CLOSURE,
             review_level=Review.ReviewLevel.LEVEL1,
             phase_instance=phase_instance,
-            review_template_id=node.review_template_id if node else None,
         )
 
     @staticmethod
@@ -795,9 +779,6 @@ class ReviewService:
             review_type=Review.ReviewType.MID_TERM,
             review_level=Review.ReviewLevel.TEACHER,
             phase_instance=phase_instance,
-            review_template_id=initial_node.review_template_id
-            if initial_node
-            else None,
         )
 
     @staticmethod
@@ -827,9 +808,6 @@ class ReviewService:
             review_type=Review.ReviewType.CLOSURE,
             review_level=Review.ReviewLevel.TEACHER,
             phase_instance=phase_instance,
-            review_template_id=initial_node.review_template_id
-            if initial_node
-            else None,
         )
 
     @staticmethod
@@ -911,9 +889,6 @@ class ReviewService:
                             review_type=review_type,
                             review_level=review_level,
                             reviewer=expert,
-                            review_template_id=node.review_template_id
-                            if node
-                            else None,
                             status=Review.ReviewStatus.PENDING,
                         )
                         created_reviews.append(review)

@@ -10,7 +10,6 @@ from rest_framework import status
 
 from apps.dictionaries.models import DictionaryItem
 from apps.reviews.models import Review
-from apps.reviews.services import ReviewService
 from apps.system_settings.services import SystemSettingService
 
 from ..models import Project, ProjectAchievement
@@ -167,7 +166,10 @@ def _validate_expected_results(project, achievements_data):
             if item:
                 label = item.label
             label = label or type_value
-            return False, f"预期成果未完成：{label} 需{expected_count}项，当前{actual}项"
+            return (
+                False,
+                f"预期成果未完成：{label} 需{expected_count}项，当前{actual}项",
+            )
 
     return True, ""
 
@@ -396,6 +398,8 @@ class ProjectClosureService:
                         status=Review.ReviewStatus.PENDING,
                     ).first()
                     if not existing_review:
+                        from apps.reviews.services import ReviewService
+
                         ReviewService.create_closure_teacher_review(project)
 
                 return (
@@ -498,6 +502,8 @@ class ProjectClosureService:
                         status=Review.ReviewStatus.PENDING,
                     ).first()
                     if not existing_review:
+                        from apps.reviews.services import ReviewService
+
                         ReviewService.create_closure_teacher_review(project)
 
                 return (

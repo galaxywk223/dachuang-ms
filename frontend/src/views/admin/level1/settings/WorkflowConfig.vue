@@ -214,20 +214,7 @@
             <el-option label="退回上一级" value="PREVIOUS" />
           </el-select>
         </el-form-item>
-        <el-form-item label="评审模板">
-          <el-select
-            v-model="nodeForm.review_template"
-            placeholder="可选"
-            clearable
-          >
-            <el-option
-              v-for="item in templates"
-              :key="item.id"
-              :label="item.name"
-              :value="item.id"
-            />
-          </el-select>
-        </el-form-item>
+
         <el-form-item label="注意事项">
           <el-input v-model="nodeForm.notice" type="textarea" :rows="2" />
         </el-form-item>
@@ -254,7 +241,6 @@ import {
   updateWorkflowNode,
   deleteWorkflowNode,
   reorderWorkflowNodes,
-  getReviewTemplates,
 } from "@/api/system-settings";
 import { listProjectBatches } from "@/api/system-settings/batches";
 
@@ -278,14 +264,8 @@ type WorkflowNode = {
   review_level: string;
   scope?: string;
   return_policy?: string;
-  review_template?: number | null;
   notice?: string;
   sort_order?: number;
-};
-
-type ReviewTemplate = {
-  id: number;
-  name: string;
 };
 
 type BatchInfo = {
@@ -331,7 +311,6 @@ const resolveList = <T>(res: unknown): T[] => {
 const workflows = ref<Workflow[]>([]);
 const currentWorkflow = ref<Workflow | null>(null);
 const nodes = ref<WorkflowNode[]>([]);
-const templates = ref<ReviewTemplate[]>([]);
 const batches = ref<BatchInfo[]>([]);
 const saving = ref(false);
 const dragIndex = ref<number | null>(null);
@@ -356,7 +335,6 @@ const nodeForm = ref({
   review_level: "TEACHER",
   scope: "",
   return_policy: "STUDENT",
-  review_template: null as number | null,
   notice: "",
 });
 
@@ -381,13 +359,6 @@ const loadNodes = async (workflowId: number) => {
     | ListResponse<WorkflowNode>
     | WorkflowNode[];
   nodes.value = resolveList<WorkflowNode>(res);
-};
-
-const loadTemplates = async () => {
-  const res = (await getReviewTemplates()) as
-    | ListResponse<ReviewTemplate>
-    | ReviewTemplate[];
-  templates.value = resolveList<ReviewTemplate>(res);
 };
 
 const loadBatches = async () => {
@@ -442,7 +413,6 @@ const openNodeDialog = () => {
     review_level: "TEACHER",
     scope: "",
     return_policy: "STUDENT",
-    review_template: null,
     notice: "",
   };
   nodeDialogVisible.value = true;
@@ -453,7 +423,6 @@ const editNode = (node: WorkflowNode) => {
     ...node,
     scope: node.scope ?? "",
     return_policy: node.return_policy ?? "STUDENT",
-    review_template: node.review_template ?? null,
     notice: node.notice ?? "",
   };
   nodeDialogVisible.value = true;
@@ -510,7 +479,7 @@ const handleDrop = async (index: number) => {
 };
 
 onMounted(async () => {
-  await Promise.all([loadWorkflows(), loadTemplates(), loadBatches()]);
+  await Promise.all([loadWorkflows(), loadBatches()]);
 });
 </script>
 

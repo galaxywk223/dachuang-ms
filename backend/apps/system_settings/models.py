@@ -208,94 +208,6 @@ class WorkflowConfig(models.Model):
         return f"{self.name}({self.phase})"
 
 
-class ReviewTemplate(models.Model):
-    """
-    评审模板（评分项与权重）
-    """
-
-    class Scope(models.TextChoices):
-        COLLEGE = "COLLEGE", "院级"
-        SCHOOL = "SCHOOL", "校级"
-
-    name = models.CharField(max_length=100, verbose_name="模板名称")
-    review_type = models.CharField(max_length=20, verbose_name="评审类型")
-    review_level = models.CharField(max_length=20, verbose_name="评审级别")
-    scope = models.CharField(
-        max_length=20, choices=Scope.choices, default=Scope.COLLEGE, verbose_name="范围"
-    )
-    batch = models.ForeignKey(
-        ProjectBatch,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="review_templates",
-        verbose_name="所属批次",
-    )
-    description = models.TextField(blank=True, default="", verbose_name="模板说明")
-    notice = models.TextField(blank=True, default="", verbose_name="评审注意事项")
-    is_active = models.BooleanField(default=True, verbose_name="是否启用")
-    is_locked = models.BooleanField(default=False, verbose_name="是否锁定")
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="created_review_templates",
-        verbose_name="创建人",
-    )
-    updated_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="updated_review_templates",
-        verbose_name="更新人",
-    )
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
-
-    class Meta:
-        db_table = "review_templates"
-        verbose_name = "评审模板"
-        verbose_name_plural = verbose_name
-        ordering = ["-updated_at"]
-
-    def __str__(self):
-        return self.name
-
-
-class ReviewTemplateItem(models.Model):
-    """
-    评审模板评分项
-    """
-
-    template = models.ForeignKey(
-        ReviewTemplate,
-        on_delete=models.CASCADE,
-        related_name="items",
-        verbose_name="评审模板",
-    )
-    title = models.CharField(max_length=200, verbose_name="评分项")
-    description = models.TextField(blank=True, default="", verbose_name="说明")
-    weight = models.DecimalField(
-        max_digits=5, decimal_places=2, default=0, verbose_name="权重"
-    )
-    max_score = models.IntegerField(default=100, verbose_name="最高分")
-    is_required = models.BooleanField(default=False, verbose_name="是否必填")
-    sort_order = models.IntegerField(default=0, verbose_name="排序")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
-
-    class Meta:
-        db_table = "review_template_items"
-        verbose_name = "评审模板评分项"
-        verbose_name_plural = verbose_name
-        ordering = ["sort_order", "id"]
-
-    def __str__(self):
-        return f"{self.template.name} - {self.title}"
-
-
 class WorkflowNode(models.Model):
     """
     流程节点（支持拖拽排序）
@@ -378,14 +290,6 @@ class WorkflowNode(models.Model):
         blank=True,
         verbose_name="结束日期",
         help_text="该节点必须完成的日期",
-    )
-    review_template = models.ForeignKey(
-        ReviewTemplate,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="workflow_nodes",
-        verbose_name="关联评审模板",
     )
     notice = models.TextField(blank=True, default="", verbose_name="评审注意事项")
     sort_order = models.IntegerField(default=0, verbose_name="排序")

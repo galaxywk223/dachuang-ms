@@ -6,7 +6,6 @@ from rest_framework import serializers
 from ..models import Review
 from apps.projects.serializers import ProjectListSerializer
 from apps.system_settings.services import SystemSettingService
-from apps.system_settings.serializers import ReviewTemplateSerializer
 from .expert import ExpertGroupSerializer
 
 
@@ -16,7 +15,6 @@ class ReviewSerializer(serializers.ModelSerializer):
     """
 
     project_info = serializers.SerializerMethodField()
-    template_info = serializers.SerializerMethodField()
     reviewer_name = serializers.CharField(source="reviewer.real_name", read_only=True)
     review_type_display = serializers.CharField(
         source="get_review_type_display", read_only=True
@@ -35,7 +33,6 @@ class ReviewSerializer(serializers.ModelSerializer):
             "id",
             "project",
             "project_info",
-            "template_info",
             "review_type",
             "review_type_display",
             "review_level",
@@ -49,7 +46,6 @@ class ReviewSerializer(serializers.ModelSerializer):
             "score_details",
             "closure_rating",
             "closure_rating_display",
-            "review_template",
             "created_at",
             "reviewed_at",
         ]
@@ -65,11 +61,6 @@ class ReviewSerializer(serializers.ModelSerializer):
             if not rules.get("show_material_in_closure_review", True):
                 data["proposal_file_url"] = ""
         return data
-
-    def get_template_info(self, obj):
-        if not obj.review_template:
-            return None
-        return ReviewTemplateSerializer(obj.review_template).data
 
 
 class ReviewActionSerializer(serializers.Serializer):

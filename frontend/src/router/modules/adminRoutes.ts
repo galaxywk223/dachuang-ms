@@ -118,13 +118,6 @@ export const adminRoutes: RouteRecordRaw[] = [
             meta: { title: "结题证书" },
           },
           {
-            path: "review-templates",
-            name: "level1-settings-review-templates",
-            component: () =>
-              import("@/views/admin/level1/settings/ReviewTemplates.vue"),
-            meta: { title: "评审模板" },
-          },
-          {
             path: "dictionaries",
             name: "level1-settings-dictionaries",
             component: () =>

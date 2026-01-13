@@ -19,7 +19,6 @@ class WorkflowNodeDef:
     scope: str
     return_policy: str
     allowed_reject_to: List[int]  # 允许退回的目标节点ID列表
-    review_template_id: Optional[int] = None
     role_fk_id: Optional[int] = None  # 角色外键ID
 
 
@@ -210,7 +209,7 @@ class WorkflowService:
             return DEFAULT_WORKFLOWS.get(phase, [])
         nodes = list(
             WorkflowNode.objects.filter(workflow=workflow, is_active=True)
-            .select_related("role_fk", "review_template")
+            .select_related("role_fk")
             .order_by("sort_order", "id")
             .all()
         )
@@ -229,9 +228,6 @@ class WorkflowService:
                 allowed_reject_to=node.allowed_reject_to
                 if isinstance(node.allowed_reject_to, list)
                 else [],
-                review_template_id=node.review_template.id
-                if node.review_template
-                else None,
                 role_fk_id=cast(Any, node).role_fk_id,
             )
             for node in nodes
@@ -241,9 +237,9 @@ class WorkflowService:
     def get_node_by_id(node_id: int) -> Optional[WorkflowNode]:
         """根据ID获取节点对象"""
         try:
-            return WorkflowNode.objects.select_related(
-                "workflow", "role_fk", "review_template"
-            ).get(id=node_id)
+            return WorkflowNode.objects.select_related("workflow", "role_fk").get(
+                id=node_id
+            )
         except WorkflowNode.DoesNotExist:
             return None
 
@@ -333,7 +329,7 @@ class WorkflowService:
             WorkflowNode.objects.filter(
                 id__in=current_node.allowed_reject_to, is_active=True
             )
-            .select_related("role_fk", "review_template")
+            .select_related("role_fk")
             .order_by("sort_order", "id")
         )
 
@@ -350,9 +346,6 @@ class WorkflowService:
                 allowed_reject_to=node.allowed_reject_to
                 if isinstance(node.allowed_reject_to, list)
                 else [],
-                review_template_id=node.review_template.id
-                if node.review_template
-                else None,
                 role_fk_id=cast(Any, node).role_fk_id,
             )
             for node in target_nodes
@@ -384,7 +377,7 @@ class WorkflowService:
                 errors.append("第一个节点必须是学生提交节点（SUBMIT类型）")
 
             # 学生提交节点的角色应该是STUDENT
-            if first_node.get_role_code() == "STUDENT" or first_node.role == "STUDENT":
+            if first_node.get_role_code() == "STUDENT":
                 # 验证学生节点不允许退回
                 if first_node.allowed_reject_to:
                     errors.append("学生提交节点不应允许退回")

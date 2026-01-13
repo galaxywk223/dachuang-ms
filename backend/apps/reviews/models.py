@@ -86,15 +86,6 @@ class Review(models.Model):
         verbose_name="结题评价",
     )
 
-    review_template = models.ForeignKey(
-        "system_settings.ReviewTemplate",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="reviews",
-        verbose_name="评审模板",
-    )
-
     # 时间戳
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
     reviewed_at = models.DateTimeField(null=True, blank=True, verbose_name="审核时间")
@@ -121,7 +112,7 @@ class ExpertGroup(models.Model):
     name = models.CharField(max_length=100, verbose_name="专家组名称")
     members = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
-        limit_choices_to={"role": "EXPERT"},
+        limit_choices_to={"role_fk__code": "EXPERT"},
         related_name="expert_groups",
         verbose_name="专家成员",
     )

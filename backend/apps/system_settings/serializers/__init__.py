@@ -10,8 +10,6 @@ from ..models import (
     ProjectBatch,
     WorkflowConfig,
     WorkflowNode,
-    ReviewTemplate,
-    ReviewTemplateItem,
 )
 
 
@@ -39,7 +37,6 @@ class SystemSettingSerializer(serializers.ModelSerializer):
 
 
 class ProjectBatchSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ProjectBatch
         fields = [
@@ -127,52 +124,6 @@ class CertificateSettingSerializer(serializers.ModelSerializer):
         return self._build_file_url(obj.seal_image)
 
 
-class ReviewTemplateItemSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ReviewTemplateItem
-        fields = [
-            "id",
-            "template",
-            "title",
-            "description",
-            "weight",
-            "max_score",
-            "is_required",
-            "sort_order",
-            "created_at",
-            "updated_at",
-        ]
-        read_only_fields = ["id", "created_at", "updated_at"]
-
-
-class ReviewTemplateSerializer(serializers.ModelSerializer):
-    updated_by_name = serializers.CharField(
-        source="updated_by.real_name", read_only=True
-    )
-    items = ReviewTemplateItemSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = ReviewTemplate
-        fields = [
-            "id",
-            "name",
-            "review_type",
-            "review_level",
-            "scope",
-            "batch",
-            "description",
-            "notice",
-            "is_active",
-            "is_locked",
-            "updated_by",
-            "updated_by_name",
-            "items",
-            "created_at",
-            "updated_at",
-        ]
-        read_only_fields = ["id", "created_at", "updated_at", "updated_by"]
-
-
 class WorkflowNodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = WorkflowNode
@@ -186,7 +137,6 @@ class WorkflowNodeSerializer(serializers.ModelSerializer):
             "review_level",
             "scope",
             "return_policy",
-            "review_template",
             "notice",
             "sort_order",
             "is_active",

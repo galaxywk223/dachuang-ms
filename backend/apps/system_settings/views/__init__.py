@@ -15,8 +15,6 @@ from ..models import (
     ProjectBatch,
     WorkflowConfig,
     WorkflowNode,
-    ReviewTemplate,
-    ReviewTemplateItem,
 )
 from ..serializers import (
     SystemSettingSerializer,
@@ -24,8 +22,6 @@ from ..serializers import (
     ProjectBatchSerializer,
     WorkflowConfigSerializer,
     WorkflowNodeSerializer,
-    ReviewTemplateSerializer,
-    ReviewTemplateItemSerializer,
 )
 from ..services import DEFAULT_SETTINGS, SystemSettingService
 
@@ -169,10 +165,21 @@ class ProjectBatchViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = ProjectBatch.objects.all()
-        if self.action in ["retrieve", "update", "partial_update", "destroy", "set_current", "restore"]:
+        if self.action in [
+            "retrieve",
+            "update",
+            "partial_update",
+            "destroy",
+            "set_current",
+            "restore",
+        ]:
             return queryset
-        include_deleted = str(self.request.query_params.get("include_deleted", "")).lower()
-        include_archived = str(self.request.query_params.get("include_archived", "")).lower()
+        include_deleted = str(
+            self.request.query_params.get("include_deleted", "")
+        ).lower()
+        include_archived = str(
+            self.request.query_params.get("include_archived", "")
+        ).lower()
         if include_deleted not in ["1", "true", "yes"]:
             queryset = queryset.filter(is_deleted=False)
         if include_archived not in ["1", "true", "yes"]:
@@ -260,7 +267,9 @@ class ProjectBatchViewSet(viewsets.ModelViewSet):
         batch.is_deleted = False
         batch.is_current = False
         batch.is_active = True
-        batch.status = ProjectBatch.STATUS_FINISHED if has_projects else ProjectBatch.STATUS_DRAFT
+        batch.status = (
+            ProjectBatch.STATUS_FINISHED if has_projects else ProjectBatch.STATUS_DRAFT
+        )
         batch.save(update_fields=["is_deleted", "is_current", "is_active", "status"])
         serializer = self.get_serializer(batch)
         return Response({"code": 200, "message": "批次已恢复", "data": serializer.data})
@@ -273,7 +282,10 @@ class ProjectBatchViewSet(viewsets.ModelViewSet):
             ProjectBatch.STATUS_ARCHIVED,
         ]:
             return Response(
-                {"code": 400, "message": "当前批次处于进行中/已结束/已归档状态，禁止删除"},
+                {
+                    "code": 400,
+                    "message": "当前批次处于进行中/已结束/已归档状态，禁止删除",
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
         project_exists = Project.objects.filter(batch_id=instance.id).exists()
@@ -282,7 +294,9 @@ class ProjectBatchViewSet(viewsets.ModelViewSet):
             instance.status = ProjectBatch.STATUS_ARCHIVED
             instance.is_current = False
             instance.is_active = False
-            instance.save(update_fields=["is_deleted", "status", "is_current", "is_active"])
+            instance.save(
+                update_fields=["is_deleted", "status", "is_current", "is_active"]
+            )
             return Response({"code": 200, "message": "批次已移入归档"})
         instance.delete()
         return Response({"code": 200, "message": "批次已删除"})
@@ -446,121 +460,13 @@ class WorkflowNodeViewSet(viewsets.ModelViewSet):
                     {"code": 403, "message": "流程配置仅允许在批次草稿状态下修改"},
                     status=status.HTTP_403_FORBIDDEN,
                 )
-        update_map = {int(item["id"]): int(item.get("sort_order", 0) or 0) for item in items if item.get("id")}
+        update_map = {
+            int(item["id"]): int(item.get("sort_order", 0) or 0)
+            for item in items
+            if item.get("id")
+        }
         for node in nodes:
             if node.id in update_map:
                 node.sort_order = update_map[node.id]
                 node.save(update_fields=["sort_order", "updated_at"])
-        return Response({"code": 200, "message": "更新成功"})
-
-
-class ReviewTemplateViewSet(viewsets.ModelViewSet):
-    """
-    评审模板管理
-    """
-
-    queryset = ReviewTemplate.objects.all()
-    serializer_class = ReviewTemplateSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_permissions(self):
-        if self.action in ["list", "retrieve"]:
-            return [IsAuthenticated()]
-        return [IsLevel1Admin()]
-
-    def _check_editable(self, instance):
-        if instance.is_locked:
-            return Response(
-                {"code": 400, "message": "评审模板已锁定，无法修改"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if instance.batch and instance.batch.status != ProjectBatch.STATUS_DRAFT:
-            return Response(
-                {"code": 403, "message": "评审模板仅允许在批次草稿状态下修改"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-        return None
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(created_by=request.user, updated_by=request.user)
-        return Response(
-            {"code": 200, "message": "创建成功", "data": serializer.data},
-            status=status.HTTP_201_CREATED,
-        )
-
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        blocked = self._check_editable(instance)
-        if blocked is not None:
-            return blocked
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(updated_by=request.user)
-        return Response({"code": 200, "message": "更新成功", "data": serializer.data})
-
-
-class ReviewTemplateItemViewSet(viewsets.ModelViewSet):
-    """
-    评审模板评分项管理
-    """
-
-    queryset = ReviewTemplateItem.objects.all()
-    serializer_class = ReviewTemplateItemSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_permissions(self):
-        if self.action in ["list", "retrieve"]:
-            return [IsAuthenticated()]
-        return [IsLevel1Admin()]
-
-    def _check_editable(self, instance):
-        template = instance.template
-        if template.is_locked:
-            return Response(
-                {"code": 400, "message": "评审模板已锁定，无法修改评分项"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if template.batch and template.batch.status != ProjectBatch.STATUS_DRAFT:
-            return Response(
-                {"code": 403, "message": "评审模板仅允许在批次草稿状态下修改"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-        return None
-
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        blocked = self._check_editable(instance)
-        if blocked is not None:
-            return blocked
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response({"code": 200, "message": "更新成功", "data": serializer.data})
-
-    @action(detail=False, methods=["post"], url_path="reorder")
-    def reorder(self, request):
-        items = request.data.get("items", [])
-        if not isinstance(items, list):
-            return Response(
-                {"code": 400, "message": "items必须为数组"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        ids = [item.get("id") for item in items if item.get("id")]
-        rows = ReviewTemplateItem.objects.filter(id__in=ids).select_related("template")
-        if rows.exists():
-            template = rows.first().template
-            if template.is_locked or (
-                template.batch and template.batch.status != ProjectBatch.STATUS_DRAFT
-            ):
-                return Response(
-                    {"code": 403, "message": "评审模板仅允许在批次草稿状态下修改"},
-                    status=status.HTTP_403_FORBIDDEN,
-                )
-        update_map = {int(item["id"]): int(item.get("sort_order", 0) or 0) for item in items if item.get("id")}
-        for row in rows:
-            if row.id in update_map:
-                row.sort_order = update_map[row.id]
-                row.save(update_fields=["sort_order", "updated_at"])
         return Response({"code": 200, "message": "更新成功"})

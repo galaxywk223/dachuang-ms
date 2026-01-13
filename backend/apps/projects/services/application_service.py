@@ -11,7 +11,6 @@ from rest_framework import status
 
 from apps.dictionaries.models import DictionaryItem
 from apps.reviews.models import Review
-from apps.reviews.services import ReviewService
 from apps.system_settings.services import SystemSettingService
 
 from ..models import Project, ProjectAdvisor, ProjectMember, ProjectPhaseInstance
@@ -178,6 +177,7 @@ def _get_or_create_user_by_identity(
     """
     User = get_user_model()
     from apps.users.models import Role
+
     user = None
     if employee_id:
         user = User.objects.filter(employee_id=employee_id).first()
@@ -366,6 +366,8 @@ class ProjectApplicationService:
                             ProjectPhaseInstance.Phase.APPLICATION,
                             created_by=request.user,
                         )
+                    from apps.reviews.services import ReviewService
+
                     ReviewService.create_teacher_review(project)
 
                 project.advisors.all().delete()
@@ -565,6 +567,8 @@ class ProjectApplicationService:
                             ProjectPhaseInstance.Phase.APPLICATION,
                             created_by=request.user,
                         )
+                    from apps.reviews.services import ReviewService
+
                     ReviewService.create_teacher_review(project)
 
                 project.advisors.all().delete()
