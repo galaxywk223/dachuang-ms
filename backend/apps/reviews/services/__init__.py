@@ -837,19 +837,26 @@ class ReviewService:
         """
         获取管理员的待审核列表
         """
+        # 排除已结题、已完成、已终止的项目
+        excluded_statuses = [
+            Project.ProjectStatus.CLOSED,
+            Project.ProjectStatus.COMPLETED,
+            Project.ProjectStatus.TERMINATED,
+        ]
+
         if admin_user.is_level2_admin:
             return Review.objects.filter(
                 project__leader__college=admin_user.college,
                 review_level=Review.ReviewLevel.LEVEL2,
                 status=Review.ReviewStatus.PENDING,
                 reviewer__isnull=True,
-            )
+            ).exclude(project__status__in=excluded_statuses)
         elif admin_user.is_level1_admin:
             return Review.objects.filter(
                 review_level=Review.ReviewLevel.LEVEL1,
                 status=Review.ReviewStatus.PENDING,
                 reviewer__isnull=True,
-            )
+            ).exclude(project__status__in=excluded_statuses)
         return Review.objects.none()
 
     @staticmethod

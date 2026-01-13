@@ -37,17 +37,23 @@ class ProjectSerializer(serializers.ModelSerializer):
             return super().to_internal_value(data)
 
     leader_name = serializers.CharField(source="leader.real_name", read_only=True)
-    leader_student_id = serializers.CharField(source="leader.employee_id", read_only=True)
+    leader_student_id = serializers.CharField(
+        source="leader.employee_id", read_only=True
+    )
     members_info = ProjectMemberSerializer(
         source="projectmember_set", many=True, read_only=True
     )
-    advisors_info = ProjectAdvisorSerializer(source="advisors", many=True, read_only=True)
+    advisors_info = ProjectAdvisorSerializer(
+        source="advisors", many=True, read_only=True
+    )
     status_display = serializers.CharField(source="get_status_display", read_only=True)
     level_display = serializers.CharField(source="level.label", read_only=True)
     category_display = serializers.CharField(source="category.label", read_only=True)
     source_display = serializers.CharField(source="source.label", read_only=True)
     college = serializers.SerializerMethodField()
-    major_code = serializers.CharField(source="leader.major", read_only=True, allow_blank=True)
+    major_code = serializers.CharField(
+        source="leader.major", read_only=True, allow_blank=True
+    )
     leader_contact = serializers.CharField(
         source="leader.phone", read_only=True, allow_blank=True
     )
@@ -84,15 +90,6 @@ class ProjectSerializer(serializers.ModelSerializer):
         queryset=DictionaryItem.objects.filter(dict_type__code="project_source"),
         required=False,
         allow_null=True,
-    )
-    discipline = serializers.SlugRelatedField(  # type: ignore[assignment]
-        slug_field="value",
-        queryset=DictionaryItem.objects.filter(dict_type__code="discipline"),
-        required=False,
-        allow_null=True,
-    )
-    discipline_display = serializers.CharField(
-        source="discipline.label", read_only=True
     )
     achievements_count = serializers.SerializerMethodField()
     batch_name = serializers.SerializerMethodField()
@@ -150,8 +147,6 @@ class ProjectSerializer(serializers.ModelSerializer):
             "category_display",
             "source",
             "source_display",
-            "discipline",
-            "discipline_display",
             "leader",
             "leader_name",
             "leader_student_id",
@@ -349,16 +344,23 @@ class ProjectSerializer(serializers.ModelSerializer):
                 )
 
                 if not allow_active_reapply and not is_draft:
-                    active_projects_count = Project.objects.filter(leader=user).exclude(
-                        status__in=[
-                            Project.ProjectStatus.DRAFT,
-                            Project.ProjectStatus.CLOSED,
-                            Project.ProjectStatus.COMPLETED,
-                            Project.ProjectStatus.TEACHER_REJECTED,
-                            Project.ProjectStatus.TERMINATED,
-                        ]
-                    ).count()
-                    if max_student_active and active_projects_count >= max_student_active:
+                    active_projects_count = (
+                        Project.objects.filter(leader=user)
+                        .exclude(
+                            status__in=[
+                                Project.ProjectStatus.DRAFT,
+                                Project.ProjectStatus.CLOSED,
+                                Project.ProjectStatus.COMPLETED,
+                                Project.ProjectStatus.TEACHER_REJECTED,
+                                Project.ProjectStatus.TERMINATED,
+                            ]
+                        )
+                        .count()
+                    )
+                    if (
+                        max_student_active
+                        and active_projects_count >= max_student_active
+                    ):
                         raise serializers.ValidationError(
                             "您已有在研或审核中的项目，在校期间限报一项。"
                         )
@@ -385,6 +387,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             title_regex = validation_rules.get("title_regex") or ""
             if title_regex:
                 import re
+
                 if title and not re.match(title_regex, title):
                     raise serializers.ValidationError("项目名称格式不符合要求")
 
@@ -413,22 +416,34 @@ class ProjectSerializer(serializers.ModelSerializer):
             leader = attrs.get("leader") or (request.user if request else None)
             college_code = leader.college if leader else ""
             allowed_types = validation_rules.get("allowed_project_types") or []
-            allowed_by_college = validation_rules.get("allowed_project_types_by_college") or {}
-            allowed_levels_by_college = validation_rules.get("allowed_levels_by_college") or {}
-            if allowed_types and attrs.get("category") and attrs.get("category").value not in allowed_types:
+            allowed_by_college = (
+                validation_rules.get("allowed_project_types_by_college") or {}
+            )
+            allowed_levels_by_college = (
+                validation_rules.get("allowed_levels_by_college") or {}
+            )
+            if (
+                allowed_types
+                and attrs.get("category")
+                and attrs.get("category").value not in allowed_types
+            ):
                 raise serializers.ValidationError("项目类别不符合申报要求")
             if college_code and allowed_by_college:
                 college_allowed = allowed_by_college.get(college_code) or []
-                if college_allowed and attrs.get("category") and attrs.get("category").value not in college_allowed:
+                if (
+                    college_allowed
+                    and attrs.get("category")
+                    and attrs.get("category").value not in college_allowed
+                ):
                     raise serializers.ValidationError("当前学院不允许申报该类别")
             if college_code and allowed_levels_by_college:
                 level_allowed = allowed_levels_by_college.get(college_code) or []
-                if level_allowed and attrs.get("level") and attrs.get("level").value not in level_allowed:
+                if (
+                    level_allowed
+                    and attrs.get("level")
+                    and attrs.get("level").value not in level_allowed
+                ):
                     raise serializers.ValidationError("当前学院不允许申报该级别")
-            if validation_rules.get("discipline_required"):
-                discipline = attrs.get("discipline") or (self.instance.discipline if self.instance else None)
-                if not discipline:
-                    raise serializers.ValidationError({"discipline": "学科分类为必填项"})
 
         instance = getattr(self, "instance", None)
         next_is_key_field = attrs.get(
@@ -461,7 +476,9 @@ class ProjectSerializer(serializers.ModelSerializer):
         if not validated_data.get("project_no"):
             request = self.context.get("request")
             leader = validated_data.get("leader") or (request.user if request else None)
-            batch = validated_data.get("batch") or SystemSettingService.get_current_batch()
+            batch = (
+                validated_data.get("batch") or SystemSettingService.get_current_batch()
+            )
             if batch and not validated_data.get("batch"):
                 validated_data["batch"] = batch
             year = validated_data.get("year") or (
@@ -482,14 +499,15 @@ class ProjectListSerializer(serializers.ModelSerializer):
     """
 
     leader_name = serializers.CharField(source="leader.real_name", read_only=True)
-    leader_student_id = serializers.CharField(source="leader.employee_id", read_only=True)
+    leader_student_id = serializers.CharField(
+        source="leader.employee_id", read_only=True
+    )
     leader_contact = serializers.CharField(source="leader.phone", read_only=True)
     leader_email = serializers.CharField(source="leader.email", read_only=True)
     college = serializers.SerializerMethodField()
     status_display = serializers.CharField(source="get_status_display", read_only=True)
     level_display = serializers.SerializerMethodField()
     category_display = serializers.SerializerMethodField()
-    discipline_display = serializers.CharField(source="discipline.label", read_only=True)
     proposal_file_url = serializers.SerializerMethodField()
     contract_file_url = serializers.SerializerMethodField()
     task_book_file_url = serializers.SerializerMethodField()
@@ -511,8 +529,6 @@ class ProjectListSerializer(serializers.ModelSerializer):
             "level_display",
             "category",
             "category_display",
-            "discipline",
-            "discipline_display",
             "leader",
             "leader_name",
             "leader_student_id",

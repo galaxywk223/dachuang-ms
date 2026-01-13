@@ -7,7 +7,9 @@
             <span class="header-title">统计概览</span>
           </div>
           <div class="header-actions">
-            <el-button type="primary" plain @click="refreshAll">刷新数据</el-button>
+            <el-button type="primary" plain @click="refreshAll"
+              >刷新数据</el-button
+            >
           </div>
         </div>
       </template>
@@ -41,237 +43,140 @@
         </el-row>
       </div>
 
-    <el-tabs v-model="activeTab" class="mt-4">
-      <el-tab-pane label="导入与归档" name="import">
-        <el-card class="tool-card">
-          <template #header>
-            <span class="title">历史项目导入</span>
-          </template>
-            <div class="import-container">
-              <div class="import-actions">
-                <el-upload
-                  ref="uploadRef"
-                  class="upload-demo"
-                  :auto-upload="false"
-                  :on-change="handleFileChange"
-                  :on-remove="handleFileRemove"
-                  :limit="1"
-                  :show-file-list="true"
-                  accept=".xlsx"
-                >
-                  <template #trigger>
-                    <el-button type="primary" plain>选择Excel文件</el-button>
+      <el-card class="tool-card mt-4">
+        <template #header>
+          <div class="card-header">
+            <span class="title">项目统计报表</span>
+            <el-button type="primary" plain @click="fetchReport"
+              >刷新</el-button
+            >
+          </div>
+        </template>
+        <el-form inline label-position="left" class="mb-2">
+          <el-form-item label="年度">
+            <el-input
+              v-model="reportFilters.year"
+              placeholder="如 2025"
+              style="width: 140px"
+            />
+          </el-form-item>
+          <el-form-item label="学院代码">
+            <el-input
+              v-model="reportFilters.college"
+              placeholder="学院代码"
+              style="width: 160px"
+            />
+          </el-form-item>
+          <el-form-item label="状态筛选">
+            <el-input
+              v-model="reportFilters.status_in"
+              placeholder="逗号分隔"
+              style="width: 220px"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="fetchReport">查询</el-button>
+            <el-button @click="resetReport">重置</el-button>
+          </el-form-item>
+        </el-form>
+
+        <el-row :gutter="16" class="mb-4">
+          <el-col :span="6">
+            <el-statistic title="项目总数" :value="reportData.total" />
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-card shadow="never" class="inner-card">
+              <template #header><span class="title">按状态</span></template>
+              <el-table :data="reportData.by_status" border stripe size="small">
+                <el-table-column prop="status" label="状态" />
+                <el-table-column
+                  prop="count"
+                  label="数量"
+                  width="100"
+                  align="center"
+                />
+              </el-table>
+            </el-card>
+          </el-col>
+          <el-col :span="12">
+            <el-card shadow="never" class="inner-card">
+              <template #header><span class="title">按学院</span></template>
+              <el-table
+                :data="reportData.by_college"
+                border
+                stripe
+                size="small"
+              >
+                <el-table-column prop="leader__college" label="学院">
+                  <template #default="{ row }">
+                    {{ getCollegeLabel(row.leader__college) }}
                   </template>
-                  <el-button 
-                    class="ml-3" 
-                    type="success" 
-                    :loading="importing" 
-                    :disabled="!importFile"
-                    @click="submitImport"
-                  >
-                    开始导入
-                  </el-button>
-                  <template #tip>
-                    <div class="el-upload__tip text-gray-400">
-                      仅支持 .xlsx 格式文件，请确保表头格式正确
-                    </div>
-                  </template>
-                </el-upload>
-              </div>
-            </div>
-          <el-alert v-if="importResult" :title="importResult" type="info" show-icon class="mt-2" />
-          <el-table v-if="importErrors.length > 0" :data="importErrorRows" border stripe class="mt-2">
-            <el-table-column prop="message" label="导入错误提示" />
-          </el-table>
-        </el-card>
+                </el-table-column>
+                <el-table-column
+                  prop="count"
+                  label="数量"
+                  width="100"
+                  align="center"
+                />
+              </el-table>
+            </el-card>
+          </el-col>
+        </el-row>
 
-        <el-card v-if="showProjectNoTool" class="tool-card mt-4">
-          <template #header>
-            <div class="card-header">
-              <span class="title">结题归档</span>
-              <el-button type="primary" plain :loading="archiving" @click="archiveClosed">归档已结题项目</el-button>
-            </div>
-          </template>
-          <el-table :data="archiveRecords" border stripe>
-            <el-table-column prop="project_no" label="项目编号" width="140" />
-            <el-table-column prop="project_title" label="项目名称" min-width="200" show-overflow-tooltip />
-            <el-table-column prop="archived_at" label="归档时间" width="180">
-              <template #default="{ row }">{{ formatDate(row.archived_at) }}</template>
-            </el-table-column>
-            <el-table-column label="附件数" width="100" align="center">
-              <template #default="{ row }">{{ row.attachments?.length || 0 }}</template>
-            </el-table-column>
-          </el-table>
-        </el-card>
-
-        <el-card class="tool-card mt-4">
-          <template #header>
-            <div class="card-header">
-              <span class="title">项目编号工具</span>
-              <div class="actions">
-                <el-button type="primary" plain @click="exportProjectNos">导出编号清单</el-button>
-                <el-button
-                  v-if="showProjectNoTool"
-                  type="warning"
-                  plain
-                  @click="fetchDuplicateNos"
-                >
-                  编号查重
-                </el-button>
-              </div>
-            </div>
-          </template>
-          <el-table v-if="showProjectNoTool" :data="duplicateNos" border stripe>
-            <el-table-column prop="project_no" label="重复编号" width="200" />
-            <el-table-column prop="cnt" label="重复数量" width="100" />
-          </el-table>
-        </el-card>
-      </el-tab-pane>
-
-      <el-tab-pane label="外部推送" name="push">
-        <el-card class="tool-card">
-          <template #header>
-            <span class="title">项目数据推送</span>
-          </template>
-          <el-form label-width="120px" label-position="top">
-            <el-form-item label="项目ID列表">
-              <el-input
-                v-model="pushForm.projectIds"
-                type="textarea"
-                :rows="3"
-                placeholder="请输入项目ID，用英文逗号分隔"
-              />
-            </el-form-item>
-            <el-form-item label="目标平台">
-              <el-select v-model="pushForm.target" placeholder="请选择平台" style="width: 260px">
-                <el-option label="安徽省大创平台" value="ANHUI_INNOVATION_PLATFORM" />
-                <el-option label="国家大创平台" value="NATIONAL_INNOVATION_PLATFORM" />
-              </el-select>
-            </el-form-item>
-            <el-form-item>
-              <el-checkbox v-model="pushForm.simulate">模拟推送</el-checkbox>
-            </el-form-item>
-            <el-form-item>
-              <el-button type="primary" :loading="pushing" @click="submitPush">创建推送任务</el-button>
-            </el-form-item>
-          </el-form>
-        </el-card>
-
-        <el-card class="tool-card mt-4">
-          <template #header>
-            <div class="card-header">
-              <span class="title">推送记录</span>
-              <el-button type="primary" plain @click="fetchPushRecords">刷新记录</el-button>
-            </div>
-          </template>
-          <el-table :data="pushRecords" border stripe>
-            <el-table-column prop="project_no" label="项目编号" width="140" />
-            <el-table-column prop="project_title" label="项目名称" min-width="200" show-overflow-tooltip />
-            <el-table-column prop="target" label="目标平台" width="180" />
-            <el-table-column prop="status_display" label="状态" width="120" />
-            <el-table-column prop="created_at" label="创建时间" width="180">
-              <template #default="{ row }">{{ formatDate(row.created_at) }}</template>
-            </el-table-column>
-            <el-table-column prop="response_message" label="响应信息" min-width="200" show-overflow-tooltip />
-          </el-table>
-        </el-card>
-      </el-tab-pane>
-
-      <el-tab-pane label="统计报表" name="report">
-        <el-card class="tool-card">
-          <template #header>
-            <div class="card-header">
-              <span class="title">项目统计报表</span>
-              <el-button type="primary" plain @click="fetchReport">刷新</el-button>
-            </div>
-          </template>
-          <el-form inline label-position="left" class="mb-2">
-            <el-form-item label="年度">
-              <el-input v-model="reportFilters.year" placeholder="如 2025" style="width: 140px" />
-            </el-form-item>
-            <el-form-item label="学院代码">
-              <el-input v-model="reportFilters.college" placeholder="学院代码" style="width: 160px" />
-            </el-form-item>
-            <el-form-item label="状态筛选">
-              <el-input v-model="reportFilters.status_in" placeholder="逗号分隔" style="width: 220px" />
-            </el-form-item>
-            <el-form-item>
-              <el-button type="primary" @click="fetchReport">查询</el-button>
-              <el-button @click="resetReport">重置</el-button>
-            </el-form-item>
-          </el-form>
-
-          <el-row :gutter="16" class="mb-4">
-            <el-col :span="6">
-              <el-statistic title="项目总数" :value="reportData.total" />
-            </el-col>
-          </el-row>
-
-          <el-row :gutter="16">
-            <el-col :span="12">
-              <el-card shadow="never" class="inner-card">
-                <template #header><span class="title">按状态</span></template>
-                <el-table :data="reportData.by_status" border stripe size="small">
-                  <el-table-column prop="status" label="状态" />
-                  <el-table-column prop="count" label="数量" width="100" align="center" />
-                </el-table>
-              </el-card>
-            </el-col>
-            <el-col :span="12">
-              <el-card shadow="never" class="inner-card">
-                <template #header><span class="title">按学院</span></template>
-                <el-table :data="reportData.by_college" border stripe size="small">
-                  <el-table-column prop="leader__college" label="学院" />
-                  <el-table-column prop="count" label="数量" width="100" align="center" />
-                </el-table>
-              </el-card>
-            </el-col>
-          </el-row>
-
-          <el-row :gutter="16" class="mt-4">
-            <el-col :span="12">
-              <el-card shadow="never" class="inner-card">
-                <template #header><span class="title">按级别</span></template>
-                <el-table :data="reportData.by_level" border stripe size="small">
-                  <el-table-column prop="level__label" label="级别" />
-                  <el-table-column prop="count" label="数量" width="100" align="center" />
-                </el-table>
-              </el-card>
-            </el-col>
-            <el-col :span="12">
-              <el-card shadow="never" class="inner-card">
-                <template #header><span class="title">按类别</span></template>
-                <el-table :data="reportData.by_category" border stripe size="small">
-                  <el-table-column prop="category__label" label="类别" />
-                  <el-table-column prop="count" label="数量" width="100" align="center" />
-                </el-table>
-              </el-card>
-            </el-col>
-          </el-row>
-        </el-card>
-      </el-tab-pane>
-    </el-tabs>
+        <el-row :gutter="16" class="mt-4">
+          <el-col :span="12">
+            <el-card shadow="never" class="inner-card">
+              <template #header><span class="title">按级别</span></template>
+              <el-table :data="reportData.by_level" border stripe size="small">
+                <el-table-column prop="level__label" label="级别" />
+                <el-table-column
+                  prop="count"
+                  label="数量"
+                  width="100"
+                  align="center"
+                />
+              </el-table>
+            </el-card>
+          </el-col>
+          <el-col :span="12">
+            <el-card shadow="never" class="inner-card">
+              <template #header><span class="title">按类别</span></template>
+              <el-table
+                :data="reportData.by_category"
+                border
+                stripe
+                size="small"
+              >
+                <el-table-column prop="category__label" label="类别" />
+                <el-table-column
+                  prop="count"
+                  label="数量"
+                  width="100"
+                  align="center"
+                />
+              </el-table>
+            </el-card>
+          </el-col>
+        </el-row>
+      </el-card>
     </el-card>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from "vue";
-import { ElMessage, type UploadFile, type UploadInstance } from "element-plus";
+import { ref, reactive, onMounted } from "vue";
+import { ElMessage } from "element-plus";
 import { Folder, Check, Clock } from "@element-plus/icons-vue";
 import StatCard from "@/components/common/StatCard.vue";
-import { useUserStore } from "@/stores/user";
 import {
   getProjectStatistics,
   getProjectStatisticsReport,
-  importHistoryProjects,
-  archiveClosedProjects,
-  pushProjectsExternal,
-  getPushRecords,
-  getArchives,
-  exportProjectNumbers,
-  getDuplicateProjectNumbers,
 } from "@/api/projects/admin";
+import { useDictionary } from "@/composables/useDictionary";
+import { DICT_CODES } from "@/api/dictionaries";
 import dayjs from "dayjs";
 
 defineOptions({
@@ -282,27 +187,6 @@ type StatsSummary = {
   total_projects: number;
   approved_projects: number;
   pending_review: number;
-};
-
-type ArchiveRecord = {
-  project_no?: string;
-  project_title?: string;
-  archived_at?: string;
-  attachments?: unknown[];
-};
-
-type PushRecord = {
-  project_no?: string;
-  project_title?: string;
-  target?: string;
-  status_display?: string;
-  created_at?: string;
-  response_message?: string;
-};
-
-type DuplicateNo = {
-  project_no?: string;
-  cnt?: number;
 };
 
 type ReportRow = {
@@ -323,53 +207,18 @@ type ApiResponse<T> = {
   message?: string;
 };
 
-const toBlob = (value: unknown, fallbackType: string) => {
-  if (value instanceof Blob) return value;
-  if (value instanceof ArrayBuffer) return new Blob([value], { type: fallbackType });
-  if (typeof value === "string") return new Blob([value], { type: fallbackType });
-  return new Blob([JSON.stringify(value ?? "")], { type: fallbackType });
-};
+const { getLabel, loadDictionaries } = useDictionary();
 
-const getErrorMessage = (error: unknown, fallback: string) => {
-  if (error instanceof Error) {
-    return error.message || fallback;
-  }
-  if (typeof error === "string") {
-    return error || fallback;
-  }
-  return fallback;
-};
-
-const activeTab = ref("import");
 const stats = reactive<StatsSummary>({
   total_projects: 0,
   approved_projects: 0,
   pending_review: 0,
 });
-const userStore = useUserStore();
-const userRole = computed(() =>
-  String(userStore.user?.role || localStorage.getItem("user_role") || "").toLowerCase()
-);
-const showProjectNoTool = computed(() => userRole.value !== "level1_admin");
 
-const importing = ref(false);
-const importFile = ref<File | null>(null);
-const importResult = ref("");
-const importErrors = ref<string[]>([]);
-const importErrorRows = ref<{ message: string }[]>([]);
-const uploadRef = ref<UploadInstance>();
-
-const archiving = ref(false);
-const archiveRecords = ref<ArchiveRecord[]>([]);
-
-const pushing = ref(false);
-const pushRecords = ref<PushRecord[]>([]);
-const pushForm = reactive({
-  projectIds: "",
-  target: "ANHUI_INNOVATION_PLATFORM",
-  simulate: true,
-});
-const duplicateNos = ref<DuplicateNo[]>([]);
+const getCollegeLabel = (collegeCode?: string) => {
+  if (!collegeCode) return "-";
+  return getLabel(DICT_CODES.COLLEGE, collegeCode);
+};
 
 const reportFilters = reactive({
   year: "",
@@ -385,18 +234,15 @@ const reportData = reactive<ReportData>({
   by_category: [],
 });
 
-const formatDate = (date?: string) => {
-  if (!date) return "-";
-  return dayjs(date).format("YYYY-MM-DD HH:mm");
-};
-
 const fetchReport = async () => {
   try {
     const params: Record<string, string> = {};
     if (reportFilters.year) params.year = reportFilters.year;
     if (reportFilters.college) params.college = reportFilters.college;
     if (reportFilters.status_in) params.status_in = reportFilters.status_in;
-    const res = (await getProjectStatisticsReport(params)) as ApiResponse<ReportData>;
+    const res = (await getProjectStatisticsReport(
+      params
+    )) as ApiResponse<ReportData>;
     const data = res?.data;
     reportData.total = data?.total ?? 0;
     reportData.by_status = data?.by_status ?? [];
@@ -426,160 +272,13 @@ const fetchStatistics = async () => {
   }
 };
 
-const fetchArchives = async () => {
-  try {
-    const res = (await getArchives()) as ApiResponse<ArchiveRecord[]>;
-    if (res.code === 200) {
-      archiveRecords.value = res.data || [];
-    }
-  } catch {
-    ElMessage.error("获取归档记录失败");
-  }
-};
-
-const fetchPushRecords = async () => {
-  try {
-    const res = (await getPushRecords()) as ApiResponse<PushRecord[]>;
-    if (res.code === 200) {
-      pushRecords.value = res.data || [];
-    }
-  } catch {
-    ElMessage.error("获取推送记录失败");
-  }
-};
-
-const handleFileChange = (file: UploadFile) => {
-  importFile.value = file.raw || null;
-};
-
-const handleFileRemove = () => {
-  importFile.value = null;
-};
-
-const submitImport = async () => {
-  if (!importFile.value) {
-    ElMessage.warning("请先选择文件");
-    return;
-  }
-  importing.value = true;
-  try {
-    const formData = new FormData();
-    formData.append("file", importFile.value);
-    const res = (await importHistoryProjects(formData)) as ApiResponse<{
-      created?: number;
-      errors?: string[];
-    }>;
-    if (res.code === 200) {
-      importResult.value = `导入完成：新增 ${res.data?.created || 0} 条`;
-      importErrors.value = res.data?.errors || [];
-      importErrorRows.value = importErrors.value.map((message) => ({ message }));
-      fetchStatistics();
-    }
-  } catch (error: unknown) {
-    importResult.value = "导入失败";
-    importErrors.value = [];
-    importErrorRows.value = [];
-    ElMessage.error(getErrorMessage(error, "导入失败"));
-  } finally {
-    importing.value = false;
-    if (uploadRef.value) {
-      uploadRef.value.clearFiles();
-    }
-    importFile.value = null;
-  }
-};
-
-const downloadFile = (blob: Blob, filename: string) => {
-  const url = window.URL.createObjectURL(new Blob([blob]));
-  const link = document.createElement("a");
-  link.href = url;
-  link.setAttribute("download", filename);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
-
-const archiveClosed = async () => {
-  archiving.value = true;
-  try {
-    const res = (await archiveClosedProjects()) as ApiResponse<{ created?: number }>;
-    if (res.code === 200) {
-      ElMessage.success(`归档完成：新增 ${res.data?.created || 0} 条`);
-      fetchArchives();
-    }
-  } catch (error: unknown) {
-    ElMessage.error(getErrorMessage(error, "归档失败"));
-  } finally {
-    archiving.value = false;
-  }
-};
-
-const exportProjectNos = async () => {
-  try {
-    const res = await exportProjectNumbers();
-    const blob = toBlob(res, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    downloadFile(blob, "项目编号清单.xlsx");
-    ElMessage.success("导出成功");
-  } catch (error: unknown) {
-    ElMessage.error(getErrorMessage(error, "导出失败"));
-  }
-};
-
-const fetchDuplicateNos = async () => {
-  try {
-    const res = (await getDuplicateProjectNumbers()) as ApiResponse<DuplicateNo[]>;
-    if (res.code === 200) {
-      duplicateNos.value = res.data || [];
-    }
-  } catch {
-    ElMessage.error("查重失败");
-  }
-};
-
-const submitPush = async () => {
-  const ids = pushForm.projectIds
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .map((item) => Number(item))
-    .filter((id) => !Number.isNaN(id));
-
-  if (ids.length === 0) {
-    ElMessage.warning("请输入有效的项目ID");
-    return;
-  }
-
-  pushing.value = true;
-  try {
-    const res = (await pushProjectsExternal({
-      project_ids: ids,
-      target: pushForm.target,
-      simulate: pushForm.simulate,
-    })) as ApiResponse<unknown>;
-    if (res.code === 200) {
-      ElMessage.success("推送任务已创建");
-      fetchPushRecords();
-    }
-  } catch (error: unknown) {
-    ElMessage.error(getErrorMessage(error, "推送失败"));
-  } finally {
-    pushing.value = false;
-  }
-};
-
 const refreshAll = () => {
   fetchStatistics();
-  fetchArchives();
-  fetchPushRecords();
-  if (showProjectNoTool.value) {
-    fetchDuplicateNos();
-  } else {
-    duplicateNos.value = [];
-  }
   fetchReport();
 };
 
-onMounted(() => {
+onMounted(async () => {
+  await loadDictionaries([DICT_CODES.COLLEGE]);
   refreshAll();
 });
 </script>
@@ -594,9 +293,9 @@ onMounted(() => {
 .main-card {
   border-radius: 8px;
   :deep(.el-card__header) {
-      padding: 16px 20px;
-      font-weight: 600;
-      border-bottom: 1px solid $color-border-light;
+    padding: 16px 20px;
+    font-weight: 600;
+    border-bottom: 1px solid $color-border-light;
   }
 }
 
@@ -607,18 +306,18 @@ onMounted(() => {
 }
 
 .header-left {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .header-title {
-    font-size: 16px;
-    color: $slate-800;
+  font-size: 16px;
+  color: $slate-800;
 }
 
 .header-actions {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .inner-card {
@@ -629,48 +328,28 @@ onMounted(() => {
 }
 
 .stats-summary {
-    margin-bottom: 24px;
+  margin-bottom: 24px;
 }
 
 .tool-card {
-    margin-top: 12px;
-}
-
-.import-container {
-  padding: 10px 0;
-}
-
-.import-actions {
-  display: flex;
-  align-items: flex-start;
-}
-
-.upload-demo {
-  :deep(.el-upload) {
-    display: inline-flex;
-    align-items: center;
-    margin-right: 12px;
-  }
-  :deep(.el-upload-list) {
-    margin-top: 8px;
-  }
+  margin-top: 12px;
 }
 
 .tool-row {
-    display: flex;
-    align-items: center;
-    gap: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .actions {
-    display: flex;
-    gap: 12px;
+  display: flex;
+  gap: 12px;
 }
 
-.ml-3 { margin-left: 12px; }
-.text-gray-400 { color: #94a3b8; font-size: 13px; margin-top: 4px; }
-
-.mt-2 { margin-top: 8px; }
-.mb-4 { margin-bottom: 16px; }
-.mt-4 { margin-top: 16px; }
+.mb-4 {
+  margin-bottom: 16px;
+}
+.mt-4 {
+  margin-top: 16px;
+}
 </style>

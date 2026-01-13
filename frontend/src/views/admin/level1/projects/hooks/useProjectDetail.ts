@@ -1,6 +1,11 @@
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { ElMessage, type FormInstance, type FormRules, type UploadFile } from "element-plus";
+import {
+  ElMessage,
+  type FormInstance,
+  type FormRules,
+  type UploadFile,
+} from "element-plus";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionaries";
 import { getAdminProjectDetail, updateProjectInfo } from "@/api/projects/admin";
@@ -36,7 +41,6 @@ type ProjectForm = {
   source: string;
   level: string;
   category: string;
-  discipline: string;
   is_key_field: boolean;
   key_field_code: string;
   title: string;
@@ -70,7 +74,11 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (!isRecord(error)) return fallback;
   const response = error.response;
-  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === "string") {
+  if (
+    isRecord(response) &&
+    isRecord(response.data) &&
+    typeof response.data.message === "string"
+  ) {
     return response.data.message;
   }
   if (typeof error.message === "string") return error.message;
@@ -93,7 +101,6 @@ export function useProjectDetail() {
     source: "",
     level: "",
     category: "",
-    discipline: "",
     is_key_field: false,
     key_field_code: "",
     title: "",
@@ -125,17 +132,22 @@ export function useProjectDetail() {
   const rules: FormRules = {
     title: [{ required: true, message: "请输入项目名称", trigger: "blur" }],
     level: [{ required: true, message: "请选择项目级别", trigger: "change" }],
-    category: [{ required: true, message: "请选择项目类别", trigger: "change" }],
+    category: [
+      { required: true, message: "请选择项目类别", trigger: "change" },
+    ],
   };
 
   const levelOptions = computed(() => getOptions(DICT_CODES.PROJECT_LEVEL));
-  const categoryOptions = computed(() => getOptions(DICT_CODES.PROJECT_CATEGORY));
+  const categoryOptions = computed(() =>
+    getOptions(DICT_CODES.PROJECT_CATEGORY)
+  );
   const sourceOptions = computed(() => getOptions(DICT_CODES.PROJECT_SOURCE));
   const collegeOptions = computed(() => getOptions(DICT_CODES.COLLEGE));
   const majorOptions = computed(() => getOptions(DICT_CODES.MAJOR_CATEGORY));
-  const disciplineOptions = computed(() => getOptions(DICT_CODES.DISCIPLINE));
   const keyFieldOptions = computed(() => getOptions(DICT_CODES.KEY_FIELD_CODE));
-  const advisorTitleOptions = computed(() => getOptions(DICT_CODES.ADVISOR_TITLE));
+  const advisorTitleOptions = computed(() =>
+    getOptions(DICT_CODES.ADVISOR_TITLE)
+  );
 
   const keyFieldCascaderOptions = computed(() => {
     const children = (keyFieldOptions.value as OptionItem[]).map((opt) => ({
@@ -203,8 +215,12 @@ export function useProjectDetail() {
     }
     pageLoading.value = true;
     try {
-      const res = (await getAdminProjectDetail(id)) as ProjectDetailResponse | Record<string, unknown>;
-      const data = (isRecord(res) && "data" in res ? res.data : res) as Record<string, unknown> | undefined;
+      const res = (await getAdminProjectDetail(id)) as
+        | ProjectDetailResponse
+        | Record<string, unknown>;
+      const data = (isRecord(res) && "data" in res ? res.data : res) as
+        | Record<string, unknown>
+        | undefined;
       if (!data || !isRecord(data)) {
         throw new Error("数据为空");
       }
@@ -214,9 +230,10 @@ export function useProjectDetail() {
       form.source = String(data.source || "");
       form.level = String(data.level || "");
       form.category = String(data.category || "");
-      form.discipline = String(data.discipline || "");
       form.is_key_field = !!data.is_key_field;
-      form.key_field_code = String(data.key_domain_code || data.key_field_code || "");
+      form.key_field_code = String(
+        data.key_domain_code || data.key_field_code || ""
+      );
       form.title = String(data.title || "");
       form.budget = Number(data.budget || 0);
       form.approved_budget =
@@ -226,7 +243,9 @@ export function useProjectDetail() {
       form.college = String(data.college || "");
       form.major_code = String(data.major_code || "");
       form.leader_name = String(data.leader_name || "");
-      form.leader_student_id = String(data.leader_student_id || data.student_id || "");
+      form.leader_student_id = String(
+        data.leader_student_id || data.student_id || ""
+      );
       form.leader_contact = String(data.leader_contact || "");
       form.leader_email = String(data.leader_email || "");
       form.expected_results = String(data.expected_results || "");
@@ -239,24 +258,28 @@ export function useProjectDetail() {
       form.task_book_file = null;
 
       if (Array.isArray(data.advisors_info)) {
-        form.advisors = (data.advisors_info as Record<string, unknown>[]).map((item, index: number) => ({
-          job_number: String(item.job_number || ""),
-          name: String(item.name || ""),
-          title: String(item.title || ""),
-          contact: String(item.contact || ""),
-          email: String(item.email || ""),
-          order: Number(item.order || index + 1),
-        }));
+        form.advisors = (data.advisors_info as Record<string, unknown>[]).map(
+          (item, index: number) => ({
+            job_number: String(item.job_number || ""),
+            name: String(item.name || ""),
+            title: String(item.title || ""),
+            contact: String(item.contact || ""),
+            email: String(item.email || ""),
+            order: Number(item.order || index + 1),
+          })
+        );
       } else {
         form.advisors = [];
       }
 
       if (Array.isArray(data.members_info)) {
-        form.members = (data.members_info as Record<string, unknown>[]).map((item) => ({
-          student_id: String(item.student_id || ""),
-          name: String(item.user_name || item.name || ""),
-          role: String(item.role || "MEMBER"),
-        }));
+        form.members = (data.members_info as Record<string, unknown>[]).map(
+          (item) => ({
+            student_id: String(item.student_id || ""),
+            name: String(item.user_name || item.name || ""),
+            role: String(item.role || "MEMBER"),
+          })
+        );
       } else {
         form.members = [];
       }
@@ -379,15 +402,16 @@ export function useProjectDetail() {
         typeof res === "string"
           ? res
           : res instanceof ArrayBuffer
-            ? res
-            : ArrayBuffer.isView(res)
-              ? (res.buffer as ArrayBuffer)
-              : JSON.stringify(res ?? "");
-      const blob = res instanceof Blob
-        ? res
-        : new Blob([blobPart], {
-            type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-          });
+          ? res
+          : ArrayBuffer.isView(res)
+          ? (res.buffer as ArrayBuffer)
+          : JSON.stringify(res ?? "");
+      const blob =
+        res instanceof Blob
+          ? res
+          : new Blob([blobPart], {
+              type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -426,7 +450,6 @@ export function useProjectDetail() {
     rules,
     levelOptions,
     categoryOptions,
-    disciplineOptions,
     sourceOptions,
     collegeOptions,
     majorOptions,

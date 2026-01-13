@@ -9,6 +9,7 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+
 class ProjectAdminExportDataMixin:
     @action(methods=["get"], detail=False, url_path="export")
     def export_data(self, request):
@@ -26,7 +27,9 @@ class ProjectAdminExportDataMixin:
         queryset = (
             self.get_queryset()
             .select_related("leader", "level", "category", "source")
-            .prefetch_related("advisors__user", "projectmember_set__user", "achievements")
+            .prefetch_related(
+                "advisors__user", "projectmember_set__user", "achievements"
+            )
         )
 
         # Support selecting specific IDs
@@ -64,8 +67,6 @@ class ProjectAdminExportDataMixin:
             "level_label": "项目级别",
             "category_code": "项目类别(代码)",
             "category_label": "项目类别",
-            "discipline_code": "学科分类(代码)",
-            "discipline_label": "学科分类",
             "is_key_field": "重点领域项目",
             "key_domain_code": "重点领域代码",
             "self_funding": "项目自筹(元)",
@@ -144,8 +145,6 @@ class ProjectAdminExportDataMixin:
                     "level_label": p.level.label if p.level else "",
                     "category_code": p.category.value if p.category else "",
                     "category_label": p.category.label if p.category else "",
-                    "discipline_code": p.discipline.value if p.discipline else "",
-                    "discipline_label": p.discipline.label if p.discipline else "",
                     "is_key_field": "是" if p.is_key_field else "否",
                     "key_domain_code": p.key_domain_code,
                     "self_funding": p.self_funding,
@@ -174,7 +173,9 @@ class ProjectAdminExportDataMixin:
                     "advisors": "；".join(advisors_text),
                     "members": "；".join(members_text),
                     "achievements_count": len(list(p.achievements.all())),
-                    "proposal_file_name": p.proposal_file.name if p.proposal_file else "",
+                    "proposal_file_name": p.proposal_file.name
+                    if p.proposal_file
+                    else "",
                     "proposal_file_url": build_file_url(p.proposal_file),
                     "attachment_file_name": p.attachment_file.name
                     if p.attachment_file

@@ -87,12 +87,6 @@
         :disabled="isProcessLocked"
       />
     </el-form-item>
-    <el-form-item label="学科分类必填">
-      <el-switch
-        v-model="localValidationRules.discipline_required"
-        :disabled="isProcessLocked"
-      />
-    </el-form-item>
     <el-form-item label="允许项目类别(逗号分隔)">
       <el-input
         v-model="allowedTypesText"
@@ -144,7 +138,6 @@ const props = defineProps<{
     allowed_project_types: string[];
     allowed_project_types_by_college: Record<string, string[]>;
     allowed_levels_by_college: Record<string, string[]>;
-    discipline_required: boolean;
   };
   collegeQuotaText: string;
   allowedTypesByCollegeText: string;

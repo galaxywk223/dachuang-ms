@@ -71,7 +71,6 @@ DEFAULT_SETTINGS = {
         "allowed_project_types": [],
         "allowed_project_types_by_college": {},
         "allowed_levels_by_college": {},
-        "discipline_required": False,
     },
 }
 

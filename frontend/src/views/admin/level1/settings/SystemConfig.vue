@@ -224,7 +224,6 @@ const validationRules = reactive({
   allowed_project_types: [] as string[],
   allowed_project_types_by_college: {} as Record<string, string[]>,
   allowed_levels_by_college: {} as Record<string, string[]>,
-  discipline_required: false,
 });
 
 const goBack = () => {

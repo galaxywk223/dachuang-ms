@@ -4,7 +4,9 @@
       <div class="page-header">
         <div class="title-bar">
           <span class="title">{{ pageTitle }}</span>
-          <el-tag size="small" type="primary" effect="plain" round>一级管理员</el-tag>
+          <el-tag size="small" type="primary" effect="plain" round
+            >一级管理员</el-tag
+          >
           <el-tag
             v-if="form.status_display"
             size="small"
@@ -61,7 +63,11 @@
           <el-row :gutter="32">
             <el-col :span="8">
               <el-form-item label="项目来源" prop="source">
-                <el-select v-model="form.source" placeholder="请选择" class="w-full">
+                <el-select
+                  v-model="form.source"
+                  placeholder="请选择"
+                  class="w-full"
+                >
                   <el-option
                     v-for="item in sourceOptions"
                     :key="item.value"
@@ -73,7 +79,11 @@
             </el-col>
             <el-col :span="8">
               <el-form-item label="项目级别" prop="level">
-                <el-select v-model="form.level" placeholder="请选择" class="w-full">
+                <el-select
+                  v-model="form.level"
+                  placeholder="请选择"
+                  class="w-full"
+                >
                   <el-option
                     v-for="item in levelOptions"
                     :key="item.value"
@@ -85,7 +95,11 @@
             </el-col>
             <el-col :span="8">
               <el-form-item label="项目类别" prop="category">
-                <el-select v-model="form.category" placeholder="请选择" class="w-full">
+                <el-select
+                  v-model="form.category"
+                  placeholder="请选择"
+                  class="w-full"
+                >
                   <el-option
                     v-for="item in categoryOptions"
                     :key="item.value"
@@ -147,7 +161,12 @@
             </el-col>
             <el-col :span="8">
               <el-form-item label="所属专业">
-                <el-select v-model="form.major_code" class="w-full" filterable disabled>
+                <el-select
+                  v-model="form.major_code"
+                  class="w-full"
+                  filterable
+                  disabled
+                >
                   <el-option
                     v-for="item in majorOptions"
                     :key="item.value"
@@ -167,7 +186,11 @@
           <el-row :gutter="32">
             <el-col :span="8">
               <el-form-item label="负责人姓名">
-                <el-input v-model="form.leader_name" disabled class="is-disabled-soft" />
+                <el-input
+                  v-model="form.leader_name"
+                  disabled
+                  class="is-disabled-soft"
+                />
               </el-form-item>
             </el-col>
             <el-col :span="8">
@@ -181,12 +204,20 @@
             </el-col>
             <el-col :span="8">
               <el-form-item label="联系电话">
-                <el-input v-model="form.leader_contact" disabled class="is-disabled-soft" />
+                <el-input
+                  v-model="form.leader_contact"
+                  disabled
+                  class="is-disabled-soft"
+                />
               </el-form-item>
             </el-col>
             <el-col :span="8">
               <el-form-item label="电子邮箱">
-                <el-input v-model="form.leader_email" disabled class="is-disabled-soft" />
+                <el-input
+                  v-model="form.leader_email"
+                  disabled
+                  class="is-disabled-soft"
+                />
               </el-form-item>
             </el-col>
           </el-row>
@@ -204,7 +235,10 @@
           >
             <el-table-column label="次序" width="120">
               <template #default="scope">
-                <el-tag :type="scope.row.order === 1 ? 'primary' : 'success'" effect="plain">
+                <el-tag
+                  :type="scope.row.order === 1 ? 'primary' : 'success'"
+                  effect="plain"
+                >
                   {{ scope.row.order === 1 ? "第一指导老师" : "第二指导老师" }}
                 </el-tag>
               </template>
@@ -254,21 +288,6 @@
             <span class="section-title">项目信息</span>
           </div>
           <el-row :gutter="24">
-            <el-col :span="12">
-              <el-form-item label="学科分类" prop="discipline">
-                <template v-if="isViewMode">
-                  <span>{{ getLabel(disciplineOptions, form.discipline) }}</span>
-                </template>
-                <el-select v-else v-model="form.discipline" placeholder="请选择" class="w-full">
-                  <el-option
-                    v-for="item in disciplineOptions"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
-                  />
-                </el-select>
-              </el-form-item>
-            </el-col>
             <el-col :span="12">
               <el-form-item label="预期成果" prop="expected_results">
                 <el-input
@@ -378,7 +397,6 @@ const {
   collegeOptions,
   majorOptions,
   advisorTitleOptions,
-  disciplineOptions,
   keyFieldCascaderOptions,
   keyFieldCascaderValue,
   getLabel,

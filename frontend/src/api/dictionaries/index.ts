@@ -64,28 +64,35 @@ export function getAllDictionaries(): Promise<DictionaryBatchResponse> {
 /**
  * 创建字典项
  */
-export function createDictionaryItem(data: Record<string, unknown> | FormData): Promise<unknown> {
+export function createDictionaryItem(
+  data: Record<string, unknown> | FormData
+): Promise<unknown> {
   return request({
     url: "/dictionaries/items/",
     method: "post",
     data,
     headers: {
-      'Content-Type': data instanceof FormData ? 'multipart/form-data' : 'application/json'
-    }
+      "Content-Type":
+        data instanceof FormData ? "multipart/form-data" : "application/json",
+    },
   });
 }
 
 /**
  * 更新字典项
  */
-export function updateDictionaryItem(id: number, data: Record<string, unknown> | FormData): Promise<unknown> {
+export function updateDictionaryItem(
+  id: number,
+  data: Record<string, unknown> | FormData
+): Promise<unknown> {
   return request({
     url: `/dictionaries/items/${id}/`,
     method: "patch", // Use PATCH for partial updates
     data,
     headers: {
-      'Content-Type': data instanceof FormData ? 'multipart/form-data' : 'application/json'
-    }
+      "Content-Type":
+        data instanceof FormData ? "multipart/form-data" : "application/json",
+    },
   });
 }
 
@@ -118,7 +125,6 @@ export const DICT_CODES = {
   PROJECT_SOURCE: "project_source",
   COLLEGE: "college",
   MAJOR_CATEGORY: "major_category", // Corrected
-  DISCIPLINE: "discipline",
   TITLE: "title",
   KEY_FIELD_CODE: "key_field_code",
   PROJECT_TYPE: "project_type",

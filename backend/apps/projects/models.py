@@ -94,14 +94,6 @@ class Project(models.Model):
         null=True,
         blank=True,
     )
-    discipline = models.ForeignKey(
-        DictionaryItem,
-        on_delete=models.PROTECT,
-        related_name="projects_discipline",
-        verbose_name="学科分类",
-        null=True,
-        blank=True,
-    )
 
     # 项目负责人信息
     leader = models.ForeignKey(
