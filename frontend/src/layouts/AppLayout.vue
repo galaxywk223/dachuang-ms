@@ -609,19 +609,29 @@ const currentMenus = computed<MenuEntry[]>(() => {
           groupTitle: "系统配置",
           items: [
             {
-              index: "settings",
-              title: "系统配置",
+              index: "/level1-admin/settings/batches",
+              title: "批次管理",
               icon: Setting,
-              children: [
-                { index: "/level1-admin/settings/batches", title: "批次管理" },
-                { index: "/level1-admin/settings/certificate", title: "结题证书" },
-                { index: "/level1-admin/settings/workflows", title: "流程配置" },
-                {
-                  index: "/level1-admin/settings/review-templates",
-                  title: "评审模板",
-                },
-                { index: "/level1-admin/settings/dictionaries", title: "字典参数" },
-              ],
+            },
+            {
+              index: "/level1-admin/settings/certificate",
+              title: "结题证书",
+              icon: Setting,
+            },
+            {
+              index: "/level1-admin/settings/workflows",
+              title: "流程配置",
+              icon: Setting,
+            },
+            {
+              index: "/level1-admin/settings/review-templates",
+              title: "评审模板",
+              icon: Setting,
+            },
+            {
+              index: "/level1-admin/settings/dictionaries",
+              title: "字典参数",
+              icon: Setting,
             },
           ],
         },

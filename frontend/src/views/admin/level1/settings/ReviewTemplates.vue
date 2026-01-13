@@ -7,7 +7,9 @@
             <span class="header-title">评审模板</span>
           </div>
           <div class="header-actions">
-            <el-button type="primary" @click="openTemplateDialog">新建模板</el-button>
+            <el-button type="primary" @click="openTemplateDialog"
+              >新建模板</el-button
+            >
           </div>
         </div>
       </template>
@@ -28,8 +30,12 @@
               >
                 <div class="item-title">{{ item.name }}</div>
                 <div class="item-meta">
-                  <el-tag size="small" effect="plain">{{ item.review_type }}</el-tag>
-                  <el-tag size="small" effect="plain" type="info">{{ item.review_level }}</el-tag>
+                  <el-tag size="small" effect="plain">{{
+                    item.review_type
+                  }}</el-tag>
+                  <el-tag size="small" effect="plain" type="info">{{
+                    item.review_level
+                  }}</el-tag>
                 </div>
               </div>
             </el-scrollbar>
@@ -42,7 +48,12 @@
               <div class="panel-header">
                 <span>评分项配置</span>
                 <div class="header-actions">
-                  <el-button type="primary" plain :disabled="!currentTemplate" @click="openItemDialog">
+                  <el-button
+                    type="primary"
+                    plain
+                    :disabled="!currentTemplate"
+                    @click="openItemDialog"
+                  >
                     新增评分项
                   </el-button>
                 </div>
@@ -67,14 +78,28 @@
                 <div class="node-content">
                   <div class="node-title">{{ item.title }}</div>
                   <div class="node-meta">
-                    <el-tag size="small" effect="plain">权重 {{ item.weight }}</el-tag>
-                    <el-tag size="small" effect="plain" type="info">满分 {{ item.max_score }}</el-tag>
-                    <el-tag v-if="item.is_required" size="small" effect="plain" type="danger">必填</el-tag>
+                    <el-tag size="small" effect="plain"
+                      >权重 {{ item.weight }}</el-tag
+                    >
+                    <el-tag size="small" effect="plain" type="info"
+                      >满分 {{ item.max_score }}</el-tag
+                    >
+                    <el-tag
+                      v-if="item.is_required"
+                      size="small"
+                      effect="plain"
+                      type="danger"
+                      >必填</el-tag
+                    >
                   </div>
                 </div>
                 <div class="node-actions">
-                  <el-button link type="primary" @click="editItem(item)">编辑</el-button>
-                  <el-button link type="danger" @click="removeItem(item)">删除</el-button>
+                  <el-button link type="primary" @click="editItem(item)"
+                    >编辑</el-button
+                  >
+                  <el-button link type="danger" @click="removeItem(item)"
+                    >删除</el-button
+                  >
                 </div>
               </div>
             </div>
@@ -83,7 +108,12 @@
       </el-row>
     </el-card>
 
-    <el-dialog v-model="templateDialogVisible" title="评审模板" width="520px" destroy-on-close>
+    <el-dialog
+      v-model="templateDialogVisible"
+      title="评审模板"
+      width="520px"
+      destroy-on-close
+    >
       <el-form :model="templateForm" label-width="120px">
         <el-form-item label="模板名称">
           <el-input v-model="templateForm.name" placeholder="请输入" />
@@ -114,11 +144,18 @@
       </el-form>
       <template #footer>
         <el-button @click="templateDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="saveTemplate">保存</el-button>
+        <el-button type="primary" :loading="saving" @click="saveTemplate"
+          >保存</el-button
+        >
       </template>
     </el-dialog>
 
-    <el-dialog v-model="itemDialogVisible" title="评分项" width="520px" destroy-on-close>
+    <el-dialog
+      v-model="itemDialogVisible"
+      title="评分项"
+      width="520px"
+      destroy-on-close
+    >
       <el-form :model="itemForm" label-width="120px">
         <el-form-item label="评分项">
           <el-input v-model="itemForm.title" placeholder="请输入" />
@@ -138,7 +175,9 @@
       </el-form>
       <template #footer>
         <el-button @click="itemDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="saveItem">保存</el-button>
+        <el-button type="primary" :loading="saving" @click="saveItem"
+          >保存</el-button
+        >
       </template>
     </el-dialog>
   </div>
@@ -194,7 +233,11 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (!isRecord(error)) return fallback;
   const response = error.response;
-  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === "string") {
+  if (
+    isRecord(response) &&
+    isRecord(response.data) &&
+    typeof response.data.message === "string"
+  ) {
     return response.data.message;
   }
   if (typeof error.message === "string") return error.message;
@@ -230,22 +273,30 @@ const itemForm = ref({
 });
 
 const loadTemplates = async () => {
-  const res = (await getReviewTemplates()) as TemplateListResponse | ReviewTemplate[];
+  const res = (await getReviewTemplates()) as
+    | TemplateListResponse
+    | ReviewTemplate[];
   const payload = isRecord(res) && "data" in res ? res.data : res;
   if (isRecord(payload) && Array.isArray(payload.data)) {
     templates.value = payload.data as ReviewTemplate[];
   } else {
-    templates.value = Array.isArray(payload) ? (payload as ReviewTemplate[]) : [];
+    templates.value = Array.isArray(payload)
+      ? (payload as ReviewTemplate[])
+      : [];
   }
 };
 
 const loadItems = async (templateId: number) => {
-  const res = (await getReviewTemplateItems({ template: templateId })) as ItemListResponse | ReviewTemplateItem[];
+  const res = (await getReviewTemplateItems({ template: templateId })) as
+    | ItemListResponse
+    | ReviewTemplateItem[];
   const payload = isRecord(res) && "data" in res ? res.data : res;
   if (isRecord(payload) && Array.isArray(payload.data)) {
     items.value = payload.data as ReviewTemplateItem[];
   } else {
-    items.value = Array.isArray(payload) ? (payload as ReviewTemplateItem[]) : [];
+    items.value = Array.isArray(payload)
+      ? (payload as ReviewTemplateItem[])
+      : [];
   }
 };
 
@@ -357,64 +408,131 @@ onMounted(async () => {
 
 <style scoped lang="scss">
 .review-templates-page {
-  .panel-card {
-    min-height: 560px;
-  }
+  padding: 20px;
+}
 
-  .list-item {
-    padding: 12px 16px;
-    border-bottom: 1px solid #f1f5f9;
-    cursor: pointer;
-
-    &.active {
-      background: #eff6ff;
-    }
-
-    .item-title {
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-
-    .item-meta {
-      display: flex;
-      gap: 6px;
-    }
-  }
-
-  .node-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .node-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    background: #fff;
-  }
-
-  .node-handle {
-    cursor: grab;
-    color: #94a3b8;
-  }
-
-  .node-content {
-    flex: 1;
-  }
-
-  .node-title {
+.main-card {
+  border-radius: 8px;
+  :deep(.el-card__header) {
+    padding: 16px 20px;
     font-weight: 600;
+    border-bottom: 1px solid #e2e8f0;
+  }
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.header-title {
+  font-size: 16px;
+  color: #1e293b;
+}
+
+.panel-card {
+  min-height: 560px;
+  border-radius: 8px;
+  :deep(.el-card__header) {
+    padding: 12px 16px;
+    font-weight: 600;
+    border-bottom: 1px solid #e2e8f0;
+  }
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.list-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #f8fafc;
   }
 
-  .node-meta {
+  &.active {
+    background: #eff6ff;
+  }
+
+  .item-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #334155;
+  }
+
+  .item-meta {
     display: flex;
     gap: 6px;
-    margin-top: 6px;
-    flex-wrap: wrap;
+  }
+}
+
+.node-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.node-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+}
+
+.node-handle {
+  cursor: grab;
+  color: #94a3b8;
+  padding: 4px;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.node-content {
+  flex: 1;
+}
+
+.node-title {
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 4px;
+}
+
+.node-meta {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.node-actions {
+  opacity: 0.6;
+  transition: opacity 0.2s;
+
+  .node-item:hover & {
+    opacity: 1;
   }
 }
 </style>

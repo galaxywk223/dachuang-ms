@@ -7,7 +7,9 @@
             <span class="header-title">流程配置</span>
           </div>
           <div class="header-actions">
-            <el-button type="primary" @click="openWorkflowDialog">新建流程</el-button>
+            <el-button type="primary" @click="openWorkflowDialog"
+              >新建流程</el-button
+            >
           </div>
         </div>
       </template>
@@ -28,8 +30,16 @@
               >
                 <div class="item-title">{{ item.name }}</div>
                 <div class="item-meta">
-                  <el-tag size="small" effect="plain">{{ phaseLabel(item.phase) }}</el-tag>
-                  <el-tag v-if="item.batch" size="small" effect="plain" type="info">批次 {{ item.batch }}</el-tag>
+                  <el-tag size="small" effect="plain">{{
+                    phaseLabel(item.phase)
+                  }}</el-tag>
+                  <el-tag
+                    v-if="item.batch"
+                    size="small"
+                    effect="plain"
+                    type="info"
+                    >批次 {{ item.batch }}</el-tag
+                  >
                 </div>
               </div>
             </el-scrollbar>
@@ -42,7 +52,12 @@
               <div class="panel-header">
                 <span>节点配置</span>
                 <div class="header-actions">
-                  <el-button type="primary" plain :disabled="!currentWorkflow" @click="openNodeDialog">
+                  <el-button
+                    type="primary"
+                    plain
+                    :disabled="!currentWorkflow"
+                    @click="openNodeDialog"
+                  >
                     新增节点
                   </el-button>
                 </div>
@@ -67,15 +82,35 @@
                 <div class="node-content">
                   <div class="node-title">{{ node.name }}</div>
                   <div class="node-meta">
-                    <el-tag size="small" effect="plain">{{ node.node_type }}</el-tag>
-                    <el-tag size="small" effect="plain" type="info">{{ node.role }}</el-tag>
-                    <el-tag v-if="node.review_level" size="small" effect="plain" type="success">{{ node.review_level }}</el-tag>
-                    <el-tag v-if="node.scope" size="small" effect="plain" type="warning">{{ node.scope }}</el-tag>
+                    <el-tag size="small" effect="plain">{{
+                      node.node_type
+                    }}</el-tag>
+                    <el-tag size="small" effect="plain" type="info">{{
+                      node.role
+                    }}</el-tag>
+                    <el-tag
+                      v-if="node.review_level"
+                      size="small"
+                      effect="plain"
+                      type="success"
+                      >{{ node.review_level }}</el-tag
+                    >
+                    <el-tag
+                      v-if="node.scope"
+                      size="small"
+                      effect="plain"
+                      type="warning"
+                      >{{ node.scope }}</el-tag
+                    >
                   </div>
                 </div>
                 <div class="node-actions">
-                  <el-button link type="primary" @click="editNode(node)">编辑</el-button>
-                  <el-button link type="danger" @click="removeNode(node)">删除</el-button>
+                  <el-button link type="primary" @click="editNode(node)"
+                    >编辑</el-button
+                  >
+                  <el-button link type="danger" @click="removeNode(node)"
+                    >删除</el-button
+                  >
                 </div>
               </div>
             </div>
@@ -84,32 +119,58 @@
       </el-row>
     </el-card>
 
-    <el-dialog v-model="workflowDialogVisible" title="流程配置" width="520px" destroy-on-close>
+    <el-dialog
+      v-model="workflowDialogVisible"
+      title="流程配置"
+      width="520px"
+      destroy-on-close
+    >
       <el-form :model="workflowForm" label-width="120px">
         <el-form-item label="流程名称">
           <el-input v-model="workflowForm.name" placeholder="请输入" />
         </el-form-item>
         <el-form-item label="流程阶段">
           <el-select v-model="workflowForm.phase" placeholder="请选择">
-            <el-option v-for="item in phaseOptions" :key="item.value" :label="item.label" :value="item.value" />
+            <el-option
+              v-for="item in phaseOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="所属批次">
           <el-select v-model="workflowForm.batch" placeholder="可选" clearable>
-            <el-option v-for="item in batches" :key="item.id" :label="item.name" :value="item.id" />
+            <el-option
+              v-for="item in batches"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="说明">
-          <el-input v-model="workflowForm.description" type="textarea" :rows="3" />
+          <el-input
+            v-model="workflowForm.description"
+            type="textarea"
+            :rows="3"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="workflowDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="saveWorkflow">保存</el-button>
+        <el-button type="primary" :loading="saving" @click="saveWorkflow"
+          >保存</el-button
+        >
       </template>
     </el-dialog>
 
-    <el-dialog v-model="nodeDialogVisible" title="节点配置" width="600px" destroy-on-close>
+    <el-dialog
+      v-model="nodeDialogVisible"
+      title="节点配置"
+      width="600px"
+      destroy-on-close
+    >
       <el-form :model="nodeForm" label-width="120px">
         <el-form-item label="节点名称">
           <el-input v-model="nodeForm.name" placeholder="请输入" />
@@ -154,8 +215,17 @@
           </el-select>
         </el-form-item>
         <el-form-item label="评审模板">
-          <el-select v-model="nodeForm.review_template" placeholder="可选" clearable>
-            <el-option v-for="item in templates" :key="item.id" :label="item.name" :value="item.id" />
+          <el-select
+            v-model="nodeForm.review_template"
+            placeholder="可选"
+            clearable
+          >
+            <el-option
+              v-for="item in templates"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="注意事项">
@@ -164,7 +234,9 @@
       </el-form>
       <template #footer>
         <el-button @click="nodeDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="saveNode">保存</el-button>
+        <el-button type="primary" :loading="saving" @click="saveNode"
+          >保存</el-button
+        >
       </template>
     </el-dialog>
   </div>
@@ -222,7 +294,8 @@ type BatchInfo = {
 };
 
 type ListResponse<T> = {
-  data?: T[] | { data?: T[] };
+  data?: T[] | { data?: T[]; results?: T[] };
+  results?: T[];
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -231,11 +304,28 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (!isRecord(error)) return fallback;
   const response = error.response;
-  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === "string") {
+  if (
+    isRecord(response) &&
+    isRecord(response.data) &&
+    typeof response.data.message === "string"
+  ) {
     return response.data.message;
   }
   if (typeof error.message === "string") return error.message;
   return fallback;
+};
+
+const resolveList = <T>(res: unknown): T[] => {
+  const payload = isRecord(res) && "data" in res ? res.data : res;
+  if (Array.isArray(payload)) return payload as T[];
+  if (isRecord(payload)) {
+    if (Array.isArray(payload.results)) return payload.results as T[];
+    if (isRecord(payload.data) && Array.isArray(payload.data.results)) {
+      return payload.data.results as T[];
+    }
+    if (Array.isArray(payload.data)) return payload.data as T[];
+  }
+  return [];
 };
 
 const workflows = ref<Workflow[]>([]);
@@ -283,42 +373,28 @@ const phaseLabel = (phase: string) => {
 
 const loadWorkflows = async () => {
   const res = (await getWorkflows()) as ListResponse<Workflow> | Workflow[];
-  const payload = isRecord(res) && "data" in res ? res.data : res;
-  if (isRecord(payload) && Array.isArray(payload.data)) {
-    workflows.value = payload.data as Workflow[];
-  } else {
-    workflows.value = Array.isArray(payload) ? (payload as Workflow[]) : [];
-  }
+  workflows.value = resolveList<Workflow>(res);
 };
 
 const loadNodes = async (workflowId: number) => {
-  const res = (await getWorkflowNodes({ workflow: workflowId })) as ListResponse<WorkflowNode> | WorkflowNode[];
-  const payload = isRecord(res) && "data" in res ? res.data : res;
-  if (isRecord(payload) && Array.isArray(payload.data)) {
-    nodes.value = payload.data as WorkflowNode[];
-  } else {
-    nodes.value = Array.isArray(payload) ? (payload as WorkflowNode[]) : [];
-  }
+  const res = (await getWorkflowNodes({ workflow: workflowId })) as
+    | ListResponse<WorkflowNode>
+    | WorkflowNode[];
+  nodes.value = resolveList<WorkflowNode>(res);
 };
 
 const loadTemplates = async () => {
-  const res = (await getReviewTemplates()) as ListResponse<ReviewTemplate> | ReviewTemplate[];
-  const payload = isRecord(res) && "data" in res ? res.data : res;
-  if (isRecord(payload) && Array.isArray(payload.data)) {
-    templates.value = payload.data as ReviewTemplate[];
-  } else {
-    templates.value = Array.isArray(payload) ? (payload as ReviewTemplate[]) : [];
-  }
+  const res = (await getReviewTemplates()) as
+    | ListResponse<ReviewTemplate>
+    | ReviewTemplate[];
+  templates.value = resolveList<ReviewTemplate>(res);
 };
 
 const loadBatches = async () => {
-  const res = (await listProjectBatches()) as ListResponse<BatchInfo> | BatchInfo[];
-  const payload = isRecord(res) && "data" in res ? res.data : res;
-  if (isRecord(payload) && Array.isArray(payload.data)) {
-    batches.value = payload.data as BatchInfo[];
-  } else {
-    batches.value = Array.isArray(payload) ? (payload as BatchInfo[]) : [];
-  }
+  const res = (await listProjectBatches()) as
+    | ListResponse<BatchInfo>
+    | BatchInfo[];
+  batches.value = resolveList<BatchInfo>(res);
 };
 
 const selectWorkflow = async (item: Workflow) => {
@@ -440,64 +516,131 @@ onMounted(async () => {
 
 <style scoped lang="scss">
 .workflow-config-page {
-  .panel-card {
-    min-height: 560px;
-  }
+  padding: 20px;
+}
 
-  .list-item {
-    padding: 12px 16px;
-    border-bottom: 1px solid #f1f5f9;
-    cursor: pointer;
-
-    &.active {
-      background: #eff6ff;
-    }
-
-    .item-title {
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-
-    .item-meta {
-      display: flex;
-      gap: 6px;
-    }
-  }
-
-  .node-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .node-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    background: #fff;
-  }
-
-  .node-handle {
-    cursor: grab;
-    color: #94a3b8;
-  }
-
-  .node-content {
-    flex: 1;
-  }
-
-  .node-title {
+.main-card {
+  border-radius: 8px;
+  :deep(.el-card__header) {
+    padding: 16px 20px;
     font-weight: 600;
+    border-bottom: 1px solid #e2e8f0;
+  }
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.header-title {
+  font-size: 16px;
+  color: #1e293b;
+}
+
+.panel-card {
+  min-height: 560px;
+  border-radius: 8px;
+  :deep(.el-card__header) {
+    padding: 12px 16px;
+    font-weight: 600;
+    border-bottom: 1px solid #e2e8f0;
+  }
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.list-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #f8fafc;
   }
 
-  .node-meta {
+  &.active {
+    background: #eff6ff;
+  }
+
+  .item-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #334155;
+  }
+
+  .item-meta {
     display: flex;
     gap: 6px;
-    margin-top: 6px;
-    flex-wrap: wrap;
+  }
+}
+
+.node-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.node-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+}
+
+.node-handle {
+  cursor: grab;
+  color: #94a3b8;
+  padding: 4px;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.node-content {
+  flex: 1;
+}
+
+.node-title {
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 4px;
+}
+
+.node-meta {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.node-actions {
+  opacity: 0.6;
+  transition: opacity 0.2s;
+
+  .node-item:hover & {
+    opacity: 1;
   }
 }
 </style>
