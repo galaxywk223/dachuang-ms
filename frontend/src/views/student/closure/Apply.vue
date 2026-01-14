@@ -28,7 +28,12 @@
               type="primary"
               :loading="loading"
               :disabled="loading"
-              @click="submitForm"
+              @click="
+                () => {
+                  console.log('提交按钮被点击');
+                  submitForm();
+                }
+              "
               >提交申请</el-button
             >
             <el-button
@@ -44,7 +49,7 @@
       </template>
 
       <el-form
-        :ref="formRef"
+        ref="formRef"
         :model="formData"
         :rules="rules"
         label-position="right"

@@ -361,6 +361,8 @@ import { getRejectTargetsByProject, type WorkflowNode } from "@/api/reviews";
 
 defineOptions({ name: "Level2EstablishmentReviewView" });
 
+const router = useRouter();
+
 type ProjectRow = {
   id: number;
   review_id?: number;
@@ -480,7 +482,6 @@ const handleViewDetail = (row: ProjectRow) => {
   } else {
     ElMessage.warning("项目ID缺失");
   }
-};
 };
 
 const handleCommand = (command: string, row: ProjectRow) => {

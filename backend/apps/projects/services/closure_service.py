@@ -392,16 +392,30 @@ class ProjectClosureService:
                 _upsert_project_achievements(project, achievements_data, request.FILES)
 
                 if not is_draft:
-                    existing_review = Review.objects.filter(
-                        project=project,
-                        review_type=Review.ReviewType.CLOSURE,
-                        review_level="TEACHER",
-                        status=Review.ReviewStatus.PENDING,
-                    ).first()
-                    if not existing_review:
-                        from apps.reviews.services import ReviewService
+                    # 使用工作流系统创建审核
+                    from apps.reviews.services import ReviewService
+                    from apps.projects.services.phase_service import ProjectPhaseService
+                    from apps.system_settings.services.workflow_service import (
+                        WorkflowService,
+                    )
 
-                        ReviewService.create_closure_teacher_review(project)
+                    # 确保 phase_instance 存在并设置为初始节点
+                    initial_node = WorkflowService.get_initial_node(
+                        ProjectPhaseInstance.Phase.CLOSURE, project.batch
+                    )
+
+                    phase_instance = ProjectPhaseService.ensure_current(
+                        project,
+                        ProjectPhaseInstance.Phase.CLOSURE,
+                        step=initial_node.code if initial_node else "STUDENT_SUBMIT",
+                        created_by=user,
+                    )
+
+                    # 从初始节点（学生提交）移动到第一个审核节点
+                    if initial_node:
+                        ReviewService._move_to_next_node(
+                            project, phase_instance, initial_node.id
+                        )
 
                 return (
                     {
@@ -496,16 +510,30 @@ class ProjectClosureService:
                 _upsert_project_achievements(project, achievements_data, request.FILES)
 
                 if not is_draft:
-                    existing_review = Review.objects.filter(
-                        project=project,
-                        review_type=Review.ReviewType.CLOSURE,
-                        review_level="TEACHER",
-                        status=Review.ReviewStatus.PENDING,
-                    ).first()
-                    if not existing_review:
-                        from apps.reviews.services import ReviewService
+                    # 使用工作流系统创建审核
+                    from apps.reviews.services import ReviewService
+                    from apps.projects.services.phase_service import ProjectPhaseService
+                    from apps.system_settings.services.workflow_service import (
+                        WorkflowService,
+                    )
 
-                        ReviewService.create_closure_teacher_review(project)
+                    # 确保 phase_instance 存在并设置为初始节点
+                    initial_node = WorkflowService.get_initial_node(
+                        ProjectPhaseInstance.Phase.CLOSURE, project.batch
+                    )
+
+                    phase_instance = ProjectPhaseService.ensure_current(
+                        project,
+                        ProjectPhaseInstance.Phase.CLOSURE,
+                        step=initial_node.code if initial_node else "STUDENT_SUBMIT",
+                        created_by=user,
+                    )
+
+                    # 从初始节点（学生提交）移动到第一个审核节点
+                    if initial_node:
+                        ReviewService._move_to_next_node(
+                            project, phase_instance, initial_node.id
+                        )
 
                 return (
                     {

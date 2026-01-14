@@ -1,62 +1,70 @@
 <template>
   <div class="dictionary-management">
-    <div class="page-header">
-      <span class="title">字典参数管理</span>
-    </div>
+    <el-tabs v-model="activeTab" class="custom-tabs">
+      <el-tab-pane label="系统参数" name="system">
+        <div class="content-wrapper">
+          <el-row :gutter="20">
+            <!-- 左侧树形导航 -->
+            <el-col :span="5">
+              <el-card class="tree-card" shadow="never">
+                <template #header>
+                  <span>参数分类</span>
+                </template>
+                <el-tree
+                  :data="treeData"
+                  :props="{ label: 'label', children: 'children' }"
+                  node-key="id"
+                  :default-expand-all="false"
+                  :expand-on-click-node="false"
+                  :highlight-current="true"
+                  @node-click="handleNodeClick"
+                >
+                  <template #default="{ node, data }">
+                    <span class="tree-node">
+                      <el-icon v-if="!isDictionaryType(data.id)">
+                        <Folder />
+                      </el-icon>
+                      <el-icon v-else>
+                        <Document />
+                      </el-icon>
+                      <span class="node-label">{{ node.label }}</span>
+                    </span>
+                  </template>
+                </el-tree>
+              </el-card>
+            </el-col>
 
-    <div class="content-wrapper">
-      <el-row :gutter="20">
-        <!-- 左侧树形导航 -->
-        <el-col :span="5">
-          <el-card class="tree-card" shadow="never">
-            <template #header>
-              <span>参数分类</span>
-            </template>
-            <el-tree
-              :data="treeData"
-              :props="{ label: 'label', children: 'children' }"
-              node-key="id"
-              :default-expand-all="false"
-              :expand-on-click-node="false"
-              :highlight-current="true"
-              @node-click="handleNodeClick"
-            >
-              <template #default="{ node, data }">
-                <span class="tree-node">
-                  <el-icon v-if="!isDictionaryType(data.id)">
-                    <Folder />
-                  </el-icon>
-                  <el-icon v-else>
-                    <Document />
-                  </el-icon>
-                  <span class="node-label">{{ node.label }}</span>
-                </span>
-              </template>
-            </el-tree>
-          </el-card>
-        </el-col>
-
-        <!-- 右侧字典项管理 -->
-        <el-col :span="19">
-          <SystemDictionaries
-            v-if="selectedNode && isDictionaryType(selectedNode)"
-            :key="selectedNode"
-            :category="selectedCategory"
-            :dict-type-code="selectedNode"
-          />
-          <el-card v-else class="empty-card" shadow="never">
-            <el-empty description="请从左侧选择具体的字典类型进行管理" />
-          </el-card>
-        </el-col>
-      </el-row>
-    </div>
+            <!-- 右侧字典项管理 -->
+            <el-col :span="19">
+              <SystemDictionaries
+                v-if="selectedNode && isDictionaryType(selectedNode)"
+                :key="selectedNode"
+                :category="selectedCategory"
+                :dict-type-code="selectedNode"
+              />
+              <el-card v-else class="empty-card" shadow="never">
+                <el-empty description="请从左侧选择具体的字典类型进行管理" />
+              </el-card>
+            </el-col>
+          </el-row>
+        </div>
+      </el-tab-pane>
+      <el-tab-pane label="用户角色" name="roles">
+        <RoleManagement />
+      </el-tab-pane>
+    </el-tabs>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from "vue";
 import { Folder, Document } from "@element-plus/icons-vue";
 import { useDictionaryTree } from "@/composables/useDictionaryTree";
 import SystemDictionaries from "./SystemDictionaries.vue";
+// Import RoleManagement from its location
+import RoleManagement from "@/views/admin/level1/users/RoleManagement.vue";
+
+const activeTab = ref("system");
 
 const {
   treeData,

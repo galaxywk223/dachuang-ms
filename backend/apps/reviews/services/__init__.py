@@ -155,9 +155,7 @@ class ReviewService:
         # 从节点直接读取 review_level，不再硬编码映射
         # 如果节点有 review_level，使用它
         # 否则使用节点的 role 作为 review_level
-        review_level = (
-            node.review_level or node.get_role_code() or node.role or "UNKNOWN"
-        )
+        review_level = node.review_level or node.role or "UNKNOWN"
 
         # 检查是否已存在该节点的待审核记录
         existing = Review.objects.filter(

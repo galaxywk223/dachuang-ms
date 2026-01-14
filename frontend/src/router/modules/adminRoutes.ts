@@ -17,13 +17,7 @@ export const adminRoutes: RouteRecordRaw[] = [
           import("@/views/admin/level1/users/UserManagement.vue"),
         meta: { title: "用户管理" },
       },
-      {
-        path: "roles",
-        name: "level1-roles",
-        component: () =>
-          import("@/views/admin/level1/users/RoleManagement.vue"),
-        meta: { title: "角色管理" },
-      },
+
       {
         path: "users/students",
         name: "level1-users-students",
@@ -65,12 +59,7 @@ export const adminRoutes: RouteRecordRaw[] = [
         component: () => import("@/views/admin/level1/projects/Index.vue"),
         meta: { title: "项目库管理" },
       },
-      {
-        path: "funds",
-        name: "level1-funds",
-        component: () => import("@/views/admin/shared/Funds.vue"),
-        meta: { title: "经费管理" },
-      },
+
       {
         path: "statistics",
         name: "level1-statistics",

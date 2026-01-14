@@ -1,6 +1,11 @@
 import { computed, onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { ElMessage, ElMessageBox, type FormInstance, type UploadFile } from "element-plus";
+import {
+  ElMessage,
+  ElMessageBox,
+  type FormInstance,
+  type UploadFile,
+} from "element-plus";
 
 import {
   createClosureApplication,
@@ -73,6 +78,21 @@ type ApiResponse<T> = {
 };
 
 const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error && typeof error === "object") {
+    const err = error as {
+      response?: { data?: { message?: string; detail?: string } };
+      message?: string;
+    };
+    if (err.response?.data?.message) {
+      return err.response.data.message;
+    }
+    if (err.response?.data?.detail) {
+      return err.response.data.detail;
+    }
+    if (err.message) {
+      return err.message;
+    }
+  }
   if (error instanceof Error) {
     return error.message || fallback;
   }
@@ -108,14 +128,18 @@ export function useClosureApply() {
     achievement_summary: "",
   });
 
-const reportFileList = ref<UploadFile[]>([]);
-const achievementFileList = ref<UploadFile[]>([]);
+  const reportFileList = ref<UploadFile[]>([]);
+  const achievementFileList = ref<UploadFile[]>([]);
 
   const achievements = ref<AchievementItem[]>([]);
   const dialogVisible = ref(false);
   const dialogIndex = ref(-1);
-const dialogFileList = ref<UploadFile[]>([]);
-  const buildUploadFile = (name: string, status: UploadFile["status"], url?: string): UploadFile => ({
+  const dialogFileList = ref<UploadFile[]>([]);
+  const buildUploadFile = (
+    name: string,
+    status: UploadFile["status"],
+    url?: string
+  ): UploadFile => ({
     name,
     status,
     url,
@@ -152,7 +176,9 @@ const dialogFileList = ref<UploadFile[]>([]);
     file: null,
   });
 
-  const achievementTypeOptions = computed(() => getOptions(DICT_CODES.ACHIEVEMENT_TYPE));
+  const achievementTypeOptions = computed(() =>
+    getOptions(DICT_CODES.ACHIEVEMENT_TYPE)
+  );
 
   const selectedAchievementTypeValue = computed(
     () => achievementForm.achievement_type || ""
@@ -177,7 +203,11 @@ const dialogFileList = ref<UploadFile[]>([]);
   const rules = {
     final_report: [
       {
-        validator: (_rule: unknown, _value: unknown, callback: (error?: Error) => void) => {
+        validator: (
+          _rule: unknown,
+          _value: unknown,
+          callback: (error?: Error) => void
+        ) => {
           if (formData.final_report || project.value?.final_report_url) {
             callback();
             return;
@@ -232,19 +262,26 @@ const dialogFileList = ref<UploadFile[]>([]);
       achievementForm.file = null;
 
       const extraData = row.extra_data || {};
-      achievementForm.company_name = extraData.company_name || row.company_name || "";
-      achievementForm.company_role = extraData.company_role || row.company_role || "";
-      achievementForm.company_date = extraData.company_date || row.company_date || "";
+      achievementForm.company_name =
+        extraData.company_name || row.company_name || "";
+      achievementForm.company_role =
+        extraData.company_role || row.company_role || "";
+      achievementForm.company_date =
+        extraData.company_date || row.company_date || "";
       achievementForm.conference_name =
         extraData.conference_name || row.conference_name || "";
       achievementForm.conference_level =
         extraData.conference_level || row.conference_level || "";
       achievementForm.conference_date =
         extraData.conference_date || row.conference_date || "";
-      achievementForm.report_title = extraData.report_title || row.report_title || "";
-      achievementForm.report_type = extraData.report_type || row.report_type || "";
-      achievementForm.media_title = extraData.media_title || row.media_title || "";
-      achievementForm.media_format = extraData.media_format || row.media_format || "";
+      achievementForm.report_title =
+        extraData.report_title || row.report_title || "";
+      achievementForm.report_type =
+        extraData.report_type || row.report_type || "";
+      achievementForm.media_title =
+        extraData.media_title || row.media_title || "";
+      achievementForm.media_format =
+        extraData.media_format || row.media_format || "";
       achievementForm.media_link = extraData.media_link || row.media_link || "";
       if (row.file) {
         dialogFileList.value = [buildUploadFile(row.file.name, "ready")];
@@ -254,7 +291,9 @@ const dialogFileList = ref<UploadFile[]>([]);
           row.attachment_name ||
           (typeof url === "string" ? url.split("/").pop() : "") ||
           "附件";
-        dialogFileList.value = [buildUploadFile(name, "success", typeof url === "string" ? url : "")];
+        dialogFileList.value = [
+          buildUploadFile(name, "success", typeof url === "string" ? url : ""),
+        ];
       }
     } else {
       Object.assign(achievementForm, {
@@ -298,8 +337,10 @@ const dialogFileList = ref<UploadFile[]>([]);
     const extraData: Record<string, string> = {};
     if (isCompanyType.value) {
       extraData.company_name = achievementForm.company_name || "";
-      if (achievementForm.company_role) extraData.company_role = achievementForm.company_role;
-      if (achievementForm.company_date) extraData.company_date = achievementForm.company_date;
+      if (achievementForm.company_role)
+        extraData.company_role = achievementForm.company_role;
+      if (achievementForm.company_date)
+        extraData.company_date = achievementForm.company_date;
     }
     if (isConferenceType.value) {
       extraData.conference_name = achievementForm.conference_name || "";
@@ -312,16 +353,19 @@ const dialogFileList = ref<UploadFile[]>([]);
     }
     if (isReportType.value) {
       extraData.report_title = achievementForm.report_title || "";
-      if (achievementForm.report_type) extraData.report_type = achievementForm.report_type;
+      if (achievementForm.report_type)
+        extraData.report_type = achievementForm.report_type;
     }
     if (isMediaType.value) {
       extraData.media_title = achievementForm.media_title || "";
       if (achievementForm.media_format) {
         extraData.media_format = achievementForm.media_format;
       }
-      if (achievementForm.media_link) extraData.media_link = achievementForm.media_link;
+      if (achievementForm.media_link)
+        extraData.media_link = achievementForm.media_link;
     }
-    const prev = dialogIndex.value > -1 ? achievements.value[dialogIndex.value] : null;
+    const prev =
+      dialogIndex.value > -1 ? achievements.value[dialogIndex.value] : null;
     const newItem = {
       ...achievementForm,
       extra_data: extraData,
@@ -348,11 +392,14 @@ const dialogFileList = ref<UploadFile[]>([]);
     project.value = data;
     projectInfo.title = data.title || "";
     projectInfo.project_no = data.project_no || "";
-    projectInfo.leader_name = data.leader_name || data.leader_info?.real_name || "";
+    projectInfo.leader_name =
+      data.leader_name || data.leader_info?.real_name || "";
     projectInfo.level_display =
-      data.level_display || getLabel(DICT_CODES.PROJECT_LEVEL, data.level ?? "");
+      data.level_display ||
+      getLabel(DICT_CODES.PROJECT_LEVEL, data.level ?? "");
     projectInfo.category_display =
-      data.category_display || getLabel(DICT_CODES.PROJECT_CATEGORY, data.category ?? "");
+      data.category_display ||
+      getLabel(DICT_CODES.PROJECT_CATEGORY, data.category ?? "");
     projectInfo.budget = data.budget ?? 0;
     projectInfo.status = data.status || "";
 
@@ -389,7 +436,8 @@ const dialogFileList = ref<UploadFile[]>([]);
       if (achRes?.code === 200) {
         achievements.value = (achRes.data || []).map((item) => ({
           id: item.id,
-          achievement_type: item.achievement_type_value || item.achievement_type,
+          achievement_type:
+            item.achievement_type_value || item.achievement_type,
           title: item.title || "",
           description: item.description || "",
           authors: item.authors || "",
@@ -420,7 +468,9 @@ const dialogFileList = ref<UploadFile[]>([]);
     }
     loading.value = true;
     try {
-      const res = (await getProjectDetail(Number(projectId))) as ApiResponse<ProjectDetail>;
+      const res = (await getProjectDetail(
+        Number(projectId)
+      )) as ApiResponse<ProjectDetail>;
       const data = res?.data ?? res;
       if (data) {
         await initFromProject(data as ProjectDetail);
@@ -435,12 +485,24 @@ const dialogFileList = ref<UploadFile[]>([]);
   };
 
   const submit = async (isDraft: boolean) => {
+    console.log("submit 函数被调用，isDraft:", isDraft);
+    console.log("formRef.value:", formRef.value);
     if (!isDraft) {
-      if (!formRef.value) return;
-      await formRef.value.validate(async (valid) => {
-        if (!valid) return;
+      if (!formRef.value) {
+        console.error("formRef.value 为空！");
+        ElMessage.error("表单未初始化，请刷新页面重试");
+        return;
+      }
+      try {
+        console.log("开始验证表单...");
+        await formRef.value.validate();
+        console.log("表单验证通过，开始提交...");
         await doSubmit(false);
-      });
+      } catch (error) {
+        console.error("表单验证失败:", error);
+        ElMessage.warning("请检查必填项");
+        return;
+      }
     } else {
       await doSubmit(true);
     }
@@ -451,7 +513,8 @@ const dialogFileList = ref<UploadFile[]>([]);
     try {
       const payload = new FormData();
 
-      if (formData.final_report) payload.append("final_report", formData.final_report);
+      if (formData.final_report)
+        payload.append("final_report", formData.final_report);
       if (formData.achievement_file) {
         payload.append("achievement_file", formData.achievement_file);
       }
@@ -476,22 +539,34 @@ const dialogFileList = ref<UploadFile[]>([]);
       const isEditingDraft = projectInfo.status === "CLOSURE_DRAFT";
       const res = (await (isEditingDraft
         ? updateClosureApplication(Number(projectId), payload)
-        : createClosureApplication(Number(projectId), payload))) as ApiResponse<unknown>;
-      if (res.code === 200 || res.status === 201) {
+        : createClosureApplication(
+            Number(projectId),
+            payload
+          ))) as ApiResponse<unknown>;
+
+      if (res.code === 200 || res.status === 201 || res.code === 201) {
         ElMessage.success(isDraft ? "草稿已保存" : "申请已提交");
         router.push(isDraft ? "/closure/drafts" : "/closure/applied");
       } else {
         ElMessage.error(res.message || "操作失败");
       }
     } catch (error: unknown) {
-      ElMessage.error(getErrorMessage(error, "提交失败"));
+      console.error("提交失败:", error);
+      const errMsg = getErrorMessage(error, "提交失败");
+      ElMessage.error(errMsg);
     } finally {
       loading.value = false;
     }
   };
 
-  const submitForm = () => submit(false);
-  const saveAsDraft = () => submit(true);
+  const submitForm = async () => {
+    console.log("submitForm 被调用");
+    await submit(false);
+  };
+  const saveAsDraft = async () => {
+    console.log("saveAsDraft 被调用");
+    await submit(true);
+  };
 
   const canDeleteSubmission = computed(() => {
     const status = projectInfo.status;
@@ -509,10 +584,16 @@ const dialogFileList = ref<UploadFile[]>([]);
   const handleDeleteSubmission = async () => {
     if (!project.value) return;
     try {
-      await ElMessageBox.confirm("确定删除该结题提交吗？删除后可在回收站恢复。", "提示", {
-        type: "warning",
-      });
-      const res = (await deleteClosureSubmission(project.value.id)) as ApiResponse<unknown>;
+      await ElMessageBox.confirm(
+        "确定删除该结题提交吗？删除后可在回收站恢复。",
+        "提示",
+        {
+          type: "warning",
+        }
+      );
+      const res = (await deleteClosureSubmission(
+        project.value.id
+      )) as ApiResponse<unknown>;
       if (res?.code === 200) {
         ElMessage.success("已移入回收站");
         fetchProjectInfo();

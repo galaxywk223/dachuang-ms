@@ -176,6 +176,10 @@ import {
   type WorkflowNode,
   type ReviewActionParams,
 } from "@/api/reviews";
+import {
+  getChangeRequests,
+  reviewChangeRequest,
+} from "@/api/projects/change-requests";
 
 defineOptions({
   name: "TeacherDashboardView",
@@ -210,6 +214,10 @@ type TeacherProjectRow = ProjectInfo & {
   file_url?: string;
   file_label?: string;
   created_at?: string;
+  // Change Request fields
+  is_change_request?: boolean;
+  change_request_id?: number;
+  id?: number;
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -370,8 +378,33 @@ const fetchProjects = async () => {
           created_at: r.created_at,
         } as TeacherProjectRow;
       });
-      projects.value = rows;
-      statistics.pending = count;
+
+      // Fetch Change Requests
+      const changeRes = await getChangeRequests({
+        status: "TEACHER_REVIEWING",
+      });
+      const changeData =
+        isRecord(changeRes) && isRecord(changeRes.data)
+          ? changeRes.data
+          : changeRes;
+      const changeList = resolveList<any>(changeData);
+      const changeRows = changeList.map((c) => ({
+        project_no: c.project_no,
+        title: c.project_title,
+        leader_name: c.leader_name,
+        level_display: c.level, // Assuming level exists or is optional
+        status: c.status,
+        status_display: c.status_display,
+        review_type_display: c.request_type_display || "项目异动",
+        created_at: c.created_at,
+        file_url: c.attachment_url,
+        file_label: "下载附件",
+        is_change_request: true,
+        change_request_id: c.id,
+      }));
+
+      projects.value = [...rows, ...changeRows];
+      statistics.pending = count + changeRows.length;
     } else {
       const { results, count } = await fetchMyProjects();
       projects.value = results || [];
@@ -392,13 +425,24 @@ const handleReview = async (project: TeacherProjectRow) => {
   currentProject.value = project;
   // We need the Review ID.
   // If we loaded from /reviews/, we have it.
+  if (project.is_change_request) {
+    currentReviewId.value = null;
+    form.action = "approve";
+    form.comments = "";
+    form.target_node_id = null;
+    rejectTargets.value = [];
+    dialogVisible.value = true;
+    return;
+  }
+
   if (project.review_id) {
     currentReviewId.value = project.review_id;
     form.action = "approve";
     form.comments = "";
     form.target_node_id = null;
     rejectTargets.value = [];
-    // 加载可退回节点
+
+    // Normal review: load reject targets
     try {
       const res = await getRejectTargets(project.review_id);
       if (res.code === 200) {
@@ -431,7 +475,11 @@ const handleClose = () => {
 const handleSubmit = async () => {
   if (!formRef.value) return;
   const reviewId = currentReviewId.value;
-  if (reviewId === null) return;
+  const isChange = currentProject.value?.is_change_request;
+
+  if (reviewId === null && !isChange) return;
+  if (isChange && !currentProject.value?.change_request_id) return;
+
   await formRef.value.validate(async (valid) => {
     if (valid) {
       submitting.value = true;
@@ -444,7 +492,15 @@ const handleSubmit = async () => {
         if (form.action === "reject" && form.target_node_id) {
           payload.target_node_id = form.target_node_id;
         }
-        await reviewAction(reviewId, payload);
+
+        if (isChange && currentProject.value?.change_request_id) {
+          await reviewChangeRequest(currentProject.value.change_request_id, {
+            action: form.action,
+            comments: form.comments,
+          });
+        } else if (reviewId !== null) {
+          await reviewAction(reviewId, payload);
+        }
         ElMessage.success("审核提交成功");
         dialogVisible.value = false;
         activeTab.value = "my_projects";

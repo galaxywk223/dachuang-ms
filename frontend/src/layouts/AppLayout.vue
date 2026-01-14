@@ -461,11 +461,7 @@ const currentMenus = computed<MenuEntry[]>(() => {
           title: "统计概览",
           icon: Folder,
         },
-        {
-          index: "/level2-admin/funds",
-          title: "经费管理",
-          icon: Folder,
-        },
+
         {
           index: "establishment",
           title: "立项管理",
@@ -549,11 +545,6 @@ const currentMenus = computed<MenuEntry[]>(() => {
               title: "项目库管理",
               icon: Folder,
             },
-            {
-              index: "/level1-admin/funds",
-              title: "经费管理",
-              icon: Folder,
-            },
           ],
         },
         {
@@ -577,11 +568,6 @@ const currentMenus = computed<MenuEntry[]>(() => {
             {
               index: "/level1-admin/users",
               title: "用户管理",
-              icon: User,
-            },
-            {
-              index: "/level1-admin/roles",
-              title: "角色管理",
               icon: User,
             },
           ],
@@ -629,16 +615,7 @@ const currentMenus = computed<MenuEntry[]>(() => {
           title: "指导项目",
           icon: DocumentAdd,
         },
-        {
-          index: "/teacher/change-reviews",
-          title: "项目异动审核",
-          icon: DocumentChecked,
-        },
-        {
-          index: "/teacher/funds",
-          title: "经费管理",
-          icon: Folder,
-        },
+
         {
           index: "/notifications",
           title: "通知中心",

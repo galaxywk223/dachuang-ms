@@ -435,7 +435,6 @@ const handleViewDetail = (row: ProjectRow) => {
     ElMessage.warning("项目ID缺失");
   }
 };
-};
 
 const handleCommand = (command: string, row: ProjectRow) => {
   if (command === "approve") handleApprove(row);
