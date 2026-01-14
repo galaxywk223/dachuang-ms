@@ -28,12 +28,17 @@ export const useUserStore = defineStore("user", () => {
     if (!data) return data;
     if (typeof data.role === "string") {
       const normalized = data.role.toLowerCase();
+      console.log("[角色标准化] 原始角色:", data.role, "标准化后:", normalized);
+      // 总是存储用户角色，不管是否在预定义枚举中
+      localStorage.setItem("user_role", normalized);
+      console.log("[角色标准化] 存储到localStorage的user_role:", normalized);
       const roles = Object.values(UserRole);
       if (roles.includes(normalized as UserRole)) {
-        const normalizedUser = { ...data, role: normalized as UserRole };
-        localStorage.setItem("user_role", normalized);
-        return normalizedUser;
+        return { ...data, role: normalized as UserRole };
       }
+      // 自定义角色也返回数据
+      console.log("[角色标准化] 自定义角色，直接返回");
+      return data;
     }
     return data;
   };
@@ -76,13 +81,17 @@ export const useUserStore = defineStore("user", () => {
         };
       };
       if (response.code === 200 && response.data) {
+        console.log("[登录调试] 登录响应数据:", response.data);
         token.value = response.data.access_token;
         const userData = response.data.user ?? null;
+        console.log("[登录调试] 用户数据:", userData);
+        console.log("[登录调试] 角色信息:", userData?.role_info);
         user.value = normalizeUserRole(userData);
 
         // 存储角色信息
         if (userData?.role_info) {
           roleInfo.value = userData.role_info;
+          console.log("[登录调试] 设置 roleInfo:", roleInfo.value);
         }
 
         // 存储权限列表
@@ -101,9 +110,7 @@ export const useUserStore = defineStore("user", () => {
             JSON.stringify(userData.permissions)
           );
         }
-        if (user.value?.role) {
-          localStorage.setItem("user_role", user.value.role);
-        }
+        // 不需要再次存储user_role，normalizeUserRole已经处理了
         return true;
       }
       return false;

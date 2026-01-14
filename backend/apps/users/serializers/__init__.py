@@ -75,6 +75,7 @@ class UserSerializer(RoleAssignMixin, serializers.ModelSerializer):
                 "code": obj.role_fk.code,
                 "name": obj.role_fk.name,
                 "default_route": obj.role_fk.default_route,
+                "scope_dimension": obj.role_fk.scope_dimension,
             }
         return None
 

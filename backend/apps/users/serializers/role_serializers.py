@@ -107,11 +107,27 @@ class RoleDetailSerializer(serializers.ModelSerializer):
         """创建角色"""
         # 自动生成角色代码
         validated_data["code"] = self._generate_role_code(validated_data["name"])
+
+        # 如果有scope_dimension（管理员角色），自动设置default_route
+        if validated_data.get("scope_dimension") and not validated_data.get(
+            "default_route"
+        ):
+            validated_data["default_route"] = "/level2-admin/projects"
+
         role = Role.objects.create(**validated_data)
         return role
 
     def update(self, instance, validated_data):
         """更新角色"""
+        # 如果修改了scope_dimension，且原来没有default_route，自动设置
+        if (
+            "scope_dimension" in validated_data
+            and validated_data["scope_dimension"]
+            and not instance.default_route
+            and not validated_data.get("default_route")
+        ):
+            validated_data["default_route"] = "/level2-admin/projects"
+
         # 更新基本字段（code不可修改）
         for attr, value in validated_data.items():
             if attr != "code":  # 不允许修改code
