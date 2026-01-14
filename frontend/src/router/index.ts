@@ -8,13 +8,18 @@ import { adminRoutes } from "./modules/adminRoutes";
 import { level2Routes } from "./modules/level2Routes";
 import { studentRoutes } from "./modules/studentRoutes";
 import { teacherRoutes } from "./modules/teacherRoutes";
-import { expertRoutes } from "./modules/expertRoutes";
 
 declare module "vue-router" {
   interface RouteMeta {
     title?: string;
     requiresAuth?: boolean;
-    role?: "admin" | "student" | "level1_admin" | "level2_admin" | "expert" | "teacher";
+    role?:
+      | "admin"
+      | "student"
+      | "level1_admin"
+      | "level2_admin"
+      | "expert"
+      | "teacher";
     category?: string;
   }
 }
@@ -55,7 +60,6 @@ const routes: RouteRecordRaw[] = [
   ...adminRoutes,
   ...level2Routes,
   ...studentRoutes,
-  ...expertRoutes,
   ...teacherRoutes,
   {
     path: "/:pathMatch(.*)*",
@@ -78,24 +82,28 @@ router.beforeEach(async (to, _from, next) => {
     // 需要登录但未登录
     next({ name: "login" });
   } else if (to.name === "login" && userStore.isLoggedIn) {
-    // 已登录则根据角色跳转
+    // 已登录则根据角色信息跳转
     if (userRole === "student") {
       next({ path: "/establishment/apply" });
     } else if (userRole === "level1_admin") {
       next({ path: "/level1-admin/statistics" });
-    } else if (userRole === "level2_admin" || userRole === "admin") {
-      next({ path: "/level2-admin/projects" });
-    } else if (userRole === "expert") {
-      next({ path: "/expert/reviews" });
-    } else if (userRole === "teacher") {
+    } else if (userRole === "expert" || userRole === "teacher") {
+      // 专家和教师使用相同的页面，因为专家就是被指定为评审的教师
       next({ path: "/teacher/dashboard" });
     } else {
-      next({ path: "/establishment/apply" }); // Default fallback
+      // 所有其他管理员角色（学院管理员、三级管理员等）都跳转到二级管理页面
+      next({ path: "/level2-admin/projects" });
     }
   } else if (userStore.isLoggedIn) {
     // 如果已登录但没有用户信息，尝试获取用户信息
     if (!userStore.user) {
-      await userStore.fetchProfile();
+      try {
+        await userStore.fetchProfile();
+      } catch (error) {
+        // 获取用户信息失败（token无效），跳转到登录页
+        next({ name: "login" });
+        return;
+      }
     }
 
     // 角色权限检查

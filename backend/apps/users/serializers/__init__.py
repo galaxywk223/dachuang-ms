@@ -57,7 +57,7 @@ class UserSerializer(RoleAssignMixin, serializers.ModelSerializer):
             "updated_at",
             "managed_scope_value",
         ]
-        read_only_fields = ["id", "created_at", "updated_at"]
+        read_only_fields = ["id", "username", "created_at", "updated_at"]
 
     def to_representation(self, instance):
         # 检查实例是否有 role_fk 属性（防止 AnonymousUser 引起错误）

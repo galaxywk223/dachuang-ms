@@ -60,7 +60,17 @@ class AdminUserViewSet(viewsets.ModelViewSet):
 
         # 按角色筛选
         role = self.request.query_params.get("role", "")
-        if role:
+        is_admin = self.request.query_params.get("is_admin", "")
+
+        if is_admin and is_admin.lower() == "true":
+            # 筛选所有管理员角色（有scope_dimension的角色）
+            from apps.users.models import Role
+
+            admin_roles = Role.objects.filter(
+                scope_dimension__isnull=False
+            ).values_list("id", flat=True)
+            queryset = queryset.filter(role_fk_id__in=admin_roles)
+        elif role:
             queryset = queryset.filter(role_fk__code=role)
 
         expert_scope = self.request.query_params.get("expert_scope", "")
@@ -212,8 +222,13 @@ class AdminUserViewSet(viewsets.ModelViewSet):
             data["role"] = User.UserRole.EXPERT
             data["college"] = request.user.college
             data["expert_scope"] = User.ExpertScope.COLLEGE
-        elif instance.is_expert:
-            data.setdefault("expert_scope", instance.expert_scope)
+        elif instance.is_expert or data.get("role") == User.UserRole.EXPERT:
+            data.setdefault(
+                "expert_scope",
+                instance.expert_scope
+                if instance.is_expert
+                else User.ExpertScope.COLLEGE,
+            )
             if data.get("expert_scope") == User.ExpertScope.SCHOOL:
                 data["college"] = ""
             elif not data.get("college"):

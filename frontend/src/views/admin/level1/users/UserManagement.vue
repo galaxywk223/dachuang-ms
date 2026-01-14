@@ -175,13 +175,14 @@
                 v-model="formData.role"
                 placeholder="请先选择角色"
                 filterable
-                :disabled="isEditMode"
+                :disabled="isEditMode && isStudentRole"
               >
                 <el-option
                   v-for="role in roleOptions"
                   :key="role.code"
                   :label="role.name"
                   :value="role.code"
+                  :disabled="isEditMode && role.code === 'STUDENT'"
                 />
               </el-select>
             </el-form-item>
@@ -470,7 +471,7 @@ const router = useRouter();
 const userTabs = [
   { label: "学生管理", name: "STUDENT" },
   { label: "教师管理", name: "TEACHER" },
-  { label: "管理员管理", name: "LEVEL2_ADMIN" },
+  { label: "管理员管理", name: "ADMIN" }, // 改为 ADMIN 表示所有管理员
 ] as const;
 
 const normalizeTab = (value?: string) => {
@@ -484,6 +485,7 @@ type RoleOption = {
   code: string;
   name: string;
   default_route?: string;
+  scope_dimension?: string;
 };
 
 type UserRow = {
@@ -536,7 +538,8 @@ const currentPage = ref(1);
 const pageSize = ref(10);
 const activeTab = ref(userTabs[0].name);
 const activeTabLabel = computed(
-  () => userTabs.find((tab) => tab.name === activeTab.value)?.label || "用户管理"
+  () =>
+    userTabs.find((tab) => tab.name === activeTab.value)?.label || "用户管理"
 );
 
 const formDialogVisible = ref(false);
@@ -566,15 +569,15 @@ const isStudentRole = computed(() => formData.role === "STUDENT");
 const isTeacherOrAdmin = computed(
   () => formData.role && formData.role !== "STUDENT"
 );
-const isAdminRole = computed(() => {
-  const role = roleOptions.value.find((r) => r.code === formData.role);
-  return role?.code?.endsWith("_ADMIN") || false;
-});
-const isExpertRole = computed(() => formData.role === "EXPERT");
 const selectedRoleScopeDimension = computed(() => {
   const role = roleOptions.value.find((r) => r.code === formData.role) as any;
   return role?.scope_dimension || "";
 });
+// 判断是否为管理员角色：有scope_dimension的角色需要选择管理范围
+const isAdminRole = computed(() => {
+  return !!selectedRoleScopeDimension.value;
+});
+const isExpertRole = computed(() => formData.role === "EXPERT");
 
 const filters = reactive({
   search: "",
@@ -729,7 +732,12 @@ const loadData = async () => {
       page_size: pageSize.value,
     };
     if (filters.search) params.search = filters.search;
-    if (filters.role) params.role = filters.role;
+    // 如果是管理员标签页，传递 is_admin=true 而不是具体角色
+    if (filters.role === "ADMIN") {
+      params.is_admin = true;
+    } else if (filters.role) {
+      params.role = filters.role;
+    }
     if (filters.college) params.college = filters.college;
     if (filters.is_active) params.is_active = filters.is_active === "true";
 
@@ -961,7 +969,9 @@ watch(
 onMounted(async () => {
   loadDictionaries([DICT_CODES.COLLEGE, DICT_CODES.TITLE]);
   await loadRoles();
-  syncRoleFromRoute(typeof route.query.role === "string" ? route.query.role : undefined);
+  syncRoleFromRoute(
+    typeof route.query.role === "string" ? route.query.role : undefined
+  );
 });
 </script>
 

@@ -6,14 +6,21 @@ import type { User } from "@/types";
 
 export const useUserStore = defineStore("user", () => {
   const token = ref<string>(localStorage.getItem("token") || "");
+
+  // 从localStorage恢复权限和角色信息
+  const storedPermissions = localStorage.getItem("permissions");
+  const storedRoleInfo = localStorage.getItem("role_info");
+
   const user = ref<User | null>(null);
-  const permissions = ref<string[]>([]);
+  const permissions = ref<string[]>(
+    storedPermissions ? JSON.parse(storedPermissions) : []
+  );
   const roleInfo = ref<{
     id: number;
     code: string;
     name: string;
     default_route: string;
-  } | null>(null);
+  } | null>(storedRoleInfo ? JSON.parse(storedRoleInfo) : null);
 
   const isLoggedIn = computed(() => !!token.value);
 
@@ -155,6 +162,17 @@ export const useUserStore = defineStore("user", () => {
       }
     } catch (error) {
       console.error("Fetch profile error:", error);
+      // 如果获取用户信息失败（如token过期），清理登录状态
+      token.value = "";
+      user.value = null;
+      permissions.value = [];
+      roleInfo.value = null;
+      localStorage.removeItem("token");
+      localStorage.removeItem("refresh_token");
+      localStorage.removeItem("role_info");
+      localStorage.removeItem("permissions");
+      localStorage.removeItem("user_role");
+      throw error; // 重新抛出错误，让路由守卫可以处理
     }
   }
 

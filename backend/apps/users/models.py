@@ -237,6 +237,11 @@ class User(AbstractUser):
         """向后兼容的角色判断"""
         return self.role_fk is not None and self.role_fk.code == self.UserRole.TEACHER
 
+    @property
+    def is_expert(self):
+        """向后兼容的角色判断"""
+        return self.role_fk is not None and self.role_fk.code == self.UserRole.EXPERT
+
 
 class LoginLog(models.Model):
     """
