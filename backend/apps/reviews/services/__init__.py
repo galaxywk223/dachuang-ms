@@ -237,6 +237,7 @@ class ReviewService:
                 project.status = Project.ProjectStatus.IN_PROGRESS
             elif phase == ProjectPhaseInstance.Phase.CLOSURE:
                 project.status = Project.ProjectStatus.READY_FOR_CLOSURE
+            project.save(update_fields=["status", "updated_at"])
             return
 
         # 审核节点 - 根据节点配置动态设置状态
@@ -246,6 +247,7 @@ class ReviewService:
         if hasattr(node, "project_status") and node.project_status:
             try:
                 project.status = node.project_status
+                project.save(update_fields=["status", "updated_at"])
                 return
             except Exception as e:
                 ReviewService.logger.warning(
@@ -280,6 +282,9 @@ class ReviewService:
             else:
                 # 其他角色：使用通用审核状态
                 project.status = Project.ProjectStatus.CLOSURE_SUBMITTED
+        
+        # 保存项目状态
+        project.save(update_fields=["status", "updated_at"])
 
     @staticmethod
     def _normalize_score_details(review, score, score_details):
