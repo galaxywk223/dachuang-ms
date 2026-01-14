@@ -11,7 +11,6 @@ from apps.projects.models import ProjectPhaseInstance, Project
 from apps.projects.services.phase_service import ProjectPhaseService
 from apps.reviews.services import ReviewService
 from apps.notifications.services import NotificationService
-from apps.system_settings.services import SystemSettingService
 
 from ...serializers import ProjectClosureSerializer
 from ...services import ProjectService, ProjectRecycleService

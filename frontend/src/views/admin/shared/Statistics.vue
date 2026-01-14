@@ -167,7 +167,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
+import { reactive, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import { Folder, Check, Clock } from "@element-plus/icons-vue";
 import StatCard from "@/components/common/StatCard.vue";
@@ -177,7 +177,6 @@ import {
 } from "@/api/projects/admin";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionaries";
-import dayjs from "dayjs";
 
 defineOptions({
   name: "StatisticsView",

@@ -177,7 +177,11 @@ const handleDelete = async (row: ProjectRow) => {
     );
 
     // 调用API删除草稿
-    const response = (await deleteMidTermSubmission(row.id)) as any;
+    const response = (await deleteMidTermSubmission(row.id)) as {
+      code?: number;
+      status?: number;
+      message?: string;
+    };
     if (response.code === 200 || response.status === 204 || !response.code) {
       ElMessage.success("删除成功");
       await fetchDrafts();

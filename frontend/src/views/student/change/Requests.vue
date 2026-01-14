@@ -144,7 +144,6 @@ import { ref, reactive, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage, type UploadFile, type UploadUserFile } from "element-plus";
 import {
-  getChangeRequests,
   createChangeRequest,
   updateChangeRequest,
   submitChangeRequest,

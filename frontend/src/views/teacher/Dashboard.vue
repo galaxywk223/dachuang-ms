@@ -387,20 +387,20 @@ const fetchProjects = async () => {
         isRecord(changeRes) && isRecord(changeRes.data)
           ? changeRes.data
           : changeRes;
-      const changeList = resolveList<any>(changeData);
-      const changeRows = changeList.map((c) => ({
-        project_no: c.project_no,
-        title: c.project_title,
-        leader_name: c.leader_name,
-        level_display: c.level, // Assuming level exists or is optional
-        status: c.status,
-        status_display: c.status_display,
-        review_type_display: c.request_type_display || "项目异动",
-        created_at: c.created_at,
-        file_url: c.attachment_url,
+      const changeList = resolveList<Record<string, unknown>>(changeData);
+      const changeRows: TeacherProjectRow[] = changeList.map((c) => ({
+        project_no: (c.project_no as string) || "",
+        title: (c.project_title as string) || "",
+        leader_name: (c.leader_name as string) || "",
+        level_display: (c.level as string) || "",
+        status: (c.status as string) || "",
+        status_display: (c.status_display as string) || "",
+        review_type_display: (c.request_type_display as string) || "项目异动",
+        created_at: (c.created_at as string) || "",
+        file_url: (c.attachment_url as string) || "",
         file_label: "下载附件",
         is_change_request: true,
-        change_request_id: c.id,
+        change_request_id: (c.id as number) || 0,
       }));
 
       projects.value = [...rows, ...changeRows];

@@ -560,7 +560,7 @@ async function handleSaveDates() {
     ElMessage.success("日期配置成功");
     dateDialogVisible.value = false;
     await loadWorkflow();
-  } catch (error: unknown) {
+  } catch {
     ElMessage.error("配置失败");
   }
 }
@@ -633,7 +633,7 @@ async function handleValidate(showSuccess = true) {
     } else if (!result.valid) {
       ElMessage.warning("流程配置存在问题，请检查");
     }
-  } catch (error: unknown) {
+  } catch {
     // 只在用户主动验证时显示错误，自动验证时静默失败
     if (showSuccess) {
       ElMessage.error("验证失败");

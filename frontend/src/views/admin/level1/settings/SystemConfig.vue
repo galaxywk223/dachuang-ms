@@ -72,15 +72,13 @@
 <script setup lang="ts">
 import { reactive, ref, computed, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { ElMessage, ElMessageBox } from "element-plus";
+import { ElMessage } from "element-plus";
 import {
   getEffectiveSettings,
   updateSettingByCode,
 } from "@/api/system-settings";
 import { getProjectBatch } from "@/api/system-settings/batches";
-import SystemConfigDatesTab from "./components/SystemConfigDatesTab.vue";
 import SystemConfigLimitsTab from "./components/SystemConfigLimitsTab.vue";
-import SystemConfigProcessTab from "./components/SystemConfigProcessTab.vue";
 import BatchWorkflowConfig from "@/components/business/BatchWorkflowConfig.vue";
 
 defineOptions({ name: "Level1SystemConfigView" });
@@ -117,7 +115,6 @@ const router = useRouter();
 const activeTab = ref("dates");
 const savingAll = ref(false);
 const batchInfo = ref<BatchInfo | null>(null);
-const globalDateRange = ref<string[]>([]);
 
 const batchId = computed(() => {
   const raw = route.params.id || route.query.batch_id;
@@ -488,49 +485,6 @@ const saveAll = async () => {
     savingAll.value = false;
   }
 };
-
-const applyBatchDates = async () => {
-  if (!globalDateRange.value || globalDateRange.value.length !== 2) return;
-
-  try {
-    await ElMessageBox.confirm(
-      "确定要将所有配置项的时间段都设置为当前选中时间吗？这会覆盖原有的时间设置。",
-      "一键设置确认",
-      {
-        confirmButtonText: "确定覆盖",
-        cancelButtonText: "取消",
-        type: "warning",
-      }
-    );
-
-    const range = [...globalDateRange.value];
-
-    // Submissions
-    applicationWindow.range = [...range];
-    midtermWindow.range = [...range];
-    closureWindow.range = [...range];
-    expertReviewWindow.range = [...range];
-
-    // Reviews - Application
-    reviewWindow.application.teacher.range = [...range];
-    reviewWindow.application.level2.range = [...range];
-    reviewWindow.application.level1.range = [...range];
-
-    // Reviews - Midterm
-    reviewWindow.midterm.teacher.range = [...range];
-    reviewWindow.midterm.level2.range = [...range];
-
-    // Reviews - Closure
-    reviewWindow.closure.teacher.range = [...range];
-    reviewWindow.closure.level2.range = [...range];
-    reviewWindow.closure.level1.range = [...range];
-
-    ElMessage.success("已应用到所有时间配置，请记得点击“保存全部”生效。");
-  } catch {
-    // cancelled
-  }
-};
-
 watch(
   () => batchId.value,
   async (id) => {

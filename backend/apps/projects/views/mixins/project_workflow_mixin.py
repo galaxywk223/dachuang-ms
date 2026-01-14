@@ -46,9 +46,9 @@ class ProjectWorkflowMixin:
 
     def _get_review_type_for_phase(self, phase: str):
         return {
-            ProjectPhaseInstance.Phase.APPLICATION: Review.ReviewType.APPLICATION,
-            ProjectPhaseInstance.Phase.MID_TERM: Review.ReviewType.MID_TERM,
-            ProjectPhaseInstance.Phase.CLOSURE: Review.ReviewType.CLOSURE,
+            "APPLICATION": Review.ReviewType.APPLICATION,
+            "MID_TERM": Review.ReviewType.MID_TERM,
+            "CLOSURE": Review.ReviewType.CLOSURE,
         }.get(phase)
 
     def _get_pending_admin_review(
@@ -128,7 +128,11 @@ class ProjectWorkflowMixin:
         submitted = assigned - pending
         approved_count = qs.filter(status=Review.ReviewStatus.APPROVED).count()
         rejected_count = qs.filter(status=Review.ReviewStatus.REJECTED).count()
-        avg_score = qs.exclude(status=Review.ReviewStatus.PENDING).aggregate(avg=Avg("score")).get("avg")
+        avg_score = (
+            qs.exclude(status=Review.ReviewStatus.PENDING)
+            .aggregate(avg=Avg("score"))
+            .get("avg")
+        )
 
         return Response(
             {
@@ -213,7 +217,9 @@ class ProjectWorkflowMixin:
         """
         project = self.get_object()
         user = request.user
-        self._assert_assigned_admin(project, ProjectPhaseInstance.Phase.APPLICATION, user)
+        self._assert_assigned_admin(
+            project, ProjectPhaseInstance.Phase.APPLICATION, user
+        )
 
         phase_instance = self._get_current_phase_instance(
             project, ProjectPhaseInstance.Phase.APPLICATION
@@ -289,7 +295,9 @@ class ProjectWorkflowMixin:
         """
         project = self.get_object()
         user = request.user
-        self._assert_assigned_admin(project, ProjectPhaseInstance.Phase.APPLICATION, user)
+        self._assert_assigned_admin(
+            project, ProjectPhaseInstance.Phase.APPLICATION, user
+        )
 
         approved_budget = request.data.get("approved_budget")
         try:

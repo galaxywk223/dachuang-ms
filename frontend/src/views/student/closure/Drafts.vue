@@ -294,7 +294,7 @@ const handleDelete = async (row: ProjectRow) => {
 
     // 调用API删除草稿
     const response = (await deleteClosureDraft(row.id)) as ApiResponse;
-    if (response.code === 200 || response.status === 204 || !response.code) {
+    if (response.code === 200 || !response.code) {
       ElMessage.success("删除成功");
       await fetchClosureDrafts();
     } else {

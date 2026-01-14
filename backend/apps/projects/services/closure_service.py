@@ -9,11 +9,9 @@ from django.utils import timezone
 from rest_framework import status
 
 from apps.dictionaries.models import DictionaryItem
-from apps.reviews.models import Review
-from apps.system_settings.services import SystemSettingService
 from apps.system_settings.services.workflow_service import WorkflowService
 
-from ..models import Project, ProjectAchievement
+from ..models import Project, ProjectAchievement, ProjectPhaseInstance
 from ..serializers import ProjectAchievementSerializer, ProjectSerializer
 
 
@@ -395,9 +393,6 @@ class ProjectClosureService:
                     # 使用工作流系统创建审核
                     from apps.reviews.services import ReviewService
                     from apps.projects.services.phase_service import ProjectPhaseService
-                    from apps.system_settings.services.workflow_service import (
-                        WorkflowService,
-                    )
 
                     # 确保 phase_instance 存在并设置为初始节点
                     initial_node = WorkflowService.get_initial_node(
@@ -513,9 +508,6 @@ class ProjectClosureService:
                     # 使用工作流系统创建审核
                     from apps.reviews.services import ReviewService
                     from apps.projects.services.phase_service import ProjectPhaseService
-                    from apps.system_settings.services.workflow_service import (
-                        WorkflowService,
-                    )
 
                     # 确保 phase_instance 存在并设置为初始节点
                     initial_node = WorkflowService.get_initial_node(
