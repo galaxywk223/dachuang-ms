@@ -145,42 +145,45 @@ const handleUploadError = () => {};
 
 const handleSubmit = async () => {
   if (!formRef.value) return;
-  await formRef.value.validate(async (valid) => {
-    if (valid) {
-      if (!props.projectId) {
-        ElMessage.error("项目信息缺失");
-        return;
-      }
+  
+  try {
+    await formRef.value.validate();
+  } catch {
+    return;
+  }
 
-      loading.value = true;
-      try {
-        const formData = new FormData();
-        formData.append("project", props.projectId.toString());
-        formData.append("title", form.title);
-        formData.append("amount", form.amount.toString());
-        formData.append("expenditure_date", form.expenditure_date);
+  if (!props.projectId) {
+    ElMessage.error("项目信息缺失");
+    return;
+  }
 
-        if (uploadFile.value) {
-          formData.append("proof_file", uploadFile.value);
-        }
+  loading.value = true;
+  try {
+    const formData = new FormData();
+    formData.append("project", props.projectId.toString());
+    formData.append("title", form.title);
+    formData.append("amount", form.amount.toString());
+    formData.append("expenditure_date", form.expenditure_date);
 
-        await request.post("/projects/expenditures/", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
-
-        ElMessage.success("经费录入成功");
-        emit("success");
-        handleClose();
-      } catch (error: unknown) {
-        console.error(error);
-        const message = error instanceof Error ? error.message : "录入失败";
-        ElMessage.error(message);
-      } finally {
-        loading.value = false;
-      }
+    if (uploadFile.value) {
+      formData.append("proof_file", uploadFile.value);
     }
-  });
+
+    await request.post("/projects/expenditures/", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    ElMessage.success("经费录入成功");
+    emit("success");
+    handleClose();
+  } catch (error: unknown) {
+    console.error(error);
+    const message = error instanceof Error ? error.message : "录入失败";
+    ElMessage.error(message);
+  } finally {
+    loading.value = false;
+  }
 };
 </script>

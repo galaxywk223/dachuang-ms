@@ -538,16 +538,15 @@ export function useProjectApplication() {
         ElMessage.warning("请补充预期成果清单");
         return;
       }
-      await formRef.value.validate(async (valid) => {
-        if (!valid) {
-          ElMessage.error("请完善必填信息");
-          return;
-        }
-        await processRequest(false);
-      });
-    } else {
-      await processRequest(true);
+      try {
+        await formRef.value.validate();
+      } catch {
+        ElMessage.error("请完善必填信息");
+        return;
+      }
     }
+    
+    await processRequest(isDraft);
   };
 
   const processRequest = async (isDraft: boolean) => {

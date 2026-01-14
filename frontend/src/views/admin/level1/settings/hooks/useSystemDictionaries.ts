@@ -389,79 +389,83 @@ export function useSystemDictionaries(
     const type = currentType.value;
     if (!formRef.value || !type) return;
 
-    await formRef.value.validate(async (valid) => {
-      if (!valid) return;
-      if (type.code === DICT_CODES.MAJOR_CATEGORY) {
-        const normalizedLabel = form.label.trim();
-        const duplicateLabel = items.value.some(
-          (item) =>
-            item.id !== editingId.value &&
-            item.label.trim() === normalizedLabel
+    try {
+      await formRef.value.validate();
+    } catch {
+      return;
+    }
+
+    if (type.code === DICT_CODES.MAJOR_CATEGORY) {
+      const normalizedLabel = form.label.trim();
+      const duplicateLabel = items.value.some(
+        (item) =>
+          item.id !== editingId.value &&
+          item.label.trim() === normalizedLabel
+      );
+      if (duplicateLabel) {
+        ElMessage.error("专业大类显示名称不能重复");
+        return;
+      }
+    }
+
+    submitting.value = true;
+    try {
+      const finalValue = showCode.value ? form.value : form.label;
+
+      const extraData: Record<string, unknown> = {};
+      if (showBudget.value) {
+        extraData.budget = Number(form.budget) || 0;
+      }
+
+      let payload: FormData | Record<string, unknown>;
+      if (selectedFile.value) {
+        payload = new FormData();
+        payload.append("label", form.label);
+        payload.append("value", finalValue);
+        payload.append(
+          "sort_order",
+          String(
+            isEditMode.value && editingId.value
+              ? form.sort_order
+              : items.value.length + 1
+          )
         );
-        if (duplicateLabel) {
-          ElMessage.error("专业大类显示名称不能重复");
-          return;
-        }
+        payload.append("extra_data", JSON.stringify(extraData));
+        payload.append("dict_type", String(type.id));
+        payload.append("description", form.description || "");
+        payload.append("is_active", "true");
+        payload.append("template_file", selectedFile.value);
+      } else {
+        payload = {
+          label: form.label,
+          value: finalValue,
+          sort_order:
+            isEditMode.value && editingId.value
+              ? form.sort_order
+              : items.value.length + 1,
+          extra_data: extraData,
+          dict_type: type.id,
+          description: form.description || "",
+          is_active: true,
+        };
       }
-      submitting.value = true;
-      try {
-        const finalValue = showCode.value ? form.value : form.label;
 
-        const extraData: Record<string, unknown> = {};
-        if (showBudget.value) {
-          extraData.budget = Number(form.budget) || 0;
-        }
-
-        let payload: FormData | Record<string, unknown>;
-        if (selectedFile.value) {
-          payload = new FormData();
-          payload.append("label", form.label);
-          payload.append("value", finalValue);
-          payload.append(
-            "sort_order",
-            String(
-              isEditMode.value && editingId.value
-                ? form.sort_order
-                : items.value.length + 1
-            )
-          );
-          payload.append("extra_data", JSON.stringify(extraData));
-          payload.append("dict_type", String(type.id));
-          payload.append("description", form.description || "");
-          payload.append("is_active", "true");
-          payload.append("template_file", selectedFile.value);
-        } else {
-          payload = {
-            label: form.label,
-            value: finalValue,
-            sort_order:
-              isEditMode.value && editingId.value
-                ? form.sort_order
-                : items.value.length + 1,
-            extra_data: extraData,
-            dict_type: type.id,
-            description: form.description || "",
-            is_active: true,
-          };
-        }
-
-        if (isEditMode.value && editingId.value) {
-          await updateDictionaryItem(editingId.value, payload);
-          ElMessage.success("修改成功");
-        } else {
-          await createDictionaryItem(payload);
-          ElMessage.success("添加成功");
-        }
-
-        dialogVisible.value = false;
-        await fetchItems(type.code);
-      } catch (error) {
-        console.error(error);
-        ElMessage.error(isEditMode.value ? "修改失败" : "添加失败");
-      } finally {
-        submitting.value = false;
+      if (isEditMode.value && editingId.value) {
+        await updateDictionaryItem(editingId.value, payload);
+        ElMessage.success("修改成功");
+      } else {
+        await createDictionaryItem(payload);
+        ElMessage.success("添加成功");
       }
-    });
+
+      dialogVisible.value = false;
+      await fetchItems(type.code);
+    } catch (error) {
+      console.error(error);
+      ElMessage.error(isEditMode.value ? "修改失败" : "添加失败");
+    } finally {
+      submitting.value = false;
+    }
   };
 
   const deleteItem = async (item: DictionaryItem) => {

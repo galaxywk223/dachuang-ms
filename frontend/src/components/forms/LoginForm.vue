@@ -106,14 +106,15 @@ const rules = {
 const handleSubmit = async () => {
   if (!loginFormRef.value) return;
 
-  await loginFormRef.value.validate(async (valid) => {
-    if (valid) {
-      emit("submit", {
-        employeeId: loginForm.employeeId,
-        password: loginForm.password,
-      });
-    }
-  });
+  try {
+    await loginFormRef.value.validate();
+    emit("submit", {
+      employeeId: loginForm.employeeId,
+      password: loginForm.password,
+    });
+  } catch {
+    // 验证失败，不做任何操作
+  }
 };
 </script>
 

@@ -242,27 +242,30 @@ const handleClose = () => {
 
 const handleSubmit = async () => {
     if (!formRef.value) return;
-    await formRef.value.validate(async (valid) => {
-        if (valid) {
-            submitting.value = true;
-            try {
-                if (isEdit.value && form.id) {
-                    await request.put(`/reviews/groups/${form.id}/`, form);
-                    ElMessage.success("更新成功");
-                } else {
-                    await request.post('/reviews/groups/', form);
-                    ElMessage.success("创建成功");
-                }
-                dialogVisible.value = false;
-                fetchGroups();
-            } catch (error: unknown) {
-                console.error(error);
-                ElMessage.error(getErrorMessage(error, "操作失败"));
-            } finally {
-                submitting.value = false;
-            }
+    
+    try {
+        await formRef.value.validate();
+    } catch {
+        return;
+    }
+
+    submitting.value = true;
+    try {
+        if (isEdit.value && form.id) {
+            await request.put(`/reviews/groups/${form.id}/`, form);
+            ElMessage.success("更新成功");
+        } else {
+            await request.post('/reviews/groups/', form);
+            ElMessage.success("创建成功");
         }
-    });
+        dialogVisible.value = false;
+        fetchGroups();
+    } catch (error: unknown) {
+        console.error(error);
+        ElMessage.error(getErrorMessage(error, "操作失败"));
+    } finally {
+        submitting.value = false;
+    }
 };
 
 const formatDate = (date: string) => {

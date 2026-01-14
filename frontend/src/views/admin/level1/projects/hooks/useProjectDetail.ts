@@ -313,84 +313,85 @@ export function useProjectDetail() {
       return;
     }
 
-    await formRef.value.validate(async (valid: boolean) => {
-      if (!valid) {
-        ElMessage.error("请完善必填信息");
-        return;
-      }
-      saving.value = true;
-      const basePayload = {
-        title: form.title,
-        source: form.source || null,
-        level: form.level || null,
-        category: form.category || null,
-        is_key_field: !!form.is_key_field,
-        key_domain_code: form.key_field_code || "",
-        budget: Number(form.budget) || 0,
-        approved_budget:
-          form.approved_budget === null || form.approved_budget === undefined
-            ? null
-            : Number(form.approved_budget),
-        expected_results: form.expected_results,
-        description: form.description,
-      };
-      const hasFiles = !!(form.contract_file || form.task_book_file);
-      if (!form.id) {
-        ElMessage.error("项目ID无效");
-        saving.value = false;
-        return;
-      }
-      try {
-        if (hasFiles) {
-          const formData = new FormData();
-          Object.entries(basePayload).forEach(([key, value]) => {
-            if (value === null || value === undefined || value === "") {
-              return;
-            }
-            formData.append(key, String(value));
-          });
-          if (form.contract_file) {
-            formData.append("contract_file", form.contract_file);
+    try {
+      await formRef.value.validate();
+    } catch {
+      ElMessage.error("请完善必填信息");
+      return;
+    }
+
+    saving.value = true;
+    const basePayload = {
+      title: form.title,
+      source: form.source || null,
+      level: form.level || null,
+      category: form.category || null,
+      is_key_field: !!form.is_key_field,
+      key_domain_code: form.key_field_code || "",
+      budget: Number(form.budget) || 0,
+      approved_budget:
+        form.approved_budget === null || form.approved_budget === undefined
+          ? null
+          : Number(form.approved_budget),
+      expected_results: form.expected_results,
+      description: form.description,
+    };
+    const hasFiles = !!(form.contract_file || form.task_book_file);
+    if (!form.id) {
+      ElMessage.error("项目ID无效");
+      saving.value = false;
+      return;
+    }
+    try {
+      if (hasFiles) {
+        const formData = new FormData();
+        Object.entries(basePayload).forEach(([key, value]) => {
+          if (value === null || value === undefined || value === "") {
+            return;
           }
-          if (form.task_book_file) {
-            formData.append("task_book_file", form.task_book_file);
-          }
-          await updateProjectInfo(form.id, formData);
+          formData.append(key, String(value));
+        });
+        if (form.contract_file) {
+          formData.append("contract_file", form.contract_file);
+        }
+        if (form.task_book_file) {
+          formData.append("task_book_file", form.task_book_file);
+        }
+        await updateProjectInfo(form.id, formData);
+      } else {
+        await updateProjectInfo(form.id, basePayload);
+      }
+      ElMessage.success("保存成功");
+      router.replace({
+        name: "level1-project-detail",
+        params: { id: form.id },
+        query: { mode: "view" },
+      });
+    } catch (error) {
+      const resp = isRecord(error) ? error.response : undefined;
+      const respData = isRecord(resp) ? resp.data : undefined;
+      console.error("Update project failed", {
+        payload: hasFiles ? "formData" : basePayload,
+        status: isRecord(resp) ? resp.status : undefined,
+        response: respData || error,
+      });
+      let msg = getErrorMessage(error, "保存失败");
+      if (respData && isRecord(respData)) {
+        if (typeof respData.message === "string") {
+          msg = respData.message;
         } else {
-          await updateProjectInfo(form.id, basePayload);
+          const details = Object.entries(respData)
+            .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join("; ") : v}`)
+            .join("；");
+          if (details) msg = `${msg}：${details}`;
         }
-        ElMessage.success("保存成功");
-        router.replace({
-          name: "level1-project-detail",
-          params: { id: form.id },
-          query: { mode: "view" },
-        });
-      } catch (error) {
-        const resp = isRecord(error) ? error.response : undefined;
-        const respData = isRecord(resp) ? resp.data : undefined;
-        console.error("Update project failed", {
-          payload: hasFiles ? "formData" : basePayload,
-          status: isRecord(resp) ? resp.status : undefined,
-          response: respData || error,
-        });
-        let msg = getErrorMessage(error, "保存失败");
-        if (respData && isRecord(respData)) {
-          if (typeof respData.message === "string") {
-            msg = respData.message;
-          } else {
-            const details = Object.entries(respData)
-              .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join("; ") : v}`)
-              .join("；");
-            if (details) msg = `${msg}：${details}`;
-          }
-        } else if (typeof respData === "string") {
-          msg = `${msg}：${respData}`;
-        }
-        ElMessage.error(msg);
-      } finally {
-        saving.value = false;
+      } else if (typeof respData === "string") {
+        msg = `${msg}：${respData}`;
       }
-    });
+      ElMessage.error(msg);
+    } finally {
+      saving.value = false;
+    }
   };
 
   const handleContractFileChange = (file: UploadFile) => {

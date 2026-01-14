@@ -243,87 +243,90 @@ export function useAchievementsPage() {
   const submitAchievement = async () => {
     const projectId = activeProjectId.value;
     if (!formRef.value || projectId === null) return;
-    await formRef.value.validate(async (valid) => {
-      if (!valid) return;
+    
+    try {
+      await formRef.value.validate();
+    } catch {
+      return;
+    }
 
-      const extraError = validateExtraFields();
-      if (extraError) {
-        ElMessage.warning(extraError);
-        return;
+    const extraError = validateExtraFields();
+    if (extraError) {
+      ElMessage.warning(extraError);
+      return;
+    }
+
+    submitting.value = true;
+    try {
+      const payload = new FormData();
+      payload.append("achievement_type", String(form.achievement_type));
+      payload.append("title", form.title);
+      payload.append("description", form.description);
+
+      if (form.authors) payload.append("authors", form.authors);
+      if (form.journal) payload.append("journal", form.journal);
+      if (form.publication_date) {
+        payload.append("publication_date", form.publication_date);
       }
-
-      submitting.value = true;
-      try {
-        const payload = new FormData();
-        payload.append("achievement_type", String(form.achievement_type));
-        payload.append("title", form.title);
-        payload.append("description", form.description);
-
-        if (form.authors) payload.append("authors", form.authors);
-        if (form.journal) payload.append("journal", form.journal);
-        if (form.publication_date) {
-          payload.append("publication_date", form.publication_date);
-        }
-        if (form.doi) payload.append("doi", form.doi);
-        if (form.patent_no) payload.append("patent_no", form.patent_no);
-        if (form.patent_type) payload.append("patent_type", form.patent_type);
-        if (form.applicant) payload.append("applicant", form.applicant);
-        if (form.copyright_no) payload.append("copyright_no", form.copyright_no);
-        if (form.copyright_owner) {
-          payload.append("copyright_owner", form.copyright_owner);
-        }
-        if (form.competition_name) {
-          payload.append("competition_name", form.competition_name);
-        }
-        if (form.award_level) payload.append("award_level", form.award_level);
-        if (form.award_date) payload.append("award_date", form.award_date);
-        const extraData: Record<string, string> = {};
-        if (isCompanyType.value) {
-          extraData.company_name = form.company_name;
-          if (form.company_role) extraData.company_role = form.company_role;
-          if (form.company_date) extraData.company_date = form.company_date;
-        }
-        if (isConferenceType.value) {
-          extraData.conference_name = form.conference_name;
-          if (form.conference_level) {
-            extraData.conference_level = form.conference_level;
-          }
-          if (form.conference_date) {
-            extraData.conference_date = form.conference_date;
-          }
-        }
-        if (isReportType.value) {
-          extraData.report_title = form.report_title;
-          if (form.report_type) extraData.report_type = form.report_type;
-        }
-        if (isMediaType.value) {
-          extraData.media_title = form.media_title;
-          if (form.media_format) extraData.media_format = form.media_format;
-          if (form.media_link) extraData.media_link = form.media_link;
-        }
-        if (Object.keys(extraData).length > 0) {
-          payload.append("extra_data", JSON.stringify(extraData));
-        }
-        if (form.attachment) payload.append("attachment", form.attachment);
-
-        const response = (await addProjectAchievement(
-          projectId,
-          payload
-        )) as ApiResponse<unknown>;
-        if (response.code === 200) {
-          ElMessage.success("成果登记成功");
-          dialogVisible.value = false;
-          resetForm();
-          fetchAchievements();
-        } else {
-          ElMessage.error(response.message || "提交失败");
-        }
-      } catch (error: unknown) {
-        ElMessage.error(getErrorMessage(error, "提交失败"));
-      } finally {
-        submitting.value = false;
+      if (form.doi) payload.append("doi", form.doi);
+      if (form.patent_no) payload.append("patent_no", form.patent_no);
+      if (form.patent_type) payload.append("patent_type", form.patent_type);
+      if (form.applicant) payload.append("applicant", form.applicant);
+      if (form.copyright_no) payload.append("copyright_no", form.copyright_no);
+      if (form.copyright_owner) {
+        payload.append("copyright_owner", form.copyright_owner);
       }
-    });
+      if (form.competition_name) {
+        payload.append("competition_name", form.competition_name);
+      }
+      if (form.award_level) payload.append("award_level", form.award_level);
+      if (form.award_date) payload.append("award_date", form.award_date);
+      const extraData: Record<string, string> = {};
+      if (isCompanyType.value) {
+        extraData.company_name = form.company_name;
+        if (form.company_role) extraData.company_role = form.company_role;
+        if (form.company_date) extraData.company_date = form.company_date;
+      }
+      if (isConferenceType.value) {
+        extraData.conference_name = form.conference_name;
+        if (form.conference_level) {
+          extraData.conference_level = form.conference_level;
+        }
+        if (form.conference_date) {
+          extraData.conference_date = form.conference_date;
+        }
+      }
+      if (isReportType.value) {
+        extraData.report_title = form.report_title;
+        if (form.report_type) extraData.report_type = form.report_type;
+      }
+      if (isMediaType.value) {
+        extraData.media_title = form.media_title;
+        if (form.media_format) extraData.media_format = form.media_format;
+        if (form.media_link) extraData.media_link = form.media_link;
+      }
+      if (Object.keys(extraData).length > 0) {
+        payload.append("extra_data", JSON.stringify(extraData));
+      }
+      if (form.attachment) payload.append("attachment", form.attachment);
+
+      const response = (await addProjectAchievement(
+        projectId,
+        payload
+      )) as ApiResponse<unknown>;
+      if (response.code === 200) {
+        ElMessage.success("成果登记成功");
+        dialogVisible.value = false;
+        resetForm();
+        fetchAchievements();
+      } else {
+        ElMessage.error(response.message || "提交失败");
+      }
+    } catch (error: unknown) {
+      ElMessage.error(getErrorMessage(error, "提交失败"));
+    } finally {
+      submitting.value = false;
+    }
   };
 
   const resetForm = () => {

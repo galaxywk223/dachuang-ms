@@ -325,31 +325,36 @@ const handleFileRemove = () => {
 
 const handleSubmit = async () => {
   if (!formRef.value || !activeProjectId.value) return;
-  await formRef.value.validate(async (valid) => {
+  try {
+    const valid = await formRef.value.validate();
     if (!valid) return;
-    submitting.value = true;
-    try {
-      const payload = new FormData();
-      payload.append("title", form.title);
-      payload.append("content", form.content);
-      if (form.attachment) payload.append("attachment", form.attachment);
-      const res = (await addProjectProgress(
-        activeProjectId.value as number,
-        payload
-      )) as ApiResponse<unknown>;
-      if (res?.code === 200) {
-        ElMessage.success("进度已提交");
-        dialogVisible.value = false;
-        fetchProgress();
-      } else {
-        ElMessage.error(res?.message || "提交失败");
-      }
-    } catch (error: unknown) {
-      ElMessage.error(getErrorMessage(error, "提交失败"));
-    } finally {
-      submitting.value = false;
+  } catch {
+    return;
+  }
+
+  submitting.value = true;
+  try {
+    const payload = new FormData();
+    payload.append("title", form.title);
+    payload.append("content", form.content);
+    if (form.attachment) payload.append("attachment", form.attachment);
+    const res = (await addProjectProgress(
+      activeProjectId.value as number,
+      payload
+    )) as ApiResponse<unknown>;
+    if (res?.code === 200) {
+      ElMessage.success("进度已提交");
+      dialogVisible.value = false;
+      resetForm();
+      await fetchProgress();
+    } else {
+      ElMessage.error(res?.message || "提交失败");
     }
-  });
+  } catch (error: unknown) {
+    ElMessage.error(getErrorMessage(error, "提交失败"));
+  } finally {
+    submitting.value = false;
+  }
 };
 
 const handleDelete = async (row: ProgressItem) => {

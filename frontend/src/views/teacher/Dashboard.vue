@@ -430,36 +430,38 @@ const handleSubmit = async () => {
   if (reviewId === null && !isChange) return;
   if (isChange && !currentProject.value?.change_request_id) return;
 
-  await formRef.value.validate(async (valid) => {
-    if (valid) {
-      submitting.value = true;
-      try {
-        const payload: ReviewActionParams = {
-          action: form.action,
-          comments: form.comments,
-        };
+  try {
+    await formRef.value.validate();
+  } catch {
+    return;
+  }
 
-        if (isChange && currentProject.value?.change_request_id) {
-          await reviewChangeRequest(currentProject.value.change_request_id, {
-            action: form.action,
-            comments: form.comments,
-          });
-        } else if (reviewId !== null) {
-          await reviewAction(reviewId, payload);
-        }
-        ElMessage.success("审核提交成功");
-        dialogVisible.value = false;
-        activeTab.value = "my_projects";
-        fetchProjects();
-        refreshStats();
-      } catch (error: unknown) {
-        console.error(error);
-        ElMessage.error(getErrorMessage(error, "提交失败"));
-      } finally {
-        submitting.value = false;
-      }
+  submitting.value = true;
+  try {
+    const payload: ReviewActionParams = {
+      action: form.action,
+      comments: form.comments,
+    };
+
+    if (isChange && currentProject.value?.change_request_id) {
+      await reviewChangeRequest(currentProject.value.change_request_id, {
+        action: form.action,
+        comments: form.comments,
+      });
+    } else if (reviewId !== null) {
+      await reviewAction(reviewId, payload);
     }
-  });
+    ElMessage.success("审核提交成功");
+    dialogVisible.value = false;
+    activeTab.value = "my_projects";
+    fetchProjects();
+    refreshStats();
+  } catch (error: unknown) {
+    console.error(error);
+    ElMessage.error(getErrorMessage(error, "提交失败"));
+  } finally {
+    submitting.value = false;
+  }
 };
 
 const formatDate = (date: string) => {

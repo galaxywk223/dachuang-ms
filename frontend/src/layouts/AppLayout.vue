@@ -742,31 +742,37 @@ const passwordRules: FormRules = {
 const handleSubmitPassword = async () => {
   if (!passwordFormRef.value) return;
 
-  await passwordFormRef.value.validate(async (valid: boolean) => {
-    if (valid) {
-      passwordLoading.value = true;
-      try {
-        const res = await changePassword(
-          passwordForm.oldPassword,
-          passwordForm.newPassword,
-          passwordForm.confirmPassword
-        );
-
-        if (res.code === 200) {
-          ElMessage.success("密码修改成功，请重新登录");
-          passwordDialogVisible.value = false;
-          await userStore.logoutAction();
-          router.push("/login");
-        } else {
-          ElMessage.error(res.message || "修改失败");
-        }
-      } catch (error) {
-        ElMessage.error(getErrorMessage(error, "请求失败"));
-      } finally {
-        passwordLoading.value = false;
-      }
+  try {
+    const valid = await passwordFormRef.value.validate();
+    if (!valid) {
+      ElMessage.error("请完善必填信息");
+      return;
     }
-  });
+  } catch {
+    return;
+  }
+
+  passwordLoading.value = true;
+  try {
+    const res = await changePassword(
+      passwordForm.oldPassword,
+      passwordForm.newPassword,
+      passwordForm.confirmPassword
+    );
+
+    if (res.code === 200) {
+      ElMessage.success("密码修改成功，请重新登录");
+      passwordDialogVisible.value = false;
+      await userStore.logoutAction();
+      router.push("/login");
+    } else {
+      ElMessage.error(res.message || "修改失败");
+    }
+  } catch (error) {
+    ElMessage.error(getErrorMessage(error, "请求失败"));
+  } finally {
+    passwordLoading.value = false;
+  }
 };
 
 const resetPasswordForm = () => {

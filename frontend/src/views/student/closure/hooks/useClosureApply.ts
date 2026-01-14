@@ -487,6 +487,7 @@ export function useClosureApply() {
   const submit = async (isDraft: boolean) => {
     console.log("submit 函数被调用，isDraft:", isDraft);
     console.log("formRef.value:", formRef.value);
+    
     if (!isDraft) {
       if (!formRef.value) {
         console.error("formRef.value 为空！");
@@ -497,18 +498,14 @@ export function useClosureApply() {
         console.log("开始验证表单...");
         await formRef.value.validate();
         console.log("表单验证通过，开始提交...");
-        await doSubmit(false);
       } catch (error) {
         console.error("表单验证失败:", error);
         ElMessage.warning("请检查必填项");
         return;
       }
-    } else {
-      await doSubmit(true);
     }
-  };
-
-  const doSubmit = async (isDraft: boolean) => {
+    
+    // 将 doSubmit 的逻辑内联到这里，确保 loading 状态管理正确
     loading.value = true;
     try {
       const payload = new FormData();
