@@ -70,7 +70,7 @@ class ReviewAssignmentViewSet(viewsets.ViewSet):
             )
 
         review_level = (
-            Review.ReviewLevel.LEVEL1 if group.scope == "SCHOOL" else Review.ReviewLevel.LEVEL2
+            "LEVEL1" if group.scope == "SCHOOL" else "LEVEL2"
         )
 
         created = ReviewService.assign_project_to_group(

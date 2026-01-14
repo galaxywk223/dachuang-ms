@@ -58,13 +58,16 @@ class UserSerializer(RoleAssignMixin, serializers.ModelSerializer):
         read_only_fields = ["id", "created_at", "updated_at"]
 
     def to_representation(self, instance):
+        # 检查实例是否有 role_fk 属性（防止 AnonymousUser 引起错误）
+        if not hasattr(instance, "role_fk"):
+            return {}
         data = super().to_representation(instance)
         data["role"] = instance.role_fk.code if instance.role_fk else None
         return data
 
     def get_role_info(self, obj):
         """获取角色信息"""
-        if obj.role_fk:
+        if hasattr(obj, "role_fk") and obj.role_fk:
             return {
                 "id": obj.role_fk.id,
                 "code": obj.role_fk.code,
@@ -75,7 +78,9 @@ class UserSerializer(RoleAssignMixin, serializers.ModelSerializer):
 
     def get_permissions(self, obj):
         """获取用户权限列表"""
-        return obj.get_permissions()
+        if hasattr(obj, "get_permissions"):
+            return obj.get_permissions()
+        return []
 
     def create(self, validated_data):
         validated_data = self._resolve_role_fk(validated_data)
@@ -182,7 +187,9 @@ class UserCreateSerializer(RoleAssignMixin, serializers.ModelSerializer):
                 raise serializers.ValidationError({"role": "默认角色不存在"})
             validated_data["role_fk"] = default_role
 
-        role_code = validated_data["role_fk"].code if validated_data.get("role_fk") else None
+        role_code = (
+            validated_data["role_fk"].code if validated_data.get("role_fk") else None
+        )
         if role_code != User.UserRole.EXPERT:
             validated_data.pop("expert_scope", None)
         elif not validated_data.get("expert_scope"):

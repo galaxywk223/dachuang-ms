@@ -3,12 +3,18 @@
     <el-card class="main-card" shadow="never">
       <template #header>
         <div class="card-header">
-           <div class="header-left">
-             <span class="header-title">草稿箱</span>
-             <el-tag type="info" size="small" effect="plain" round class="ml-2">{{ pagination.total }}</el-tag>
-           </div>
-           <div class="header-actions">
-           </div>
+          <div class="header-left">
+            <span class="header-title">草稿箱</span>
+            <el-tag
+              type="info"
+              size="small"
+              effect="plain"
+              round
+              class="ml-2"
+              >{{ pagination.total }}</el-tag
+            >
+          </div>
+          <div class="header-actions"></div>
         </div>
       </template>
 
@@ -148,10 +154,7 @@
 import { ref, reactive, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { useRouter } from "vue-router";
-import {
-  getClosureDrafts,
-  deleteClosureDraft,
-} from "@/api/projects";
+import { getClosureDrafts, deleteClosureDraft } from "@/api/projects";
 
 defineOptions({
   name: "StudentClosureDraftsView",
@@ -291,9 +294,9 @@ const handleDelete = async (row: ProjectRow) => {
 
     // 调用API删除草稿
     const response = (await deleteClosureDraft(row.id)) as ApiResponse;
-    if (response.code === 200) {
+    if (response.code === 200 || response.status === 204 || !response.code) {
       ElMessage.success("删除成功");
-      fetchClosureDrafts();
+      await fetchClosureDrafts();
     } else {
       ElMessage.error(response.message || "删除失败");
     }

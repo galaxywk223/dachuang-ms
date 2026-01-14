@@ -405,3 +405,81 @@ class WorkflowService:
             return {"valid": False, "errors": ["工作流配置不存在"]}
         except Exception as e:
             return {"valid": False, "errors": [f"验证失败: {str(e)}"]}
+
+    @staticmethod
+    def check_node_time_window(node, check_date):
+        """
+        检查节点的时间窗口
+        返回: (ok: bool, message: str)
+        """
+        if not node.start_date and not node.end_date:
+            # 如果节点没有配置时间限制，则始终允许
+            return True, ""
+
+        if node.start_date and check_date < node.start_date:
+            return False, f"当前未到开放时间（开始时间：{node.start_date}）"
+
+        if node.end_date and check_date > node.end_date:
+            return False, f"当前已超过截止时间（截止时间：{node.end_date}）"
+
+        return True, ""
+
+    @staticmethod
+    def get_current_node_for_project(project, phase):
+        """
+        获取项目在指定阶段的当前节点
+        """
+        from apps.projects.models import ProjectPhaseInstance
+
+        phase_instance = ProjectPhaseInstance.objects.filter(
+            project=project, phase=phase
+        ).first()
+
+        if not phase_instance or not phase_instance.current_node_id:
+            return None
+
+        try:
+            return WorkflowNode.objects.get(id=phase_instance.current_node_id)
+        except WorkflowNode.DoesNotExist:
+            return None
+
+    @staticmethod
+    def check_phase_window(phase, batch, check_date):
+        """
+        检查阶段的时间窗口（用于学生提交）
+        返回: (ok: bool, message: str)
+        """
+        try:
+            workflow = WorkflowConfig.objects.filter(
+                batch=batch, phase=phase, is_active=True
+            ).first()
+
+            if not workflow:
+                return True, ""  # 没有配置则允许
+
+            # 获取学生提交节点（第一个SUBMIT类型节点）
+            submit_node = WorkflowNode.objects.filter(
+                workflow=workflow, node_type="SUBMIT", is_active=True
+            ).first()
+
+            if not submit_node:
+                return True, ""  # 没有提交节点则允许
+
+            return WorkflowService.check_node_time_window(submit_node, check_date)
+        except Exception:
+            return True, ""  # 出错则允许（宽松策略）
+
+    @staticmethod
+    def check_review_node_window(project, phase, check_date):
+        """
+        检查项目当前审核节点的时间窗口
+        返回: (ok: bool, message: str)
+        """
+        try:
+            current_node = WorkflowService.get_current_node_for_project(project, phase)
+            if not current_node:
+                return True, ""  # 没有当前节点则允许
+
+            return WorkflowService.check_node_time_window(current_node, check_date)
+        except Exception:
+            return True, ""  # 出错则允许（宽松策略）

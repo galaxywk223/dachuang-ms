@@ -85,7 +85,7 @@ class TaskBookService:
         review = Review.objects.filter(
             project=project,
             review_type=Review.ReviewType.TASK_BOOK,
-            review_level=Review.ReviewLevel.TEACHER,
+            review_level="TEACHER",
             status=Review.ReviewStatus.PENDING,
         ).first()
 
@@ -135,7 +135,7 @@ class TaskBookService:
         review = Review.objects.filter(
             project=project,
             review_type=Review.ReviewType.TASK_BOOK,
-            review_level=Review.ReviewLevel.LEVEL2,
+            review_level="LEVEL2",
             status=Review.ReviewStatus.PENDING,
         ).first()
 

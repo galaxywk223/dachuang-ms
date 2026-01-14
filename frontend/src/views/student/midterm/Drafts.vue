@@ -20,9 +20,24 @@
         style="width: 100%"
       >
         <el-table-column prop="project_no" label="项目编号" min-width="160" />
-        <el-table-column prop="title" label="项目名称" min-width="220" show-overflow-tooltip />
-        <el-table-column prop="leader_name" label="负责人" width="120" align="center" />
-        <el-table-column prop="college" label="学院" width="140" align="center" />
+        <el-table-column
+          prop="title"
+          label="项目名称"
+          min-width="220"
+          show-overflow-tooltip
+        />
+        <el-table-column
+          prop="leader_name"
+          label="负责人"
+          width="120"
+          align="center"
+        />
+        <el-table-column
+          prop="college"
+          label="学院"
+          width="140"
+          align="center"
+        />
         <el-table-column label="状态" width="120" align="center">
           <template #default="{ row }">
             <el-tag type="info" size="small">
@@ -30,10 +45,23 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="140" align="center" fixed="right">
+        <el-table-column label="操作" width="200" align="center" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" link size="small" @click="handleEdit(row)">
+            <el-button
+              type="primary"
+              link
+              size="small"
+              @click="handleEdit(row)"
+            >
               编辑报告
+            </el-button>
+            <el-button
+              type="danger"
+              link
+              size="small"
+              @click="handleDelete(row)"
+            >
+              删除
             </el-button>
           </template>
         </el-table-column>
@@ -64,9 +92,9 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from "vue";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { useRouter } from "vue-router";
-import { getProjects } from "@/api/projects";
+import { getProjects, deleteMidTermSubmission } from "@/api/projects";
 
 defineOptions({
   name: "StudentMidtermDraftsView",
@@ -134,6 +162,34 @@ const fetchDrafts = async () => {
 
 const handleEdit = (row: ProjectRow) => {
   router.push(`/midterm/apply?projectId=${row.id}`);
+};
+
+const handleDelete = async (row: ProjectRow) => {
+  try {
+    await ElMessageBox.confirm(
+      "确定要删除该中期草稿吗？删除后无法恢复。",
+      "提示",
+      {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      }
+    );
+
+    // 调用API删除草稿
+    const response = (await deleteMidTermSubmission(row.id)) as any;
+    if (response.code === 200 || response.status === 204 || !response.code) {
+      ElMessage.success("删除成功");
+      await fetchDrafts();
+    } else {
+      ElMessage.error(response.message || "删除失败");
+    }
+  } catch (error: unknown) {
+    if (error !== "cancel") {
+      console.error("删除中期草稿失败:", error);
+      ElMessage.error(getErrorMessage(error, "删除失败"));
+    }
+  }
 };
 
 const handleSizeChange = (size: number) => {

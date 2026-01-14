@@ -4,12 +4,25 @@
       <template #header>
         <div class="card-header">
           <div class="header-left">
-             <span class="header-title">基本信息填报</span>
+            <span class="header-title">基本信息填报</span>
           </div>
           <div class="header-actions">
-             <el-button @click="handleReset">重置</el-button>
-             <el-button type="info" plain @click="saveAsDraft">保存草稿</el-button>
-             <el-button type="primary" @click="submitForm">提交申请</el-button>
+            <el-button @click="handleReset">重置</el-button>
+            <el-button
+              type="info"
+              plain
+              :loading="loading"
+              :disabled="loading"
+              @click="saveAsDraft"
+              >保存草稿</el-button
+            >
+            <el-button
+              type="primary"
+              :loading="loading"
+              :disabled="loading"
+              @click="submitForm"
+              >提交申请</el-button
+            >
           </div>
         </div>
       </template>
@@ -80,7 +93,6 @@
           :handle-file-change="handleFileChange"
           :handle-file-remove="handleFileRemove"
         />
-
       </el-form>
     </el-card>
   </div>
@@ -130,6 +142,7 @@ const {
   addExpectedResult,
   removeExpectedResult,
   getLabel,
+  loading,
   submitForm,
   saveAsDraft,
   handleReset,

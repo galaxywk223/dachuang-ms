@@ -21,7 +21,12 @@
               clearable
               style="width: 140px"
             >
-              <el-option v-for="item in levelOptions" :key="item.value" :label="item.label" :value="item.value" />
+              <el-option
+                v-for="item in levelOptions"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
             </el-select>
           </el-form-item>
 
@@ -32,12 +37,19 @@
               clearable
               style="width: 160px"
             >
-              <el-option v-for="item in categoryOptions" :key="item.value" :label="item.label" :value="item.value" />
+              <el-option
+                v-for="item in categoryOptions"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
             </el-select>
           </el-form-item>
 
           <el-form-item>
-            <el-button type="primary" @click="handleSearch" :icon="Search">查询</el-button>
+            <el-button type="primary" @click="handleSearch" :icon="Search"
+              >查询</el-button
+            >
             <el-button @click="handleReset" :icon="RefreshLeft">重置</el-button>
           </el-form-item>
         </el-form>
@@ -46,61 +58,137 @@
       <!-- 表格区域 -->
       <div class="table-container">
         <div class="status-tabs-wrapper">
-             <div class="table-header-title">
-                <span class="title-text">我的草稿</span>
-                <el-tag type="info" size="small" effect="plain" round class="count-tag">{{ pagination.total }}</el-tag>
-             </div>
-             <div class="header-actions">
-                <el-button type="primary" @click="$router.push('/establishment/apply')">
-                   <el-icon class="el-icon--left"><Plus /></el-icon> 新建草稿
-                </el-button>
-             </div>
+          <div class="table-header-title">
+            <span class="title-text">我的草稿</span>
+            <el-tag
+              type="info"
+              size="small"
+              effect="plain"
+              round
+              class="count-tag"
+              >{{ pagination.total }}</el-tag
+            >
+          </div>
+          <div class="header-actions">
+            <el-button
+              type="primary"
+              @click="$router.push('/establishment/apply')"
+            >
+              <el-icon class="el-icon--left"><Plus /></el-icon> 新建草稿
+            </el-button>
+          </div>
         </div>
 
         <el-table
           v-loading="loading"
           :data="tableData"
           style="width: 100%"
-          :header-cell-style="{ background: '#f8fafc', color: '#475569', fontWeight: '600', fontSize: '13px', height: '48px' }"
+          :header-cell-style="{
+            background: '#f8fafc',
+            color: '#475569',
+            fontWeight: '600',
+            fontSize: '13px',
+            height: '48px',
+          }"
           :cell-style="{ color: '#334155', fontSize: '14px', padding: '8px 0' }"
           border
         >
-          <el-table-column prop="title" label="项目名称" min-width="180" show-overflow-tooltip fixed="left">
-             <template #default="{ row }">
-               <span class="link-text" @click="handleEdit(row)">{{ row.title || '未命名草稿' }}</span>
-             </template>
-          </el-table-column>
-
-          <el-table-column prop="level" label="项目级别" width="100" align="center">
+          <el-table-column
+            prop="title"
+            label="项目名称"
+            min-width="180"
+            show-overflow-tooltip
+            fixed="left"
+          >
             <template #default="{ row }">
-               <el-tag v-if="row.level" :type="getLevelType(row.level)" effect="plain" size="small">{{ row.level_display || getLabel(levelOptions, row.level) }}</el-tag>
-               <span v-else>-</span>
+              <span class="link-text" @click="handleEdit(row)">{{
+                row.title || "未命名草稿"
+              }}</span>
             </template>
           </el-table-column>
 
-          <el-table-column prop="category" label="项目类别" width="120" align="center">
-             <template #default="{ row }">
-                 {{ row.category_display || getLabel(categoryOptions, row.category) || '-' }}
-             </template>
+          <el-table-column
+            prop="level"
+            label="项目级别"
+            width="100"
+            align="center"
+          >
+            <template #default="{ row }">
+              <el-tag
+                v-if="row.level"
+                :type="getLevelType(row.level)"
+                effect="plain"
+                size="small"
+                >{{
+                  row.level_display || getLabel(levelOptions, row.level)
+                }}</el-tag
+              >
+              <span v-else>-</span>
+            </template>
           </el-table-column>
 
-          <el-table-column prop="is_key_field" label="重点领域项目" width="140" align="center">
+          <el-table-column
+            prop="category"
+            label="项目类别"
+            width="120"
+            align="center"
+          >
             <template #default="{ row }">
-              <el-tag v-if="row.is_key_field" type="success" size="small" effect="light">重点领域项目</el-tag>
-              <el-tag v-else type="info" size="small" effect="plain">一般项目</el-tag>
+              {{
+                row.category_display ||
+                getLabel(categoryOptions, row.category) ||
+                "-"
+              }}
+            </template>
+          </el-table-column>
+
+          <el-table-column
+            prop="is_key_field"
+            label="重点领域项目"
+            width="140"
+            align="center"
+          >
+            <template #default="{ row }">
+              <el-tag
+                v-if="row.is_key_field"
+                type="success"
+                size="small"
+                effect="light"
+                >重点领域项目</el-tag
+              >
+              <el-tag v-else type="info" size="small" effect="plain"
+                >一般项目</el-tag
+              >
             </template>
           </el-table-column>
 
           <el-table-column prop="budget" label="经费" width="100" align="right">
-             <template #default="{ row }">
-                {{ row.budget }}
-             </template>
+            <template #default="{ row }">
+              {{ row.budget }}
+            </template>
           </el-table-column>
 
-          <el-table-column label="操作" width="140" align="center" fixed="right">
+          <el-table-column
+            label="操作"
+            width="140"
+            align="center"
+            fixed="right"
+          >
             <template #default="{ row }">
-              <el-button type="primary" link size="small" @click="handleEdit(row)">编辑</el-button>
-              <el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
+              <el-button
+                type="primary"
+                link
+                size="small"
+                @click="handleEdit(row)"
+                >编辑</el-button
+              >
+              <el-button
+                type="danger"
+                link
+                size="small"
+                @click="handleDelete(row)"
+                >删除</el-button
+              >
             </template>
           </el-table-column>
         </el-table>
@@ -202,12 +290,12 @@ const pagination = reactive({
 });
 
 onMounted(async () => {
-    await loadDictionaries([
-        DICT_CODES.PROJECT_LEVEL, 
-        DICT_CODES.PROJECT_CATEGORY, 
-        DICT_CODES.COLLEGE
-    ]);
-    fetchDrafts();
+  await loadDictionaries([
+    DICT_CODES.PROJECT_LEVEL,
+    DICT_CODES.PROJECT_CATEGORY,
+    DICT_CODES.COLLEGE,
+  ]);
+  fetchDrafts();
 });
 
 const fetchDrafts = async () => {
@@ -216,7 +304,7 @@ const fetchDrafts = async () => {
     const params: Record<string, string | number> = {
       page: pagination.page,
       page_size: pagination.pageSize,
-      ...filterForm
+      ...filterForm,
     };
     // Clean empty params
     if (!params.title) delete params.title;
@@ -238,8 +326,8 @@ const fetchDrafts = async () => {
 };
 
 const getLabel = (options: DictOption[], value: string) => {
-    const found = options.find(opt => opt.value === value);
-    return found ? found.label : value;
+  const found = options.find((opt) => opt.value === value);
+  return found ? found.label : value;
 };
 
 const handleSearch = () => {
@@ -266,9 +354,9 @@ const handleCurrentChange = (page: number) => {
 };
 
 const getLevelType = (level: string) => {
-    if (level === 'NATIONAL') return 'danger';
-    if (level === 'PROVINCIAL') return 'warning';
-    return 'info';
+  if (level === "NATIONAL") return "danger";
+  if (level === "PROVINCIAL") return "warning";
+  return "info";
 };
 
 const handleEdit = (row: DraftRow) => {
@@ -277,18 +365,23 @@ const handleEdit = (row: DraftRow) => {
 
 const handleDelete = async (row: DraftRow) => {
   try {
-    await ElMessageBox.confirm("确定要删除该草稿吗？删除后无法恢复。", "提示", { 
-        type: "warning",
-        confirmButtonText: "确定",
-        cancelButtonText: "取消"
+    await ElMessageBox.confirm("确定要删除该草稿吗？删除后无法恢复。", "提示", {
+      type: "warning",
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
     });
     const response = (await deleteProject(row.id)) as DraftsResponse;
-    if (response.code === 200 || response.status === 204) {
+    if (response.code === 200 || response.status === 204 || !response.code) {
       ElMessage.success("删除成功");
-      fetchDrafts();
+      await fetchDrafts();
+    } else {
+      ElMessage.error(response.message || "删除失败");
     }
-  } catch {
-    // ignore
+  } catch (error: unknown) {
+    if (error !== "cancel") {
+      console.error("删除草稿失败:", error);
+      ElMessage.error(getErrorMessage(error, "删除失败"));
+    }
   }
 };
 </script>
@@ -307,14 +400,14 @@ const handleDelete = async (row: DraftRow) => {
 }
 
 .filter-form {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    
-    :deep(.el-form-item) {
-      margin-bottom: 24px;
-      margin-right: 0;
-    }
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  :deep(.el-form-item) {
+    margin-bottom: 24px;
+    margin-right: 0;
+  }
 }
 
 .table-container {
@@ -339,31 +432,31 @@ const handleDelete = async (row: DraftRow) => {
   display: flex;
   align-items: center;
   gap: 12px;
-  
+
   .title-text {
-      font-size: 16px;
-      font-weight: 600;
-      color: $slate-800;
-      position: relative;
-      padding-left: 14px;
-      
-      &::before {
-          content: '';
-          position: absolute;
-          left: 0;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 4px;
-          height: 16px;
-          background: $primary-600;
-          border-radius: 2px;
-      }
+    font-size: 16px;
+    font-weight: 600;
+    color: $slate-800;
+    position: relative;
+    padding-left: 14px;
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 4px;
+      height: 16px;
+      background: $primary-600;
+      border-radius: 2px;
+    }
   }
 }
 
 .count-tag {
-    font-weight: normal;
-    color: $slate-500;
+  font-weight: normal;
+  color: $slate-500;
 }
 
 .link-text {
@@ -371,9 +464,9 @@ const handleDelete = async (row: DraftRow) => {
   cursor: pointer;
   text-decoration: none;
   font-weight: 500;
-  
+
   &:hover {
-      text-decoration: underline;
+    text-decoration: underline;
   }
 }
 

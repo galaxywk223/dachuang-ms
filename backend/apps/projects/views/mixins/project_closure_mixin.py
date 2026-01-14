@@ -40,8 +40,12 @@ class ProjectClosureMixin:
 
         try:
             if not is_draft:
-                ok, msg = SystemSettingService.check_window(
-                    "CLOSURE_WINDOW", timezone.now().date(), batch=project.batch
+                from apps.system_settings.services.workflow_service import (
+                    WorkflowService,
+                )
+
+                ok, msg = WorkflowService.check_phase_window(
+                    "CLOSURE", project.batch, timezone.now().date()
                 )
                 if not ok:
                     return Response(
@@ -54,7 +58,10 @@ class ProjectClosureMixin:
                 current_phase = ProjectPhaseService.get_current(
                     project, ProjectPhaseInstance.Phase.CLOSURE
                 )
-                if current_phase and current_phase.state == ProjectPhaseInstance.State.RETURNED:
+                if (
+                    current_phase
+                    and current_phase.state == ProjectPhaseInstance.State.RETURNED
+                ):
                     ProjectPhaseService.start_new_attempt(
                         project,
                         ProjectPhaseInstance.Phase.CLOSURE,
@@ -85,8 +92,10 @@ class ProjectClosureMixin:
             )
 
         try:
-            ok, msg = SystemSettingService.check_window(
-                "CLOSURE_WINDOW", timezone.now().date(), batch=project.batch
+            from apps.system_settings.services.workflow_service import WorkflowService
+
+            ok, msg = WorkflowService.check_phase_window(
+                "CLOSURE", project.batch, timezone.now().date()
             )
             if not ok:
                 return Response(
@@ -98,7 +107,10 @@ class ProjectClosureMixin:
                 current_phase = ProjectPhaseService.get_current(
                     project, ProjectPhaseInstance.Phase.CLOSURE
                 )
-                if current_phase and current_phase.state == ProjectPhaseInstance.State.RETURNED:
+                if (
+                    current_phase
+                    and current_phase.state == ProjectPhaseInstance.State.RETURNED
+                ):
                     ProjectPhaseService.start_new_attempt(
                         project,
                         ProjectPhaseInstance.Phase.CLOSURE,
@@ -173,7 +185,9 @@ class ProjectClosureMixin:
             resource_type=ProjectRecycleBin.ResourceType.CLOSURE,
             payload=payload,
             attachments=[
-                f for f in [payload.get("final_report"), payload.get("achievement_file")] if f
+                f
+                for f in [payload.get("final_report"), payload.get("achievement_file")]
+                if f
             ],
             deleted_by=request.user,
         )

@@ -145,7 +145,8 @@ export function useProjectApplication() {
 
   const currentUser = computed(() => ({
     name: userStore.user?.real_name || userStore.user?.username || "学生用户",
-    student_id: userStore.user?.employee_id || userStore.user?.username || "Unknown",
+    student_id:
+      userStore.user?.employee_id || userStore.user?.username || "Unknown",
   }));
 
   const formData = reactive<FormDataState>({
@@ -203,7 +204,9 @@ export function useProjectApplication() {
 
   const currentTemplateUrl = computed(() => {
     if (!formData.category) return null;
-    const option = categoryOptions.value.find((opt) => opt.value === formData.category);
+    const option = categoryOptions.value.find(
+      (opt) => opt.value === formData.category
+    );
     return option?.template_file || null;
   });
 
@@ -232,7 +235,11 @@ export function useProjectApplication() {
     description: [{ required: true, message: "必填项", trigger: "blur" }],
     attachment_file: [
       {
-        validator: (_rule: unknown, _value: unknown, callback: (error?: Error) => void) => {
+        validator: (
+          _rule: unknown,
+          _value: unknown,
+          callback: (error?: Error) => void
+        ) => {
           if (fileList.value.length > 0) {
             callback();
           } else {
@@ -305,7 +312,9 @@ export function useProjectApplication() {
   const keyFieldCascaderValue = computed({
     get: () => {
       if (!formData.is_key_field) return ["GENERAL"];
-      return formData.key_domain_code ? ["KEY", formData.key_domain_code] : ["KEY"];
+      return formData.key_domain_code
+        ? ["KEY", formData.key_domain_code]
+        : ["KEY"];
     },
     set: (val: string[]) => {
       if (!val || val.length === 0) return;
@@ -407,7 +416,9 @@ export function useProjectApplication() {
 
     // Check if order already exists (optional, but good for UX)
     if (formData.advisors.some((a) => a.order === newAdvisor.order)) {
-      ElMessage.warning(newAdvisor.order === 1 ? "第一指导教师已存在" : "第二指导教师已存在");
+      ElMessage.warning(
+        newAdvisor.order === 1 ? "第一指导教师已存在" : "第二指导教师已存在"
+      );
       return;
     }
 
@@ -519,7 +530,9 @@ export function useProjectApplication() {
 
     if (!isDraft) {
       if (formData.advisors.length === 0) {
-        console.warn("No advisors added, user might have forgotten to click add");
+        console.warn(
+          "No advisors added, user might have forgotten to click add"
+        );
       }
       if (formData.expected_results_data.length === 0) {
         ElMessage.warning("请补充预期成果清单");
@@ -570,7 +583,10 @@ export function useProjectApplication() {
           ? "KEY"
           : "NORMAL";
 
-      if (!basicFields.leader_email || !/^\S+@\S+\.\S+$/.test(basicFields.leader_email)) {
+      if (
+        !basicFields.leader_email ||
+        !/^\S+@\S+\.\S+$/.test(basicFields.leader_email)
+      ) {
         basicFields.leader_email = "";
       }
 
@@ -605,9 +621,9 @@ export function useProjectApplication() {
           payload
         )) as ApiResponse<{ id?: number }>;
       } else {
-        response = (await createProjectApplication(
-          payload
-        )) as ApiResponse<{ id?: number }>;
+        response = (await createProjectApplication(payload)) as ApiResponse<{
+          id?: number;
+        }>;
       }
 
       if (response.code === 200 || response.status === 201) {
@@ -652,7 +668,9 @@ export function useProjectApplication() {
       const projectData = res.data || (res as ProjectDetail);
 
       if (projectData && (projectData.id || res.code === 200)) {
-        const data = projectData.id ? projectData : (projectData as ProjectDetail);
+        const data = projectData.id
+          ? projectData
+          : (projectData as ProjectDetail);
         if (!data) throw new Error("No data found");
 
         formData.id = typeof data.id === "number" ? data.id : null;
@@ -667,21 +685,36 @@ export function useProjectApplication() {
         formData.leader_email = data.leader_email || "";
         formData.description = data.description || "";
         formData.expected_results = data.expected_results || "";
-        formData.expected_results_data = Array.isArray(data.expected_results_data)
+        formData.expected_results_data = Array.isArray(
+          data.expected_results_data
+        )
           ? data.expected_results_data
           : [];
 
         // Handle Boolean Key Field
         formData.is_key_field = !!data.is_key_field;
-        formData.key_domain_code = data.key_domain_code || data.key_field_code || "";
+        formData.key_domain_code =
+          data.key_domain_code || data.key_field_code || "";
 
-        const proposalUrl = data.proposal_file_url || data.attachment_file_url || "";
-        const proposalName = data.proposal_file_name || data.attachment_file_name || "申请书.pdf";
+        const proposalUrl =
+          data.proposal_file_url || data.attachment_file_url || "";
+        const proposalName =
+          data.proposal_file_name || data.attachment_file_name || "申请书.pdf";
         fileList.value = proposalUrl
-          ? [{ name: proposalName, url: proposalUrl, status: "success", uid: Date.now() }]
+          ? [
+              {
+                name: proposalName,
+                url: proposalUrl,
+                status: "success",
+                uid: Date.now(),
+              },
+            ]
           : [];
 
-        if (Array.isArray(data.advisors_info) && data.advisors_info.length > 0) {
+        if (
+          Array.isArray(data.advisors_info) &&
+          data.advisors_info.length > 0
+        ) {
           formData.advisors = data.advisors_info.map((adh, index) => ({
             job_number: adh.job_number || "",
             name: adh.name || "",
@@ -730,8 +763,10 @@ export function useProjectApplication() {
     } else {
       // Pre-fill contact info if creating new application
       if (userStore.user) {
-        if (!formData.leader_contact) formData.leader_contact = userStore.user.phone || "";
-        if (!formData.leader_email) formData.leader_email = userStore.user.email || "";
+        if (!formData.leader_contact)
+          formData.leader_contact = userStore.user.phone || "";
+        if (!formData.leader_email)
+          formData.leader_email = userStore.user.email || "";
       }
     }
   });
@@ -741,7 +776,8 @@ export function useProjectApplication() {
     () => userStore.user,
     (newUser) => {
       if (newUser && !route.query.id) {
-        if (!formData.leader_contact) formData.leader_contact = newUser.phone || "";
+        if (!formData.leader_contact)
+          formData.leader_contact = newUser.phone || "";
         if (!formData.leader_email) formData.leader_email = newUser.email || "";
       }
     }
@@ -778,6 +814,7 @@ export function useProjectApplication() {
     addExpectedResult,
     removeExpectedResult,
     getLabel,
+    loading,
     submitForm,
     saveAsDraft,
     handleReset,

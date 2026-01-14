@@ -11,6 +11,7 @@ from rest_framework import status
 from apps.dictionaries.models import DictionaryItem
 from apps.reviews.models import Review
 from apps.system_settings.services import SystemSettingService
+from apps.system_settings.services.workflow_service import WorkflowService
 
 from ..models import Project, ProjectAchievement
 from ..serializers import ProjectAchievementSerializer, ProjectSerializer
@@ -347,8 +348,8 @@ class ProjectClosureService:
         try:
             with transaction.atomic():
                 if not is_draft:
-                    ok, msg = SystemSettingService.check_window(
-                        "CLOSURE_WINDOW", timezone.now().date(), batch=project.batch
+                    ok, msg = WorkflowService.check_phase_window(
+                        "CLOSURE", project.batch, timezone.now().date()
                     )
                     if not ok:
                         return (
@@ -394,7 +395,7 @@ class ProjectClosureService:
                     existing_review = Review.objects.filter(
                         project=project,
                         review_type=Review.ReviewType.CLOSURE,
-                        review_level=Review.ReviewLevel.TEACHER,
+                        review_level="TEACHER",
                         status=Review.ReviewStatus.PENDING,
                     ).first()
                     if not existing_review:
@@ -451,8 +452,8 @@ class ProjectClosureService:
         try:
             with transaction.atomic():
                 if not is_draft:
-                    ok, msg = SystemSettingService.check_window(
-                        "CLOSURE_WINDOW", timezone.now().date(), batch=project.batch
+                    ok, msg = WorkflowService.check_phase_window(
+                        "CLOSURE", project.batch, timezone.now().date()
                     )
                     if not ok:
                         return (
@@ -498,7 +499,7 @@ class ProjectClosureService:
                     existing_review = Review.objects.filter(
                         project=project,
                         review_type=Review.ReviewType.CLOSURE,
-                        review_level=Review.ReviewLevel.TEACHER,
+                        review_level="TEACHER",
                         status=Review.ReviewStatus.PENDING,
                     ).first()
                     if not existing_review:

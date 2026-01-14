@@ -42,8 +42,12 @@ class ProjectMidtermMixin:
 
         try:
             if not is_draft:
-                ok, msg = SystemSettingService.check_window(
-                    "MIDTERM_WINDOW", timezone.now().date(), batch=project.batch
+                from apps.system_settings.services.workflow_service import (
+                    WorkflowService,
+                )
+
+                ok, msg = WorkflowService.check_phase_window(
+                    "MID_TERM", project.batch, timezone.now().date()
                 )
                 if not ok:
                     return Response(
@@ -58,7 +62,10 @@ class ProjectMidtermMixin:
                 current_phase = ProjectPhaseService.get_current(
                     project, ProjectPhaseInstance.Phase.MID_TERM
                 )
-                if current_phase and current_phase.state == ProjectPhaseInstance.State.RETURNED:
+                if (
+                    current_phase
+                    and current_phase.state == ProjectPhaseInstance.State.RETURNED
+                ):
                     ProjectPhaseService.start_new_attempt(
                         project,
                         ProjectPhaseInstance.Phase.MID_TERM,
@@ -88,8 +95,10 @@ class ProjectMidtermMixin:
             )
 
         try:
-            ok, msg = SystemSettingService.check_window(
-                "MIDTERM_WINDOW", timezone.now().date(), batch=project.batch
+            from apps.system_settings.services.workflow_service import WorkflowService
+
+            ok, msg = WorkflowService.check_phase_window(
+                "MID_TERM", project.batch, timezone.now().date()
             )
             if not ok:
                 return Response(
@@ -101,7 +110,10 @@ class ProjectMidtermMixin:
                 current_phase = ProjectPhaseService.get_current(
                     project, ProjectPhaseInstance.Phase.MID_TERM
                 )
-                if current_phase and current_phase.state == ProjectPhaseInstance.State.RETURNED:
+                if (
+                    current_phase
+                    and current_phase.state == ProjectPhaseInstance.State.RETURNED
+                ):
                     ProjectPhaseService.start_new_attempt(
                         project,
                         ProjectPhaseInstance.Phase.MID_TERM,
@@ -152,11 +164,20 @@ class ProjectMidtermMixin:
             project=project,
             resource_type=ProjectRecycleBin.ResourceType.MID_TERM,
             payload=payload,
-            attachments=[payload.get("mid_term_report")] if payload.get("mid_term_report") else [],
+            attachments=[payload.get("mid_term_report")]
+            if payload.get("mid_term_report")
+            else [],
             deleted_by=request.user,
         )
         project.mid_term_report = None
         project.mid_term_submitted_at = None
         project.status = Project.ProjectStatus.IN_PROGRESS
-        project.save(update_fields=["mid_term_report", "mid_term_submitted_at", "status", "updated_at"])
+        project.save(
+            update_fields=[
+                "mid_term_report",
+                "mid_term_submitted_at",
+                "status",
+                "updated_at",
+            ]
+        )
         return Response({"code": 200, "message": "已移入回收站"})

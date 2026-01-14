@@ -100,6 +100,10 @@ class SystemSettingService:
 
     @staticmethod
     def get_setting(code, default=None, batch=None):
+        """
+        获取指定批次的配置。
+        每个批次必须有自己的独立配置，不应该回退到全局配置。
+        """
         batch_obj = batch
         if batch_obj is None:
             batch_obj = SystemSettingService.get_current_batch()
@@ -108,15 +112,14 @@ class SystemSettingService:
         elif isinstance(batch_obj, str) and batch_obj.isdigit():
             batch_obj = ProjectBatch.objects.filter(id=int(batch_obj)).first()
 
+        # 只查找指定批次的配置，不回退到全局配置
         setting = None
         if batch_obj:
             setting = SystemSetting.objects.filter(
                 code=code, is_active=True, batch=batch_obj
             ).first()
-        if setting is None:
-            setting = SystemSetting.objects.filter(
-                code=code, is_active=True, batch__isnull=True
-            ).first()
+
+        # 如果找到配置，合并到默认值
         base = default or DEFAULT_SETTINGS.get(code, {})
         if setting:
             merged = dict(base)
@@ -124,52 +127,9 @@ class SystemSettingService:
             return merged
         return base
 
-    @staticmethod
-    def _parse_date(value):
-        if not value:
-            return None
-        try:
-            return datetime.strptime(value, "%Y-%m-%d").date()
-        except ValueError:
-            return None
-
-    @staticmethod
-    def check_window(code, now_date, batch=None):
-        data = SystemSettingService.get_setting(code, batch=batch)
-        if not data.get("enabled"):
-            return True, ""
-
-        start = SystemSettingService._parse_date(data.get("start"))
-        end = SystemSettingService._parse_date(data.get("end"))
-
-        if start and now_date < start:
-            return False, "当前未到开放时间"
-        if end and now_date > end:
-            return False, "当前已超过截止时间"
-        return True, ""
-
-    @staticmethod
-    def check_review_window(review_type, review_level, now_date, batch=None):
-        data = SystemSettingService.get_setting("REVIEW_WINDOW", batch=batch)
-        level_key = review_level.lower()
-        type_map = {
-            "APPLICATION": "application",
-            "MID_TERM": "midterm",
-            "CLOSURE": "closure",
-        }
-        type_key = type_map.get(review_type, review_type.lower())
-        if type_key not in data:
-            return True, ""
-        level_data = data.get(type_key, {}).get(level_key, {})
-        if not level_data.get("enabled"):
-            return True, ""
-        start = SystemSettingService._parse_date(level_data.get("start"))
-        end = SystemSettingService._parse_date(level_data.get("end"))
-        if start and now_date < start:
-            return False, "当前未到审核开放时间"
-        if end and now_date > end:
-            return False, "当前已超过审核截止时间"
-        return True, ""
+    # 时间窗口检查方法已移除
+    # 现在完全使用工作流节点配置
+    # 请使用 WorkflowService.check_node_time_window() 代替
 
 
 __all__ = [

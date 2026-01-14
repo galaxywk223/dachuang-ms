@@ -49,15 +49,15 @@ class ReviewViewSet(viewsets.ModelViewSet):
         elif user.is_level2_admin:
             queryset = queryset.filter(
                 project__leader__college=user.college,
-                review_level=Review.ReviewLevel.LEVEL2,
+                review_level="LEVEL2",
             )
         # 一级管理员可以看到所有一级审核记录
         elif user.is_level1_admin:
-            queryset = queryset.filter(review_level=Review.ReviewLevel.LEVEL1)
+            queryset = queryset.filter(review_level="LEVEL1")
         # 指导教师只能看到分配给自己的审核
         elif user.is_teacher:
             queryset = queryset.filter(
-                project__advisors__user=user, review_level=Review.ReviewLevel.TEACHER
+                project__advisors__user=user, review_level="TEACHER"
             ).distinct()
         elif user.is_expert:
             queryset = queryset.filter(reviewer=user)
@@ -96,7 +96,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         if (
             review.reviewer_id is None
             and review.review_level
-            in (Review.ReviewLevel.LEVEL2, Review.ReviewLevel.LEVEL1)
+            in ("LEVEL2", "LEVEL1")
             and review.review_type
             in (
                 Review.ReviewType.APPLICATION,
@@ -150,12 +150,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-        ok, msg = SystemSettingService.check_review_window(
-            review.review_type,
-            review.review_level,
-            timezone.now().date(),
-            batch=review.project.batch,
-        )
+        # 检查审核时间窗口 - 优先使用工作流节点配置
+        ok, msg = self._check_review_time_window(review)
         if not ok:
             return Response(
                 {"code": 400, "message": msg},
@@ -168,7 +164,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         min_len = int(review_rules.get("teacher_application_comment_min", 0) or 0)
         if (
             min_len
-            and review.review_level == Review.ReviewLevel.TEACHER
+            and review.review_level == "TEACHER"
             and review.review_type == Review.ReviewType.APPLICATION
             and len(comments or "") < min_len
         ):
@@ -177,7 +173,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if review.review_level == Review.ReviewLevel.TEACHER:
+        if review.review_level == "TEACHER":
             score = None
 
         # 执行审核
@@ -219,6 +215,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         获取当前审核记录可退回的目标节点列表
         """
         from apps.system_settings.services.workflow_service import WorkflowService
+
         review = self.get_object()
 
         # 检查权限
@@ -287,12 +284,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-        ok, msg = SystemSettingService.check_review_window(
-            review.review_type,
-            review.review_level,
-            timezone.now().date(),
-            batch=review.project.batch,
-        )
+        # 检查审核时间窗口 - 使用工作流节点配置
+        ok, msg = self._check_review_time_window(review)
         if not ok:
             return Response(
                 {"code": 400, "message": msg},
@@ -315,7 +308,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         min_len = int(review_rules.get("teacher_application_comment_min", 0) or 0)
         if (
             min_len
-            and review.review_level == Review.ReviewLevel.TEACHER
+            and review.review_level == "TEACHER"
             and review.review_type == Review.ReviewType.APPLICATION
             and len(comments or "") < min_len
         ):
@@ -378,14 +371,14 @@ class ReviewViewSet(viewsets.ModelViewSet):
             # 二级管理员获取本学院待审核的项目
             queryset = Review.objects.filter(
                 project__leader__college=user.college,
-                review_level=Review.ReviewLevel.LEVEL2,
+                review_level="LEVEL2",
                 status=Review.ReviewStatus.PENDING,
                 reviewer__isnull=True,
             )
         elif user.is_level1_admin:
             # 一级管理员获取待一级审核的项目
             queryset = Review.objects.filter(
-                review_level=Review.ReviewLevel.LEVEL1,
+                review_level="LEVEL1",
                 status=Review.ReviewStatus.PENDING,
                 reviewer__isnull=True,
             )
@@ -411,7 +404,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         """
         if review.reviewer_id:
             return review.reviewer_id == user.id
-        if review.review_level == Review.ReviewLevel.LEVEL2:
+        if review.review_level == "LEVEL2":
             # 二级审核：必须是二级管理员且是同一学院
             project_college = (
                 review.project.leader.college
@@ -419,10 +412,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 else None
             )
             return user.is_level2_admin and user.college == project_college
-        elif review.review_level == Review.ReviewLevel.LEVEL1:
+        elif review.review_level == "LEVEL1":
             # 一级审核：必须是一级管理员
             return user.is_level1_admin
-        elif review.review_level == Review.ReviewLevel.TEACHER:
+        elif review.review_level == "TEACHER":
             # 导师审核：必须是该项目的导师
             # Check if user is in project advisors
             return (
@@ -462,7 +455,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
             if (
                 review.reviewer_id is None
                 and review.review_level
-                in (Review.ReviewLevel.LEVEL2, Review.ReviewLevel.LEVEL1)
+                in ("LEVEL2", "LEVEL1")
                 and review.review_type
                 in (
                     Review.ReviewType.APPLICATION,
@@ -487,12 +480,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
                         {"id": review.id, "reason": msg or "不在评审时间范围内"}
                     )
                     continue
-            ok, msg = SystemSettingService.check_review_window(
-                review.review_type,
-                review.review_level,
-                timezone.now().date(),
-                batch=review.project.batch,
-            )
+
+            # 检查审核时间窗口 - 使用工作流节点配置
+            ok, msg = self._check_review_time_window(review)
             if not ok:
                 failed.append({"id": review.id, "reason": msg or "不在审核时间范围内"})
                 continue
@@ -554,7 +544,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
             level2_passed = Review.objects.filter(
                 project=project,
                 review_type=Review.ReviewType.APPLICATION,
-                review_level=Review.ReviewLevel.LEVEL2,
+                review_level="LEVEL2",
                 status=Review.ReviewStatus.APPROVED,
             ).exists()
             if not level2_passed:
@@ -581,3 +571,25 @@ class ReviewViewSet(viewsets.ModelViewSet):
             return Response(
                 {"code": 404, "message": "项目不存在"}, status=status.HTTP_404_NOT_FOUND
             )
+
+    def _check_review_time_window(self, review):
+        """
+        检查审核时间窗口 - 使用工作流节点配置
+        """
+        from apps.system_settings.services.workflow_service import WorkflowService
+
+        # 从工作流节点获取时间配置
+        if review.phase_instance and review.phase_instance.current_node_id:
+            from apps.system_settings.models import WorkflowNode
+
+            current_node = WorkflowNode.objects.filter(
+                id=review.phase_instance.current_node_id
+            ).first()
+
+            if current_node:
+                return WorkflowService.check_node_time_window(
+                    current_node, timezone.now().date()
+                )
+
+        # 没有节点配置则允许
+        return True, ""

@@ -270,7 +270,7 @@ class BatchWorkflowViewSet(viewsets.ViewSet):
         return Response(result_serializer.data)
 
     def _delete_node(self, request, pk, phase, node_id):
-        """删除工作流节点（软删除）"""
+        """删除工作流节点（物理删除）"""
         batch = get_object_or_404(ProjectBatch, pk=pk)
         node = get_object_or_404(WorkflowNode, pk=node_id)
 
@@ -290,8 +290,8 @@ class BatchWorkflowViewSet(viewsets.ViewSet):
                 {"detail": "学生提交节点不可删除"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        node.is_active = False
-        node.save(update_fields=["is_active"])
+        # 物理删除节点，避免数据库残留
+        node.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 

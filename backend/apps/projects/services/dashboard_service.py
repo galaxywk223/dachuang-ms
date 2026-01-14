@@ -192,7 +192,7 @@ class DashboardService:
         # 待审核任务
         pending_reviews = Review.objects.filter(
             project__in=guided_projects,
-            review_level=Review.ReviewLevel.TEACHER,
+            review_level="TEACHER",
             status=Review.ReviewStatus.PENDING,
         ).select_related("project")
 
@@ -256,7 +256,7 @@ class DashboardService:
         pending_reviews = (
             Review.objects.filter(
                 project__leader__college=user.college,
-                review_level=Review.ReviewLevel.LEVEL2,
+                review_level="LEVEL2",
                 status=Review.ReviewStatus.PENDING,
             )
             .values("review_type")
@@ -312,7 +312,7 @@ class DashboardService:
         # 待审核统计
         pending_reviews = (
             Review.objects.filter(
-                review_level=Review.ReviewLevel.LEVEL1,
+                review_level="LEVEL1",
                 status=Review.ReviewStatus.PENDING,
             )
             .values("review_type")

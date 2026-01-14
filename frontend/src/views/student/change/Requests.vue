@@ -4,17 +4,21 @@
       <template #header>
         <div class="card-header">
           <div class="header-left">
-             <span class="header-title">项目异动申请</span>
+            <span class="header-title">项目异动申请</span>
           </div>
           <div class="header-actions">
-             <el-button type="primary" @click="openDialog">新建申请</el-button>
+            <el-button type="primary" @click="openDialog">新建申请</el-button>
           </div>
         </div>
       </template>
 
       <el-table :data="requests" v-loading="loading" border stripe>
         <el-table-column prop="project_no" label="项目编号" width="140" />
-        <el-table-column prop="project_title" label="项目名称" min-width="180" />
+        <el-table-column
+          prop="project_title"
+          label="项目名称"
+          min-width="180"
+        />
         <el-table-column prop="request_type_display" label="类型" width="120" />
         <el-table-column prop="status_display" label="状态" width="140" />
         <el-table-column prop="submitted_at" label="提交时间" width="160" />
@@ -48,15 +52,33 @@
       </el-table>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" title="项目异动申请" width="620px" destroy-on-close>
+    <el-dialog
+      v-model="dialogVisible"
+      title="项目异动申请"
+      width="620px"
+      destroy-on-close
+    >
       <el-form :model="form" label-width="120px">
         <el-form-item label="项目" required>
-          <el-select v-model="form.project" placeholder="请选择项目" style="width: 100%">
-            <el-option v-for="item in projectOptions" :key="item.id" :label="item.title" :value="item.id" />
+          <el-select
+            v-model="form.project"
+            placeholder="请选择项目"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="item in projectOptions"
+              :key="item.id"
+              :label="item.title"
+              :value="item.id"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="类型" required>
-          <el-select v-model="form.request_type" placeholder="请选择类型" style="width: 100%">
+          <el-select
+            v-model="form.request_type"
+            placeholder="请选择类型"
+            style="width: 100%"
+          >
             <el-option label="项目变更" value="CHANGE" />
             <el-option label="项目终止" value="TERMINATION" />
             <el-option label="项目延期" value="EXTENSION" />
@@ -65,11 +87,28 @@
         <el-form-item label="原因">
           <el-input v-model="form.reason" type="textarea" :rows="3" />
         </el-form-item>
-        <el-form-item v-if="form.request_type === 'EXTENSION'" label="延期至" required>
-          <el-date-picker v-model="form.requested_end_date" type="date" value-format="YYYY-MM-DD" style="width: 100%" />
+        <el-form-item
+          v-if="form.request_type === 'EXTENSION'"
+          label="延期至"
+          required
+        >
+          <el-date-picker
+            v-model="form.requested_end_date"
+            type="date"
+            value-format="YYYY-MM-DD"
+            style="width: 100%"
+          />
         </el-form-item>
-        <el-form-item v-if="form.request_type === 'CHANGE'" label="变更内容(JSON)">
-          <el-input v-model="changeDataText" type="textarea" :rows="4" placeholder='{"title":"新名称"}' />
+        <el-form-item
+          v-if="form.request_type === 'CHANGE'"
+          label="变更内容(JSON)"
+        >
+          <el-input
+            v-model="changeDataText"
+            type="textarea"
+            :rows="4"
+            placeholder='{"title":"新名称"}'
+          />
         </el-form-item>
         <el-form-item label="附件">
           <el-upload
@@ -86,7 +125,13 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" :loading="saving" @click="saveDraft">保存草稿</el-button>
+          <el-button
+            type="primary"
+            :loading="saving"
+            :disabled="saving"
+            @click="saveDraft"
+            >保存草稿</el-button
+          >
         </span>
       </template>
     </el-dialog>
@@ -96,7 +141,12 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from "vue";
 import { ElMessage, type UploadFile, type UploadUserFile } from "element-plus";
-import { getChangeRequests, createChangeRequest, updateChangeRequest, submitChangeRequest } from "@/api/projects/change-requests";
+import {
+  getChangeRequests,
+  createChangeRequest,
+  updateChangeRequest,
+  submitChangeRequest,
+} from "@/api/projects/change-requests";
 import request from "@/utils/request";
 
 defineOptions({
@@ -135,7 +185,7 @@ type RequestForm = {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
-const resolveList = <T,>(payload: unknown): T[] => {
+const resolveList = <T>(payload: unknown): T[] => {
   if (Array.isArray(payload)) return payload as T[];
   if (isRecord(payload) && Array.isArray(payload.results)) {
     return payload.results as T[];
@@ -302,9 +352,9 @@ onMounted(() => {
 .main-card {
   border-radius: 8px;
   :deep(.el-card__header) {
-      padding: 16px 20px;
-      font-weight: 600;
-      border-bottom: 1px solid $color-border-light;
+    padding: 16px 20px;
+    font-weight: 600;
+    border-bottom: 1px solid $color-border-light;
   }
 }
 
@@ -315,17 +365,17 @@ onMounted(() => {
 }
 
 .header-left {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .header-title {
-    font-size: 16px;
-    color: $slate-800;
+  font-size: 16px;
+  color: $slate-800;
 }
 
 .header-actions {
-    display: flex;
-    gap: 12px;
+  display: flex;
+  gap: 12px;
 }
 </style>

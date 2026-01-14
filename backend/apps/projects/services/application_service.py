@@ -72,10 +72,17 @@ def _get_current_batch():
 
 
 def _check_application_window(batch=None):
-    ok, msg = SystemSettingService.check_window(
-        "APPLICATION_WINDOW", timezone.now().date(), batch=batch
+    """
+    检查申报时间窗口 - 使用工作流节点配置
+    """
+    from apps.system_settings.services.workflow_service import WorkflowService
+
+    if not batch:
+        batch = _get_current_batch()
+
+    return WorkflowService.check_phase_window(
+        "APPLICATION", batch, timezone.now().date()
     )
-    return ok, msg or "当前不在申报时间范围内"
 
 
 def _validate_limits(user, advisors_data, members_data, project=None, batch=None):
@@ -105,7 +112,7 @@ def _validate_limits(user, advisors_data, members_data, project=None, batch=None
             excellent_project_ids = list(
                 Review.objects.filter(
                     review_type=Review.ReviewType.CLOSURE,
-                    review_level=Review.ReviewLevel.LEVEL1,
+                    review_level="LEVEL1",
                     status=Review.ReviewStatus.APPROVED,
                     closure_rating=Review.ClosureRating.EXCELLENT,
                 ).values_list("project_id", flat=True)
@@ -232,9 +239,8 @@ class ProjectApplicationService:
         try:
             with transaction.atomic():
                 current_batch = _get_current_batch()
-                window_batch = project.batch or current_batch
                 if not is_draft:
-                    ok, msg = _check_application_window(window_batch)
+                    ok, msg = _check_application_window(current_batch)
                     if not ok:
                         return (
                             {"code": 400, "message": msg},
@@ -351,7 +357,7 @@ class ProjectApplicationService:
                     and not Review.objects.filter(
                         project=project,
                         review_type=Review.ReviewType.APPLICATION,
-                        review_level=Review.ReviewLevel.TEACHER,
+                        review_level="TEACHER",
                         status=Review.ReviewStatus.PENDING,
                     ).exists()
                 ):
@@ -508,7 +514,7 @@ class ProjectApplicationService:
                     )
 
                 ok, msg = _validate_limits(
-                    user, advisors_data, members_data, project, batch=window_batch
+                    user, advisors_data, members_data, project, batch=current_batch
                 )
                 if not ok:
                     return (
@@ -534,8 +540,8 @@ class ProjectApplicationService:
 
                 project = serializer.save()
 
-                if window_batch and not project.batch:
-                    project.batch = window_batch
+                if current_batch and not project.batch:
+                    project.batch = current_batch
                 if project.batch:
                     project.year = project.batch.year
 
@@ -552,7 +558,7 @@ class ProjectApplicationService:
                     and not Review.objects.filter(
                         project=project,
                         review_type=Review.ReviewType.APPLICATION,
-                        review_level=Review.ReviewLevel.TEACHER,
+                        review_level="TEACHER",
                         status=Review.ReviewStatus.PENDING,
                     ).exists()
                 ):

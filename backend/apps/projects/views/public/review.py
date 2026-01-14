@@ -115,11 +115,11 @@ class ProjectReviewViewSet(viewsets.ViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        ok, msg = SystemSettingService.check_review_window(
-            review.review_type,
-            review.review_level,
-            timezone.now().date(),
-            batch=review.project.batch,
+        from apps.system_settings.services.workflow_service import WorkflowService
+        ok, msg = WorkflowService.check_review_node_window(
+            review.project,
+            review.phase_instance.phase if review.phase_instance else 'APPLICATION',
+            timezone.now().date()
         )
         if not ok:
             return Response(
@@ -191,11 +191,11 @@ class ProjectReviewViewSet(viewsets.ViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        ok, msg = SystemSettingService.check_review_window(
-            review.review_type,
-            review.review_level,
-            timezone.now().date(),
-            batch=review.project.batch,
+        from apps.system_settings.services.workflow_service import WorkflowService
+        ok, msg = WorkflowService.check_review_node_window(
+            review.project,
+            review.phase_instance.phase if review.phase_instance else 'APPLICATION',
+            timezone.now().date()
         )
         if not ok:
             return Response(

@@ -18,10 +18,8 @@ class Review(models.Model):
         MID_TERM = "MID_TERM", "中期审核"
         CLOSURE = "CLOSURE", "结题审核"
 
-    class ReviewLevel(models.TextChoices):
-        TEACHER = "TEACHER", "导师审核"
-        LEVEL2 = "LEVEL2", "二级审核"
-        LEVEL1 = "LEVEL1", "一级审核"
+    # ReviewLevel 枚举已删除 - 改为动态值，支持任意角色
+    # 管理员可在工作流配置中添加任意多个审核角色，无需修改代码
 
     class ReviewStatus(models.TextChoices):
         PENDING = "PENDING", "待审核"
@@ -53,8 +51,12 @@ class Review(models.Model):
     review_type = models.CharField(
         max_length=20, choices=ReviewType.choices, verbose_name="审核类型"
     )
+    # review_level 改为纯CharField，允许任意角色值
+    # 值从工作流节点的 review_level 或 role 字段读取
     review_level = models.CharField(
-        max_length=20, choices=ReviewLevel.choices, verbose_name="审核级别"
+        max_length=50,
+        verbose_name="审核级别/角色",
+        help_text="动态值，由工作流节点配置决定",
     )
 
     # 审核人和状态

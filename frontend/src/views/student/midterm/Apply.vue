@@ -5,7 +5,11 @@
         <div class="card-header">
           <div class="header-left">
             <span class="header-title">中期检查报告提交</span>
-            <el-tag v-if="project" :type="getStatusType(project.status)" class="ml-3">
+            <el-tag
+              v-if="project"
+              :type="getStatusType(project.status)"
+              class="ml-3"
+            >
               {{ getStatusText(project.status) }}
             </el-tag>
           </div>
@@ -22,11 +26,21 @@
 
       <div v-else class="content-container">
         <el-descriptions title="项目基本信息" :column="2" border>
-          <el-descriptions-item label="项目编号">{{ project.project_no }}</el-descriptions-item>
-          <el-descriptions-item label="项目名称">{{ project.title }}</el-descriptions-item>
-          <el-descriptions-item label="负责人">{{ project.leader_name }}</el-descriptions-item>
+          <el-descriptions-item label="项目编号">{{
+            project.project_no
+          }}</el-descriptions-item>
+          <el-descriptions-item label="项目名称">{{
+            project.title
+          }}</el-descriptions-item>
+          <el-descriptions-item label="负责人">{{
+            project.leader_name
+          }}</el-descriptions-item>
           <el-descriptions-item label="指导教师">
-            <span v-for="advisor in project.advisors_info" :key="advisor.id" class="mr-2">
+            <span
+              v-for="advisor in project.advisors_info"
+              :key="advisor.id"
+              class="mr-2"
+            >
               {{ advisor.name }}
             </span>
           </el-descriptions-item>
@@ -53,7 +67,12 @@
             class="mb-4"
           />
 
-          <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
+          <el-form
+            ref="formRef"
+            :model="form"
+            :rules="rules"
+            label-width="120px"
+          >
             <el-form-item label="中期报告" prop="mid_term_report">
               <el-upload
                 class="upload-demo"
@@ -81,24 +100,28 @@
 
             <div v-if="project.mid_term_report_url" class="current-file mb-4">
               <span class="label">当前报告：</span>
-              <el-link type="primary" :href="project.mid_term_report_url" target="_blank">
-                {{ project.mid_term_report_name || '点击查看' }}
+              <el-link
+                type="primary"
+                :href="project.mid_term_report_url"
+                target="_blank"
+              >
+                {{ project.mid_term_report_name || "点击查看" }}
               </el-link>
             </div>
 
             <el-form-item>
-              <el-button 
-                type="primary" 
-                @click="submitForm(false)" 
+              <el-button
+                type="primary"
+                @click="submitForm(false)"
                 :loading="submitting"
                 :disabled="!canSubmit"
               >
                 提交报告
               </el-button>
-              <el-button 
-                @click="submitForm(true)" 
-                :loading="saving" 
-                :disabled="!canSubmit"
+              <el-button
+                @click="submitForm(true)"
+                :loading="saving"
+                :disabled="saving"
               >
                 保存草稿
               </el-button>
@@ -175,7 +198,9 @@ const rules = {
 const canSubmit = computed(() => {
   if (!project.value) return false;
   const status = project.value.status;
-  return ["IN_PROGRESS", "MID_TERM_DRAFT", "MID_TERM_REJECTED"].includes(status);
+  return ["IN_PROGRESS", "MID_TERM_DRAFT", "MID_TERM_REJECTED"].includes(
+    status
+  );
 });
 
 const canDelete = computed(() => {
@@ -195,8 +220,10 @@ const hasProjectId = computed(
   () => Number.isFinite(projectId.value) && projectId.value > 0
 );
 const emptyMessage = computed(() =>
-  hasProjectId.value ? '未找到项目或无权限' : '请从列表选择需要提交中期检查的项目'
-)
+  hasProjectId.value
+    ? "未找到项目或无权限"
+    : "请从列表选择需要提交中期检查的项目"
+);
 
 const getStatusType = (status: string) => {
   const map: Record<string, string> = {
@@ -251,7 +278,9 @@ const fetchProject = async () => {
     }
 
     loading.value = true;
-    const res = (await getProjectDetail(projectId.value)) as ApiResponse<Project>;
+    const res = (await getProjectDetail(
+      projectId.value
+    )) as ApiResponse<Project>;
     if (res?.code === 200) {
       project.value = res.data || null;
       fileList.value = [];
@@ -266,7 +295,10 @@ const fetchProject = async () => {
   }
 };
 
-const handleFileChange = (uploadFile: UploadFile, uploadFiles: UploadUserFile[]) => {
+const handleFileChange = (
+  uploadFile: UploadFile,
+  uploadFiles: UploadUserFile[]
+) => {
   if (uploadFile.raw) {
     form.value.mid_term_report = uploadFile.raw;
     // Clear validation
@@ -283,10 +315,16 @@ const handleFileRemove = () => {
 const handleDelete = async () => {
   if (!project.value) return;
   try {
-    await ElMessageBox.confirm("确定删除中期提交吗？删除后可在回收站恢复。", "提示", {
-      type: "warning",
-    });
-    const res = (await deleteMidTermSubmission(project.value.id)) as ApiResponse<unknown>;
+    await ElMessageBox.confirm(
+      "确定删除中期提交吗？删除后可在回收站恢复。",
+      "提示",
+      {
+        type: "warning",
+      }
+    );
+    const res = (await deleteMidTermSubmission(
+      project.value.id
+    )) as ApiResponse<unknown>;
     if (res?.code === 200) {
       ElMessage.success("已移入回收站");
       fetchProject();
@@ -323,11 +361,15 @@ const submitForm = async (isDraft: boolean) => {
       submitting.value = true;
     }
 
-    await request.post(`/projects/${project.value.id}/apply-mid-term/`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    await request.post(
+      `/projects/${project.value.id}/apply-mid-term/`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
 
     ElMessage.success(isDraft ? "保存成功" : "提交成功");
     fetchProject(); // Refresh
@@ -362,9 +404,9 @@ watch(
 .main-card {
   border-radius: 8px;
   :deep(.el-card__header) {
-      padding: 16px 20px;
-      font-weight: 600;
-      border-bottom: 1px solid $color-border-light;
+    padding: 16px 20px;
+    font-weight: 600;
+    border-bottom: 1px solid $color-border-light;
   }
 }
 
@@ -375,42 +417,42 @@ watch(
 }
 
 .header-left {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .header-title {
-    font-size: 16px;
-    color: $slate-800;
+  font-size: 16px;
+  color: $slate-800;
 }
 
 .content-container {
-    .form-section {
-      margin-top: 30px;
-      
-      h3 {
-        margin-bottom: 20px;
-        padding-left: 10px;
-        border-left: 4px solid $primary-500;
-        font-size: 16px;
-        color: $slate-800;
-      }
+  .form-section {
+    margin-top: 30px;
+
+    h3 {
+      margin-bottom: 20px;
+      padding-left: 10px;
+      border-left: 4px solid $primary-500;
+      font-size: 16px;
+      color: $slate-800;
     }
+  }
 }
 
 .ml-3 {
-    margin-left: 12px;
+  margin-left: 12px;
 }
-  
+
 .mt-4 {
-    margin-top: 16px;
+  margin-top: 16px;
 }
-  
+
 .mb-4 {
-    margin-bottom: 16px;
+  margin-bottom: 16px;
 }
-  
+
 .mr-2 {
-    margin-right: 8px;
+  margin-right: 8px;
 }
 </style>
