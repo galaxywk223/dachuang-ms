@@ -178,13 +178,6 @@
         <el-form-item label="节点编码">
           <el-input v-model="nodeForm.code" placeholder="例如 TEACHER_REVIEW" />
         </el-form-item>
-        <el-form-item label="节点类型">
-          <el-select v-model="nodeForm.node_type" placeholder="请选择">
-            <el-option label="审核" value="REVIEW" />
-            <el-option label="专家评审" value="EXPERT_REVIEW" />
-            <el-option label="管理员确认" value="APPROVAL" />
-          </el-select>
-        </el-form-item>
         <el-form-item label="角色">
           <el-select v-model="nodeForm.role" placeholder="请选择">
             <el-option label="导师" value="TEACHER" />

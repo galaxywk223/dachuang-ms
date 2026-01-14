@@ -66,24 +66,9 @@
                   align="center"
                 />
                 <el-table-column prop="name" label="节点名称" min-width="120" />
-                <el-table-column
-                  prop="node_type"
-                  label="类型"
-                  width="100"
-                  align="center"
-                >
-                  <template #default="{ row }">
-                    <el-tag :type="getNodeTypeTag(row.node_type)" size="small">
-                      {{ getNodeTypeName(row.node_type) }}
-                    </el-tag>
-                  </template>
-                </el-table-column>
                 <el-table-column label="执行角色" width="120" align="center">
                   <template #default="{ row }">
-                    {{
-                      row.role_name ||
-                      (row.node_type === "SUBMIT" ? "学生" : "-")
-                    }}
+                    {{ row.role_name || "-" }}
                   </template>
                 </el-table-column>
                 <el-table-column label="日期范围" width="180" align="center">
@@ -239,12 +224,6 @@
         <el-form-item label="节点名称" prop="name">
           <el-input v-model="nodeForm.name" placeholder="如: 导师审核" />
         </el-form-item>
-        <el-form-item label="节点类型" prop="node_type">
-          <el-select v-model="nodeForm.node_type" placeholder="选择类型">
-            <el-option label="审核" value="REVIEW" />
-            <el-option label="确认" value="APPROVAL" />
-          </el-select>
-        </el-form-item>
         <el-form-item label="执行角色" prop="role_fk">
           <el-select
             v-model="nodeForm.role_fk"
@@ -274,12 +253,11 @@
             v-model="nodeForm.allowed_reject_to"
             multiple
             placeholder="选择可退回的节点"
-            :disabled="nodeForm.node_type === 'SUBMIT'"
           >
             <el-option
               v-for="node in rejectTargetOptions"
               :key="node.id"
-              :label="`${node.name} (${node.node_type})`"
+              :label="node.name"
               :value="node.id"
             />
           </el-select>
@@ -418,7 +396,6 @@ const nodeForm = ref<WorkflowNodeInput>({
 
 const nodeRules: FormRules = {
   name: [{ required: true, message: "请输入节点名称", trigger: "blur" }],
-  node_type: [{ required: true, message: "请选择节点类型", trigger: "change" }],
   role_fk: [{ required: true, message: "请选择执行角色", trigger: "change" }],
 };
 
@@ -441,7 +418,6 @@ const roleMap = computed(() => {
 });
 
 const canEnableExpertReview = computed(() => {
-  if (nodeForm.value.node_type === "SUBMIT") return false;
   if (!nodeForm.value.role_fk) return false;
   const role = roleMap.value.get(nodeForm.value.role_fk);
   return Boolean(role?.code && role.code.endsWith("_ADMIN"));
@@ -450,7 +426,9 @@ const canEnableExpertReview = computed(() => {
 const rejectTargetOptions = computed(() => {
   const sorted = [...nodes.value].sort((a, b) => a.sort_order - b.sort_order);
   if (!editingNode.value) return sorted;
-  return sorted.filter((node) => node.sort_order < editingNode.value!.sort_order);
+  return sorted.filter(
+    (node) => node.sort_order < editingNode.value!.sort_order
+  );
 });
 
 onMounted(() => {
@@ -623,13 +601,8 @@ async function handleSaveNode() {
       ElMessage.success("更新成功");
     } else {
       // 新增节点时自动生成节点编码
-      const nodeTypePrefix: Record<string, string> = {
-        REVIEW: "REVIEW",
-        APPROVAL: "APPROVAL",
-      };
-      const prefix = nodeTypePrefix[nodeForm.value.node_type] || "NODE";
       const timestamp = Date.now().toString().slice(-6);
-      nodeForm.value.code = `${prefix}_${timestamp}`;
+      nodeForm.value.code = `REVIEW_${timestamp}`;
 
       await createWorkflowNode(
         props.batchId,
@@ -688,26 +661,8 @@ function handleDialogClose() {
   nodeFormRef.value?.resetFields();
 }
 
-function getNodeTypeName(type: string) {
-  const names: Record<string, string> = {
-    SUBMIT: "提交",
-    REVIEW: "审核",
-    APPROVAL: "确认",
-  };
-  return names[type] || type;
-}
-
-function getNodeTypeTag(type: string) {
-  const tags: Record<string, "" | "success" | "warning" | "danger"> = {
-    SUBMIT: "success",
-    REVIEW: "",
-    APPROVAL: "danger",
-  };
-  return tags[type] || "";
-}
-
 watch(
-  () => [nodeForm.value.node_type, nodeForm.value.role_fk],
+  () => nodeForm.value.role_fk,
   () => {
     if (!canEnableExpertReview.value) {
       nodeForm.value.require_expert_review = false;
