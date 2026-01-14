@@ -57,12 +57,17 @@
         <el-table-column label="专家评审" width="160">
           <template #default="scope">
             <el-tag
-              v-if="(scope.row.expert_summary?.assigned || 0) === 0"
+              v-if="scope.row.expert_summary?.require_expert_review === false"
+              type="success"
+              >无需</el-tag
+            >
+            <el-tag
+              v-else-if="(scope.row.expert_summary?.assigned || 0) === 0"
               type="info"
               >未分配</el-tag
             >
             <el-tag
-              v-else
+              v-else-if="scope.row.expert_summary"
               :type="
                 scope.row.expert_summary?.all_submitted ? 'success' : 'warning'
               "
@@ -71,6 +76,7 @@
                 scope.row.expert_summary?.assigned || 0
               }}
             </el-tag>
+            <el-tag v-else type="info">未知</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="150" fixed="right">
@@ -197,6 +203,7 @@ type ExpertSummary = {
   assigned?: number;
   submitted?: number;
   all_submitted?: boolean;
+  require_expert_review?: boolean;
 };
 
 type ProjectRow = {
@@ -369,17 +376,19 @@ const handleCurrentChange = (val: number) => {
 
 const handleReview = async (row: ProjectRow) => {
   const summary = row?.expert_summary;
-  if (!summary || (summary.assigned || 0) === 0) {
-    ElMessage.warning("请先到“院系评审分配”分配专家组");
-    router.push({
-      path: "/level2-admin/expert/assignment",
-      query: { reviewType: "MID_TERM" },
-    });
-    return;
-  }
-  if (!summary.all_submitted) {
-    ElMessage.warning("专家评审尚未全部提交");
-    return;
+  if (summary?.require_expert_review) {
+    if ((summary.assigned || 0) === 0) {
+      ElMessage.warning("请先到“院系评审分配”分配专家组");
+      router.push({
+        path: "/level2-admin/expert/assignment",
+        query: { reviewType: "MID_TERM" },
+      });
+      return;
+    }
+    if (!summary.all_submitted) {
+      ElMessage.warning("专家评审尚未全部提交");
+      return;
+    }
   }
   if (typeof row.review_id !== "number") {
     ElMessage.error("未找到待审核记录");
@@ -442,7 +451,10 @@ const submitBatchReview = async () => {
   try {
     const readyRows = selectedRows.value.filter((row) => {
       const s = row?.expert_summary;
-      return s && (s.assigned || 0) > 0 && !!s.all_submitted;
+      if (s?.require_expert_review) {
+        return (s.assigned || 0) > 0 && !!s.all_submitted;
+      }
+      return true;
     });
     const skipped = selectedRows.value.length - readyRows.length;
     if (readyRows.length === 0) {

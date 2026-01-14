@@ -73,9 +73,24 @@ const handleLogin = async (formData: LoginFormData) => {
         duration: 2000,
       });
 
-      // 根据后端返回的 default_route 进行跳转
-      const defaultRoute = userStore.roleInfo?.default_route || "/";
-      router.push(defaultRoute);
+      // 根据角色进行跳转，强制执行新的首页规则
+      const userRole = String(userStore.user?.role || "");
+      let targetPath = userStore.roleInfo?.default_route || "/";
+
+      if (userRole === "student") {
+        targetPath = "/my-projects";
+      } else if (userRole === "level1_admin") {
+        targetPath = "/level1-admin/statistics";
+      } else if (
+        userRole === "level2_admin" ||
+        userStore.roleInfo?.scope_dimension // 其他管理员
+      ) {
+        targetPath = "/level2-admin/statistics";
+      } else if (userRole === "expert" || userRole === "teacher") {
+        targetPath = "/teacher/dashboard";
+      }
+
+      router.push(targetPath);
     }
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "登录服务暂不可用";

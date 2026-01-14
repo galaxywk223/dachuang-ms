@@ -117,6 +117,10 @@ class ProjectWorkflowMixin:
                 if node.require_expert_review:
                     node_id = node.id
                     break
+        node_obj = WorkflowService.get_node_by_id(node_id) if node_id else None
+        require_expert_review = (
+            bool(node_obj.require_expert_review) if node_obj else False
+        )
         qs = self._get_expert_reviews_qs(
             project=project,
             review_type=review_type,
@@ -143,6 +147,8 @@ class ProjectWorkflowMixin:
                     "attempt_no": phase_instance.attempt_no if phase_instance else None,
                     "step": phase_instance.step if phase_instance else "",
                     "state": phase_instance.state if phase_instance else "",
+                    "node_id": node_id,
+                    "require_expert_review": require_expert_review,
                     "assigned": assigned,
                     "submitted": submitted,
                     "pending": pending,

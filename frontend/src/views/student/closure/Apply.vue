@@ -496,6 +496,7 @@ const {
   dialogIndex,
   dialogVisible,
   formData,
+  formRef,
   getLabel,
   handleAchievementFileChange,
   handleDialogFileChange,

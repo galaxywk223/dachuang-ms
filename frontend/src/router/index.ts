@@ -97,7 +97,7 @@ router.beforeEach(async (to, _from, next) => {
 
     if (userRole === "student") {
       console.log("[路由守卫] 跳转到学生页面");
-      next({ path: "/establishment/apply" });
+      next({ path: "/my-projects" });
     } else if (userRole === "level1_admin") {
       console.log("[路由守卫] 跳转到校级管理员页面");
       next({ path: "/level1-admin/statistics" });
@@ -108,7 +108,7 @@ router.beforeEach(async (to, _from, next) => {
     } else {
       // 所有其他管理员角色（学院管理员、三级管理员等）都跳转到二级管理页面
       console.log("[路由守卫] 跳转到管理员页面");
-      next({ path: "/level2-admin/projects" });
+      next({ path: "/level2-admin/statistics" });
     }
   } else if (userStore.isLoggedIn) {
     // 如果已登录但没有用户信息，尝试获取用户信息

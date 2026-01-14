@@ -330,7 +330,7 @@ class DashboardService:
 
         # 成果统计
         achievement_stats = (
-            ProjectAchievement.objects.filter(is_deleted=False)
+            ProjectAchievement.objects.filter(project__is_deleted=False)
             .values("achievement_type__value", "achievement_type__label")
             .annotate(count=Count("id"))
         )

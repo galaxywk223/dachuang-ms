@@ -51,9 +51,7 @@ class ArchiveService:
                 )
 
         # 添加成果附件
-        achievements = ProjectAchievement.objects.filter(
-            project=project, is_deleted=False
-        )
+        achievements = ProjectAchievement.objects.filter(project=project)
         for achievement in achievements:
             if achievement.attachment:
                 attachments.append(
@@ -115,7 +113,7 @@ class ArchiveService:
             "project_status": project.status,
             "total_attachments": len(attachments),
             "achievement_count": ProjectAchievement.objects.filter(
-                project=project, is_deleted=False
+                project=project
             ).count(),
             "expenditure_count": ProjectExpenditure.objects.filter(
                 project=project, is_deleted=False
