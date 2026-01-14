@@ -2,7 +2,7 @@
   <div class="dictionary-page">
     <div class="page-header-wrapper" v-if="!dictTypeCode">
       <div class="title-bar">
-        <span class="title">{{ route.meta.title || "系统字典管理" }}</span>
+        <span class="title">{{ route.meta.title || "系统参数管理" }}</span>
       </div>
     </div>
 
@@ -49,7 +49,10 @@
                     currentType.description
                   }}</span>
                 </div>
-                <div class="header-actions" v-if="currentType">
+                <div
+                  class="header-actions"
+                  v-if="currentType && !currentType.isLocal"
+                >
                   <el-button @click="openImportDialog">
                     <el-icon><Upload /></el-icon> 导入
                   </el-button>
@@ -65,71 +68,79 @@
 
             <!-- Items Table -->
             <div v-if="currentType">
-              <el-table
-                v-loading="loading"
-                :data="items"
-                style="width: 100%"
-                stripe
-                border
-                :header-cell-style="{
-                  background: '#f8fafc',
-                  color: '#475569',
-                  fontWeight: '600',
-                }"
-              >
-                <el-table-column
-                  prop="label"
-                  label="显示名称"
-                  min-width="150"
-                />
-                <el-table-column
-                  v-if="showCode"
-                  prop="value"
-                  label="代码"
-                  min-width="120"
-                />
-                <el-table-column
-                  v-if="currentType?.code === 'project_level'"
-                  label="预算(元)"
-                  min-width="100"
-                >
-                  <template #default="{ row }">
-                    {{
-                      row.extra_data && row.extra_data.budget
-                        ? row.extra_data.budget
-                        : "-"
-                    }}
-                  </template>
-                </el-table-column>
-                <!-- <el-table-column prop="sort_order" label="排序" width="80" align="center" /> -->
+              <!-- Custom Local Content -->
+              <div v-if="currentType.isLocal" class="local-content">
+                <slot name="custom-content" :type="currentType"></slot>
+              </div>
 
-                <el-table-column
-                  label="操作"
-                  width="160"
-                  align="center"
-                  fixed="right"
+              <!-- Standard Dictionary Content -->
+              <div v-else>
+                <el-table
+                  v-loading="loading"
+                  :data="items"
+                  style="width: 100%"
+                  stripe
+                  border
+                  :header-cell-style="{
+                    background: '#f8fafc',
+                    color: '#475569',
+                    fontWeight: '600',
+                  }"
                 >
-                  <template #default="{ row }">
-                    <el-button
-                      link
-                      type="primary"
-                      size="small"
-                      @click="editItem(row)"
-                      >编辑</el-button
-                    >
-                    <el-button
-                      link
-                      type="danger"
-                      size="small"
-                      @click="deleteItem(row)"
-                      >删除</el-button
-                    >
-                  </template>
-                </el-table-column>
-              </el-table>
+                  <el-table-column
+                    prop="label"
+                    label="显示名称"
+                    min-width="150"
+                  />
+                  <el-table-column
+                    v-if="showCode"
+                    prop="value"
+                    label="代码"
+                    min-width="120"
+                  />
+                  <el-table-column
+                    v-if="currentType?.code === 'project_level'"
+                    label="预算(元)"
+                    min-width="100"
+                  >
+                    <template #default="{ row }">
+                      {{
+                        row.extra_data && row.extra_data.budget
+                          ? row.extra_data.budget
+                          : "-"
+                      }}
+                    </template>
+                  </el-table-column>
+                  <!-- <el-table-column prop="sort_order" label="排序" width="80" align="center" /> -->
 
-              <div class="empty-tip" v-if="!loading && items.length === 0">
-                暂无数据
+                  <el-table-column
+                    label="操作"
+                    width="160"
+                    align="center"
+                    fixed="right"
+                  >
+                    <template #default="{ row }">
+                      <el-button
+                        link
+                        type="primary"
+                        size="small"
+                        @click="editItem(row)"
+                        >编辑</el-button
+                      >
+                      <el-button
+                        link
+                        type="danger"
+                        size="small"
+                        @click="deleteItem(row)"
+                        >删除</el-button
+                      >
+                    </template>
+                  </el-table-column>
+                </el-table>
+
+                <div class="empty-tip" v-if="!loading && items.length === 0">
+                  暂无数据
+                </div>
               </div>
             </div>
             <div v-else class="empty-selection">
@@ -235,7 +246,10 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="importDialogVisible = false">取消</el-button>
-          <el-button type="primary" :loading="importLoading" @click="submitImport"
+          <el-button
+            type="primary"
+            :loading="importLoading"
+            @click="submitImport"
             >开始导入</el-button
           >
         </span>
@@ -246,7 +260,13 @@
 
 <script setup lang="ts">
 import { useRoute } from "vue-router";
-import { Plus, Collection, ArrowRight, Upload, Delete } from "@element-plus/icons-vue";
+import {
+  Plus,
+  Collection,
+  ArrowRight,
+  Upload,
+  Delete,
+} from "@element-plus/icons-vue";
 import { useSystemDictionaries } from "./hooks/useSystemDictionaries";
 
 // 支持props传入，也支持从route.meta获取
@@ -254,10 +274,12 @@ const props = withDefaults(
   defineProps<{
     category?: string;
     dictTypeCode?: string;
+    extraTypes?: any[];
   }>(),
   {
     category: undefined,
     dictTypeCode: undefined,
+    extraTypes: () => [],
   }
 );
 
@@ -301,6 +323,7 @@ const {
 } = useSystemDictionaries({
   category: effectiveCategory,
   dictTypeCode: effectiveDictTypeCode,
+  extraTypes: props.extraTypes,
 });
 void formRef;
 </script>

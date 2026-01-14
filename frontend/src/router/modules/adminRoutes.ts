@@ -39,7 +39,8 @@ export const adminRoutes: RouteRecordRaw[] = [
       {
         path: "users/experts",
         name: "level1-users-experts",
-        component: () => import("@/views/admin/level1/users/ExpertManagement.vue"),
+        component: () =>
+          import("@/views/admin/level1/users/ExpertManagement.vue"),
         meta: { title: "专家库管理" },
       },
       {
@@ -112,7 +113,7 @@ export const adminRoutes: RouteRecordRaw[] = [
             name: "level1-settings-dictionaries",
             component: () =>
               import("@/views/admin/level1/settings/DictionaryManagement.vue"),
-            meta: { title: "字典参数" },
+            meta: { title: "系统参数" },
           },
         ],
       },

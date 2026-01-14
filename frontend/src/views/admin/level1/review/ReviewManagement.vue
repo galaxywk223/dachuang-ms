@@ -9,14 +9,7 @@
 
       <el-tabs v-model="activeTab" @tab-change="handleTabChange">
         <el-tab-pane name="establishment">
-          <template #label>
-            <el-badge
-              :value="counts.establishment"
-              :hidden="counts.establishment === 0"
-            >
-              立项审核
-            </el-badge>
-          </template>
+          <template #label> 立项审核 </template>
           <EstablishmentReview
             v-if="activeTab === 'establishment'"
             @review-completed="loadCounts"
@@ -24,11 +17,7 @@
         </el-tab-pane>
 
         <el-tab-pane name="closure">
-          <template #label>
-            <el-badge :value="counts.closure" :hidden="counts.closure === 0">
-              结题审核
-            </el-badge>
-          </template>
+          <template #label> 结题审核 </template>
           <ClosureReview
             v-if="activeTab === 'closure'"
             @review-completed="loadCounts"
@@ -36,11 +25,7 @@
         </el-tab-pane>
 
         <el-tab-pane name="change">
-          <template #label>
-            <el-badge :value="counts.change" :hidden="counts.change === 0">
-              异动审核
-            </el-badge>
-          </template>
+          <template #label> 异动审核 </template>
           <ChangeReview
             v-if="activeTab === 'change'"
             @review-completed="loadCounts"
@@ -66,7 +51,7 @@ const router = useRouter();
 const activeTab = ref<string>("establishment");
 
 // 使用待审核数量composable
-const { counts, loadCounts } = useReviewCounts();
+const { loadCounts } = useReviewCounts();
 
 // 处理Tab切换
 const handleTabChange = (tabName: string | number) => {
@@ -124,6 +109,7 @@ watch(
   :deep(.el-tabs) {
     .el-tabs__header {
       margin-bottom: 20px;
+      padding-top: 12px;
     }
 
     .el-tabs__item {

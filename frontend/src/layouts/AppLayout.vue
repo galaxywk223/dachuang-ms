@@ -593,7 +593,7 @@ const currentMenus = computed<MenuEntry[]>(() => {
             },
             {
               index: "/level1-admin/settings/dictionaries",
-              title: "字典参数",
+              title: "系统参数",
               icon: Setting,
             },
           ],

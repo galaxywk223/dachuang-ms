@@ -1,101 +1,51 @@
 <template>
   <div class="role-management-page">
-    <el-card class="main-card" shadow="never">
-      <template #header>
-        <div class="card-header">
-          <span class="header-title">用户角色管理</span>
-          <el-button type="primary" @click="openCreateDialog">
-            <el-icon><Plus /></el-icon>
-            新建角色
+    <el-table v-loading="loading" :data="tableData" stripe style="width: 100%">
+      <el-table-column prop="name" label="角色名称" min-width="200" />
+      <el-table-column prop="user_count" label="用户数" width="120" />
+      <el-table-column label="操作" fixed="right" width="250">
+        <template #default="{ row }">
+          <el-button
+            link
+            type="primary"
+            size="small"
+            :disabled="row.is_system"
+            @click="openEditDialog(row)"
+            >编辑</el-button
+          >
+          <el-button
+            link
+            type="warning"
+            size="small"
+            :disabled="row.is_system"
+            @click="handleToggleStatus(row)"
+          >
+            {{ row.is_active ? "禁用" : "启用" }}
           </el-button>
-        </div>
-      </template>
+          <el-button
+            link
+            type="danger"
+            size="small"
+            :disabled="row.is_system"
+            @click="handleDelete(row)"
+          >
+            删除
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
 
-      <div class="filter-section">
-        <el-form :model="filters" class="filter-form" :inline="true">
-          <el-form-item label="搜索">
-            <el-input
-              v-model="filters.search"
-              placeholder="角色名称 / 代码"
-              clearable
-              @keyup.enter="handleSearch"
-            >
-              <template #prefix
-                ><el-icon><Search /></el-icon
-              ></template>
-            </el-input>
-          </el-form-item>
-          <el-form-item label="状态">
-            <el-select v-model="filters.is_active" placeholder="全部" clearable>
-              <el-option label="启用" value="true" />
-              <el-option label="禁用" value="false" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="类型">
-            <el-select v-model="filters.is_system" placeholder="全部" clearable>
-              <el-option label="系统内置" value="true" />
-              <el-option label="自定义" value="false" />
-            </el-select>
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" @click="handleSearch">查询</el-button>
-            <el-button @click="resetFilters">重置</el-button>
-          </el-form-item>
-        </el-form>
-      </div>
-
-      <el-table
-        v-loading="loading"
-        :data="tableData"
-        stripe
-        style="width: 100%"
-      >
-        <el-table-column prop="name" label="角色名称" min-width="200" />
-        <el-table-column prop="user_count" label="用户数" width="120" />
-        <el-table-column label="操作" fixed="right" width="250">
-          <template #default="{ row }">
-            <el-button
-              link
-              type="primary"
-              size="small"
-              :disabled="row.is_system"
-              @click="openEditDialog(row)"
-              >编辑</el-button
-            >
-            <el-button
-              link
-              type="warning"
-              size="small"
-              :disabled="row.is_system"
-              @click="handleToggleStatus(row)"
-            >
-              {{ row.is_active ? "禁用" : "启用" }}
-            </el-button>
-            <el-button
-              link
-              type="danger"
-              size="small"
-              :disabled="row.is_system"
-              @click="handleDelete(row)"
-            >
-              删除
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <div class="pagination-footer">
-        <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="total"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
-      </div>
-    </el-card>
+    <div class="pagination-footer">
+      <el-pagination
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        :page-sizes="[10, 20, 50, 100]"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </div>
 
     <el-dialog
       v-model="formDialogVisible"
@@ -154,7 +104,6 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from "vue";
-import { Search, Plus } from "@element-plus/icons-vue";
 import {
   getRoles,
   getRoleDetail,
@@ -217,12 +166,6 @@ const submitLoading = ref(false);
 const isEditMode = ref(false);
 const currentId = ref<number | null>(null);
 
-const filters = reactive({
-  search: "",
-  is_active: "",
-  is_system: "",
-});
-
 const formRef = ref<FormInstance>();
 const formData = reactive({
   name: "",
@@ -241,9 +184,6 @@ const loadRolesList = async () => {
       page: currentPage.value,
       page_size: pageSize.value,
     };
-    if (filters.search) params.search = filters.search;
-    if (filters.is_active) params.is_active = filters.is_active === "true";
-    if (filters.is_system) params.is_system = filters.is_system === "true";
 
     const res = await getRoles(params);
     const { results, total: totalCount } = normalizeList(res);
@@ -258,18 +198,6 @@ const loadRolesList = async () => {
   }
 };
 
-const handleSearch = () => {
-  currentPage.value = 1;
-  loadRolesList();
-};
-
-const resetFilters = () => {
-  filters.search = "";
-  filters.is_active = "";
-  filters.is_system = "";
-  handleSearch();
-};
-
 const handleSizeChange = () => {
   currentPage.value = 1;
   loadRolesList();
@@ -277,11 +205,6 @@ const handleSizeChange = () => {
 
 const handleCurrentChange = () => {
   loadRolesList();
-};
-
-const openCreateDialog = () => {
-  isEditMode.value = false;
-  formDialogVisible.value = true;
 };
 
 const openEditDialog = async (row: RoleRow) => {

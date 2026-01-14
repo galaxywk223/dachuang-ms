@@ -14,35 +14,6 @@
         </div>
       </template>
 
-      <div class="stats-summary mb-4">
-        <el-row :gutter="20">
-          <el-col :span="8">
-            <StatCard
-              :icon="Folder"
-              icon-bg="linear-gradient(135deg, #60a5fa 0%, #2563eb 100%)"
-              :value="stats.total_projects"
-              label="项目总数"
-            />
-          </el-col>
-          <el-col :span="8">
-            <StatCard
-              :icon="Check"
-              icon-bg="linear-gradient(135deg, #34d399 0%, #059669 100%)"
-              :value="stats.approved_projects"
-              label="已立项/完成"
-            />
-          </el-col>
-          <el-col :span="8">
-            <StatCard
-              :icon="Clock"
-              icon-bg="linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
-              :value="stats.pending_review"
-              label="待审核"
-            />
-          </el-col>
-        </el-row>
-      </div>
-
       <el-card class="tool-card mt-4">
         <template #header>
           <div class="card-header">
@@ -168,11 +139,7 @@
 
 <script setup lang="ts">
 import { reactive, onMounted } from "vue";
-import { ElMessage } from "element-plus";
-import { Folder, Check, Clock } from "@element-plus/icons-vue";
-import StatCard from "@/components/common/StatCard.vue";
 import {
-  getProjectStatistics,
   getProjectStatisticsReport,
 } from "@/api/projects/admin";
 import { useDictionary } from "@/composables/useDictionary";
@@ -181,12 +148,6 @@ import { DICT_CODES } from "@/api/dictionaries";
 defineOptions({
   name: "StatisticsView",
 });
-
-type StatsSummary = {
-  total_projects: number;
-  approved_projects: number;
-  pending_review: number;
-};
 
 type ReportRow = {
   count?: number;
@@ -207,12 +168,6 @@ type ApiResponse<T> = {
 };
 
 const { getLabel, loadDictionaries } = useDictionary();
-
-const stats = reactive<StatsSummary>({
-  total_projects: 0,
-  approved_projects: 0,
-  pending_review: 0,
-});
 
 const getCollegeLabel = (collegeCode?: string) => {
   if (!collegeCode) return "-";
@@ -260,19 +215,7 @@ const resetReport = () => {
   fetchReport();
 };
 
-const fetchStatistics = async () => {
-  try {
-    const res = (await getProjectStatistics()) as ApiResponse<StatsSummary>;
-    if (res.code === 200) {
-      Object.assign(stats, res.data);
-    }
-  } catch {
-    ElMessage.error("获取统计数据失败");
-  }
-};
-
 const refreshAll = () => {
-  fetchStatistics();
   fetchReport();
 };
 
@@ -324,10 +267,6 @@ onMounted(async () => {
     padding: 10px 12px;
     font-weight: 500;
   }
-}
-
-.stats-summary {
-  margin-bottom: 24px;
 }
 
 .tool-card {

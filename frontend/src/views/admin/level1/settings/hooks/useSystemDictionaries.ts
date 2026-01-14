@@ -22,6 +22,7 @@ interface DictionaryType {
   code: string;
   name: string;
   description: string;
+  isLocal?: boolean;
 }
 
 interface DictionaryItem {
@@ -62,7 +63,11 @@ const CATEGORY_GROUPS: Record<string, string[]> = {
 };
 
 export function useSystemDictionaries(
-  options: { category?: string; dictTypeCode?: string } = {}
+  options: {
+    category?: string;
+    dictTypeCode?: string;
+    extraTypes?: DictionaryType[];
+  } = {}
 ) {
   const dictionaryTypes = ref<DictionaryType[]>([]);
   const currentType = ref<DictionaryType | null>(null);
@@ -130,33 +135,39 @@ export function useSystemDictionaries(
       }));
       const category = options.category || "";
 
+      let filteredTypes: DictionaryType[] = [];
+
       if (category && CATEGORY_GROUPS[category]) {
         const allowedCodes = CATEGORY_GROUPS[category];
-        dictionaryTypes.value = allTypes.filter((t: DictionaryType) =>
+        filteredTypes = allTypes.filter((t: DictionaryType) =>
           allowedCodes.includes(t.code)
         );
       } else {
-        dictionaryTypes.value = allTypes;
+        filteredTypes = allTypes;
       }
+
+      // Merge extra types
+      if (options.extraTypes) {
+        filteredTypes = [...filteredTypes, ...options.extraTypes];
+      }
+
+      dictionaryTypes.value = filteredTypes;
 
       // 如果提供了dictTypeCode，直接选中该类型
       if (options.dictTypeCode) {
-        const targetType = allTypes.find(
+        const targetType = dictionaryTypes.value.find(
           (t: DictionaryType) => t.code === options.dictTypeCode
         );
         currentType.value = targetType || null;
-        // 立即加载该类型的数据
-        if (targetType) {
-          await fetchItems(targetType.code);
-        }
       } else {
         currentType.value = dictionaryTypes.value.length
           ? dictionaryTypes.value[0]
           : null;
-        // 立即加载第一个类型的数据
-        if (currentType.value) {
-          await fetchItems(currentType.value.code);
-        }
+      }
+
+      // 立即加载第一个类型的数据
+      if (currentType.value) {
+        await fetchItems(currentType.value.code);
       }
     } catch (error) {
       console.error("Failed to fetch dictionary types:", error);
@@ -165,6 +176,12 @@ export function useSystemDictionaries(
   };
 
   const fetchItems = async (typeCode: string) => {
+    // Check if current type is local
+    if (currentType.value?.isLocal) {
+      items.value = [];
+      return;
+    }
+
     loading.value = true;
     try {
       const response = await request.get("/dictionaries/items/", {
