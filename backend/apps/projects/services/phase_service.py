@@ -61,18 +61,32 @@ class ProjectPhaseService:
             initial_node = WorkflowService.get_initial_node(phase, project.batch)
             if initial_node:
                 step = initial_node.code
+        final_step = step or context.initial_step
+        node = (
+            WorkflowService.get_node_by_code(phase, final_step, project.batch)
+            if final_step
+            else None
+        )
         current = ProjectPhaseService.get_current(project, phase)
         if current:
+            update_fields = []
             if step and current.step != step:
                 current.step = step
-                current.save(update_fields=["step", "updated_at"])
+                update_fields.append("step")
+            if node and current.current_node_id != node.id:
+                current.current_node_id = node.id
+                update_fields.append("current_node_id")
+            if update_fields:
+                update_fields.append("updated_at")
+                current.save(update_fields=update_fields)
             return current
 
         return ProjectPhaseInstance.objects.create(
             project=project,
             phase=context.phase,
             attempt_no=1,
-            step=step or context.initial_step,
+            step=final_step,
+            current_node_id=node.id if node else None,
             state=ProjectPhaseInstance.State.IN_PROGRESS,
             created_by=created_by,
         )
@@ -91,13 +105,20 @@ class ProjectPhaseService:
             initial_node = WorkflowService.get_initial_node(phase, project.batch)
             if initial_node:
                 step = initial_node.code
+        final_step = step or context.initial_step
+        node = (
+            WorkflowService.get_node_by_code(phase, final_step, project.batch)
+            if final_step
+            else None
+        )
         current = ProjectPhaseService.get_current(project, phase)
         next_attempt = 1 if not current else int(current.attempt_no) + 1
         return ProjectPhaseInstance.objects.create(
             project=project,
             phase=context.phase,
             attempt_no=next_attempt,
-            step=step or context.initial_step,
+            step=final_step,
+            current_node_id=node.id if node else None,
             state=ProjectPhaseInstance.State.IN_PROGRESS,
             created_by=created_by,
         )

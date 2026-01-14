@@ -232,8 +232,9 @@ class ProjectApplicationService:
         try:
             with transaction.atomic():
                 current_batch = _get_current_batch()
+                window_batch = project.batch or current_batch
                 if not is_draft:
-                    ok, msg = _check_application_window(current_batch)
+                    ok, msg = _check_application_window(window_batch)
                     if not ok:
                         return (
                             {"code": 400, "message": msg},
@@ -507,7 +508,7 @@ class ProjectApplicationService:
                     )
 
                 ok, msg = _validate_limits(
-                    user, advisors_data, members_data, project, batch=current_batch
+                    user, advisors_data, members_data, project, batch=window_batch
                 )
                 if not ok:
                     return (
@@ -533,8 +534,8 @@ class ProjectApplicationService:
 
                 project = serializer.save()
 
-                if current_batch and not project.batch:
-                    project.batch = current_batch
+                if window_batch and not project.batch:
+                    project.batch = window_batch
                 if project.batch:
                     project.year = project.batch.year
 

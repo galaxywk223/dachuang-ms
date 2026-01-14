@@ -185,7 +185,7 @@ class BatchWorkflowViewSet(viewsets.ViewSet):
 
         nodes = (
             WorkflowNode.objects.filter(workflow=workflow, is_active=True)
-            .select_related("role_fk", "review_template")
+            .select_related("role_fk")
             .order_by("sort_order", "id")
         )
 

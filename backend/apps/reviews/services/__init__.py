@@ -213,6 +213,17 @@ class ReviewService:
         return total, normalized
 
     @staticmethod
+    def _find_teacher_node(phase, batch):
+        nodes = WorkflowService.get_nodes(phase, batch)
+        for node in nodes:
+            if node.node_type != "SUBMIT" and node.role == "TEACHER":
+                return node
+        for node in nodes:
+            if node.node_type != "SUBMIT":
+                return node
+        return nodes[0] if nodes else None
+
+    @staticmethod
     @transaction.atomic
     def create_review(
         project,
@@ -238,12 +249,12 @@ class ReviewService:
         """
         创建导师审核记录（申报审核）
         """
-        initial_node = WorkflowService.get_initial_node(
+        teacher_node = ReviewService._find_teacher_node(
             ProjectPhaseInstance.Phase.APPLICATION, project.batch
         )
-        step = initial_node.code if initial_node else "TEACHER_REVIEW"
+        step = teacher_node.code if teacher_node else "TEACHER_REVIEW"
         review_level = (
-            initial_node.review_level if initial_node else Review.ReviewLevel.TEACHER
+            teacher_node.review_level if teacher_node else Review.ReviewLevel.TEACHER
         )
         phase_instance = ProjectPhaseService.ensure_current(
             project, ProjectPhaseInstance.Phase.APPLICATION, step=step
@@ -370,6 +381,14 @@ class ReviewService:
             return ReviewService._legacy_approve_review(review, project)
 
         current_node_id = phase_instance.current_node_id
+        if not current_node_id:
+            inferred_node = WorkflowService.get_node_by_code(
+                phase_instance.phase, phase_instance.step, project.batch
+            )
+            if inferred_node:
+                phase_instance.current_node_id = inferred_node.id
+                phase_instance.save(update_fields=["current_node_id", "updated_at"])
+                current_node_id = inferred_node.id
         if not current_node_id:
             # 向后兼容：如果没有 current_node_id，根据 review_type 推断
             ReviewService.logger.warning(
@@ -514,6 +533,14 @@ class ReviewService:
         phase_instance = review.phase_instance
 
         # 使用动态流程引擎处理退回
+        if phase_instance and not phase_instance.current_node_id:
+            inferred_node = WorkflowService.get_node_by_code(
+                phase_instance.phase, phase_instance.step, project.batch
+            )
+            if inferred_node:
+                phase_instance.current_node_id = inferred_node.id
+                phase_instance.save(update_fields=["current_node_id", "updated_at"])
+
         if phase_instance and phase_instance.current_node_id:
             current_node_id = phase_instance.current_node_id
 
@@ -758,10 +785,10 @@ class ReviewService:
         """
         创建中期审核记录（导师审核）
         """
-        initial_node = WorkflowService.get_initial_node(
+        teacher_node = ReviewService._find_teacher_node(
             ProjectPhaseInstance.Phase.MID_TERM, project.batch
         )
-        step = initial_node.code if initial_node else "TEACHER_REVIEW"
+        step = teacher_node.code if teacher_node else "TEACHER_REVIEW"
         phase_instance = ProjectPhaseService.ensure_current(
             project, ProjectPhaseInstance.Phase.MID_TERM, step=step
         )
@@ -796,10 +823,10 @@ class ReviewService:
         if existing:
             return existing
 
-        initial_node = WorkflowService.get_initial_node(
+        teacher_node = ReviewService._find_teacher_node(
             ProjectPhaseInstance.Phase.CLOSURE, project.batch
         )
-        step = initial_node.code if initial_node else "TEACHER_REVIEW"
+        step = teacher_node.code if teacher_node else "TEACHER_REVIEW"
         phase_instance = ProjectPhaseService.ensure_current(
             project, ProjectPhaseInstance.Phase.CLOSURE, step=step
         )

@@ -201,8 +201,12 @@ class ProjectWorkflowMixin:
                     "SCHOOL",
                     project.batch,
                 )
-                phase_instance.step = school_node.code if school_node else phase_instance.step
-                phase_instance.save(update_fields=["step", "updated_at"])
+                update_fields = ["updated_at"]
+                if school_node:
+                    phase_instance.step = school_node.code
+                    phase_instance.current_node_id = school_node.id
+                    update_fields.extend(["step", "current_node_id"])
+                phase_instance.save(update_fields=update_fields)
             project.status = Project.ProjectStatus.LEVEL1_AUDITING
             project.save(update_fields=["status", "updated_at"])
 
@@ -255,8 +259,12 @@ class ProjectWorkflowMixin:
                 "SCHOOL",
                 project.batch,
             )
-            phase_instance.step = school_node.code if school_node else phase_instance.step
-            phase_instance.save(update_fields=["step", "updated_at"])
+            update_fields = ["updated_at"]
+            if school_node:
+                phase_instance.step = school_node.code
+                phase_instance.current_node_id = school_node.id
+                update_fields.extend(["step", "current_node_id"])
+            phase_instance.save(update_fields=update_fields)
             project.status = Project.ProjectStatus.CLOSURE_LEVEL1_REVIEWING
             project.save(update_fields=["status", "updated_at"])
 
