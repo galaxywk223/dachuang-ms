@@ -4,6 +4,7 @@ from apps.projects.models import Project
 from apps.projects.services import ProjectService
 from apps.reviews.services import ReviewService
 from apps.reviews.models import Review
+from apps.reviews.constants import REVIEW_LEVEL_LEVEL2
 from apps.users.models import Role
 from django.utils.crypto import get_random_string
 
@@ -84,7 +85,7 @@ class MidTermTestCase(TestCase):
         review = ReviewService.create_review(
             self.project,
             Review.ReviewType.MID_TERM,
-            Review.ReviewLevel.LEVEL2,
+            REVIEW_LEVEL_LEVEL2,
             phase_instance=phase_instance,
         )
         self.assertEqual(review.status, Review.ReviewStatus.PENDING)
@@ -98,7 +99,9 @@ class MidTermTestCase(TestCase):
         # Setup as reviewing
         self.project.status = Project.ProjectStatus.MID_TERM_REVIEWING
         self.project.save()
-        review = ReviewService.create_review(self.project, Review.ReviewType.MID_TERM, Review.ReviewLevel.LEVEL2)
+        review = ReviewService.create_review(
+            self.project, Review.ReviewType.MID_TERM, REVIEW_LEVEL_LEVEL2
+        )
 
         # Reject
         ReviewService.reject_review(review, self.admin, "Bad job")

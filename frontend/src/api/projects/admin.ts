@@ -1,40 +1,5 @@
 import request from "@/utils/request";
 
-// 管理员 - 项目审核相关接口
-
-/**
- * 获取待审核项目列表
- */
-export function getReviewProjects(params: Record<string, unknown>): Promise<unknown> {
-  return request({
-    url: "/projects/admin/review/pending/",
-    method: "get",
-    params,
-  });
-}
-
-/**
- * 审核通过项目
- */
-export function approveProject(id: number, data: Record<string, unknown>): Promise<unknown> {
-  return request({
-    url: `/projects/admin/review/${id}/approve/`,
-    method: "post",
-    data,
-  });
-}
-
-/**
- * 驳回项目
- */
-export function rejectProject(id: number, data: Record<string, unknown>): Promise<unknown> {
-  return request({
-    url: `/projects/admin/review/${id}/reject/`,
-    method: "post",
-    data,
-  });
-}
-
 // 管理员 - 项目管理相关接口
 
 /**

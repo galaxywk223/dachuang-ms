@@ -12,7 +12,6 @@ class ExpertGroupPermission(BasePermission):
         return bool(
             request.user
             and request.user.is_authenticated
-            and (request.user.is_level1_admin or request.user.is_level2_admin)
+            and request.user.is_admin
         )
-
 

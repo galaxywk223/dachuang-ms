@@ -351,13 +351,14 @@ import {
   EditPen,
 } from "@element-plus/icons-vue";
 import {
-  getReviewProjects,
-  approveProject,
-  rejectProject,
-} from "@/api/projects/admin";
+  getPendingReviews,
+  getRejectTargets,
+  reviewAction,
+  type PendingReview,
+  type WorkflowNode,
+} from "@/api/reviews";
 import ProjectStatusBadge from "@/components/business/project/StatusBadge.vue";
 import request from "@/utils/request";
-import { getRejectTargetsByProject, type WorkflowNode } from "@/api/reviews";
 
 defineOptions({ name: "Level2EstablishmentReviewView" });
 
@@ -384,7 +385,7 @@ type ProjectRow = {
 type ReviewProjectsResponse = {
   code?: number;
   data?: {
-    results?: ProjectRow[];
+    results?: PendingReview[];
     total?: number;
   };
 };
@@ -431,21 +432,58 @@ const batchForm = ref({
   score: null as number | null,
 });
 
+const resolveReviewList = (payload: unknown): PendingReview[] => {
+  if (Array.isArray(payload)) return payload as PendingReview[];
+  if (!isRecord(payload)) return [];
+  if (Array.isArray(payload.results)) return payload.results as PendingReview[];
+  if (isRecord(payload.data) && Array.isArray(payload.data?.results)) {
+    return payload.data?.results as PendingReview[];
+  }
+  if (Array.isArray(payload.data as PendingReview[])) {
+    return payload.data as PendingReview[];
+  }
+  return [];
+};
+
+const resolveReviewCount = (payload: unknown) => {
+  if (!isRecord(payload)) return 0;
+  if (typeof payload.count === "number") return payload.count;
+  if (typeof payload.total === "number") return payload.total;
+  if (isRecord(payload.data)) {
+    if (typeof payload.data?.count === "number") return payload.data.count;
+    if (typeof payload.data?.total === "number") return payload.data.total;
+  }
+  return 0;
+};
+
+const buildProjectRows = (reviews: PendingReview[]): ProjectRow[] =>
+  reviews.map((review) => {
+    const projectInfo = isRecord(review.project_info)
+      ? (review.project_info as ProjectRow)
+      : ({} as ProjectRow);
+    return {
+      ...projectInfo,
+      id: (projectInfo.id as number) ?? review.project,
+      review_id: review.id,
+    };
+  });
+
 const fetchProjects = async () => {
   loading.value = true;
   try {
-    const response = (await getReviewProjects({
+    const response = await getPendingReviews({
       page: currentPage.value,
       page_size: pageSize.value,
       search: searchQuery.value,
-      type: "establishment",
-    })) as ReviewProjectsResponse;
+      review_type: "APPLICATION",
+    });
 
-    if (response.code === 200 && response.data) {
-      projects.value = response.data.results ?? [];
-      total.value = response.data.total ?? 0;
-      selectedRows.value = [];
-    }
+    const data =
+      isRecord(response) && "data" in response ? response.data : response;
+    const reviews = resolveReviewList(data);
+    projects.value = buildProjectRows(reviews);
+    total.value = resolveReviewCount(data) || projects.value.length;
+    selectedRows.value = [];
   } catch (error) {
     ElMessage.error(getErrorMessage(error, "获取项目列表失败"));
   } finally {
@@ -505,9 +543,11 @@ const handleReject = async (row: ProjectRow) => {
 
   // 加载可退回节点
   try {
-    const res = await getRejectTargetsByProject(row.id);
-    if (res.code === 200) {
-      rejectTargets.value = res.data || [];
+    if (typeof row.review_id === "number") {
+      const res = await getRejectTargets(row.review_id);
+      if (res.code === 200) {
+        rejectTargets.value = res.data || [];
+      }
     }
   } catch (error) {
     console.error("获取退回节点失败", error);
@@ -523,23 +563,35 @@ const confirmReview = async () => {
   }
 
   try {
+    const selectedRow = projects.value.find(
+      (row) => row.id === reviewForm.value.projectId
+    );
     const data: { comment: string; target_node_id?: number | null } = {
       comment: reviewForm.value.comment,
     };
     let response: ReviewProjectsResponse;
     if (reviewType.value === "approve") {
-      response = (await approveProject(
-        reviewForm.value.projectId,
-        data
-      )) as ReviewProjectsResponse;
+      if (typeof selectedRow?.review_id === "number") {
+        response = (await reviewAction(selectedRow.review_id, {
+          action: "approve",
+          comments: reviewForm.value.comment,
+        })) as ReviewProjectsResponse;
+      } else {
+        throw new Error("缺少审核记录");
+      }
     } else {
       if (reviewForm.value.target_node_id) {
         data.target_node_id = reviewForm.value.target_node_id;
       }
-      response = (await rejectProject(
-        reviewForm.value.projectId,
-        data
-      )) as ReviewProjectsResponse;
+      if (typeof selectedRow?.review_id === "number") {
+        response = (await reviewAction(selectedRow.review_id, {
+          action: "reject",
+          comments: reviewForm.value.comment,
+          target_node_id: data.target_node_id ?? null,
+        })) as ReviewProjectsResponse;
+      } else {
+        throw new Error("缺少审核记录");
+      }
     }
 
     if (response.code === 200) {

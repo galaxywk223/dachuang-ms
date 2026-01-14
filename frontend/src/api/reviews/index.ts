@@ -12,6 +12,7 @@ export interface ReviewActionParams {
   score?: number | null;
   score_details?: { item_id: number; score: number | null }[];
   closure_rating?: string;
+  approved_budget?: number | null;
   reject_to?: string; // 旧参数，向后兼容
   target_node_id?: number | null; // 新参数，退回到指定节点ID
 }
@@ -35,8 +36,18 @@ export interface WorkflowNode {
   id: number;
   code: string;
   name: string;
-  node_type: "SUBMIT" | "REVIEW" | "EXPERT_REVIEW" | "APPROVAL";
+  node_type: "SUBMIT" | "REVIEW" | "APPROVAL";
   role: string;
+}
+
+export interface PendingReview {
+  id: number;
+  project: number;
+  project_info?: Record<string, unknown>;
+  review_type?: string;
+  review_type_display?: string;
+  review_level?: string;
+  review_level_display?: string;
 }
 
 /**
@@ -80,14 +91,13 @@ export function getRejectTargets(
 }
 
 /**
- * 根据项目ID获取可退回的目标节点列表（用于管理员审核）
+ * 获取管理员待审核列表
  */
-export function getRejectTargetsByProject(
-  projectId: number
-): Promise<{ code: number; message: string; data: WorkflowNode[] }> {
+export function getPendingReviews(params: Record<string, unknown>): Promise<unknown> {
   return request({
-    url: `/projects/admin/review/${projectId}/reject-targets/`,
+    url: "/reviews/pending/",
     method: "get",
+    params,
   });
 }
 

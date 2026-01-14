@@ -44,8 +44,7 @@ class ProjectCoreActionsMixin:
             )
 
         if not (
-            user.is_level1_admin
-            or user.is_level2_admin
+            user.is_admin
             or (user.is_student and project.leader_id == user.id)
         ):
             return Response(

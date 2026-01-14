@@ -216,7 +216,6 @@ class WorkflowNode(models.Model):
     class NodeType(models.TextChoices):
         SUBMIT = "SUBMIT", "提交"
         REVIEW = "REVIEW", "审核"
-        EXPERT_REVIEW = "EXPERT_REVIEW", "专家评审"
         APPROVAL = "APPROVAL", "管理员确认"
 
     class Role(models.TextChoices):
@@ -261,6 +260,11 @@ class WorkflowNode(models.Model):
     )
     review_level = models.CharField(
         max_length=20, blank=True, default="", verbose_name="审核级别"
+    )
+    require_expert_review = models.BooleanField(
+        default=False,
+        verbose_name="是否需要专家评审",
+        help_text="管理员节点开启后需先完成专家评审才能终审",
     )
     scope = models.CharField(
         max_length=20, blank=True, default="", verbose_name="专家范围"
@@ -312,3 +316,119 @@ class WorkflowNode(models.Model):
         if self.role_fk:
             return self.role_fk.code
         return self.role if self.role else None
+
+
+class PhaseScopeConfig(models.Model):
+    """
+    阶段数据范围配置（按批次/阶段）
+    """
+
+    class ScopeType(models.TextChoices):
+        COLLEGE = "COLLEGE", "学院"
+        PROJECT_CATEGORY = "PROJECT_CATEGORY", "项目类别"
+        PROJECT_LEVEL = "PROJECT_LEVEL", "项目级别"
+        KEY_FIELD = "KEY_FIELD", "重点领域"
+
+    batch = models.ForeignKey(
+        ProjectBatch,
+        on_delete=models.CASCADE,
+        related_name="phase_scopes",
+        verbose_name="所属批次",
+    )
+    phase = models.CharField(
+        max_length=20, choices=WorkflowConfig.Phase.choices, verbose_name="流程阶段"
+    )
+    scope_type = models.CharField(
+        max_length=50, choices=ScopeType.choices, verbose_name="数据范围维度"
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_phase_scopes",
+        verbose_name="创建人",
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="updated_phase_scopes",
+        verbose_name="更新人",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+
+    class Meta:
+        db_table = "phase_scope_configs"
+        verbose_name = "阶段数据范围配置"
+        verbose_name_plural = verbose_name
+        unique_together = ("batch", "phase")
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.batch.name}-{self.phase}:{self.scope_type}"
+
+
+class AdminAssignment(models.Model):
+    """
+    管理员分配（按批次/阶段/节点/维度值）
+    """
+
+    batch = models.ForeignKey(
+        ProjectBatch,
+        on_delete=models.CASCADE,
+        related_name="admin_assignments",
+        verbose_name="所属批次",
+    )
+    phase = models.CharField(
+        max_length=20, choices=WorkflowConfig.Phase.choices, verbose_name="流程阶段"
+    )
+    workflow_node = models.ForeignKey(
+        WorkflowNode,
+        on_delete=models.CASCADE,
+        related_name="admin_assignments",
+        verbose_name="工作流节点",
+    )
+    scope_value = models.CharField(max_length=100, verbose_name="维度值")
+    admin_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="admin_assignments",
+        verbose_name="管理员用户",
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_admin_assignments",
+        verbose_name="创建人",
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="updated_admin_assignments",
+        verbose_name="更新人",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+
+    class Meta:
+        db_table = "admin_assignments"
+        verbose_name = "管理员分配"
+        verbose_name_plural = verbose_name
+        unique_together = ("batch", "phase", "workflow_node", "scope_value")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["batch", "phase", "scope_value", "admin_user"],
+                name="uniq_admin_assignment_user",
+            )
+        ]
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.batch.name}-{self.phase}:{self.workflow_node_id}-{self.scope_value}"

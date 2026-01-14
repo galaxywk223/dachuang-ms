@@ -5,6 +5,7 @@
 from django.utils import timezone
 import logging
 from django.db import transaction
+from django.db.models import Q
 from ..models import (
     Review,
     ExpertGroup,
@@ -14,6 +15,8 @@ from apps.projects.models import ProjectPhaseInstance
 from apps.projects.services.phase_service import ProjectPhaseService
 from apps.projects.services.archive_service import ensure_project_archive
 from apps.system_settings.services import SystemSettingService, WorkflowService
+from apps.system_settings.services import AdminAssignmentService
+from apps.system_settings.models import PhaseScopeConfig, AdminAssignment
 from apps.notifications.services import NotificationService
 
 
@@ -54,7 +57,7 @@ class ReviewService:
             )
 
             # 如果是审核节点，自动创建 Review 记录
-            if next_node.node_type in ["REVIEW", "EXPERT_REVIEW", "APPROVAL"]:
+            if next_node.node_type in ["REVIEW", "APPROVAL"]:
                 ReviewService._create_review_for_node(
                     project, phase_instance, next_node
                 )
@@ -78,7 +81,7 @@ class ReviewService:
             return None, True
 
     @staticmethod
-    def _move_to_target_node(project, phase_instance, target_node_id):
+    def _move_to_target_node(project, phase_instance, target_node_id, reason=""):
         """
         退回到指定的目标节点
         """
@@ -97,39 +100,72 @@ class ReviewService:
             node_type=target_node_obj.node_type,
             role=target_node_obj.get_role_code() or target_node_obj.role,
             review_level=target_node_obj.review_level,
+            require_expert_review=target_node_obj.require_expert_review,
             scope=target_node_obj.scope,
             return_policy=target_node_obj.return_policy,
             allowed_reject_to=target_node_obj.allowed_reject_to or [],
             role_fk_id=target_node_obj.role_fk_id,
         )
 
-        # 更新 phase_instance
-        phase_instance.current_node_id = target_node.id
-        phase_instance.step = target_node.code
-        phase_instance.save(update_fields=["current_node_id", "step"])
+        nodes = WorkflowService.get_nodes(phase_instance.phase, project.batch)
+        node_order = {node.id: idx for idx, node in enumerate(nodes)}
+        target_index = node_order.get(target_node.id)
+        if target_index is not None:
+            later_node_ids = [
+                node.id for idx, node in enumerate(nodes) if idx > target_index
+            ]
+            if later_node_ids:
+                Review.objects.filter(
+                    project=project,
+                    phase_instance=phase_instance,
+                    workflow_node_id__in=later_node_ids,
+                ).delete()
 
-        # 如果退回到学生节点，标记为已退回
+        Review.objects.filter(
+            project=project,
+            phase_instance=phase_instance,
+            workflow_node_id=target_node.id,
+            status=Review.ReviewStatus.PENDING,
+        ).update(
+            status=Review.ReviewStatus.REJECTED,
+            comments="退回重新开始",
+            reviewed_at=timezone.now(),
+        )
+
+        return_to = (
+            ProjectPhaseInstance.ReturnTo.STUDENT
+            if target_node.node_type == "SUBMIT"
+            else ProjectPhaseInstance.ReturnTo.TEACHER
+        )
+        ProjectPhaseService.mark_returned(
+            phase_instance,
+            return_to=return_to,
+            reason=reason or "审核退回",
+        )
+        new_instance = ProjectPhaseService.start_new_attempt(
+            project,
+            phase_instance.phase,
+            step=target_node.code,
+        )
+        if target_node.node_type != "SUBMIT":
+            ReviewService._create_review_for_node(
+                project, new_instance, target_node
+            )
+
         if target_node.node_type == "SUBMIT":
             phase = phase_instance.phase
             if phase == ProjectPhaseInstance.Phase.APPLICATION:
                 project.status = Project.ProjectStatus.APPLICATION_RETURNED
             elif phase == ProjectPhaseInstance.Phase.MID_TERM:
-                project.status = Project.ProjectStatus.MID_TERM_REJECTED
+                project.status = Project.ProjectStatus.MID_TERM_RETURNED
             elif phase == ProjectPhaseInstance.Phase.CLOSURE:
                 project.status = Project.ProjectStatus.CLOSURE_DRAFT
-
-            ProjectPhaseService.mark_returned(
-                phase_instance,
-                return_to=ProjectPhaseInstance.ReturnTo.STUDENT,
-                reason="审核退回",
-            )
         else:
-            # 退回到其他审核节点，更新项目状态
             ReviewService._update_project_status_for_node(
                 project, target_node, phase_instance.phase
             )
 
-        project.save(update_fields=["status"])
+        project.save(update_fields=["status", "updated_at"])
         return True
 
     @staticmethod
@@ -158,13 +194,18 @@ class ReviewService:
         review_level = node.review_level or node.role or "UNKNOWN"
 
         # 检查是否已存在该节点的待审核记录
-        existing = Review.objects.filter(
+        workflow_node_id = ReviewService._resolve_workflow_node_id(node)
+        existing_qs = Review.objects.filter(
             project=project,
             review_type=review_type,
             review_level=review_level,
             status=Review.ReviewStatus.PENDING,
             phase_instance=phase_instance,
-        ).exists()
+            is_expert_review=False,
+        )
+        if workflow_node_id:
+            existing_qs = existing_qs.filter(workflow_node_id=workflow_node_id)
+        existing = existing_qs.exists()
 
         if existing:
             ReviewService.logger.info(
@@ -173,12 +214,13 @@ class ReviewService:
             return
 
         # 创建新的 Review 记录
-        Review.objects.create(
+        ReviewService.create_review(
             project=project,
             review_type=review_type,
-            review_level=review_level,  # 动态值，不限于预定义枚举
-            status=Review.ReviewStatus.PENDING,
+            review_level=review_level,
             phase_instance=phase_instance,
+            workflow_node=workflow_node_id,
+            is_expert_review=False,
         )
 
         ReviewService.logger.info(
@@ -247,49 +289,105 @@ class ReviewService:
         """
         规范评分明细
         """
-        return score, score_details or []
+        if score_details is None:
+            return score, []
 
-        detail_map = {}
-        for item in score_details or []:
-            try:
-                item_id = int(item.get("item_id"))
-                detail_map[item_id] = item
-            except (TypeError, ValueError, AttributeError) as exc:
-                ReviewService.logger.debug("Skip invalid score detail: %s", exc)
-                continue
+        if not isinstance(score_details, list):
+            raise ValueError("评分明细格式错误")
 
         total = 0
         normalized = []
-        for item in items:
-            detail = detail_map.get(item.id, {})
-            raw_score = detail.get("score")
+        for item in score_details:
+            if not isinstance(item, dict):
+                raise ValueError("评分明细格式错误")
+            title = item.get("title") or ""
+            item_id = item.get("item_id")
+            raw_score = item.get("score")
             if raw_score is None or raw_score == "":
-                if item.is_required:
-                    raise ValueError(f"评分项“{item.title}”不能为空")
-                raw_score = 0
+                display_name = title or f"#{item_id}" if item_id else "评分项"
+                raise ValueError(f"评分项“{display_name}”不能为空")
             try:
                 raw_score = int(raw_score)
             except (TypeError, ValueError):
-                raise ValueError(f"评分项“{item.title}”分值格式错误")
-            if raw_score < 0 or raw_score > item.max_score:
-                raise ValueError(f"评分项“{item.title}”超出范围")
+                display_name = title or f"#{item_id}" if item_id else "评分项"
+                raise ValueError(f"评分项“{display_name}”分值格式错误")
+            if raw_score < 0:
+                display_name = title or f"#{item_id}" if item_id else "评分项"
+                raise ValueError(f"评分项“{display_name}”超出范围")
 
-            weighted = raw_score
-            if item.weight:
-                weighted = int(round(raw_score * float(item.weight) / 100))
+            max_score = item.get("max_score")
+            if max_score not in (None, ""):
+                try:
+                    max_score_int = int(max_score)
+                except (TypeError, ValueError):
+                    raise ValueError("评分明细最大分值格式错误")
+                if raw_score > max_score_int:
+                    display_name = title or f"#{item_id}" if item_id else "评分项"
+                    raise ValueError(f"评分项“{display_name}”超出范围")
+            else:
+                max_score_int = None
+
+            weight = item.get("weight")
+            if weight in (None, ""):
+                weight_value = 100.0
+            else:
+                try:
+                    weight_value = float(weight)
+                except (TypeError, ValueError):
+                    raise ValueError("评分明细权重格式错误")
+
+            weighted = int(round(raw_score * weight_value / 100))
             total += weighted
             normalized.append(
                 {
-                    "item_id": item.id,
-                    "title": item.title,
+                    "item_id": item_id,
+                    "title": title,
                     "score": raw_score,
-                    "weight": float(item.weight),
+                    "weight": weight_value,
                     "weighted_score": weighted,
-                    "max_score": item.max_score,
+                    "max_score": max_score_int,
                 }
             )
 
-        return total, normalized
+        final_score = total if score is None else score
+        return final_score, normalized
+
+    @staticmethod
+    def _ensure_expert_reviews_completed(review):
+        if review.is_expert_review:
+            return
+
+        node = review.workflow_node
+        expert_required = False
+        if node:
+            expert_required = node.require_expert_review
+
+        if review.workflow_node_id:
+            expert_qs = Review.objects.filter(
+                project=review.project,
+                phase_instance=review.phase_instance,
+                workflow_node_id=review.workflow_node_id,
+                is_expert_review=True,
+            )
+        else:
+            expert_qs = Review.objects.filter(
+                project=review.project,
+                phase_instance=review.phase_instance,
+                review_type=review.review_type,
+                review_level=review.review_level,
+                is_expert_review=True,
+            )
+
+        if node and not expert_required:
+            return
+
+        if expert_qs.exists():
+            if expert_qs.filter(status=Review.ReviewStatus.PENDING).exists():
+                raise ValueError("专家评审尚未全部提交")
+            return
+
+        if expert_required:
+            raise ValueError("请先分配专家评审")
 
     @staticmethod
     def _find_teacher_node(phase, batch):
@@ -303,6 +401,13 @@ class ReviewService:
         return nodes[0] if nodes else None
 
     @staticmethod
+    def _resolve_workflow_node_id(node):
+        if not node:
+            return None
+        node_id = node.id if hasattr(node, "id") else node
+        return node_id if WorkflowService.get_node_by_id(node_id) else None
+
+    @staticmethod
     @transaction.atomic
     def create_review(
         project,
@@ -310,17 +415,29 @@ class ReviewService:
         review_level,
         *,
         phase_instance: ProjectPhaseInstance | None = None,
+        workflow_node=None,
+        is_expert_review: bool = False,
+        reviewer=None,
     ):
         """
         创建审核记录
         """
-        return Review.objects.create(
-            project=project,
-            phase_instance=phase_instance,
-            review_type=review_type,
-            review_level=review_level,
-            status=Review.ReviewStatus.PENDING,
-        )
+        payload = {
+            "project": project,
+            "phase_instance": phase_instance,
+            "review_type": review_type,
+            "review_level": review_level,
+            "status": Review.ReviewStatus.PENDING,
+            "is_expert_review": is_expert_review,
+            "reviewer": reviewer,
+        }
+        if workflow_node is not None:
+            if isinstance(workflow_node, int):
+                if WorkflowService.get_node_by_id(workflow_node):
+                    payload["workflow_node_id"] = workflow_node
+            else:
+                payload["workflow_node"] = workflow_node
+        return Review.objects.create(**payload)
 
     @staticmethod
     @transaction.atomic
@@ -344,6 +461,7 @@ class ReviewService:
             review_type=Review.ReviewType.APPLICATION,
             review_level=review_level or "TEACHER",
             phase_instance=phase_instance,
+            workflow_node=teacher_node.id if teacher_node else None,
         )
 
     @staticmethod
@@ -364,7 +482,7 @@ class ReviewService:
             "COLLEGE",
             project.batch,
         )
-        step = node.code if node else "COLLEGE_EXPERT"
+        step = node.code if node else "COLLEGE_REVIEW"
         phase_instance = ProjectPhaseService.ensure_current(
             project, ProjectPhaseInstance.Phase.APPLICATION, step=step
         )
@@ -373,6 +491,7 @@ class ReviewService:
             review_type=Review.ReviewType.APPLICATION,
             review_level="LEVEL2",
             phase_instance=phase_instance,
+            workflow_node=node.id if node else None,
         )
 
     @staticmethod
@@ -381,24 +500,28 @@ class ReviewService:
         """
         创建一级审核记录
         """
-        existing = Review.objects.filter(
-            project=project,
-            review_type=Review.ReviewType.APPLICATION,
-            review_level="LEVEL1",
-            status=Review.ReviewStatus.PENDING,
-        ).first()
-        if existing:
-            project.status = Project.ProjectStatus.LEVEL1_AUDITING
-            project.save(update_fields=["status"])
-            return existing
-
         node = WorkflowService.find_expert_node(
             ProjectPhaseInstance.Phase.APPLICATION,
             "LEVEL1",
             "SCHOOL",
             project.batch,
         )
-        step = node.code if node else "SCHOOL_EXPERT"
+        existing_qs = Review.objects.filter(
+            project=project,
+            review_type=Review.ReviewType.APPLICATION,
+            review_level="LEVEL1",
+            status=Review.ReviewStatus.PENDING,
+        )
+        workflow_node_id = ReviewService._resolve_workflow_node_id(node)
+        if workflow_node_id:
+            existing_qs = existing_qs.filter(workflow_node_id=workflow_node_id)
+        existing = existing_qs.first()
+        if existing:
+            project.status = Project.ProjectStatus.LEVEL1_AUDITING
+            project.save(update_fields=["status"])
+            return existing
+
+        step = node.code if node else "SCHOOL_PUBLISH"
         phase_instance = ProjectPhaseService.ensure_current(
             project, ProjectPhaseInstance.Phase.APPLICATION, step=step
         )
@@ -409,6 +532,7 @@ class ReviewService:
             review_type=Review.ReviewType.APPLICATION,
             review_level="LEVEL1",
             phase_instance=phase_instance,
+            workflow_node=workflow_node_id,
         )
 
     @staticmethod
@@ -424,6 +548,8 @@ class ReviewService:
         """
         审核通过 - 使用动态工作流引擎
         """
+        ReviewService._ensure_expert_reviews_completed(review)
+
         # 处理评分
         total_score, normalized_details = ReviewService._normalize_score_details(
             review, score, score_details
@@ -457,7 +583,17 @@ class ReviewService:
             )
             return ReviewService._legacy_approve_review(review, project)
 
-        current_node_id = phase_instance.current_node_id
+        if review.workflow_node_id and review.workflow_node_id != phase_instance.current_node_id:
+            node_obj = WorkflowService.get_node_by_id(review.workflow_node_id)
+            update_fields = ["current_node_id"]
+            phase_instance.current_node_id = review.workflow_node_id
+            if node_obj:
+                phase_instance.step = node_obj.code
+                update_fields.append("step")
+            update_fields.append("updated_at")
+            phase_instance.save(update_fields=update_fields)
+
+        current_node_id = phase_instance.current_node_id or review.workflow_node_id
         if not current_node_id:
             inferred_node = WorkflowService.get_node_by_code(
                 phase_instance.phase, phase_instance.step, project.batch
@@ -525,7 +661,7 @@ class ReviewService:
                     "COLLEGE",
                     project.batch,
                 )
-                step = node.code if node else "COLLEGE_EXPERT"
+                step = node.code if node else "COLLEGE_FINALIZE"
                 phase_instance = ProjectPhaseService.ensure_current(
                     project, ProjectPhaseInstance.Phase.MID_TERM, step=step
                 )
@@ -549,7 +685,7 @@ class ReviewService:
                     "COLLEGE",
                     project.batch,
                 )
-                step = node.code if node else "COLLEGE_EXPERT"
+                step = node.code if node else "COLLEGE_REVIEW"
                 phase_instance = ProjectPhaseService.ensure_current(
                     project, ProjectPhaseInstance.Phase.CLOSURE, step=step
                 )
@@ -563,7 +699,7 @@ class ReviewService:
                     "SCHOOL",
                     project.batch,
                 )
-                step = node.code if node else "SCHOOL_EXPERT"
+                step = node.code if node else "SCHOOL_FINALIZE"
                 phase_instance = ProjectPhaseService.ensure_current(
                     project, ProjectPhaseInstance.Phase.CLOSURE, step=step
                 )
@@ -595,6 +731,8 @@ class ReviewService:
             reject_to: 旧参数，向后兼容 ("teacher", "student", None)
             target_node_id: 新参数，退回到指定节点ID
         """
+        ReviewService._ensure_expert_reviews_completed(review)
+
         # 更新审核记录
         review.status = Review.ReviewStatus.REJECTED
         review.reviewer = reviewer
@@ -610,6 +748,20 @@ class ReviewService:
         phase_instance = review.phase_instance
 
         # 使用动态流程引擎处理退回
+        if (
+            phase_instance
+            and review.workflow_node_id
+            and review.workflow_node_id != phase_instance.current_node_id
+        ):
+            node_obj = WorkflowService.get_node_by_id(review.workflow_node_id)
+            update_fields = ["current_node_id"]
+            phase_instance.current_node_id = review.workflow_node_id
+            if node_obj:
+                phase_instance.step = node_obj.code
+                update_fields.append("step")
+            update_fields.append("updated_at")
+            phase_instance.save(update_fields=update_fields)
+
         if phase_instance and not phase_instance.current_node_id:
             inferred_node = WorkflowService.get_node_by_code(
                 phase_instance.phase, phase_instance.step, project.batch
@@ -624,7 +776,7 @@ class ReviewService:
             # 如果指定了 target_node_id，退回到指定节点
             if target_node_id:
                 success = ReviewService._move_to_target_node(
-                    project, phase_instance, target_node_id
+                    project, phase_instance, target_node_id, comments
                 )
                 if success:
                     ReviewService.logger.info(
@@ -644,7 +796,7 @@ class ReviewService:
                 # 默认退回到第一个可退回节点（通常是学生节点）
                 default_target = reject_targets[0]
                 success = ReviewService._move_to_target_node(
-                    project, phase_instance, default_target.id
+                    project, phase_instance, default_target.id, comments
                 )
                 if success:
                     ReviewService.logger.info(
@@ -785,7 +937,7 @@ class ReviewService:
             "COLLEGE",
             project.batch,
         )
-        step = node.code if node else "COLLEGE_EXPERT"
+        step = node.code if node else "COLLEGE_REVIEW"
         phase_instance = ProjectPhaseService.ensure_current(
             project, ProjectPhaseInstance.Phase.CLOSURE, step=step
         )
@@ -794,6 +946,7 @@ class ReviewService:
             review_type=Review.ReviewType.CLOSURE,
             review_level="LEVEL2",
             phase_instance=phase_instance,
+            workflow_node=node.id if node else None,
         )
 
     @staticmethod
@@ -802,24 +955,27 @@ class ReviewService:
         """
         创建结题一级审核记录
         """
-        existing = Review.objects.filter(
-            project=project,
-            review_type=Review.ReviewType.CLOSURE,
-            review_level="LEVEL1",
-            status=Review.ReviewStatus.PENDING,
-        ).first()
-        if existing:
-            project.status = Project.ProjectStatus.CLOSURE_LEVEL1_REVIEWING
-            project.save(update_fields=["status"])
-            return existing
-
         node = WorkflowService.find_expert_node(
             ProjectPhaseInstance.Phase.CLOSURE,
             "LEVEL1",
             "SCHOOL",
             project.batch,
         )
-        step = node.code if node else "SCHOOL_EXPERT"
+        existing_qs = Review.objects.filter(
+            project=project,
+            review_type=Review.ReviewType.CLOSURE,
+            review_level="LEVEL1",
+            status=Review.ReviewStatus.PENDING,
+        )
+        workflow_node_id = ReviewService._resolve_workflow_node_id(node)
+        if workflow_node_id:
+            existing_qs = existing_qs.filter(workflow_node_id=workflow_node_id)
+        existing = existing_qs.first()
+        if existing:
+            project.status = Project.ProjectStatus.CLOSURE_LEVEL1_REVIEWING
+            project.save(update_fields=["status"])
+            return existing
+        step = node.code if node else "SCHOOL_FINALIZE"
         phase_instance = ProjectPhaseService.ensure_current(
             project, ProjectPhaseInstance.Phase.CLOSURE, step=step
         )
@@ -832,6 +988,7 @@ class ReviewService:
             review_type=Review.ReviewType.CLOSURE,
             review_level="LEVEL1",
             phase_instance=phase_instance,
+            workflow_node=workflow_node_id,
         )
 
     @staticmethod
@@ -850,7 +1007,7 @@ class ReviewService:
             "COLLEGE",
             project.batch,
         )
-        step = node.code if node else "COLLEGE_EXPERT"
+        step = node.code if node else "COLLEGE_FINALIZE"
         phase_instance = ProjectPhaseService.ensure_current(
             project, ProjectPhaseInstance.Phase.MID_TERM, step=step
         )
@@ -869,12 +1026,16 @@ class ReviewService:
         phase_instance = ProjectPhaseService.ensure_current(
             project, ProjectPhaseInstance.Phase.MID_TERM, step=step
         )
-        existing = Review.objects.filter(
+        existing_qs = Review.objects.filter(
             project=project,
             review_type=Review.ReviewType.MID_TERM,
             review_level="TEACHER",
             status=Review.ReviewStatus.PENDING,
-        ).first()
+        )
+        workflow_node_id = ReviewService._resolve_workflow_node_id(teacher_node)
+        if workflow_node_id:
+            existing_qs = existing_qs.filter(workflow_node_id=workflow_node_id)
+        existing = existing_qs.first()
         if existing:
             return existing
 
@@ -883,6 +1044,7 @@ class ReviewService:
             review_type=Review.ReviewType.MID_TERM,
             review_level="TEACHER",
             phase_instance=phase_instance,
+            workflow_node=workflow_node_id,
         )
 
     @staticmethod
@@ -891,18 +1053,21 @@ class ReviewService:
         """
         创建结题审核记录（导师审核）
         """
-        existing = Review.objects.filter(
+        teacher_node = ReviewService._find_teacher_node(
+            ProjectPhaseInstance.Phase.CLOSURE, project.batch
+        )
+        existing_qs = Review.objects.filter(
             project=project,
             review_type=Review.ReviewType.CLOSURE,
             review_level="TEACHER",
             status=Review.ReviewStatus.PENDING,
-        ).first()
+        )
+        workflow_node_id = ReviewService._resolve_workflow_node_id(teacher_node)
+        if workflow_node_id:
+            existing_qs = existing_qs.filter(workflow_node_id=workflow_node_id)
+        existing = existing_qs.first()
         if existing:
             return existing
-
-        teacher_node = ReviewService._find_teacher_node(
-            ProjectPhaseInstance.Phase.CLOSURE, project.batch
-        )
         step = teacher_node.code if teacher_node else "TEACHER_REVIEW"
         phase_instance = ProjectPhaseService.ensure_current(
             project, ProjectPhaseInstance.Phase.CLOSURE, step=step
@@ -912,7 +1077,58 @@ class ReviewService:
             review_type=Review.ReviewType.CLOSURE,
             review_level="TEACHER",
             phase_instance=phase_instance,
+            workflow_node=workflow_node_id,
         )
+
+    @staticmethod
+    def _build_admin_review_filter(admin_user):
+        assignments = (
+            AdminAssignment.objects.filter(admin_user=admin_user)
+            .select_related("batch", "workflow_node")
+            .all()
+        )
+        if not assignments:
+            return None
+
+        batch_ids = {assignment.batch_id for assignment in assignments}
+        phases = {assignment.phase for assignment in assignments}
+        scope_configs = PhaseScopeConfig.objects.filter(
+            batch_id__in=batch_ids, phase__in=phases
+        )
+        scope_map = {
+            (config.batch_id, config.phase): config.scope_type
+            for config in scope_configs
+        }
+        review_type_map = {
+            ProjectPhaseInstance.Phase.APPLICATION: Review.ReviewType.APPLICATION,
+            ProjectPhaseInstance.Phase.MID_TERM: Review.ReviewType.MID_TERM,
+            ProjectPhaseInstance.Phase.CLOSURE: Review.ReviewType.CLOSURE,
+        }
+
+        query = Q()
+        for assignment in assignments:
+            scope_type = scope_map.get((assignment.batch_id, assignment.phase))
+            review_type = review_type_map.get(assignment.phase)
+            if not scope_type or not review_type:
+                continue
+            cond = Q(
+                project__batch_id=assignment.batch_id,
+                review_type=review_type,
+                workflow_node_id=assignment.workflow_node_id,
+            )
+            if scope_type == PhaseScopeConfig.ScopeType.COLLEGE:
+                cond &= Q(project__leader__college=assignment.scope_value)
+            elif scope_type == PhaseScopeConfig.ScopeType.PROJECT_CATEGORY:
+                cond &= Q(project__category_id=assignment.scope_value)
+            elif scope_type == PhaseScopeConfig.ScopeType.PROJECT_LEVEL:
+                cond &= Q(project__level_id=assignment.scope_value)
+            elif scope_type == PhaseScopeConfig.ScopeType.KEY_FIELD:
+                value = str(assignment.scope_value).lower() in ("1", "true", "yes")
+                cond &= Q(project__is_key_field=value)
+            else:
+                continue
+            query |= cond
+        return query
 
     @staticmethod
     def get_pending_reviews_for_admin(admin_user):
@@ -926,20 +1142,16 @@ class ReviewService:
             Project.ProjectStatus.TERMINATED,
         ]
 
-        if admin_user.is_level2_admin:
-            return Review.objects.filter(
-                project__leader__college=admin_user.college,
-                review_level="LEVEL2",
-                status=Review.ReviewStatus.PENDING,
-                reviewer__isnull=True,
-            ).exclude(project__status__in=excluded_statuses)
-        elif admin_user.is_level1_admin:
-            return Review.objects.filter(
-                review_level="LEVEL1",
-                status=Review.ReviewStatus.PENDING,
-                reviewer__isnull=True,
-            ).exclude(project__status__in=excluded_statuses)
-        return Review.objects.none()
+        base_qs = Review.objects.filter(
+            status=Review.ReviewStatus.PENDING,
+            reviewer__isnull=True,
+            is_expert_review=False,
+        ).exclude(project__status__in=excluded_statuses)
+
+        query = ReviewService._build_admin_review_filter(admin_user)
+        if not query:
+            return Review.objects.none()
+        return base_qs.filter(query)
 
     @staticmethod
     def assign_project_to_group(
@@ -948,6 +1160,7 @@ class ReviewService:
         review_type=Review.ReviewType.APPLICATION,
         review_level="LEVEL2",
         creator=None,
+        target_node_id=None,
     ):
         """
         批量分配项目给专家组
@@ -955,6 +1168,9 @@ class ReviewService:
         group = ExpertGroup.objects.get(pk=group_id)
         experts = group.members.all()
         created_reviews = []
+        phase = ReviewService._get_phase_from_review_type(review_type)
+        if not phase:
+            raise ValueError("不支持该评审类型的专家分配")
 
         with transaction.atomic():
             for pid in project_ids:
@@ -963,18 +1179,53 @@ class ReviewService:
                 except Project.DoesNotExist:
                     continue
 
-                scope = "SCHOOL" if review_level == "LEVEL1" else "COLLEGE"
-                node = WorkflowService.find_expert_node(
-                    review_type, review_level, scope, project.batch
+                phase_instance = ProjectPhaseService.get_current(project, phase)
+                if not phase_instance:
+                    ReviewService.logger.warning(
+                        "Project %s has no phase instance for expert assignment",
+                        project.id,
+                    )
+                    continue
+                if (
+                    target_node_id
+                    and phase_instance.current_node_id
+                    and target_node_id != phase_instance.current_node_id
+                ):
+                    ReviewService.logger.warning(
+                        "Project %s current node mismatch for expert assignment",
+                        project.id,
+                    )
+                    continue
+                node_id = target_node_id or phase_instance.current_node_id
+                if not node_id:
+                    ReviewService.logger.warning(
+                        "Project %s has no current node for expert assignment",
+                        project.id,
+                    )
+                    continue
+                node_obj = WorkflowService.get_node_by_id(node_id)
+                if not node_obj:
+                    ReviewService.logger.warning(
+                        "Node %s not found for expert assignment", node_id
+                    )
+                    continue
+                if not node_obj.require_expert_review:
+                    ReviewService.logger.warning(
+                        "Node %s does not require expert review", node_id
+                    )
+                    continue
+                assigned_user = AdminAssignmentService.resolve_admin_user(
+                    project, phase, node_obj
                 )
-                step = node.code if node else "COLLEGE_EXPERT"
-
-                phase_instance = ProjectPhaseService.ensure_current(
-                    project,
-                    review_type,
-                    created_by=creator,
-                    step=step,
+                if creator and assigned_user.id != creator.id:
+                    raise ValueError("无权限分配该节点的专家评审任务")
+                review_level_value = (
+                    node_obj.review_level
+                    or node_obj.get_role_code()
+                    or review_level
                 )
+                if not review_level_value:
+                    raise ValueError("审核节点未配置审核级别或角色")
 
                 for expert in experts:
                     # Check duplication
@@ -982,16 +1233,19 @@ class ReviewService:
                         project=project,
                         reviewer=expert,
                         review_type=review_type,
-                        review_level=review_level,
+                        review_level=review_level_value,
                         phase_instance=phase_instance,
+                        workflow_node_id=node_id,
+                        is_expert_review=True,
                     ).exists():
-                        review = Review.objects.create(
+                        review = ReviewService.create_review(
                             project=project,
                             phase_instance=phase_instance,
                             review_type=review_type,
-                            review_level=review_level,
+                            review_level=review_level_value,
                             reviewer=expert,
-                            status=Review.ReviewStatus.PENDING,
+                            workflow_node=node_id,
+                            is_expert_review=True,
                         )
                         created_reviews.append(review)
                         NotificationService.notify_review_assigned(review)

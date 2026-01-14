@@ -11,12 +11,17 @@ class ProjectRankingMixin:
     @action(methods=["post"], detail=True, url_path="update-ranking")
     def update_ranking(self, request, pk=None):
         """
-        更新项目排名（仅二级管理员）
+        更新项目排名（仅管理员）
         """
         project = self.get_object()
         user = request.user
 
-        if not user.is_level2_admin or project.leader.college != user.college:
+        if not user.is_admin:
+            return Response(
+                {"code": 403, "message": "无权限修改此项目排名"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        if not user.is_level1_admin and project.leader.college != user.college:
             return Response(
                 {"code": 403, "message": "无权限修改此项目排名"},
                 status=status.HTTP_403_FORBIDDEN,
@@ -33,4 +38,3 @@ class ProjectRankingMixin:
         project.save()
 
         return Response({"code": 200, "message": "排名更新成功"})
-

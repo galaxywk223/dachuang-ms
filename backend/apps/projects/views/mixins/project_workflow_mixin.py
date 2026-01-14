@@ -13,9 +13,8 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from apps.projects.models import ProjectPhaseInstance
-from apps.projects.services.archive_service import ensure_project_archive
 from apps.projects.services.phase_service import ProjectPhaseService
-from apps.system_settings.services import WorkflowService
+from apps.system_settings.services import WorkflowService, AdminAssignmentService
 from apps.reviews.models import Review
 from apps.reviews.services import ReviewService
 
@@ -28,47 +27,101 @@ class ProjectWorkflowMixin:
     ) -> ProjectPhaseInstance | None:
         return ProjectPhaseService.get_current(project, phase)
 
+    def _assert_assigned_admin(self, project: Project, phase: str, user):
+        phase_instance = self._get_current_phase_instance(project, phase)
+        if not phase_instance or not phase_instance.current_node_id:
+            raise PermissionDenied("流程状态异常：缺少当前节点")
+        node_obj = WorkflowService.get_node_by_id(phase_instance.current_node_id)
+        if not node_obj:
+            raise PermissionDenied("流程状态异常：当前节点不存在")
+        try:
+            admin_user = AdminAssignmentService.resolve_admin_user(
+                project, phase, node_obj
+            )
+        except ValueError as exc:
+            raise PermissionDenied(str(exc)) from exc
+        if admin_user.id != user.id:
+            raise PermissionDenied("无权限操作该节点")
+        return phase_instance
+
+    def _get_review_type_for_phase(self, phase: str):
+        return {
+            ProjectPhaseInstance.Phase.APPLICATION: Review.ReviewType.APPLICATION,
+            ProjectPhaseInstance.Phase.MID_TERM: Review.ReviewType.MID_TERM,
+            ProjectPhaseInstance.Phase.CLOSURE: Review.ReviewType.CLOSURE,
+        }.get(phase)
+
+    def _get_pending_admin_review(
+        self,
+        *,
+        user,
+        project: Project,
+        phase: str,
+        phase_instance: ProjectPhaseInstance | None,
+    ):
+        review_type = self._get_review_type_for_phase(phase)
+        if not review_type:
+            return None
+        qs = ReviewService.get_pending_reviews_for_admin(user).filter(
+            project=project,
+            review_type=review_type,
+        )
+        if phase_instance:
+            qs = qs.filter(phase_instance=phase_instance)
+            if phase_instance.current_node_id:
+                qs = qs.filter(workflow_node_id=phase_instance.current_node_id)
+        return qs.first()
+
     def _get_expert_reviews_qs(
         self,
         *,
         project: Project,
-        review_type: str,
-        review_level: str,
+        review_type: str | None,
         phase_instance: ProjectPhaseInstance | None,
+        workflow_node_id: int | None = None,
     ):
-        qs = Review.objects.filter(
-            project=project,
-            review_type=review_type,
-            review_level=review_level,
-            reviewer__role="EXPERT",
-        )
+        qs = Review.objects.filter(project=project, is_expert_review=True)
+        if review_type:
+            qs = qs.filter(review_type=review_type)
         if phase_instance:
             qs = qs.filter(phase_instance=phase_instance)
+        if workflow_node_id:
+            qs = qs.filter(workflow_node_id=workflow_node_id)
+        elif phase_instance and phase_instance.current_node_id:
+            qs = qs.filter(workflow_node_id=phase_instance.current_node_id)
         return qs
 
     @action(detail=True, methods=["get"], url_path="expert-summary")
     def expert_summary(self, request, pk=None):
         """
         获取当前阶段专家评审进度/统计（不改变流程）
-        query: review_type=APPLICATION|MID_TERM|CLOSURE, scope=COLLEGE|SCHOOL(optional)
+        query: review_type=APPLICATION|MID_TERM|CLOSURE, scope=COLLEGE|SCHOOL(optional), node_id(optional)
         """
         project = self.get_object()
         review_type = (
             request.query_params.get("review_type") or Review.ReviewType.APPLICATION
         )
-        scope = (request.query_params.get("scope") or "COLLEGE").upper()
-        review_level = (
-            Review.ReviewLevel.LEVEL2
-            if scope == "COLLEGE"
-            else Review.ReviewLevel.LEVEL1
-        )
-
+        scope = (request.query_params.get("scope") or "").upper()
         phase_instance = self._get_current_phase_instance(project, review_type)
+
+        node_id_param = request.query_params.get("node_id")
+        node_id = (
+            int(node_id_param)
+            if node_id_param and str(node_id_param).isdigit()
+            else None
+        )
+        if not node_id and phase_instance and phase_instance.current_node_id:
+            node_id = phase_instance.current_node_id
+        if not node_id and scope:
+            for node in WorkflowService.get_nodes(review_type, project.batch):
+                if node.require_expert_review and node.scope == scope:
+                    node_id = node.id
+                    break
         qs = self._get_expert_reviews_qs(
             project=project,
             review_type=review_type,
-            review_level=review_level,
             phase_instance=phase_instance,
+            workflow_node_id=node_id,
         )
         assigned = qs.count()
         pending = qs.filter(status=Review.ReviewStatus.PENDING).count()
@@ -108,28 +161,7 @@ class ProjectWorkflowMixin:
         phase = request.data.get("phase") or ProjectPhaseInstance.Phase.APPLICATION
         reason = request.data.get("reason", "")
 
-        if phase == ProjectPhaseInstance.Phase.APPLICATION and not (
-            user.is_level2_admin or user.is_level1_admin
-        ):
-            raise PermissionDenied("无权限退回该阶段")
-        if phase == ProjectPhaseInstance.Phase.MID_TERM and not (
-            user.is_level2_admin or user.is_level1_admin
-        ):
-            raise PermissionDenied("无权限退回该阶段")
-        if phase == ProjectPhaseInstance.Phase.CLOSURE:
-            phase_instance_for_perm = self._get_current_phase_instance(
-                project, ProjectPhaseInstance.Phase.CLOSURE
-            )
-            if user.is_level1_admin:
-                pass
-            elif (
-                user.is_level2_admin
-                and phase_instance_for_perm
-                and str(phase_instance_for_perm.step).startswith("COLLEGE_")
-            ):
-                pass
-            else:
-                raise PermissionDenied("无权限退回该阶段")
+        self._assert_assigned_admin(project, phase, user)
 
         status_map = {
             ProjectPhaseInstance.Phase.APPLICATION: Project.ProjectStatus.APPLICATION_RETURNED,
@@ -140,16 +172,26 @@ class ProjectWorkflowMixin:
 
         with transaction.atomic():
             phase_instance = self._get_current_phase_instance(project, phase)
+            moved = False
             if phase_instance:
-                ProjectPhaseService.mark_returned(
-                    phase_instance,
-                    return_to=ProjectPhaseInstance.ReturnTo.STUDENT,
-                    reason=reason,
+                initial_node = WorkflowService.get_initial_node(
+                    phase_instance.phase, project.batch
                 )
+                if initial_node and WorkflowService.get_node_by_id(initial_node.id):
+                    ReviewService._move_to_target_node(
+                        project, phase_instance, initial_node.id, reason
+                    )
+                    moved = True
+                else:
+                    ProjectPhaseService.mark_returned(
+                        phase_instance,
+                        return_to=ProjectPhaseInstance.ReturnTo.STUDENT,
+                        reason=reason,
+                    )
                 Review.objects.filter(
                     project=project,
                     phase_instance=phase_instance,
-                    reviewer__role="EXPERT",
+                    is_expert_review=True,
                     status=Review.ReviewStatus.PENDING,
                 ).update(
                     status=Review.ReviewStatus.REJECTED,
@@ -157,8 +199,9 @@ class ProjectWorkflowMixin:
                     reviewed_at=timezone.now(),
                 )
 
-            project.status = new_status
-            project.save(update_fields=["status", "updated_at"])
+            if not moved:
+                project.status = new_status
+                project.save(update_fields=["status", "updated_at"])
 
         return Response({"code": 200, "message": "已退回学生修改"})
 
@@ -170,45 +213,29 @@ class ProjectWorkflowMixin:
         """
         project = self.get_object()
         user = request.user
-        if not user.is_level2_admin:
-            raise PermissionDenied("只有二级管理员可以上报校级")
+        self._assert_assigned_admin(project, ProjectPhaseInstance.Phase.APPLICATION, user)
 
         phase_instance = self._get_current_phase_instance(
             project, ProjectPhaseInstance.Phase.APPLICATION
         )
-        qs = self._get_expert_reviews_qs(
+        review = self._get_pending_admin_review(
+            user=user,
             project=project,
-            review_type=Review.ReviewType.APPLICATION,
-            review_level=Review.ReviewLevel.LEVEL2,
+            phase=ProjectPhaseInstance.Phase.APPLICATION,
             phase_instance=phase_instance,
         )
-        if not qs.exists():
+        if not review:
             return Response(
-                {"code": 400, "message": "请先分配专家评审"},
+                {"code": 404, "message": "未找到待审核记录或无权限"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        try:
+            ReviewService.approve_review(review, user, "")
+        except ValueError as exc:
+            return Response(
+                {"code": 400, "message": str(exc)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if qs.filter(status=Review.ReviewStatus.PENDING).exists():
-            return Response(
-                {"code": 400, "message": "院级专家评审尚未全部提交"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        with transaction.atomic():
-            if phase_instance:
-                school_node = WorkflowService.find_expert_node(
-                    ProjectPhaseInstance.Phase.APPLICATION,
-                    Review.ReviewLevel.LEVEL1,
-                    "SCHOOL",
-                    project.batch,
-                )
-                update_fields = ["updated_at"]
-                if school_node:
-                    phase_instance.step = school_node.code
-                    phase_instance.current_node_id = school_node.id
-                    update_fields.extend(["step", "current_node_id"])
-                phase_instance.save(update_fields=update_fields)
-            project.status = Project.ProjectStatus.LEVEL1_AUDITING
-            project.save(update_fields=["status", "updated_at"])
 
         return Response({"code": 200, "message": "已上报校级"})
 
@@ -220,8 +247,7 @@ class ProjectWorkflowMixin:
         """
         project = self.get_object()
         user = request.user
-        if not user.is_level2_admin:
-            raise PermissionDenied("只有二级管理员可以上报校级")
+        self._assert_assigned_admin(project, ProjectPhaseInstance.Phase.CLOSURE, user)
 
         phase_instance = self._get_current_phase_instance(
             project, ProjectPhaseInstance.Phase.CLOSURE
@@ -234,39 +260,24 @@ class ProjectWorkflowMixin:
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        qs = self._get_expert_reviews_qs(
+        review = self._get_pending_admin_review(
+            user=user,
             project=project,
-            review_type=Review.ReviewType.CLOSURE,
-            review_level=Review.ReviewLevel.LEVEL2,
+            phase=ProjectPhaseInstance.Phase.CLOSURE,
             phase_instance=phase_instance,
         )
-        if not qs.exists():
+        if not review:
             return Response(
-                {"code": 400, "message": "请先分配专家评审"},
+                {"code": 404, "message": "未找到待审核记录或无权限"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        try:
+            ReviewService.approve_review(review, user, "")
+        except ValueError as exc:
+            return Response(
+                {"code": 400, "message": str(exc)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if qs.filter(status=Review.ReviewStatus.PENDING).exists():
-            return Response(
-                {"code": 400, "message": "院级专家评审尚未全部提交"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        with transaction.atomic():
-            school_node = WorkflowService.find_expert_node(
-                ProjectPhaseInstance.Phase.CLOSURE,
-                Review.ReviewLevel.LEVEL1,
-                "SCHOOL",
-                project.batch,
-            )
-            update_fields = ["updated_at"]
-            if school_node:
-                phase_instance.step = school_node.code
-                phase_instance.current_node_id = school_node.id
-                update_fields.extend(["step", "current_node_id"])
-            phase_instance.save(update_fields=update_fields)
-            project.status = Project.ProjectStatus.CLOSURE_LEVEL1_REVIEWING
-            project.save(update_fields=["status", "updated_at"])
 
         return Response({"code": 200, "message": "已上报校级"})
 
@@ -278,8 +289,7 @@ class ProjectWorkflowMixin:
         """
         project = self.get_object()
         user = request.user
-        if not user.is_level1_admin:
-            raise PermissionDenied("只有一级管理员可以发布立项")
+        self._assert_assigned_admin(project, ProjectPhaseInstance.Phase.APPLICATION, user)
 
         approved_budget = request.data.get("approved_budget")
         try:
@@ -297,25 +307,29 @@ class ProjectWorkflowMixin:
         phase_instance = self._get_current_phase_instance(
             project, ProjectPhaseInstance.Phase.APPLICATION
         )
-        qs = self._get_expert_reviews_qs(
+        review = self._get_pending_admin_review(
+            user=user,
             project=project,
-            review_type=Review.ReviewType.APPLICATION,
-            review_level=Review.ReviewLevel.LEVEL1,
+            phase=ProjectPhaseInstance.Phase.APPLICATION,
             phase_instance=phase_instance,
         )
-        if qs.exists() and qs.filter(status=Review.ReviewStatus.PENDING).exists():
+        if not review:
             return Response(
-                {"code": 400, "message": "校级专家评审尚未全部提交"},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"code": 404, "message": "未找到待审核记录或无权限"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
-        with transaction.atomic():
-            if approved_budget_val is not None:
-                project.approved_budget = approved_budget_val
-            project.status = Project.ProjectStatus.IN_PROGRESS
-            project.save(update_fields=["approved_budget", "status", "updated_at"])
-            if phase_instance:
-                ProjectPhaseService.mark_completed(phase_instance, step="PUBLISHED")
+        try:
+            with transaction.atomic():
+                if approved_budget_val is not None:
+                    project.approved_budget = approved_budget_val
+                    project.save(update_fields=["approved_budget", "updated_at"])
+                ReviewService.approve_review(review, user, "")
+        except ValueError as exc:
+            return Response(
+                {"code": 400, "message": str(exc)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         return Response({"code": 200, "message": "立项已发布"})
 
@@ -327,8 +341,7 @@ class ProjectWorkflowMixin:
         """
         project = self.get_object()
         user = request.user
-        if not (user.is_level2_admin or user.is_level1_admin):
-            raise PermissionDenied("无权限操作")
+        self._assert_assigned_admin(project, ProjectPhaseInstance.Phase.MID_TERM, user)
 
         action_type = request.data.get("action")
         reason = request.data.get("reason", "")
@@ -341,43 +354,34 @@ class ProjectWorkflowMixin:
         phase_instance = self._get_current_phase_instance(
             project, ProjectPhaseInstance.Phase.MID_TERM
         )
-        qs = self._get_expert_reviews_qs(
+        review = self._get_pending_admin_review(
+            user=user,
             project=project,
-            review_type=Review.ReviewType.MID_TERM,
-            review_level=Review.ReviewLevel.LEVEL2,
+            phase=ProjectPhaseInstance.Phase.MID_TERM,
             phase_instance=phase_instance,
         )
-        if qs.exists() and qs.filter(status=Review.ReviewStatus.PENDING).exists():
+        if not review:
             return Response(
-                {"code": 400, "message": "中期专家审核尚未全部提交"},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"code": 404, "message": "未找到待审核记录或无权限"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
-        with transaction.atomic():
+        target_node_id = request.data.get("target_node_id")
+        try:
             if action_type == "pass":
-                project.status = Project.ProjectStatus.READY_FOR_CLOSURE
-                project.save(update_fields=["status", "updated_at"])
-                if phase_instance:
-                    ProjectPhaseService.mark_completed(phase_instance, step="COMPLETED")
+                ReviewService.approve_review(review, user, "")
             else:
-                project.status = Project.ProjectStatus.MID_TERM_RETURNED
-                project.save(update_fields=["status", "updated_at"])
-                if phase_instance:
-                    ProjectPhaseService.mark_returned(
-                        phase_instance,
-                        return_to=ProjectPhaseInstance.ReturnTo.STUDENT,
-                        reason=reason,
-                    )
-                    Review.objects.filter(
-                        project=project,
-                        phase_instance=phase_instance,
-                        reviewer__role="EXPERT",
-                        status=Review.ReviewStatus.PENDING,
-                    ).update(
-                        status=Review.ReviewStatus.REJECTED,
-                        comments="管理员退回，评审任务作废",
-                        reviewed_at=timezone.now(),
-                    )
+                ReviewService.reject_review(
+                    review,
+                    user,
+                    reason,
+                    target_node_id=target_node_id,
+                )
+        except ValueError as exc:
+            return Response(
+                {"code": 400, "message": str(exc)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         return Response({"code": 200, "message": "处理中期完成"})
 
@@ -389,8 +393,7 @@ class ProjectWorkflowMixin:
         """
         project = self.get_object()
         user = request.user
-        if not user.is_level1_admin:
-            raise PermissionDenied("只有一级管理员可以操作结题")
+        self._assert_assigned_admin(project, ProjectPhaseInstance.Phase.CLOSURE, user)
 
         action_type = request.data.get("action")
         reason = request.data.get("reason", "")
@@ -411,59 +414,49 @@ class ProjectWorkflowMixin:
         )
         if phase_instance is None:
             return Response(
-                {"code": 400, "message": "请先分配校级专家评审"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        qs = self._get_expert_reviews_qs(
-            project=project,
-            review_type=Review.ReviewType.CLOSURE,
-            review_level=Review.ReviewLevel.LEVEL1,
-            phase_instance=phase_instance,
-        )
-        if not qs.exists():
-            return Response(
                 {"code": 400, "message": "请先分配专家评审"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if qs.filter(status=Review.ReviewStatus.PENDING).exists():
+        review = self._get_pending_admin_review(
+            user=user,
+            project=project,
+            phase=ProjectPhaseInstance.Phase.CLOSURE,
+            phase_instance=phase_instance,
+        )
+        if not review:
             return Response(
-                {"code": 400, "message": "结题专家评审尚未全部提交"},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"code": 404, "message": "未找到待审核记录或无权限"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
-        with transaction.atomic():
-            if action_type == "approve":
-                project.status = Project.ProjectStatus.CLOSED
-                project.save(update_fields=["status", "updated_at"])
-                ensure_project_archive(project)
-                if phase_instance:
-                    ProjectPhaseService.mark_completed(phase_instance, step="COMPLETED")
+        target_node_id = request.data.get("target_node_id")
+        if not target_node_id:
+            if return_to == "teacher":
+                teacher_node = ReviewService._find_teacher_node(
+                    ProjectPhaseInstance.Phase.CLOSURE, project.batch
+                )
+                target_node_id = ReviewService._resolve_workflow_node_id(teacher_node)
             else:
-                if return_to == "teacher":
-                    project.status = Project.ProjectStatus.CLOSURE_SUBMITTED
-                else:
-                    project.status = Project.ProjectStatus.CLOSURE_RETURNED
-                project.save(update_fields=["status", "updated_at"])
-                if phase_instance:
-                    ProjectPhaseService.mark_returned(
-                        phase_instance,
-                        return_to=ProjectPhaseInstance.ReturnTo.TEACHER
-                        if return_to == "teacher"
-                        else ProjectPhaseInstance.ReturnTo.STUDENT,
-                        reason=reason,
-                    )
-                    Review.objects.filter(
-                        project=project,
-                        phase_instance=phase_instance,
-                        reviewer__role="EXPERT",
-                        status=Review.ReviewStatus.PENDING,
-                    ).update(
-                        status=Review.ReviewStatus.REJECTED,
-                        comments="管理员退回，评审任务作废",
-                        reviewed_at=timezone.now(),
-                    )
-                if return_to == "teacher":
-                    ReviewService.create_closure_teacher_review(project)
+                initial_node = WorkflowService.get_initial_node(
+                    phase_instance.phase, project.batch
+                )
+                if initial_node and WorkflowService.get_node_by_id(initial_node.id):
+                    target_node_id = initial_node.id
+
+        try:
+            if action_type == "approve":
+                ReviewService.approve_review(review, user, "")
+            else:
+                ReviewService.reject_review(
+                    review,
+                    user,
+                    reason,
+                    target_node_id=target_node_id,
+                )
+        except ValueError as exc:
+            return Response(
+                {"code": 400, "message": str(exc)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         return Response({"code": 200, "message": "处理完成"})

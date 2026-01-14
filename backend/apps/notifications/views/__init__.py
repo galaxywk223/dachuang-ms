@@ -70,7 +70,7 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
         批量发送通知（管理员）
         """
         user = request.user
-        if not (user.is_level1_admin or user.is_level2_admin):
+        if not user.is_admin:
             return Response(
                 {"code": 403, "message": "无权限发送通知"},
                 status=status.HTTP_403_FORBIDDEN,
@@ -95,7 +95,7 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(role=role)
         if college:
             queryset = queryset.filter(college=college)
-        if user.is_level2_admin:
+        if user.is_admin and not user.is_level1_admin:
             queryset = queryset.filter(college=user.college)
 
         created = 0

@@ -6,6 +6,7 @@ from datetime import datetime
 
 from ..models import SystemSetting, ProjectBatch
 from .workflow_service import WorkflowService
+from .admin_assignment_service import AdminAssignmentService
 
 
 DEFAULT_SETTINGS = {
@@ -136,4 +137,5 @@ __all__ = [
     "DEFAULT_SETTINGS",
     "SystemSettingService",
     "WorkflowService",
+    "AdminAssignmentService",
 ]

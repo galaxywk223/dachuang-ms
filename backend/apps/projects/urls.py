@@ -9,7 +9,6 @@ from .views import (
     ProjectProgressViewSet,
     ProjectAchievementViewSet,
     ProjectExpenditureViewSet,
-    ProjectReviewViewSet,
     ProjectManagementViewSet,
     AchievementManagementViewSet,
     ProjectChangeRequestViewSet,
@@ -20,7 +19,6 @@ from .views import (
 
 router = DefaultRouter()
 router.register(r"progress", ProjectProgressViewSet, basename="progress")
-router.register(r"admin/review", ProjectReviewViewSet, basename="admin-review")
 router.register(r"admin/manage", ProjectManagementViewSet, basename="admin-manage")
 # router.register(r"admin/achievements", AchievementManagementViewSet, basename="admin-achievements")
 router.register(r"achievements", ProjectAchievementViewSet, basename="achievement")

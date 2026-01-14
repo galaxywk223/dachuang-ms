@@ -24,7 +24,7 @@ class ProjectExpenditureViewSet(viewsets.ModelViewSet):
     filterset_fields = ["project"]
 
     def _can_manage_expenditure(self, user, project):
-        if user.is_level1_admin or user.is_level2_admin:
+        if user.is_admin:
             return True
         if user.is_student:
             return (
@@ -125,7 +125,7 @@ class ProjectExpenditureViewSet(viewsets.ModelViewSet):
             return ProjectExpenditure.objects.filter(
                 project__advisors__user=user
             ).distinct()
-        if user.is_level2_admin:
+        if user.is_admin and not user.is_level1_admin:
             return ProjectExpenditure.objects.filter(
                 project__leader__college=user.college
             )

@@ -2,14 +2,16 @@
 批次工作流配置视图
 """
 
-from rest_framework import status, viewsets
+from rest_framework import status, viewsets, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from apps.users.permissions import IsLevel1Admin
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 
 from apps.system_settings.models import ProjectBatch, WorkflowConfig, WorkflowNode
+from apps.projects.models import ProjectPhaseInstance
 from apps.system_settings.serializers.workflow_serializers import (
     WorkflowConfigSerializer,
     WorkflowNodeSerializer,
@@ -22,7 +24,7 @@ from apps.system_settings.services.workflow_service import WorkflowService
 class BatchWorkflowViewSet(viewsets.ViewSet):
     """批次工作流配置视图集"""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsLevel1Admin]
 
     @action(detail=True, methods=["get"], url_path="workflows")
     def list_workflows(self, request, pk=None):
@@ -148,20 +150,36 @@ class BatchWorkflowViewSet(viewsets.ViewSet):
 
         default_nodes = DEFAULT_WORKFLOWS.get(phase, [])
 
+        created_nodes = []
         for idx, node_def in enumerate(default_nodes):
-            WorkflowNode.objects.create(
+            node = WorkflowNode.objects.create(
                 workflow=workflow,
                 code=node_def.code,
                 name=node_def.name,
                 node_type=node_def.node_type,
                 role=node_def.role,
                 review_level=node_def.review_level,
+                require_expert_review=node_def.require_expert_review,
                 scope=node_def.scope,
                 return_policy=node_def.return_policy,
-                allowed_reject_to=node_def.allowed_reject_to,
+                allowed_reject_to=[],
                 sort_order=idx,
                 is_active=True,
             )
+            created_nodes.append((idx, node, node_def))
+
+        index_to_id = {idx: node.id for idx, node, _ in created_nodes}
+        for _, node, node_def in created_nodes:
+            if not node_def.allowed_reject_to:
+                continue
+            mapped_ids = [
+                index_to_id[i]
+                for i in node_def.allowed_reject_to
+                if i in index_to_id
+            ]
+            if mapped_ids:
+                node.allowed_reject_to = mapped_ids
+                node.save(update_fields=["allowed_reject_to", "updated_at"])
 
         serializer = WorkflowConfigSerializer(workflow)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -218,6 +236,9 @@ class BatchWorkflowViewSet(viewsets.ViewSet):
         serializer.is_valid(raise_exception=True)
 
         node = serializer.save(workflow=workflow)
+        validation = WorkflowService.validate_workflow_nodes(workflow.id)
+        if not validation.get("valid"):
+            raise serializers.ValidationError({"detail": validation.get("errors", [])})
 
         result_serializer = WorkflowNodeSerializer(node)
         return Response(result_serializer.data, status=status.HTTP_201_CREATED)
@@ -265,12 +286,15 @@ class BatchWorkflowViewSet(viewsets.ViewSet):
         )
         serializer.is_valid(raise_exception=True)
         node = serializer.save()
+        validation = WorkflowService.validate_workflow_nodes(node.workflow_id)
+        if not validation.get("valid"):
+            raise serializers.ValidationError({"detail": validation.get("errors", [])})
 
         result_serializer = WorkflowNodeSerializer(node)
         return Response(result_serializer.data)
 
     def _delete_node(self, request, pk, phase, node_id):
-        """删除工作流节点（物理删除）"""
+        """删除工作流节点（软删除）"""
         batch = get_object_or_404(ProjectBatch, pk=pk)
         node = get_object_or_404(WorkflowNode, pk=node_id)
 
@@ -290,8 +314,14 @@ class BatchWorkflowViewSet(viewsets.ViewSet):
                 {"detail": "学生提交节点不可删除"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 物理删除节点，避免数据库残留
-        node.delete()
+        if ProjectPhaseInstance.objects.filter(current_node_id=node.id).exists():
+            return Response(
+                {"detail": "节点正在使用，无法删除"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        node.is_active = False
+        node.save(update_fields=["is_active", "updated_at"])
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -338,8 +368,32 @@ class BatchWorkflowViewSet(viewsets.ViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # 更新排序
         node_map = {node.id: node for node in nodes}
+        first_node = node_map.get(node_ids[0])
+        if not first_node or first_node.node_type != "SUBMIT":
+            return Response(
+                {"detail": "学生提交节点必须排在第一位"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        order_map = {node_id: idx for idx, node_id in enumerate(node_ids)}
+        for node_id in node_ids:
+            node = node_map.get(node_id)
+            if not node or not node.allowed_reject_to:
+                continue
+            for target_id in node.allowed_reject_to:
+                if target_id not in order_map:
+                    return Response(
+                        {"detail": "退回目标节点不存在，请先修正退回配置"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                if order_map[target_id] >= order_map[node_id]:
+                    return Response(
+                        {"detail": "退回目标必须为前序节点"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+        # 更新排序
         for idx, node_id in enumerate(node_ids):
             node = node_map.get(node_id)
             if node:

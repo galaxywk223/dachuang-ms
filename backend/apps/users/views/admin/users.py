@@ -63,7 +63,7 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         if expert_scope:
             queryset = queryset.filter(expert_scope=expert_scope)
 
-        if current_user.is_level2_admin:
+        if current_user.is_admin and not current_user.is_level1_admin:
             queryset = queryset.filter(role_fk__code=User.UserRole.EXPERT)
             if current_user.college:
                 queryset = queryset.filter(
@@ -123,11 +123,7 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         """
         创建用户
         """
-        if not (
-            request.user.is_superuser
-            or request.user.is_level1_admin
-            or request.user.is_level2_admin
-        ):
+        if not (request.user.is_superuser or request.user.is_admin):
             return Response(
                 {"code": 403, "message": "无权限创建用户"},
                 status=status.HTTP_403_FORBIDDEN,
@@ -136,10 +132,10 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         data = request.data.copy()
         data.setdefault("role", User.UserRole.STUDENT)
 
-        if request.user.is_level2_admin:
+        if request.user.is_admin and not request.user.is_level1_admin:
             if data.get("role") != User.UserRole.EXPERT:
                 return Response(
-                    {"code": 403, "message": "二级管理员仅可创建院级专家"},
+                    {"code": 403, "message": "非校级管理员仅可创建院级专家"},
                     status=status.HTTP_403_FORBIDDEN,
                 )
             if not request.user.college:
@@ -194,10 +190,10 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         """
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
-        if request.user.is_level2_admin:
+        if request.user.is_admin and not request.user.is_level1_admin:
             if not instance.is_expert:
                 return Response(
-                    {"code": 403, "message": "二级管理员仅可管理院级专家"},
+                    {"code": 403, "message": "非校级管理员仅可管理院级专家"},
                     status=status.HTTP_403_FORBIDDEN,
                 )
             if request.user.college and instance.college != request.user.college:
@@ -208,7 +204,7 @@ class AdminUserViewSet(viewsets.ModelViewSet):
 
         data = request.data.copy()
         password = data.pop("password", None)
-        if request.user.is_level2_admin:
+        if request.user.is_admin and not request.user.is_level1_admin:
             data["role"] = User.UserRole.EXPERT
             data["college"] = request.user.college
             data["expert_scope"] = User.ExpertScope.COLLEGE
@@ -237,10 +233,10 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         删除用户
         """
         instance = self.get_object()
-        if request.user.is_level2_admin:
+        if request.user.is_admin and not request.user.is_level1_admin:
             if not instance.is_expert:
                 return Response(
-                    {"code": 403, "message": "二级管理员仅可管理院级专家"},
+                    {"code": 403, "message": "非校级管理员仅可管理院级专家"},
                     status=status.HTTP_403_FORBIDDEN,
                 )
             if request.user.college and instance.college != request.user.college:
@@ -265,10 +261,10 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         启用/禁用用户
         """
         user = self.get_object()
-        if request.user.is_level2_admin:
+        if request.user.is_admin and not request.user.is_level1_admin:
             if not user.is_expert:
                 return Response(
-                    {"code": 403, "message": "二级管理员仅可管理院级专家"},
+                    {"code": 403, "message": "非校级管理员仅可管理院级专家"},
                     status=status.HTTP_403_FORBIDDEN,
                 )
             if request.user.college and user.college != request.user.college:
@@ -297,10 +293,10 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         重置用户密码
         """
         user = self.get_object()
-        if request.user.is_level2_admin:
+        if request.user.is_admin and not request.user.is_level1_admin:
             if not user.is_expert:
                 return Response(
-                    {"code": 403, "message": "二级管理员仅可管理院级专家"},
+                    {"code": 403, "message": "非校级管理员仅可管理院级专家"},
                     status=status.HTTP_403_FORBIDDEN,
                 )
             if request.user.college and user.college != request.user.college:
@@ -328,9 +324,7 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         """
         total_users = User.objects.count()
         student_count = User.objects.filter(role_fk__code="STUDENT").count()
-        admin_count = User.objects.filter(
-            role_fk__code__in=["LEVEL1_ADMIN", "LEVEL2_ADMIN"]
-        ).count()
+        admin_count = User.objects.filter(role_fk__code__endswith="_ADMIN").count()
 
         return Response(
             {
@@ -363,11 +357,11 @@ class AdminUserViewSet(viewsets.ModelViewSet):
             current_user = request.user
             default_college = None
 
-            # 二级管理员权限检查
-            if current_user.is_level2_admin:
+            # 非校级管理员权限检查
+            if current_user.is_admin and not current_user.is_level1_admin:
                 if role != User.UserRole.EXPERT:
                     return Response(
-                        {"code": 403, "message": "二级管理员仅可导入院级专家"},
+                        {"code": 403, "message": "非校级管理员仅可导入院级专家"},
                         status=status.HTTP_403_FORBIDDEN,
                     )
                 if not current_user.college:

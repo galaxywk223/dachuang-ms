@@ -22,9 +22,9 @@ class AchievementManagementViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = ProjectAchievement.objects.all().order_by("-created_at")
         
-        # 权限控制：二级管理员只能看到本学院项目的成果
+        # 权限控制：非校级管理员只能看到本学院项目的成果
         user = self.request.user
-        if user.is_level2_admin:
+        if user.is_admin and not user.is_level1_admin:
             queryset = queryset.filter(project__leader__college=user.college)
 
         # Search by project title or achievement title

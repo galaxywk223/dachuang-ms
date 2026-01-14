@@ -4,7 +4,6 @@ from .public.project import ProjectViewSet
 from .public.progress import ProjectProgressViewSet
 from .public.achievement import ProjectAchievementViewSet
 from .public.expenditure import ProjectExpenditureViewSet
-from .public.review import ProjectReviewViewSet
 from .public.changes import ProjectChangeRequestViewSet
 from .public.application import ProjectApplicationViewSet
 from .public.closure import ProjectClosureViewSet
@@ -17,7 +16,6 @@ __all__ = [
     "ProjectProgressViewSet",
     "ProjectAchievementViewSet",
     "ProjectExpenditureViewSet",
-    "ProjectReviewViewSet",
     "ProjectChangeRequestViewSet",
     "ProjectApplicationViewSet",
     "ProjectClosureViewSet",

@@ -55,7 +55,7 @@ class UserViewSet(viewsets.ModelViewSet):
         if search:
             filters["search"] = search
 
-        if current_user.is_level2_admin:
+        if current_user.is_admin and not current_user.is_level1_admin:
             filters["role"] = User.UserRole.EXPERT
             if current_user.college:
                 filters["college"] = current_user.college
@@ -132,10 +132,10 @@ class UserViewSet(viewsets.ModelViewSet):
         try:
             current_user = request.user
             default_college = None
-            if current_user.is_level2_admin:
+            if current_user.is_admin and not current_user.is_level1_admin:
                 if role != User.UserRole.EXPERT:
                     return Response(
-                        {"code": 403, "message": "二级管理员仅可导入院级专家"},
+                        {"code": 403, "message": "非校级管理员仅可导入院级专家"},
                         status=status.HTTP_403_FORBIDDEN,
                     )
                 if not current_user.college:

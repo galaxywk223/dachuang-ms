@@ -6,6 +6,11 @@ from django.db import transaction
 from django.utils import timezone
 from ..models import Project
 from apps.reviews.models import Review
+from apps.reviews.constants import (
+    REVIEW_LEVEL_LEVEL1,
+    REVIEW_LEVEL_LEVEL2,
+    REVIEW_LEVEL_TEACHER,
+)
 from apps.notifications.services import NotificationService
 
 
@@ -53,8 +58,8 @@ class BatchOperationService:
 
                 # 更新审核记录
                 review.status = Review.ReviewStatus.APPROVED
-                review.comment = comment
-                review.reviewed_by = reviewer
+                review.comments = comment
+                review.reviewer = reviewer
                 review.reviewed_at = timezone.now()
                 review.save()
 
@@ -112,8 +117,8 @@ class BatchOperationService:
                     continue
 
                 review.status = Review.ReviewStatus.REJECTED
-                review.comment = comment
-                review.reviewed_by = reviewer
+                review.comments = comment
+                review.reviewer = reviewer
                 review.reviewed_at = timezone.now()
                 review.save()
 
@@ -279,31 +284,31 @@ def _update_project_status_on_approve(project, review_type, review_level):
     审核通过后更新项目状态
     """
     if review_type == Review.ReviewType.APPLICATION:
-        if review_level == Review.ReviewLevel.TEACHER:
+        if review_level == REVIEW_LEVEL_TEACHER:
             project.status = Project.ProjectStatus.TEACHER_APPROVED
-        elif review_level == Review.ReviewLevel.LEVEL2:
+        elif review_level == REVIEW_LEVEL_LEVEL2:
             project.status = Project.ProjectStatus.COLLEGE_AUDITING
-        elif review_level == Review.ReviewLevel.LEVEL1:
+        elif review_level == REVIEW_LEVEL_LEVEL1:
             project.status = Project.ProjectStatus.IN_PROGRESS
 
     elif review_type == Review.ReviewType.TASK_BOOK:
-        if review_level == Review.ReviewLevel.TEACHER:
+        if review_level == REVIEW_LEVEL_TEACHER:
             project.status = Project.ProjectStatus.TASK_BOOK_APPROVED
-        elif review_level == Review.ReviewLevel.LEVEL2:
+        elif review_level == REVIEW_LEVEL_LEVEL2:
             project.status = Project.ProjectStatus.IN_PROGRESS
 
     elif review_type == Review.ReviewType.MID_TERM:
-        if review_level == Review.ReviewLevel.TEACHER:
+        if review_level == REVIEW_LEVEL_TEACHER:
             project.status = Project.ProjectStatus.MID_TERM_APPROVED
-        elif review_level == Review.ReviewLevel.LEVEL2:
+        elif review_level == REVIEW_LEVEL_LEVEL2:
             project.status = Project.ProjectStatus.READY_FOR_CLOSURE
 
     elif review_type == Review.ReviewType.CLOSURE:
-        if review_level == Review.ReviewLevel.TEACHER:
+        if review_level == REVIEW_LEVEL_TEACHER:
             project.status = Project.ProjectStatus.CLOSURE_LEVEL2_REVIEWING
-        elif review_level == Review.ReviewLevel.LEVEL2:
+        elif review_level == REVIEW_LEVEL_LEVEL2:
             project.status = Project.ProjectStatus.CLOSURE_LEVEL2_APPROVED
-        elif review_level == Review.ReviewLevel.LEVEL1:
+        elif review_level == REVIEW_LEVEL_LEVEL1:
             project.status = Project.ProjectStatus.CLOSED
 
     project.save()

@@ -20,10 +20,10 @@ class ProjectLevel2ExportMixin:
     @action(methods=["get"], detail=False, url_path="export-excel")
     def export_excel(self, request):
         """
-        批量导出项目数据为Excel（仅二级管理员）
+        批量导出项目数据为Excel（仅非校级管理员）
         """
         user = request.user
-        if not user.is_level2_admin:
+        if not user.is_admin or user.is_level1_admin:
             return Response(
                 {"code": 403, "message": "无权限导出数据"},
                 status=status.HTTP_403_FORBIDDEN,
@@ -104,10 +104,10 @@ class ProjectLevel2ExportMixin:
     @action(methods=["get"], detail=False, url_path="export-attachments")
     def export_attachments(self, request):
         """
-        批量下载项目附件为ZIP（仅二级管理员）
+        批量下载项目附件为ZIP（仅非校级管理员）
         """
         user = request.user
-        if not user.is_level2_admin:
+        if not user.is_admin or user.is_level1_admin:
             return Response(
                 {"code": 403, "message": "无权限下载附件"},
                 status=status.HTTP_403_FORBIDDEN,

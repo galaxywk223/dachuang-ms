@@ -3,17 +3,18 @@
 """
 
 from django.utils import timezone
+from decimal import Decimal
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.notifications.services import NotificationService
-from apps.projects.models import Project
-from apps.system_settings.services import SystemSettingService
+from apps.system_settings.services import SystemSettingService, AdminAssignmentService
 
 from ..models import Review
 from ..serializers import ReviewActionSerializer, ReviewSerializer
+from ..constants import REVIEW_LEVEL_LEVEL1
 from ..services import ReviewService
 
 
@@ -45,15 +46,13 @@ class ReviewViewSet(viewsets.ModelViewSet):
         # 学生只能看到自己项目的审核记录
         if user.is_student:
             queryset = queryset.filter(project__leader=user)
-        # 二级管理员只能看到本学院的审核记录
-        elif user.is_level2_admin:
-            queryset = queryset.filter(
-                project__leader__college=user.college,
-                review_level="LEVEL2",
+        elif user.is_admin:
+            query = ReviewService._build_admin_review_filter(user)
+            queryset = (
+                queryset.filter(query, is_expert_review=False)
+                if query
+                else queryset.none()
             )
-        # 一级管理员可以看到所有一级审核记录
-        elif user.is_level1_admin:
-            queryset = queryset.filter(review_level="LEVEL1")
         # 指导教师只能看到分配给自己的审核
         elif user.is_teacher:
             queryset = queryset.filter(
@@ -93,25 +92,15 @@ class ReviewViewSet(viewsets.ModelViewSet):
         review = self.get_object()
         user = request.user
 
-        if (
-            review.reviewer_id is None
-            and review.review_level
-            in ("LEVEL2", "LEVEL1")
-            and review.review_type
-            in (
-                Review.ReviewType.APPLICATION,
-                Review.ReviewType.MID_TERM,
-                Review.ReviewType.CLOSURE,
-            )
-            and (user.is_level2_admin or user.is_level1_admin)
-        ):
+        # 检查审核权限
+        try:
+            permitted = self.check_review_permission(review, user)
+        except ValueError as exc:
             return Response(
-                {"code": 400, "message": "该环节需先分配专家评审，管理员不能直接审核"},
+                {"code": 400, "message": str(exc)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        # 检查审核权限
-        if not self.check_review_permission(review, user):
+        if not permitted:
             return Response(
                 {"code": 403, "message": "无权限审核此项目"},
                 status=status.HTTP_403_FORBIDDEN,
@@ -137,6 +126,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         target_node_id = serializer.validated_data.get(
             "target_node_id"
         )  # 新增：退回目标节点ID
+        approved_budget = serializer.validated_data.get("approved_budget")
 
         if user.is_expert:
             ok, msg = SystemSettingService.check_window(
@@ -178,6 +168,31 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
         # 执行审核
         try:
+            if (
+                action_type == "approve"
+                and review.review_type == Review.ReviewType.APPLICATION
+                and review.review_level == REVIEW_LEVEL_LEVEL1
+            ):
+                if approved_budget in (None, ""):
+                    return Response(
+                        {"code": 400, "message": "请填写批准经费"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                try:
+                    approved_budget_val = Decimal(str(approved_budget))
+                except Exception:
+                    return Response(
+                        {"code": 400, "message": "批准经费格式不正确"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                if approved_budget_val < 0:
+                    return Response(
+                        {"code": 400, "message": "批准经费不能为负数"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                review.project.approved_budget = approved_budget_val
+                review.project.save(update_fields=["approved_budget", "updated_at"])
+
             if action_type == "approve":
                 result = ReviewService.approve_review(
                     review, user, comments, score, closure_rating, score_details
@@ -219,7 +234,14 @@ class ReviewViewSet(viewsets.ModelViewSet):
         review = self.get_object()
 
         # 检查权限
-        if not self.check_review_permission(review, request.user):
+        try:
+            permitted = self.check_review_permission(review, request.user)
+        except ValueError as exc:
+            return Response(
+                {"code": 400, "message": str(exc)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not permitted:
             return Response(
                 {"code": 403, "message": "无权限查看此审核的退回选项"},
                 status=status.HTTP_403_FORBIDDEN,
@@ -227,14 +249,17 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
         # 获取 phase_instance 和 current_node_id
         phase_instance = review.phase_instance
-        if not phase_instance or not phase_instance.current_node_id:
+        node_id = review.workflow_node_id or (
+            phase_instance.current_node_id if phase_instance else None
+        )
+        if not node_id:
             return Response(
                 {"code": 200, "message": "该审核记录未配置工作流节点", "data": []}
             )
 
         # 获取可退回的节点
         reject_targets = WorkflowService.get_reject_target_nodes(
-            phase_instance.current_node_id
+            node_id
         )
 
         # 转换为可序列化的格式
@@ -260,7 +285,14 @@ class ReviewViewSet(viewsets.ModelViewSet):
         review = self.get_object()
         user = request.user
 
-        if not self.check_review_permission(review, user):
+        try:
+            permitted = self.check_review_permission(review, user)
+        except ValueError as exc:
+            return Response(
+                {"code": 400, "message": str(exc)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not permitted:
             return Response(
                 {"code": 403, "message": "无权限修改此审核"},
                 status=status.HTTP_403_FORBIDDEN,
@@ -367,25 +399,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
         """
         user = request.user
 
-        if user.is_level2_admin:
-            # 二级管理员获取本学院待审核的项目
-            queryset = Review.objects.filter(
-                project__leader__college=user.college,
-                review_level="LEVEL2",
-                status=Review.ReviewStatus.PENDING,
-                reviewer__isnull=True,
-            )
-        elif user.is_level1_admin:
-            # 一级管理员获取待一级审核的项目
-            queryset = Review.objects.filter(
-                review_level="LEVEL1",
-                status=Review.ReviewStatus.PENDING,
-                reviewer__isnull=True,
-            )
-        else:
+        if not user.is_admin:
             return Response(
                 {"code": 403, "message": "无权限访问"}, status=status.HTTP_403_FORBIDDEN
             )
+        queryset = ReviewService.get_pending_reviews_for_admin(user)
 
         # 应用过滤和排序
         queryset = self.filter_queryset(queryset)
@@ -404,23 +422,21 @@ class ReviewViewSet(viewsets.ModelViewSet):
         """
         if review.reviewer_id:
             return review.reviewer_id == user.id
-        if review.review_level == "LEVEL2":
-            # 二级审核：必须是二级管理员且是同一学院
-            project_college = (
-                review.project.leader.college
-                if review.project and review.project.leader
-                else None
-            )
-            return user.is_level2_admin and user.college == project_college
-        elif review.review_level == "LEVEL1":
-            # 一级审核：必须是一级管理员
-            return user.is_level1_admin
-        elif review.review_level == "TEACHER":
+        if review.review_level == "TEACHER":
             # 导师审核：必须是该项目的导师
             # Check if user is in project advisors
             return (
                 user.is_teacher and review.project.advisors.filter(user=user).exists()
             )
+        if not review.workflow_node_id:
+            raise ValueError("审核记录未绑定工作流节点，无法解析管理员权限")
+        phase = ReviewService._get_phase_from_review_type(review.review_type)
+        if not phase:
+            raise ValueError("审核类型不支持管理员分配")
+        admin_user = AdminAssignmentService.resolve_admin_user(
+            review.project, phase, review.workflow_node
+        )
+        return admin_user.id == user.id
         return False
 
     @action(methods=["post"], detail=False, url_path="batch-review")
@@ -452,21 +468,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
         for review in Review.objects.filter(
             id__in=review_ids, status=Review.ReviewStatus.PENDING
         ):
-            if (
-                review.reviewer_id is None
-                and review.review_level
-                in ("LEVEL2", "LEVEL1")
-                and review.review_type
-                in (
-                    Review.ReviewType.APPLICATION,
-                    Review.ReviewType.MID_TERM,
-                    Review.ReviewType.CLOSURE,
-                )
-                and (request.user.is_level2_admin or request.user.is_level1_admin)
-            ):
-                failed.append({"id": review.id, "reason": "需先分配专家评审"})
+            try:
+                permitted = self.check_review_permission(review, request.user)
+            except ValueError as exc:
+                failed.append({"id": review.id, "reason": str(exc)})
                 continue
-            if not self.check_review_permission(review, request.user):
+            if not permitted:
                 failed.append({"id": review.id, "reason": "无权限"})
                 continue
             if request.user.is_expert:
@@ -522,9 +529,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
         二级管理员提交项目到一级审核
         """
         user = request.user
-        if not user.is_level2_admin:
+        if not user.is_admin:
             return Response(
-                {"code": 403, "message": "只有二级管理员可以提交到一级审核"},
+                {"code": 403, "message": "只有管理员可以提交审核"},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -534,43 +541,29 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 {"code": 400, "message": "请提供项目ID"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
+        review = ReviewService.get_pending_reviews_for_admin(user).filter(
+            project_id=project_id
+        ).first()
+        if not review:
+            return Response(
+                {"code": 404, "message": "未找到待审核记录或无权限"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
         try:
-            project = Project.objects.get(id=project_id, leader__college=user.college)
-
-            # 检查二级审核是否已通过
-            from ..models import Review
-
-            level2_passed = Review.objects.filter(
-                project=project,
-                review_type=Review.ReviewType.APPLICATION,
-                review_level="LEVEL2",
-                status=Review.ReviewStatus.APPROVED,
-            ).exists()
-            if not level2_passed:
-                return Response(
-                    {"code": 400, "message": "项目必须先通过二级审核"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            # 创建一级审核记录
-            review = ReviewService.create_level1_review(project)
-
-            # 更新项目状态
-            project.status = Project.ProjectStatus.LEVEL1_AUDITING
-            project.save(update_fields=["status"])
-
+            ReviewService.approve_review(review, user, "")
+        except ValueError as exc:
             return Response(
-                {
-                    "code": 200,
-                    "message": "已提交至一级管理员审核",
-                    "data": ReviewSerializer(review).data,
-                }
+                {"code": 400, "message": str(exc)},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        except Project.DoesNotExist:
-            return Response(
-                {"code": 404, "message": "项目不存在"}, status=status.HTTP_404_NOT_FOUND
-            )
+
+        return Response(
+            {
+                "code": 200,
+                "message": "已提交审核",
+                "data": ReviewSerializer(review).data,
+            }
+        )
 
     def _check_review_time_window(self, review):
         """
@@ -579,11 +572,14 @@ class ReviewViewSet(viewsets.ModelViewSet):
         from apps.system_settings.services.workflow_service import WorkflowService
 
         # 从工作流节点获取时间配置
-        if review.phase_instance and review.phase_instance.current_node_id:
+        node_id = review.workflow_node_id or (
+            review.phase_instance.current_node_id if review.phase_instance else None
+        )
+        if node_id:
             from apps.system_settings.models import WorkflowNode
 
             current_node = WorkflowNode.objects.filter(
-                id=review.phase_instance.current_node_id
+                id=node_id
             ).first()
 
             if current_node:

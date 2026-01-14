@@ -69,8 +69,8 @@ class ProjectViewSet(
         # 学生只能看到自己参与的项目
         if user.is_student:
             queryset = queryset.filter(Q(leader=user) | Q(members=user)).distinct()
-        # 二级管理员只能看到自己学院的项目
-        elif user.is_level2_admin:
+        # 非校级管理员只能看到自己学院的项目
+        elif user.is_admin and not user.is_level1_admin:
             queryset = queryset.filter(leader__college=user.college)
         # 一级管理员可以看到所有项目
         elif user.is_level1_admin:

@@ -28,7 +28,7 @@ class ReviewAssignmentViewSet(viewsets.ViewSet):
         }
         """
         user = request.user
-        if not (user.is_level1_admin or user.is_level2_admin):
+        if not user.is_admin:
             return Response(
                 {"message": "无权限分配评审任务"},
                 status=status.HTTP_403_FORBIDDEN,
@@ -36,50 +36,38 @@ class ReviewAssignmentViewSet(viewsets.ViewSet):
         project_ids = request.data.get('project_ids', [])
         group_id = request.data.get('group_id')
         review_type = request.data.get('review_type', Review.ReviewType.APPLICATION)
+        target_node_id = request.data.get("target_node_id")
         
         if not project_ids or not group_id:
-             return Response({"message": "Empty project_ids or group_id"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"message": "Empty project_ids or group_id"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         try:
             group = ExpertGroup.objects.get(pk=group_id)
         except ExpertGroup.DoesNotExist:
             return Response({"message": "Expert group not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        if group.scope == "SCHOOL":
-            if not user.is_level1_admin:
-                return Response(
-                    {"message": "无权限分配校级专家组评审任务"},
-                    status=status.HTTP_403_FORBIDDEN,
-                )
-        elif group.scope == "COLLEGE":
-            if not user.is_level2_admin:
-                return Response(
-                    {"message": "无权限分配院系专家组评审任务"},
-                    status=status.HTTP_403_FORBIDDEN,
-                )
-            if group.created_by and group.created_by.college and user.college:
-                if group.created_by.college != user.college:
-                    return Response(
-                        {"message": "无权限分配其他学院的专家组"},
-                        status=status.HTTP_403_FORBIDDEN,
-                    )
-        else:
+        if group.created_by_id != user.id:
             return Response(
-                {"message": "专家组级别无效"},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"message": "只能使用自己创建的专家组分配评审任务"},
+                status=status.HTTP_403_FORBIDDEN,
             )
 
-        review_level = (
-            "LEVEL1" if group.scope == "SCHOOL" else "LEVEL2"
-        )
+        review_level = request.data.get("review_level")
 
-        created = ReviewService.assign_project_to_group(
-            project_ids=project_ids,
-            group_id=group_id,
-            review_type=review_type,
-            review_level=review_level,
-            creator=request.user
-        )
+        try:
+            created = ReviewService.assign_project_to_group(
+                project_ids=project_ids,
+                group_id=group_id,
+                review_type=review_type,
+                review_level=review_level,
+                creator=request.user,
+                target_node_id=target_node_id,
+            )
+        except ValueError as exc:
+            return Response({"message": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         
         return Response({
             "message": f"Successfully assigned {len(created)} review tasks.",

@@ -34,7 +34,7 @@ class ProjectChangeRequestViewSet(viewsets.ModelViewSet):
             return queryset.filter(created_by=user)
         if user.is_teacher:
             return queryset.filter(project__advisors__user=user).distinct()
-        if user.is_level2_admin:
+        if user.is_admin and not user.is_level1_admin:
             return queryset.filter(project__leader__college=user.college)
         if user.is_level1_admin:
             return queryset
@@ -161,7 +161,7 @@ class ProjectChangeRequestViewSet(viewsets.ModelViewSet):
                 review_level=ProjectChangeReview.ReviewLevel.TEACHER,
                 status=ProjectChangeReview.ReviewStatus.PENDING,
             ).first()
-        if user.is_level2_admin:
+        if user.is_admin and not user.is_level1_admin:
             if change_request.project.leader.college != user.college:
                 return None
             return ProjectChangeReview.objects.filter(

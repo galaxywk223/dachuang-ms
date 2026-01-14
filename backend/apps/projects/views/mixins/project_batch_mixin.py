@@ -21,7 +21,7 @@ class ProjectBatchMixin:
         批量更新项目状态
         """
         user = request.user
-        if not (user.is_level1_admin or user.is_level2_admin):
+        if not user.is_admin:
             return Response(
                 {"code": 403, "message": "无权限操作"},
                 status=status.HTTP_403_FORBIDDEN,
@@ -47,7 +47,7 @@ class ProjectBatchMixin:
             )
 
         queryset = Project.objects.filter(id__in=project_ids)
-        if user.is_level2_admin:
+        if user.is_admin and not user.is_level1_admin:
             queryset = queryset.filter(leader__college=user.college)
 
         updated = queryset.update(status=target_status)

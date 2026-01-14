@@ -37,6 +37,8 @@ class ReviewSerializer(serializers.ModelSerializer):
             "review_type_display",
             "review_level",
             "review_level_display",
+            "workflow_node",
+            "is_expert_review",
             "reviewer",
             "reviewer_name",
             "status",
@@ -49,7 +51,13 @@ class ReviewSerializer(serializers.ModelSerializer):
             "created_at",
             "reviewed_at",
         ]
-        read_only_fields = ["id", "created_at", "reviewed_at"]
+        read_only_fields = [
+            "id",
+            "created_at",
+            "reviewed_at",
+            "workflow_node",
+            "is_expert_review",
+        ]
 
     def get_project_info(self, obj):
         request = self.context.get("request")
@@ -85,6 +93,13 @@ class ReviewActionSerializer(serializers.Serializer):
         required=False,
         default=list,  # type: ignore[arg-type]
         help_text="评分明细（模板评分项）",
+    )
+    approved_budget = serializers.DecimalField(
+        required=False,
+        allow_null=True,
+        max_digits=10,
+        decimal_places=2,
+        help_text="批准经费（立项审核需要）",
     )
     closure_rating = serializers.ChoiceField(
         choices=Review.ClosureRating.choices,

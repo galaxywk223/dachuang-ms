@@ -48,6 +48,14 @@ class Review(models.Model):
         related_name="reviews",
         verbose_name="关联阶段轮次",
     )
+    workflow_node = models.ForeignKey(
+        "system_settings.WorkflowNode",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="reviews",
+        verbose_name="关联工作流节点",
+    )
     review_type = models.CharField(
         max_length=20, choices=ReviewType.choices, verbose_name="审核类型"
     )
@@ -66,6 +74,9 @@ class Review(models.Model):
         null=True,
         blank=True,
         verbose_name="审核人",
+    )
+    is_expert_review = models.BooleanField(
+        default=False, verbose_name="是否专家评审任务"
     )
     status = models.CharField(
         max_length=20,
@@ -104,6 +115,10 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.project.project_no} - {self.get_review_type_display()} - {self.get_review_level_display()}"
+
+    def get_review_level_display(self):
+        """兼容旧接口：review_level 已改为动态值"""
+        return self.review_level or ""
 
 
 class ExpertGroup(models.Model):

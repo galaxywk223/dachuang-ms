@@ -217,7 +217,7 @@ class Project(models.Model):
         verbose_name="项目状态",
     )
 
-    # 项目排名（二级管理员可修改）
+    # 项目排名（管理员可修改）
     ranking = models.IntegerField(null=True, blank=True, verbose_name="项目排名")
 
     # 时间戳

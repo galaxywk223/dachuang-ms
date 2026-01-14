@@ -237,12 +237,18 @@ import { Search, RefreshLeft, Download } from "@element-plus/icons-vue";
 import { batchDownloadAttachments } from "@/api/projects/admin";
 import ProjectStatusBadge from "@/components/business/project/StatusBadge.vue";
 import request from "@/utils/request";
-import { getRejectTargetsByProject, type WorkflowNode } from "@/api/reviews";
+import {
+  getPendingReviews,
+  getRejectTargets,
+  type PendingReview,
+  type WorkflowNode,
+} from "@/api/reviews";
 
 defineOptions({ name: "Level2ClosureReviewView" });
 
 type ProjectRow = {
   id: number;
+  review_id?: number;
   title?: string;
   level_display?: string;
   category_display?: string;
@@ -259,11 +265,11 @@ type ProjectRow = {
 };
 
 type ListPayload = {
-  results?: ProjectRow[];
+  results?: PendingReview[];
   count?: number;
   total?: number;
   data?: {
-    results?: ProjectRow[];
+    results?: PendingReview[];
     count?: number;
     total?: number;
   };
@@ -307,15 +313,16 @@ const batchForm = ref({
 });
 
 
-const resolveList = (payload: unknown): ProjectRow[] => {
-  if (Array.isArray(payload)) return payload as ProjectRow[];
+const resolveList = (payload: unknown): PendingReview[] => {
+  if (Array.isArray(payload)) return payload as PendingReview[];
   if (!isRecord(payload)) return [];
   const typed = payload as ListPayload;
   if (Array.isArray(typed.results)) return typed.results ?? [];
   if (isRecord(typed.data) && Array.isArray(typed.data?.results)) {
     return typed.data?.results ?? [];
   }
-  if (Array.isArray(typed.data as ProjectRow[])) return typed.data as ProjectRow[];
+  if (Array.isArray(typed.data as PendingReview[]))
+    return typed.data as PendingReview[];
   return [];
 };
 
@@ -331,21 +338,32 @@ const resolveCount = (payload: unknown) => {
   return 0;
 };
 
+const buildProjectRows = (reviews: PendingReview[]): ProjectRow[] =>
+  reviews.map((review) => {
+    const projectInfo = isRecord(review.project_info)
+      ? (review.project_info as ProjectRow)
+      : ({} as ProjectRow);
+    return {
+      ...projectInfo,
+      id: (projectInfo.id as number) ?? review.project,
+      review_id: review.id,
+    };
+  });
+
 const fetchProjects = async () => {
   loading.value = true;
   try {
-    const projectRes = await request.get("/projects/", {
-      params: {
-        page: currentPage.value,
-        page_size: pageSize.value,
-        search: searchQuery.value,
-        status: "CLOSURE_LEVEL2_REVIEWING",
-        phase: "CLOSURE",
-      },
+    const reviewRes = await getPendingReviews({
+      page: currentPage.value,
+      page_size: pageSize.value,
+      search: searchQuery.value,
+      review_type: "CLOSURE",
     });
 
-    const data = isRecord(projectRes) && "data" in projectRes ? projectRes.data : projectRes;
-    projects.value = resolveList(data);
+    const data =
+      isRecord(reviewRes) && "data" in reviewRes ? reviewRes.data : reviewRes;
+    const reviews = resolveList(data);
+    projects.value = buildProjectRows(reviews);
     total.value = resolveCount(data) || projects.value.length;
     selectedRows.value = [];
   } catch {
@@ -390,9 +408,11 @@ const handleReject = async (row: ProjectRow) => {
 
   // 加载可退回节点
   try {
-    const res = await getRejectTargetsByProject(row.id);
-    if (res.code === 200) {
-      rejectTargets.value = res.data || [];
+    if (typeof row.review_id === "number") {
+      const res = await getRejectTargets(row.review_id);
+      if (res.code === 200) {
+        rejectTargets.value = res.data || [];
+      }
     }
   } catch (error) {
     console.error("获取退回节点失败", error);
@@ -509,8 +529,7 @@ const handleBatchDownload = async () => {
     } else {
       // For review page, we implicitly filter by 'type=closure' and current search
       params.search = searchQuery.value;
-      params.status = "CLOSURE_SUBMITTED"; // Or however getReviewProjects filters
-      // Wait, getReviewProjects uses type='closure'.
+      params.status = "CLOSURE_SUBMITTED";
       // batchDownloadAttachments expects project filters.
       // Admin Review List logic filters for closure statuses.
       // We should probably rely on IDs selection for safety in Review page, OR replicate filters.

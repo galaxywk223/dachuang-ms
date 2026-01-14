@@ -45,11 +45,12 @@ class ProjectManagementViewSet(
         """
         queryset = Project.objects.all().order_by("-created_at")
 
-        # 权限控制：二级管理员只能看到本学院的项目
+        # 权限控制：非校级管理员只能看到本学院的项目
         user = self.request.user
-        if user.is_level2_admin:
-            queryset = queryset.filter(leader__college=user.college)
-        elif not user.is_level1_admin:
+        if user.is_admin:
+            if not user.is_level1_admin:
+                queryset = queryset.filter(leader__college=user.college)
+        else:
             return Project.objects.none()
 
         # 搜索

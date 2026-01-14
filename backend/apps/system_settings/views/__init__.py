@@ -2,10 +2,11 @@
 系统设置视图
 """
 
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, serializers
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from django.db import transaction
 
 from apps.users.permissions import IsLevel1Admin
 from apps.projects.models import Project
@@ -15,6 +16,8 @@ from ..models import (
     ProjectBatch,
     WorkflowConfig,
     WorkflowNode,
+    PhaseScopeConfig,
+    AdminAssignment,
 )
 from ..serializers import (
     SystemSettingSerializer,
@@ -22,8 +25,11 @@ from ..serializers import (
     ProjectBatchSerializer,
     WorkflowConfigSerializer,
     WorkflowNodeSerializer,
+    PhaseScopeConfigSerializer,
+    AdminAssignmentSerializer,
 )
 from ..services import DEFAULT_SETTINGS, SystemSettingService
+from ..services.workflow_service import WorkflowService
 
 
 class SystemSettingViewSet(viewsets.ModelViewSet):
@@ -425,18 +431,25 @@ class WorkflowNodeViewSet(viewsets.ModelViewSet):
             return blocked
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        node = serializer.save()
+        validation = WorkflowService.validate_workflow_nodes(node.workflow_id)
+        if not validation.get("valid"):
+            raise serializers.ValidationError({"detail": validation.get("errors", [])})
         return Response({"code": 200, "message": "更新成功", "data": serializer.data})
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        node = serializer.save()
+        validation = WorkflowService.validate_workflow_nodes(node.workflow_id)
+        if not validation.get("valid"):
+            raise serializers.ValidationError({"detail": validation.get("errors", [])})
         return Response(
             {"code": 200, "message": "创建成功", "data": serializer.data},
             status=status.HTTP_201_CREATED,
         )
 
+    @transaction.atomic
     @action(detail=False, methods=["post"], url_path="reorder")
     def reorder(self, request):
         """
@@ -469,4 +482,60 @@ class WorkflowNodeViewSet(viewsets.ModelViewSet):
             if node.id in update_map:
                 node.sort_order = update_map[node.id]
                 node.save(update_fields=["sort_order", "updated_at"])
+        if nodes.exists():
+            validation = WorkflowService.validate_workflow_nodes(nodes.first().workflow_id)
+            if not validation.get("valid"):
+                raise serializers.ValidationError({"detail": validation.get("errors", [])})
         return Response({"code": 200, "message": "更新成功"})
+
+
+class PhaseScopeConfigViewSet(viewsets.ModelViewSet):
+    """
+    阶段数据范围配置
+    """
+
+    queryset = PhaseScopeConfig.objects.all()
+    serializer_class = PhaseScopeConfigSerializer
+    permission_classes = [IsLevel1Admin]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        batch_id = self.request.query_params.get("batch_id")
+        phase = self.request.query_params.get("phase")
+        if batch_id:
+            queryset = queryset.filter(batch_id=batch_id)
+        if phase:
+            queryset = queryset.filter(phase=phase)
+        return queryset
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
+
+
+class AdminAssignmentViewSet(viewsets.ModelViewSet):
+    """
+    管理员分配配置
+    """
+
+    queryset = AdminAssignment.objects.all()
+    serializer_class = AdminAssignmentSerializer
+    permission_classes = [IsLevel1Admin]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        batch_id = self.request.query_params.get("batch_id")
+        phase = self.request.query_params.get("phase")
+        if batch_id:
+            queryset = queryset.filter(batch_id=batch_id)
+        if phase:
+            queryset = queryset.filter(phase=phase)
+        return queryset
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)

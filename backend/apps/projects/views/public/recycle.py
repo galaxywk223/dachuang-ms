@@ -30,7 +30,7 @@ class ProjectRecycleBinViewSet(viewsets.ReadOnlyModelViewSet):
             return qs.filter(project__leader=user)
         if user.is_teacher:
             return qs.filter(project__advisors__user=user).distinct()
-        if user.is_level2_admin:
+        if user.is_admin and not user.is_level1_admin:
             return qs.filter(project__leader__college=user.college)
         if user.is_level1_admin:
             return qs

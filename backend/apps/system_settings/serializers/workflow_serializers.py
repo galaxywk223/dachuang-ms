@@ -29,6 +29,7 @@ class WorkflowNodeSerializer(serializers.ModelSerializer):
             "role_name",
             "role_code",
             "review_level",
+            "require_expert_review",
             "scope",
             "return_policy",
             "allowed_reject_to",
@@ -59,6 +60,7 @@ class WorkflowNodeCreateUpdateSerializer(serializers.ModelSerializer):
             "node_type",
             "role_fk",
             "review_level",
+            "require_expert_review",
             "scope",
             "return_policy",
             "allowed_reject_to",
@@ -82,6 +84,8 @@ class WorkflowNodeCreateUpdateSerializer(serializers.ModelSerializer):
                 )
             if attrs.get("allowed_reject_to"):
                 raise serializers.ValidationError("学生提交节点不允许退回")
+            if attrs.get("require_expert_review"):
+                raise serializers.ValidationError("学生提交节点不能启用专家评审")
 
         # 非学生节点不能使用学生角色
         if node_type != "SUBMIT" and role_fk:

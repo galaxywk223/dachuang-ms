@@ -35,8 +35,8 @@ class ProjectAchievementViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(
                 Q(project__leader=user) | Q(project__members=user)
             ).distinct()
-        # 二级管理员只能看到本学院项目的成果
-        elif user.is_level2_admin:
+        # 非校级管理员只能看到本学院项目的成果
+        elif user.is_admin and not user.is_level1_admin:
             queryset = queryset.filter(project__leader__college=user.college)
 
         return queryset

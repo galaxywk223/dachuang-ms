@@ -22,35 +22,24 @@ class ExpertGroupViewSet(viewsets.ModelViewSet):
         user = self.request.user
         queryset = super().get_queryset()
         
-        if user.is_level1_admin:
-            # 校级管理员管理校级专家组
-            return queryset.filter(scope="SCHOOL")
-        elif user.is_level2_admin:
-             # 院级管理员管理本院专家组 (created_by handles college implication usually, or we filter by creator)
-             # Better: Filter by scope COLLEGE and created_by college (if we had college field, but created_by is proxy)
-             return queryset.filter(scope="COLLEGE", created_by__college=user.college)
+        if user.is_admin:
+            return queryset.filter(created_by=user)
         elif user.is_expert:
             # 专家只能看自己在的组? Or generic access? Let's say experts only see groups they are in if needed.
-             return queryset.filter(members=user)
+            return queryset.filter(members=user)
         return queryset.none()
 
     def perform_create(self, serializer):
         user = self.request.user
-        if user.is_level1_admin:
-            scope = "SCHOOL"
-        elif user.is_level2_admin:
-            scope = "COLLEGE"
-        else:
+        if not user.is_admin:
             raise PermissionDenied("无权限创建专家组")
+        scope = "SCHOOL" if user.is_level1_admin else "COLLEGE"
         serializer.save(created_by=user, scope=scope)
 
     def perform_update(self, serializer):
         user = self.request.user
-        if not (user.is_level1_admin or user.is_level2_admin):
+        if not user.is_admin:
             raise PermissionDenied("无权限修改专家组")
-        if user.is_level1_admin and serializer.instance.scope != "SCHOOL":
-            raise PermissionDenied("无权限修改该专家组")
-        if user.is_level2_admin and serializer.instance.scope != "COLLEGE":
+        if serializer.instance.created_by_id != user.id:
             raise PermissionDenied("无权限修改该专家组")
         serializer.save()
-

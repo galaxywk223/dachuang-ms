@@ -31,15 +31,13 @@ class AuthViewSet(viewsets.GenericViewSet):
         """
         用户登录
         """
-        # 添加调试日志
         import logging
 
         logger = logging.getLogger(__name__)
-        logger.info(f"Login request data: {request.data}")
 
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            logger.error(f"Serializer errors: {serializer.errors}")
+            logger.error("Login serializer errors: %s", serializer.errors)
         serializer.is_valid(raise_exception=True)
 
         user = serializer.validated_data["user"]
