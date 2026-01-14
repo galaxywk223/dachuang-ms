@@ -10,7 +10,6 @@ from ..models import (
     ProjectBatch,
     WorkflowConfig,
     WorkflowNode,
-    PhaseScopeConfig,
     AdminAssignment,
 )
 
@@ -188,34 +187,11 @@ class WorkflowConfigSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_at", "updated_at", "updated_by"]
 
 
-class PhaseScopeConfigSerializer(serializers.ModelSerializer):
-    created_by_name = serializers.CharField(
-        source="created_by.real_name", read_only=True
-    )
-
-    class Meta:
-        model = PhaseScopeConfig
-        fields = [
-            "id",
-            "batch",
-            "phase",
-            "scope_type",
-            "created_by",
-            "created_by_name",
-            "updated_by",
-            "created_at",
-            "updated_at",
-        ]
-        read_only_fields = ["id", "created_at", "updated_at", "created_by", "updated_by"]
-
-
 class AdminAssignmentSerializer(serializers.ModelSerializer):
     admin_user_name = serializers.CharField(
         source="admin_user.real_name", read_only=True
     )
-    workflow_name = serializers.CharField(
-        source="workflow_node.name", read_only=True
-    )
+    workflow_name = serializers.CharField(source="workflow_node.name", read_only=True)
 
     class Meta:
         model = AdminAssignment
@@ -233,7 +209,13 @@ class AdminAssignmentSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "created_at", "updated_at", "created_by", "updated_by"]
+        read_only_fields = [
+            "id",
+            "created_at",
+            "updated_at",
+            "created_by",
+            "updated_by",
+        ]
 
     def validate(self, attrs):
         instance = getattr(self, "instance", None)
@@ -263,12 +245,8 @@ class AdminAssignmentSerializer(serializers.ModelSerializer):
         if not role_code or not role_code.endswith("_ADMIN"):
             raise serializers.ValidationError("管理员用户必须为管理员角色")
 
-        scope_config = PhaseScopeConfig.objects.filter(batch=batch, phase=phase).first()
-        if not scope_config:
-            raise serializers.ValidationError("请先配置阶段数据范围")
-        if scope_config.scope_type == PhaseScopeConfig.ScopeType.KEY_FIELD:
-            if str(scope_value) not in ("0", "1"):
-                raise serializers.ValidationError("重点领域维度值必须为0或1")
+        # 旧的 PhaseScopeConfig 校验已删除
+        # 现在通过角色的 scope_dimension 和用户的 managed_scope_value 自动解析
 
         qs = AdminAssignment.objects.filter(
             batch=batch,

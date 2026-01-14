@@ -60,6 +60,19 @@ class Role(models.Model):
     permissions = models.ManyToManyField(
         Permission, blank=True, related_name="roles", verbose_name="权限列表"
     )
+    scope_dimension = models.CharField(
+        max_length=50,
+        choices=[
+            ("COLLEGE", "学院"),
+            ("PROJECT_CATEGORY", "项目类别"),
+            ("PROJECT_LEVEL", "项目级别"),
+            ("KEY_FIELD", "重点领域"),
+        ],
+        null=True,
+        blank=True,
+        verbose_name="数据范围维度",
+        help_text="管理员角色的数据范围维度。非管理员角色留空。",
+    )
     is_system = models.BooleanField(
         default=False, verbose_name="是否系统内置", help_text="系统内置角色不可删除"
     )
@@ -102,7 +115,6 @@ class User(AbstractUser):
         LEVEL2_ADMIN = "LEVEL2_ADMIN", "二级管理员"
         LEVEL1_ADMIN = "LEVEL1_ADMIN", "一级管理员"
         TEACHER = "TEACHER", "指导教师"
-        EXPERT = "EXPERT", "评审专家"
 
     class ExpertScope(models.TextChoices):
         SCHOOL = "SCHOOL", "校级专家"
@@ -149,6 +161,15 @@ class User(AbstractUser):
         default=ExpertScope.COLLEGE,
         verbose_name="专家级别",
     )
+    managed_scope_value = models.ForeignKey(
+        "dictionaries.DictionaryItem",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="managed_by_users",
+        verbose_name="管理范围值",
+        help_text="管理员用户负责的维度值（如学院、项目类别等）。对应角色的 scope_dimension。",
+    )
 
     # 扩展字段
     avatar = models.ImageField(
@@ -188,16 +209,14 @@ class User(AbstractUser):
     def is_level2_admin(self):
         """向后兼容的角色判断"""
         return (
-            self.role_fk is not None
-            and self.role_fk.code == self.UserRole.LEVEL2_ADMIN
+            self.role_fk is not None and self.role_fk.code == self.UserRole.LEVEL2_ADMIN
         )
 
     @property
     def is_level1_admin(self):
         """向后兼容的角色判断"""
         return (
-            self.role_fk is not None
-            and self.role_fk.code == self.UserRole.LEVEL1_ADMIN
+            self.role_fk is not None and self.role_fk.code == self.UserRole.LEVEL1_ADMIN
         )
 
     @property
@@ -210,11 +229,6 @@ class User(AbstractUser):
     def is_teacher(self):
         """向后兼容的角色判断"""
         return self.role_fk is not None and self.role_fk.code == self.UserRole.TEACHER
-
-    @property
-    def is_expert(self):
-        """向后兼容的角色判断"""
-        return self.role_fk is not None and self.role_fk.code == self.UserRole.EXPERT
 
 
 class LoginLog(models.Model):

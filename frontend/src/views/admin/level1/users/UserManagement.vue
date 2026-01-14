@@ -5,7 +5,9 @@
         <div class="card-header">
           <div class="header-left">
             <span class="header-title">用户管理</span>
-            <el-tag type="info" size="small" effect="plain">共 {{ total }} 项</el-tag>
+            <el-tag type="info" size="small" effect="plain"
+              >共 {{ total }} 项</el-tag
+            >
           </div>
           <div class="header-actions">
             <el-button type="primary" @click="openCreateDialog">
@@ -29,7 +31,9 @@
               clearable
               @keyup.enter="handleSearch"
             >
-              <template #prefix><el-icon><Search /></el-icon></template>
+              <template #prefix
+                ><el-icon><Search /></el-icon
+              ></template>
             </el-input>
           </el-form-item>
 
@@ -86,7 +90,12 @@
         </el-form>
       </div>
 
-      <el-table v-loading="loading" :data="tableData" stripe style="width: 100%">
+      <el-table
+        v-loading="loading"
+        :data="tableData"
+        stripe
+        style="width: 100%"
+      >
         <el-table-column prop="employee_id" label="学号/工号" width="140" />
         <el-table-column prop="real_name" label="姓名" width="120" />
         <el-table-column label="角色" width="160">
@@ -110,11 +119,28 @@
         </el-table-column>
         <el-table-column label="操作" fixed="right" min-width="200">
           <template #default="{ row }">
-            <el-button link type="primary" size="small" @click="openEditDialog(row)">编辑</el-button>
-            <el-button link type="warning" size="small" @click="handleToggleStatus(row)">
+            <el-button
+              link
+              type="primary"
+              size="small"
+              @click="openEditDialog(row)"
+              >编辑</el-button
+            >
+            <el-button
+              link
+              type="warning"
+              size="small"
+              @click="handleToggleStatus(row)"
+            >
               {{ row.is_active ? "禁用" : "激活" }}
             </el-button>
-            <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+            <el-button
+              link
+              type="danger"
+              size="small"
+              @click="handleDelete(row)"
+              >删除</el-button
+            >
           </template>
         </el-table-column>
       </el-table>
@@ -159,7 +185,11 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="角色" prop="role">
-              <el-select v-model="formData.role" placeholder="选择角色" filterable>
+              <el-select
+                v-model="formData.role"
+                placeholder="选择角色"
+                filterable
+              >
                 <el-option
                   v-for="role in roleOptions"
                   :key="role.code"
@@ -171,12 +201,19 @@
           </el-col>
           <el-col :span="12" v-if="!isEditMode">
             <el-form-item label="密码" prop="password">
-              <el-input v-model="formData.password" show-password placeholder="默认 123456" />
+              <el-input
+                v-model="formData.password"
+                show-password
+                placeholder="默认 123456"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="12" v-if="isExpertRole">
             <el-form-item label="专家级别" prop="expert_scope">
-              <el-select v-model="formData.expert_scope" placeholder="选择专家级别">
+              <el-select
+                v-model="formData.expert_scope"
+                placeholder="选择专家级别"
+              >
                 <el-option label="院级专家" value="COLLEGE" />
                 <el-option label="校级专家" value="SCHOOL" />
               </el-select>
@@ -199,6 +236,27 @@
                   :value="item.value"
                 />
               </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12" v-if="isAdminRole">
+            <el-form-item label="管理范围" prop="managed_scope_value">
+              <el-select
+                v-model="formData.managed_scope_value"
+                placeholder="请选择管理范围"
+                clearable
+                filterable
+                style="width: 100%"
+              >
+                <el-option
+                  v-for="item in scopeValueOptions"
+                  :key="item.id"
+                  :label="item.label"
+                  :value="item.id"
+                />
+              </el-select>
+              <div class="form-hint">
+                根据角色的数据范围维度选择具体负责的维度值（如学院、项目类别等）
+              </div>
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -236,7 +294,11 @@
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="formDialogVisible = false">取消</el-button>
-          <el-button type="primary" :loading="submitLoading" @click="handleSubmit">
+          <el-button
+            type="primary"
+            :loading="submitLoading"
+            @click="handleSubmit"
+          >
             {{ isEditMode ? "保存修改" : "确认添加" }}
           </el-button>
         </div>
@@ -252,7 +314,11 @@
     >
       <el-form :model="importForm" label-width="90px">
         <el-form-item label="角色">
-          <el-select v-model="importForm.role" placeholder="选择角色" filterable>
+          <el-select
+            v-model="importForm.role"
+            placeholder="选择角色"
+            filterable
+          >
             <el-option
               v-for="role in roleOptions"
               :key="role.code"
@@ -262,7 +328,10 @@
           </el-select>
         </el-form-item>
         <el-form-item label="专家级别" v-if="importForm.role === 'EXPERT'">
-          <el-select v-model="importForm.expert_scope" placeholder="选择专家级别">
+          <el-select
+            v-model="importForm.expert_scope"
+            placeholder="选择专家级别"
+          >
             <el-option label="院级专家" value="COLLEGE" />
             <el-option label="校级专家" value="SCHOOL" />
           </el-select>
@@ -278,7 +347,9 @@
             accept=".xlsx,.xls"
           >
             <el-icon><UploadFilled /></el-icon>
-            <div class="el-upload__text">将文件拖到此处，或 <em>点击上传</em></div>
+            <div class="el-upload__text">
+              将文件拖到此处，或 <em>点击上传</em>
+            </div>
             <template #tip>
               <div class="upload-tip">只能上传 xlsx/xls 文件，且不超过 5MB</div>
             </template>
@@ -288,7 +359,11 @@
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="importDialogVisible = false">取消</el-button>
-          <el-button type="primary" :loading="importLoading" @click="handleImport">
+          <el-button
+            type="primary"
+            :loading="importLoading"
+            @click="handleImport"
+          >
             开始导入
           </el-button>
         </div>
@@ -310,7 +385,13 @@ import {
   importUsers,
 } from "@/api/users/admin";
 import { getRoleSimpleList } from "@/api/users/roles";
-import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadFile } from "element-plus";
+import {
+  ElMessage,
+  ElMessageBox,
+  type FormInstance,
+  type FormRules,
+  type UploadFile,
+} from "element-plus";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionaries";
 
@@ -328,7 +409,12 @@ type UserRow = {
   employee_id: string;
   real_name: string;
   role?: string;
-  role_info?: { id: number; code: string; name: string; default_route?: string };
+  role_info?: {
+    id: number;
+    code: string;
+    name: string;
+    default_route?: string;
+  };
   college?: string;
   department?: string;
   title?: string;
@@ -348,11 +434,15 @@ const normalizeList = (res: unknown) => {
   if (res.code === 200 && isRecord(res.data)) {
     const data = res.data as Record<string, unknown>;
     const results = (data.results as UserRow[]) || [];
-    const total = (data.count as number) ?? (data.total as number) ?? results.length;
+    const total =
+      (data.count as number) ?? (data.total as number) ?? results.length;
     return { results, total };
   }
   if (Array.isArray(res.results)) {
-    return { results: res.results as UserRow[], total: (res.count as number) ?? res.results.length };
+    return {
+      results: res.results as UserRow[],
+      total: (res.count as number) ?? res.results.length,
+    };
   }
   return { results: [], total: 0 };
 };
@@ -377,6 +467,10 @@ const roleMap = computed(() => {
   return map;
 });
 
+const scopeValueOptions = ref<{ id: number; label: string; value: string }[]>(
+  []
+);
+
 const { loadDictionaries, getOptions, getLabel } = useDictionary();
 const collegeOptions = computed(() => getOptions(DICT_CODES.COLLEGE));
 
@@ -394,6 +488,7 @@ const formData = reactive({
   role: "",
   password: "123456",
   expert_scope: "COLLEGE",
+  managed_scope_value: null as number | null,
   college: "",
   department: "",
   title: "",
@@ -410,6 +505,59 @@ const importForm = reactive({
 });
 
 const isExpertRole = computed(() => formData.role === "EXPERT");
+const isAdminRole = computed(() => {
+  const role = roleOptions.value.find((r) => r.code === formData.role);
+  return role?.code?.endsWith("_ADMIN") || false;
+});
+
+// 监听角色变化，加载对应的管理范围选项
+watch(
+  () => formData.role,
+  async (newRole) => {
+    if (!newRole || !isAdminRole.value) {
+      scopeValueOptions.value = [];
+      formData.managed_scope_value = null;
+      return;
+    }
+
+    try {
+      // 获取角色详情以获取 scope_dimension
+      const roleDetail = roleOptions.value.find(
+        (r) => r.code === newRole
+      ) as any;
+      if (!roleDetail || !roleDetail.scope_dimension) {
+        scopeValueOptions.value = [];
+        return;
+      }
+
+      const scopeDimension = roleDetail.scope_dimension;
+
+      // 根据 scope_dimension 加载对应的字典项
+      let dictCode = "";
+      if (scopeDimension === "COLLEGE") {
+        dictCode = DICT_CODES.COLLEGE;
+      } else if (scopeDimension === "PROJECT_CATEGORY") {
+        dictCode = DICT_CODES.PROJECT_CATEGORY;
+      } else if (scopeDimension === "PROJECT_LEVEL") {
+        dictCode = DICT_CODES.PROJECT_LEVEL;
+      } else if (scopeDimension === "KEY_FIELD") {
+        dictCode = "key_field"; // 需要确认实际的字典代码
+      }
+
+      if (dictCode) {
+        const options = getOptions(dictCode);
+        scopeValueOptions.value = options.map((opt: any) => ({
+          id: opt.id,
+          label: opt.label,
+          value: opt.value,
+        }));
+      }
+    } catch (error) {
+      console.error("加载管理范围选项失败:", error);
+      scopeValueOptions.value = [];
+    }
+  }
+);
 
 const formRules: FormRules = {
   employee_id: [
@@ -423,7 +571,8 @@ const formRules: FormRules = {
       validator: (_rule, value, callback) => {
         if (isEditMode.value) return callback();
         if (!value) return callback(new Error("请输入密码"));
-        if (String(value).length < 6) return callback(new Error("密码至少 6 位"));
+        if (String(value).length < 6)
+          return callback(new Error("密码至少 6 位"));
         return callback();
       },
       trigger: "blur",
@@ -530,6 +679,7 @@ const openEditDialog = (row: UserRow) => {
   formData.real_name = row.real_name || "";
   formData.role = row.role_info?.code || row.role || "";
   formData.expert_scope = row.expert_scope || "COLLEGE";
+  formData.managed_scope_value = (row as any).managed_scope_value || null;
   formData.college = row.college || "";
   formData.department = row.department || "";
   formData.title = row.title || "";
@@ -547,6 +697,7 @@ const resetForm = () => {
   formData.role = "";
   formData.password = "123456";
   formData.expert_scope = "COLLEGE";
+  formData.managed_scope_value = null;
   formData.college = "";
   formData.department = "";
   formData.title = "";
@@ -567,6 +718,7 @@ const handleSubmit = async () => {
       real_name: formData.real_name,
       role: formData.role,
       expert_scope: formData.expert_scope,
+      managed_scope_value: formData.managed_scope_value,
       college: formData.college,
       department: formData.department,
       title: formData.title,

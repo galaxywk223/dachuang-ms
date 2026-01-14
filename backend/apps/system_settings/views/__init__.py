@@ -16,7 +16,6 @@ from ..models import (
     ProjectBatch,
     WorkflowConfig,
     WorkflowNode,
-    PhaseScopeConfig,
     AdminAssignment,
 )
 from ..serializers import (
@@ -25,7 +24,6 @@ from ..serializers import (
     ProjectBatchSerializer,
     WorkflowConfigSerializer,
     WorkflowNodeSerializer,
-    PhaseScopeConfigSerializer,
     AdminAssignmentSerializer,
 )
 from ..services import DEFAULT_SETTINGS, SystemSettingService
@@ -483,36 +481,14 @@ class WorkflowNodeViewSet(viewsets.ModelViewSet):
                 node.sort_order = update_map[node.id]
                 node.save(update_fields=["sort_order", "updated_at"])
         if nodes.exists():
-            validation = WorkflowService.validate_workflow_nodes(nodes.first().workflow_id)
+            validation = WorkflowService.validate_workflow_nodes(
+                nodes.first().workflow_id
+            )
             if not validation.get("valid"):
-                raise serializers.ValidationError({"detail": validation.get("errors", [])})
+                raise serializers.ValidationError(
+                    {"detail": validation.get("errors", [])}
+                )
         return Response({"code": 200, "message": "更新成功"})
-
-
-class PhaseScopeConfigViewSet(viewsets.ModelViewSet):
-    """
-    阶段数据范围配置
-    """
-
-    queryset = PhaseScopeConfig.objects.all()
-    serializer_class = PhaseScopeConfigSerializer
-    permission_classes = [IsLevel1Admin]
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        batch_id = self.request.query_params.get("batch_id")
-        phase = self.request.query_params.get("phase")
-        if batch_id:
-            queryset = queryset.filter(batch_id=batch_id)
-        if phase:
-            queryset = queryset.filter(phase=phase)
-        return queryset
-
-    def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user, updated_by=self.request.user)
-
-    def perform_update(self, serializer):
-        serializer.save(updated_by=self.request.user)
 
 
 class AdminAssignmentViewSet(viewsets.ModelViewSet):

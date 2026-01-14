@@ -129,7 +129,7 @@ class ExpertGroup(models.Model):
     name = models.CharField(max_length=100, verbose_name="专家组名称")
     members = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
-        limit_choices_to={"role_fk__code": "EXPERT"},
+        limit_choices_to={"role_fk__code": "TEACHER"},
         related_name="expert_groups",
         verbose_name="专家成员",
     )

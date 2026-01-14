@@ -76,7 +76,7 @@ class UserRepository:
             "role_info": role_info,
             "permissions": permissions,
             "default_route": default_route,
-            "expert_scope": user.expert_scope if user.is_expert else None,
+            "expert_scope": user.expert_scope if user.is_teacher else None,
             "college": user.college,
             "department": user.department,
             "phone": user.phone,

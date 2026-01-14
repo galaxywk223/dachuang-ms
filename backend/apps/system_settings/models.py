@@ -224,7 +224,6 @@ class WorkflowNode(models.Model):
         TEACHER = "TEACHER", "导师"
         LEVEL2_ADMIN = "LEVEL2_ADMIN", "二级管理员"
         LEVEL1_ADMIN = "LEVEL1_ADMIN", "一级管理员"
-        EXPERT = "EXPERT", "专家"
 
     class ReturnPolicy(models.TextChoices):
         NONE = "NONE", "不允许退回"
@@ -318,59 +317,6 @@ class WorkflowNode(models.Model):
         return self.role if self.role else None
 
 
-class PhaseScopeConfig(models.Model):
-    """
-    阶段数据范围配置（按批次/阶段）
-    """
-
-    class ScopeType(models.TextChoices):
-        COLLEGE = "COLLEGE", "学院"
-        PROJECT_CATEGORY = "PROJECT_CATEGORY", "项目类别"
-        PROJECT_LEVEL = "PROJECT_LEVEL", "项目级别"
-        KEY_FIELD = "KEY_FIELD", "重点领域"
-
-    batch = models.ForeignKey(
-        ProjectBatch,
-        on_delete=models.CASCADE,
-        related_name="phase_scopes",
-        verbose_name="所属批次",
-    )
-    phase = models.CharField(
-        max_length=20, choices=WorkflowConfig.Phase.choices, verbose_name="流程阶段"
-    )
-    scope_type = models.CharField(
-        max_length=50, choices=ScopeType.choices, verbose_name="数据范围维度"
-    )
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="created_phase_scopes",
-        verbose_name="创建人",
-    )
-    updated_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="updated_phase_scopes",
-        verbose_name="更新人",
-    )
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
-
-    class Meta:
-        db_table = "phase_scope_configs"
-        verbose_name = "阶段数据范围配置"
-        verbose_name_plural = verbose_name
-        unique_together = ("batch", "phase")
-        ordering = ["-created_at"]
-
-    def __str__(self):
-        return f"{self.batch.name}-{self.phase}:{self.scope_type}"
-
-
 class AdminAssignment(models.Model):
     """
     管理员分配（按批次/阶段/节点/维度值）
@@ -431,4 +377,6 @@ class AdminAssignment(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"{self.batch.name}-{self.phase}:{self.workflow_node_id}-{self.scope_value}"
+        return (
+            f"{self.batch.name}-{self.phase}:{self.workflow_node_id}-{self.scope_value}"
+        )

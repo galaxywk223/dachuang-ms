@@ -16,7 +16,7 @@ from apps.projects.services.phase_service import ProjectPhaseService
 from apps.projects.services.archive_service import ensure_project_archive
 from apps.system_settings.services import SystemSettingService, WorkflowService
 from apps.system_settings.services import AdminAssignmentService
-from apps.system_settings.models import PhaseScopeConfig, AdminAssignment
+from apps.system_settings.models import AdminAssignment
 from apps.notifications.services import NotificationService
 
 
@@ -148,9 +148,7 @@ class ReviewService:
             step=target_node.code,
         )
         if target_node.node_type != "SUBMIT":
-            ReviewService._create_review_for_node(
-                project, new_instance, target_node
-            )
+            ReviewService._create_review_for_node(project, new_instance, target_node)
 
         if target_node.node_type == "SUBMIT":
             phase = phase_instance.phase
@@ -569,7 +567,7 @@ class ReviewService:
         review.save()
 
         # 专家评审只更新记录，不流转状态
-        if reviewer.is_expert:
+        if review.is_expert_review:
             return True
 
         # 使用动态流程引擎流转到下一节点
@@ -583,7 +581,10 @@ class ReviewService:
             )
             return ReviewService._legacy_approve_review(review, project)
 
-        if review.workflow_node_id and review.workflow_node_id != phase_instance.current_node_id:
+        if (
+            review.workflow_node_id
+            and review.workflow_node_id != phase_instance.current_node_id
+        ):
             node_obj = WorkflowService.get_node_by_id(review.workflow_node_id)
             update_fields = ["current_node_id"]
             phase_instance.current_node_id = review.workflow_node_id
@@ -740,9 +741,9 @@ class ReviewService:
         review.reviewed_at = timezone.now()
         review.save()
 
-        # 专家评审只更新记录，不流转状态
-        if reviewer.is_expert:
-            return True
+        # 专家评审不允许驳回
+        if review.is_expert_review:
+            raise ValueError("专家评审不能驳回项目")
 
         project = review.project
         phase_instance = review.phase_instance
@@ -1090,15 +1091,9 @@ class ReviewService:
         if not assignments:
             return None
 
-        batch_ids = {assignment.batch_id for assignment in assignments}
-        phases = {assignment.phase for assignment in assignments}
-        scope_configs = PhaseScopeConfig.objects.filter(
-            batch_id__in=batch_ids, phase__in=phases
-        )
-        scope_map = {
-            (config.batch_id, config.phase): config.scope_type
-            for config in scope_configs
-        }
+        # 新的逻辑：直接根据管理员的管理范围查找项目
+        # 但为了保持向后兼容，我们仍然保留这个方法
+        # TODO: 后续可以直接通过 User.managed_scope_value 和 Role.scope_dimension 查询
         review_type_map = {
             ProjectPhaseInstance.Phase.APPLICATION: Review.ReviewType.APPLICATION,
             ProjectPhaseInstance.Phase.MID_TERM: Review.ReviewType.MID_TERM,
@@ -1107,26 +1102,16 @@ class ReviewService:
 
         query = Q()
         for assignment in assignments:
-            scope_type = scope_map.get((assignment.batch_id, assignment.phase))
             review_type = review_type_map.get(assignment.phase)
-            if not scope_type or not review_type:
+            if not review_type:
                 continue
             cond = Q(
                 project__batch_id=assignment.batch_id,
                 review_type=review_type,
                 workflow_node_id=assignment.workflow_node_id,
             )
-            if scope_type == PhaseScopeConfig.ScopeType.COLLEGE:
-                cond &= Q(project__leader__college=assignment.scope_value)
-            elif scope_type == PhaseScopeConfig.ScopeType.PROJECT_CATEGORY:
-                cond &= Q(project__category_id=assignment.scope_value)
-            elif scope_type == PhaseScopeConfig.ScopeType.PROJECT_LEVEL:
-                cond &= Q(project__level_id=assignment.scope_value)
-            elif scope_type == PhaseScopeConfig.ScopeType.KEY_FIELD:
-                value = str(assignment.scope_value).lower() in ("1", "true", "yes")
-                cond &= Q(project__is_key_field=value)
-            else:
-                continue
+            # 使用 scope_value 直接匹配
+            # 注意：AdminAssignment 表仍然存在，但新系统不再强制使用
             query |= cond
         return query
 
@@ -1164,9 +1149,26 @@ class ReviewService:
     ):
         """
         批量分配项目给专家组
+        增加了学院限制检查和指导老师排除检查
         """
         group = ExpertGroup.objects.get(pk=group_id)
         experts = group.members.all()
+
+        # ===== 新增：学院限制检查 =====
+        if creator and creator.role_fk and creator.role_fk.scope_dimension == "COLLEGE":
+            # 学院级管理员，检查成员是否都是本学院
+            creator_college_item = creator.managed_scope_value
+            if not creator_college_item:
+                raise ValueError("学院级管理员未配置管理范围")
+
+            creator_college = creator_college_item.value
+            for member in experts:
+                if member.college != creator_college:
+                    raise ValueError(
+                        f"学院级管理员只能选择本学院教师作为专家。"
+                        f"专家 {member.real_name}({member.employee_id}) 不属于 {creator_college}"
+                    )
+
         created_reviews = []
         phase = ReviewService._get_phase_from_review_type(review_type)
         if not phase:
@@ -1178,6 +1180,23 @@ class ReviewService:
                     project = Project.objects.get(pk=pid)
                 except Project.DoesNotExist:
                     continue
+
+                # ===== 新增：指导老师排除检查 =====
+                advisor_ids = set(project.advisors.values_list("user_id", flat=True))
+                member_ids = set(experts.values_list("id", flat=True))
+                intersection = advisor_ids & member_ids
+                if intersection:
+                    from apps.users.models import User
+
+                    advisor_names = list(
+                        User.objects.filter(id__in=intersection).values_list(
+                            "real_name", flat=True
+                        )
+                    )
+                    raise ValueError(
+                        f"项目 {project.project_no} 的专家组成员包含项目指导老师（{', '.join(advisor_names)}），"
+                        f"请重新选择专家组"
+                    )
 
                 phase_instance = ProjectPhaseService.get_current(project, phase)
                 if not phase_instance:
@@ -1220,9 +1239,7 @@ class ReviewService:
                 if creator and assigned_user.id != creator.id:
                     raise ValueError("无权限分配该节点的专家评审任务")
                 review_level_value = (
-                    node_obj.review_level
-                    or node_obj.get_role_code()
-                    or review_level
+                    node_obj.review_level or node_obj.get_role_code() or review_level
                 )
                 if not review_level_value:
                     raise ValueError("审核节点未配置审核级别或角色")

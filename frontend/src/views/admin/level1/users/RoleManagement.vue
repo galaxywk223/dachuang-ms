@@ -20,7 +20,9 @@
               clearable
               @keyup.enter="handleSearch"
             >
-              <template #prefix><el-icon><Search /></el-icon></template>
+              <template #prefix
+                ><el-icon><Search /></el-icon
+              ></template>
             </el-input>
           </el-form-item>
           <el-form-item label="状态">
@@ -42,11 +44,20 @@
         </el-form>
       </div>
 
-      <el-table v-loading="loading" :data="tableData" stripe style="width: 100%">
+      <el-table
+        v-loading="loading"
+        :data="tableData"
+        stripe
+        style="width: 100%"
+      >
         <el-table-column prop="code" label="角色代码" width="160" />
         <el-table-column prop="name" label="角色名称" width="140" />
         <el-table-column prop="description" label="描述" min-width="200" />
-        <el-table-column prop="default_route" label="默认路由" min-width="180" />
+        <el-table-column
+          prop="default_route"
+          label="默认路由"
+          min-width="180"
+        />
         <el-table-column label="类型" width="120">
           <template #default="{ row }">
             <el-tag type="info" size="small" effect="plain">
@@ -65,7 +76,13 @@
         <el-table-column prop="user_count" label="用户数" width="90" />
         <el-table-column label="操作" fixed="right" min-width="220">
           <template #default="{ row }">
-            <el-button link type="primary" size="small" @click="openEditDialog(row)">编辑</el-button>
+            <el-button
+              link
+              type="primary"
+              size="small"
+              @click="openEditDialog(row)"
+              >编辑</el-button
+            >
             <el-button
               link
               type="warning"
@@ -117,7 +134,10 @@
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="角色代码" prop="code">
-              <el-input v-model="formData.code" :disabled="formData.is_system" />
+              <el-input
+                v-model="formData.code"
+                :disabled="formData.is_system"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -127,17 +147,46 @@
           </el-col>
           <el-col :span="24">
             <el-form-item label="描述" prop="description">
-              <el-input v-model="formData.description" type="textarea" rows="2" />
+              <el-input
+                v-model="formData.description"
+                type="textarea"
+                rows="2"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="默认路由" prop="default_route">
-              <el-input v-model="formData.default_route" placeholder="如 /level1-admin/statistics" />
+              <el-input
+                v-model="formData.default_route"
+                placeholder="如 /level1-admin/statistics"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="排序" prop="sort_order">
-              <el-input-number v-model="formData.sort_order" :min="0" style="width: 100%" />
+              <el-input-number
+                v-model="formData.sort_order"
+                :min="0"
+                style="width: 100%"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="数据范围维度" prop="scope_dimension">
+              <el-select
+                v-model="formData.scope_dimension"
+                placeholder="请选择"
+                clearable
+                style="width: 100%"
+              >
+                <el-option label="学院" value="COLLEGE" />
+                <el-option label="项目类别" value="PROJECT_CATEGORY" />
+                <el-option label="项目级别" value="PROJECT_LEVEL" />
+                <el-option label="重点领域" value="KEY_FIELD" />
+              </el-select>
+              <div class="form-hint">
+                管理员角色需要选择数据范围维度。非管理员角色留空。
+              </div>
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -171,7 +220,11 @@
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="formDialogVisible = false">取消</el-button>
-          <el-button type="primary" :loading="submitLoading" @click="handleSubmit">
+          <el-button
+            type="primary"
+            :loading="submitLoading"
+            @click="handleSubmit"
+          >
             {{ isEditMode ? "保存修改" : "确认创建" }}
           </el-button>
         </div>
@@ -192,7 +245,12 @@ import {
   toggleRoleStatus,
   getPermissions,
 } from "@/api/users/roles";
-import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from "element-plus";
+import {
+  ElMessage,
+  ElMessageBox,
+  type FormInstance,
+  type FormRules,
+} from "element-plus";
 
 type RoleRow = {
   id: number;
@@ -226,7 +284,10 @@ const normalizeList = (res: unknown) => {
     return { results, total };
   }
   if (Array.isArray(res.results)) {
-    return { results: res.results as RoleRow[], total: (res.count as number) ?? res.results.length };
+    return {
+      results: res.results as RoleRow[],
+      total: (res.count as number) ?? res.results.length,
+    };
   }
   if (Array.isArray(res)) {
     return { results: res as RoleRow[], total: res.length };
@@ -260,6 +321,7 @@ const formData = reactive({
   description: "",
   default_route: "",
   sort_order: 0,
+  scope_dimension: "",
   permission_ids: [] as number[],
   is_system: false,
 });
@@ -273,7 +335,10 @@ const groupedPermissions = computed(() => {
     }
     groups[category].push(perm);
   });
-  return Object.entries(groups).map(([category, items]) => ({ category, items }));
+  return Object.entries(groups).map(([category, items]) => ({
+    category,
+    items,
+  }));
 });
 
 const formRules: FormRules = {
@@ -367,6 +432,7 @@ const openEditDialog = async (row: RoleRow) => {
   try {
     const detail = await getRoleDetail(row.id);
     if (isRecord(detail)) {
+      formData.scope_dimension = (detail.scope_dimension as string) || "";
       const permissionsList = detail.permissions as Permission[] | undefined;
       if (permissionsList) {
         formData.permission_ids = permissionsList.map((perm) => perm.id);
@@ -387,6 +453,7 @@ const resetForm = () => {
   formData.description = "";
   formData.default_route = "";
   formData.sort_order = 0;
+  formData.scope_dimension = "";
   formData.permission_ids = [];
   formData.is_system = false;
 };
@@ -403,6 +470,7 @@ const handleSubmit = async () => {
       description: formData.description,
       default_route: formData.default_route,
       sort_order: formData.sort_order,
+      scope_dimension: formData.scope_dimension || null,
       permission_ids: formData.permission_ids,
     };
 

@@ -14,18 +14,19 @@ class ExpertGroupViewSet(viewsets.ModelViewSet):
     """
     专家组管理视图集
     """
+
     queryset = ExpertGroup.objects.all()
     serializer_class = ExpertGroupSerializer
-    permission_classes = [ExpertGroupPermission] 
+    permission_classes = [ExpertGroupPermission]
 
     def get_queryset(self):
         user = self.request.user
         queryset = super().get_queryset()
-        
+
         if user.is_admin:
             return queryset.filter(created_by=user)
-        elif user.is_expert:
-            # 专家只能看自己在的组? Or generic access? Let's say experts only see groups they are in if needed.
+        elif user.is_teacher:
+            # 教师（作为专家）只能看自己在的组
             return queryset.filter(members=user)
         return queryset.none()
 

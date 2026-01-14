@@ -39,11 +39,6 @@ DEFAULT_SETTINGS = {
             "level1": {"enabled": False, "start": "", "end": ""},
         },
     },
-    "EXPERT_REVIEW_WINDOW": {
-        "enabled": False,
-        "start": "",
-        "end": "",
-    },
     "LIMIT_RULES": {
         "max_advisors": 2,
         "max_members": 5,

@@ -55,11 +55,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
             )
         # 指导教师只能看到分配给自己的审核
         elif user.is_teacher:
-            queryset = queryset.filter(
+            # 教师可以看到作为指导老师的审核和作为专家的审核
+            teacher_reviews = queryset.filter(
                 project__advisors__user=user, review_level="TEACHER"
-            ).distinct()
-        elif user.is_expert:
-            queryset = queryset.filter(reviewer=user)
+            )
+            expert_reviews = queryset.filter(reviewer=user, is_expert_review=True)
+            queryset = (teacher_reviews | expert_reviews).distinct()
 
         status_in = self.request.query_params.get(
             "status_in"
@@ -128,17 +129,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         )  # 新增：退回目标节点ID
         approved_budget = serializer.validated_data.get("approved_budget")
 
-        if user.is_expert:
-            ok, msg = SystemSettingService.check_window(
-                "EXPERT_REVIEW_WINDOW",
-                timezone.now().date(),
-                batch=review.project.batch,
-            )
-            if not ok:
-                return Response(
-                    {"code": 400, "message": msg},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+        # 专家评审不再需要 EXPERT_REVIEW_WINDOW 检查，使用工作流节点的时间窗口
 
         # 检查审核时间窗口 - 优先使用工作流节点配置
         ok, msg = self._check_review_time_window(review)
@@ -258,9 +249,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
             )
 
         # 获取可退回的节点
-        reject_targets = WorkflowService.get_reject_target_nodes(
-            node_id
-        )
+        reject_targets = WorkflowService.get_reject_target_nodes(node_id)
 
         # 转换为可序列化的格式
         target_list = []
@@ -304,17 +293,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if user.is_expert:
-            ok, msg = SystemSettingService.check_window(
-                "EXPERT_REVIEW_WINDOW",
-                timezone.now().date(),
-                batch=review.project.batch,
-            )
-            if not ok:
-                return Response(
-                    {"code": 400, "message": msg},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+        # 专家评审不再需要 EXPERT_REVIEW_WINDOW 检查
 
         # 检查审核时间窗口 - 使用工作流节点配置
         ok, msg = self._check_review_time_window(review)
@@ -476,17 +455,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
             if not permitted:
                 failed.append({"id": review.id, "reason": "无权限"})
                 continue
-            if request.user.is_expert:
-                ok, msg = SystemSettingService.check_window(
-                    "EXPERT_REVIEW_WINDOW",
-                    timezone.now().date(),
-                    batch=review.project.batch,
-                )
-                if not ok:
-                    failed.append(
-                        {"id": review.id, "reason": msg or "不在评审时间范围内"}
-                    )
-                    continue
 
             # 检查审核时间窗口 - 使用工作流节点配置
             ok, msg = self._check_review_time_window(review)
@@ -541,9 +509,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 {"code": 400, "message": "请提供项目ID"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        review = ReviewService.get_pending_reviews_for_admin(user).filter(
-            project_id=project_id
-        ).first()
+        review = (
+            ReviewService.get_pending_reviews_for_admin(user)
+            .filter(project_id=project_id)
+            .first()
+        )
         if not review:
             return Response(
                 {"code": 404, "message": "未找到待审核记录或无权限"},
@@ -578,9 +548,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         if node_id:
             from apps.system_settings.models import WorkflowNode
 
-            current_node = WorkflowNode.objects.filter(
-                id=node_id
-            ).first()
+            current_node = WorkflowNode.objects.filter(id=node_id).first()
 
             if current_node:
                 return WorkflowService.check_node_time_window(

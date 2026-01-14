@@ -3,7 +3,6 @@ export enum UserRole {
   LEVEL1_ADMIN = "level1_admin", // 一级管理员（校级）
   LEVEL2_ADMIN = "level2_admin", // 二级管理员（院级）
   TEACHER = "teacher",
-  EXPERT = "expert",
   ADMIN = "admin", // Legacy/Generic admin
 }
 
