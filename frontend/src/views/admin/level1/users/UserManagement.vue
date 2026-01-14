@@ -173,22 +173,14 @@
         class="admin-form"
       >
         <el-row :gutter="16">
-          <el-col :span="12">
-            <el-form-item label="学号/工号" prop="employee_id">
-              <el-input v-model="formData.employee_id" :disabled="isEditMode" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="姓名" prop="real_name">
-              <el-input v-model="formData.real_name" />
-            </el-form-item>
-          </el-col>
+          <!-- 角色选择 - 放在第一位 -->
           <el-col :span="12">
             <el-form-item label="角色" prop="role">
               <el-select
                 v-model="formData.role"
-                placeholder="选择角色"
+                placeholder="请先选择角色"
                 filterable
+                :disabled="isEditMode"
               >
                 <el-option
                   v-for="role in roleOptions"
@@ -199,6 +191,8 @@
               </el-select>
             </el-form-item>
           </el-col>
+
+          <!-- 密码 - 仅新建时 -->
           <el-col :span="12" v-if="!isEditMode">
             <el-form-item label="密码" prop="password">
               <el-input
@@ -208,36 +202,110 @@
               />
             </el-form-item>
           </el-col>
-          <el-col :span="12" v-if="isExpertRole">
-            <el-form-item label="专家级别" prop="expert_scope">
-              <el-select
-                v-model="formData.expert_scope"
-                placeholder="选择专家级别"
-              >
-                <el-option label="院级专家" value="COLLEGE" />
-                <el-option label="校级专家" value="SCHOOL" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="学院" prop="college">
-              <el-select
-                v-model="formData.college"
-                placeholder="选择学院"
-                clearable
-                filterable
-                allow-create
-                default-first-option
-              >
-                <el-option
-                  v-for="item in collegeOptions"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
+
+          <!-- 学生专属字段 -->
+          <template v-if="isStudentRole">
+            <el-col :span="12">
+              <el-form-item label="学号" prop="employee_id">
+                <el-input v-model="formData.employee_id" :disabled="isEditMode" placeholder="请输入学号" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="姓名" prop="real_name">
+                <el-input v-model="formData.real_name" placeholder="请输入姓名" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="性别" prop="gender">
+                <el-select v-model="formData.gender" placeholder="请选择性别">
+                  <el-option label="男" value="男" />
+                  <el-option label="女" value="女" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="部门" prop="department">
+                <el-select
+                  v-model="formData.department"
+                  placeholder="选择部门"
+                  clearable
+                  filterable
+                >
+                  <el-option
+                    v-for="item in collegeOptions"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="专业名称" prop="major">
+                <el-input v-model="formData.major" placeholder="请输入专业名称" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="当前年级" prop="grade">
+                <el-input v-model="formData.grade" placeholder="如：2023" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="班级" prop="class_name">
+                <el-input v-model="formData.class_name" placeholder="如：软231" />
+              </el-form-item>
+            </el-col>
+          </template>
+
+          <!-- 教师/管理员共同字段 -->
+          <template v-if="isTeacherOrAdmin">
+            <el-col :span="12">
+              <el-form-item label="工号" prop="employee_id">
+                <el-input v-model="formData.employee_id" :disabled="isEditMode" placeholder="请输入工号" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="姓名" prop="real_name">
+                <el-input v-model="formData.real_name" placeholder="请输入姓名" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="职称" prop="title">
+                <el-select
+                  v-model="formData.title"
+                  placeholder="选择职称"
+                  clearable
+                  filterable
+                >
+                  <el-option
+                    v-for="item in titleOptions"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="部门" prop="department">
+                <el-select
+                  v-model="formData.department"
+                  placeholder="选择部门"
+                  clearable
+                  filterable
+                >
+                  <el-option
+                    v-for="item in collegeOptions"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+          </template>
+
+          <!-- 管理员额外字段 - 管理范围 -->
           <el-col :span="12" v-if="isAdminRole">
             <el-form-item label="管理范围" prop="managed_scope_value">
               <el-select
@@ -255,38 +323,20 @@
                 />
               </el-select>
               <div class="form-hint">
-                根据角色的数据范围维度选择具体负责的维度值（如学院、项目类别等）
+                根据角色的数据范围维度选择具体负责的维度值
               </div>
             </el-form-item>
           </el-col>
-          <el-col :span="12">
-            <el-form-item label="部门" prop="department">
-              <el-input v-model="formData.department" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="职称" prop="title">
-              <el-input v-model="formData.title" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="专业" prop="major">
-              <el-input v-model="formData.major" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="班级" prop="class_name">
-              <el-input v-model="formData.class_name" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
+
+          <!-- 联系方式 - 所有角色通用 -->
+          <el-col :span="12" v-if="formData.role">
             <el-form-item label="手机号" prop="phone">
-              <el-input v-model="formData.phone" maxlength="11" />
+              <el-input v-model="formData.phone" maxlength="11" placeholder="请输入手机号" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="12" v-if="formData.role">
             <el-form-item label="邮箱" prop="email">
-              <el-input v-model="formData.email" />
+              <el-input v-model="formData.email" placeholder="请输入邮箱" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -473,6 +523,18 @@ const scopeValueOptions = ref<{ id: number; label: string; value: string }[]>(
 
 const { loadDictionaries, getOptions, getLabel } = useDictionary();
 const collegeOptions = computed(() => getOptions(DICT_CODES.COLLEGE));
+const titleOptions = computed(() => getOptions(DICT_CODES.TITLE));
+
+// 角色判断
+const isStudentRole = computed(() => formData.role === "STUDENT");
+const isTeacherOrAdmin = computed(() => 
+  formData.role && formData.role !== "STUDENT"
+);
+const isAdminRole = computed(() => {
+  const role = roleOptions.value.find((r) => r.code === formData.role);
+  return role?.code?.endsWith("_ADMIN") || false;
+});
+const isExpertRole = computed(() => formData.role === "EXPERT");
 
 const filters = reactive({
   search: "",
@@ -487,9 +549,10 @@ const formData = reactive({
   real_name: "",
   role: "",
   password: "123456",
+  gender: "",
+  grade: "",
   expert_scope: "COLLEGE",
   managed_scope_value: null as number | null,
-  college: "",
   department: "",
   title: "",
   major: "",
@@ -502,12 +565,6 @@ const importForm = reactive({
   role: "",
   expert_scope: "COLLEGE",
   file: null as UploadFile | null,
-});
-
-const isExpertRole = computed(() => formData.role === "EXPERT");
-const isAdminRole = computed(() => {
-  const role = roleOptions.value.find((r) => r.code === formData.role);
-  return role?.code?.endsWith("_ADMIN") || false;
 });
 
 // 监听角色变化，加载对应的管理范围选项
@@ -541,10 +598,14 @@ watch(
       } else if (scopeDimension === "PROJECT_LEVEL") {
         dictCode = DICT_CODES.PROJECT_LEVEL;
       } else if (scopeDimension === "KEY_FIELD") {
-        dictCode = "key_field"; // 需要确认实际的字典代码
+        dictCode = DICT_CODES.KEY_FIELD_CODE;
+      } else if (scopeDimension === "PROJECT_SOURCE") {
+        dictCode = DICT_CODES.PROJECT_SOURCE;
       }
 
       if (dictCode) {
+        // 先加载字典数据
+        await loadDictionaries([dictCode]);
         const options = getOptions(dictCode);
         scopeValueOptions.value = options.map((opt: any) => ({
           id: opt.id,
@@ -678,9 +739,10 @@ const openEditDialog = (row: UserRow) => {
   formData.employee_id = row.employee_id || "";
   formData.real_name = row.real_name || "";
   formData.role = row.role_info?.code || row.role || "";
+  formData.gender = (row as any).gender || "";
+  formData.grade = (row as any).grade || "";
   formData.expert_scope = row.expert_scope || "COLLEGE";
   formData.managed_scope_value = (row as any).managed_scope_value || null;
-  formData.college = row.college || "";
   formData.department = row.department || "";
   formData.title = row.title || "";
   formData.major = row.major || "";
@@ -696,9 +758,10 @@ const resetForm = () => {
   formData.real_name = "";
   formData.role = "";
   formData.password = "123456";
+  formData.gender = "";
+  formData.grade = "";
   formData.expert_scope = "COLLEGE";
   formData.managed_scope_value = null;
-  formData.college = "";
   formData.department = "";
   formData.title = "";
   formData.major = "";
@@ -717,9 +780,10 @@ const handleSubmit = async () => {
       employee_id: formData.employee_id,
       real_name: formData.real_name,
       role: formData.role,
+      gender: formData.gender,
+      grade: formData.grade,
       expert_scope: formData.expert_scope,
       managed_scope_value: formData.managed_scope_value,
-      college: formData.college,
       department: formData.department,
       title: formData.title,
       major: formData.major,
@@ -834,7 +898,7 @@ watch(
 );
 
 onMounted(async () => {
-  loadDictionaries([DICT_CODES.COLLEGE]);
+  loadDictionaries([DICT_CODES.COLLEGE, DICT_CODES.TITLE]);
   await loadRoles();
   const roleQuery = route.query.role;
   if (typeof roleQuery === "string") {

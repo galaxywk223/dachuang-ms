@@ -50,36 +50,15 @@
         stripe
         style="width: 100%"
       >
-        <el-table-column prop="code" label="角色代码" width="160" />
-        <el-table-column prop="name" label="角色名称" width="140" />
-        <el-table-column prop="description" label="描述" min-width="200" />
-        <el-table-column
-          prop="default_route"
-          label="默认路由"
-          min-width="180"
-        />
-        <el-table-column label="类型" width="120">
-          <template #default="{ row }">
-            <el-tag type="info" size="small" effect="plain">
-              {{ row.is_system ? "系统内置" : "自定义" }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="状态" width="100">
-          <template #default="{ row }">
-            <el-tag :type="row.is_active ? 'success' : 'danger'" size="small">
-              {{ row.is_active ? "启用" : "禁用" }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="permission_count" label="权限数" width="90" />
-        <el-table-column prop="user_count" label="用户数" width="90" />
-        <el-table-column label="操作" fixed="right" min-width="220">
+        <el-table-column prop="name" label="角色名称" min-width="200" />
+        <el-table-column prop="user_count" label="用户数" width="120" />
+        <el-table-column label="操作" fixed="right" width="250">
           <template #default="{ row }">
             <el-button
               link
               type="primary"
               size="small"
+              :disabled="row.is_system"
               @click="openEditDialog(row)"
               >编辑</el-button
             >
@@ -87,6 +66,7 @@
               link
               type="warning"
               size="small"
+              :disabled="row.is_system"
               @click="handleToggleStatus(row)"
             >
               {{ row.is_active ? "禁用" : "启用" }}
@@ -128,94 +108,33 @@
         ref="formRef"
         :model="formData"
         :rules="formRules"
-        label-width="90px"
+        label-width="120px"
         class="role-form"
       >
-        <el-row :gutter="16">
-          <el-col :span="12">
-            <el-form-item label="角色代码" prop="code">
-              <el-input
-                v-model="formData.code"
-                :disabled="formData.is_system"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="角色名称" prop="name">
-              <el-input v-model="formData.name" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="描述" prop="description">
-              <el-input
-                v-model="formData.description"
-                type="textarea"
-                rows="2"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="默认路由" prop="default_route">
-              <el-input
-                v-model="formData.default_route"
-                placeholder="如 /level1-admin/statistics"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="排序" prop="sort_order">
-              <el-input-number
-                v-model="formData.sort_order"
-                :min="0"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="数据范围维度" prop="scope_dimension">
-              <el-select
-                v-model="formData.scope_dimension"
-                placeholder="请选择"
-                clearable
-                style="width: 100%"
-              >
-                <el-option label="学院" value="COLLEGE" />
-                <el-option label="项目类别" value="PROJECT_CATEGORY" />
-                <el-option label="项目级别" value="PROJECT_LEVEL" />
-                <el-option label="重点领域" value="KEY_FIELD" />
-              </el-select>
-              <div class="form-hint">
-                管理员角色需要选择数据范围维度。非管理员角色留空。
-              </div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="权限" prop="permission_ids">
-              <el-select
-                v-model="formData.permission_ids"
-                multiple
-                filterable
-                collapse-tags
-                collapse-tags-tooltip
-                class="permission-select"
-                placeholder="选择权限"
-              >
-                <el-option-group
-                  v-for="group in groupedPermissions"
-                  :key="group.category"
-                  :label="group.category"
-                >
-                  <el-option
-                    v-for="perm in group.items"
-                    :key="perm.id"
-                    :label="perm.name"
-                    :value="perm.id"
-                  />
-                </el-option-group>
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
+        <el-form-item label="角色名称" prop="name">
+          <el-input
+            v-model="formData.name"
+            placeholder="如：三级管理员"
+            :disabled="formData.is_system"
+          />
+        </el-form-item>
+        <el-form-item label="数据范围维度" prop="scope_dimension">
+          <el-select
+            v-model="formData.scope_dimension"
+            placeholder="请选择"
+            clearable
+            :disabled="formData.is_system"
+          >
+            <el-option label="学院" value="COLLEGE" />
+            <el-option label="项目类别" value="PROJECT_CATEGORY" />
+            <el-option label="项目级别" value="PROJECT_LEVEL" />
+            <el-option label="项目来源" value="PROJECT_SOURCE" />
+            <el-option label="重点领域代码" value="KEY_FIELD" />
+          </el-select>
+          <div class="form-hint">
+            管理员角色需要选择数据范围维度。非管理员角色留空。
+          </div>
+        </el-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -243,7 +162,6 @@ import {
   updateRole,
   deleteRole,
   toggleRoleStatus,
-  getPermissions,
 } from "@/api/users/roles";
 import {
   ElMessage,
@@ -306,8 +224,6 @@ const submitLoading = ref(false);
 const isEditMode = ref(false);
 const currentId = ref<number | null>(null);
 
-const permissions = ref<Permission[]>([]);
-
 const filters = reactive({
   search: "",
   is_active: "",
@@ -316,57 +232,13 @@ const filters = reactive({
 
 const formRef = ref<FormInstance>();
 const formData = reactive({
-  code: "",
   name: "",
-  description: "",
-  default_route: "",
-  sort_order: 0,
   scope_dimension: "",
-  permission_ids: [] as number[],
   is_system: false,
 });
 
-const groupedPermissions = computed(() => {
-  const groups: Record<string, Permission[]> = {};
-  permissions.value.forEach((perm) => {
-    const category = perm.category || "其他";
-    if (!groups[category]) {
-      groups[category] = [];
-    }
-    groups[category].push(perm);
-  });
-  return Object.entries(groups).map(([category, items]) => ({
-    category,
-    items,
-  }));
-});
-
 const formRules: FormRules = {
-  code: [
-    { required: true, message: "请输入角色代码", trigger: "blur" },
-    {
-      validator: (_rule, value, callback) => {
-        if (!value) return callback();
-        if (!/^[A-Z0-9_]+$/.test(String(value))) {
-          return callback(new Error("角色代码只能包含大写字母、数字和下划线"));
-        }
-        return callback();
-      },
-      trigger: "blur",
-    },
-  ],
   name: [{ required: true, message: "请输入角色名称", trigger: "blur" }],
-};
-
-const loadPermissions = async () => {
-  const res = await getPermissions({ page_size: 2000 });
-  if (Array.isArray(res)) {
-    permissions.value = res as Permission[];
-    return;
-  }
-  if (isRecord(res) && Array.isArray(res.results)) {
-    permissions.value = res.results as Permission[];
-  }
 };
 
 const loadRolesList = async () => {
@@ -423,22 +295,12 @@ const openEditDialog = async (row: RoleRow) => {
   isEditMode.value = true;
   currentId.value = row.id;
   formDialogVisible.value = true;
-  formData.code = row.code || "";
   formData.name = row.name || "";
-  formData.description = row.description || "";
-  formData.default_route = row.default_route || "";
-  formData.sort_order = row.sort_order ?? 0;
   formData.is_system = Boolean(row.is_system);
   try {
     const detail = await getRoleDetail(row.id);
     if (isRecord(detail)) {
       formData.scope_dimension = (detail.scope_dimension as string) || "";
-      const permissionsList = detail.permissions as Permission[] | undefined;
-      if (permissionsList) {
-        formData.permission_ids = permissionsList.map((perm) => perm.id);
-      } else if (Array.isArray(detail.permission_ids)) {
-        formData.permission_ids = detail.permission_ids as number[];
-      }
     }
   } catch {
     ElMessage.error("获取角色详情失败");
@@ -448,13 +310,8 @@ const openEditDialog = async (row: RoleRow) => {
 const resetForm = () => {
   formRef.value?.clearValidate();
   currentId.value = null;
-  formData.code = "";
   formData.name = "";
-  formData.description = "";
-  formData.default_route = "";
-  formData.sort_order = 0;
   formData.scope_dimension = "";
-  formData.permission_ids = [];
   formData.is_system = false;
 };
 
@@ -465,13 +322,8 @@ const handleSubmit = async () => {
   submitLoading.value = true;
   try {
     const payload = {
-      code: formData.code,
       name: formData.name,
-      description: formData.description,
-      default_route: formData.default_route,
-      sort_order: formData.sort_order,
       scope_dimension: formData.scope_dimension || null,
-      permission_ids: formData.permission_ids,
     };
 
     if (isEditMode.value && currentId.value) {
@@ -513,8 +365,7 @@ const handleDelete = async (row: RoleRow) => {
   }
 };
 
-onMounted(async () => {
-  await loadPermissions();
+onMounted(() => {
   loadRolesList();
 });
 </script>

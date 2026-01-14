@@ -45,9 +45,7 @@ class RoleViewSet(viewsets.ModelViewSet):
         search = self.request.query_params.get("search", "")
         if search:
             queryset = queryset.filter(
-                Q(code__icontains=search)
-                | Q(name__icontains=search)
-                | Q(description__icontains=search)
+                Q(code__icontains=search) | Q(name__icontains=search)
             )
 
         # 状态过滤

@@ -64,7 +64,7 @@ class AdminAssignmentService:
 
         Args:
             project: 项目实例
-            scope_dimension: 数据范围维度（COLLEGE/PROJECT_CATEGORY/PROJECT_LEVEL/KEY_FIELD）
+            scope_dimension: 数据范围维度（COLLEGE/PROJECT_CATEGORY/PROJECT_LEVEL/PROJECT_SOURCE/KEY_FIELD）
 
         Returns:
             int: 对应的 DictionaryItem.id
@@ -92,6 +92,11 @@ class AdminAssignmentService:
             if not project.level_id:
                 raise ValueError("项目缺少项目级别")
             return project.level_id
+
+        elif scope_dimension == "PROJECT_SOURCE":
+            if not project.source_id:
+                raise ValueError("项目缺少项目来源")
+            return project.source_id
 
         elif scope_dimension == "KEY_FIELD":
             # 重点领域的处理

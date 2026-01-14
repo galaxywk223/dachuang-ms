@@ -27,7 +27,6 @@ class PermissionSerializer(serializers.ModelSerializer):
 class RoleListSerializer(serializers.ModelSerializer):
     """角色列表序列化器（简化版）"""
 
-    permission_count = serializers.SerializerMethodField()
     user_count = serializers.SerializerMethodField()
 
     class Meta:
@@ -36,20 +35,12 @@ class RoleListSerializer(serializers.ModelSerializer):
             "id",
             "code",
             "name",
-            "description",
             "is_system",
             "is_active",
-            "default_route",
-            "sort_order",
-            "permission_count",
             "user_count",
             "created_at",
         ]
-        read_only_fields = ["created_at"]
-
-    def get_permission_count(self, obj):
-        """获取角色拥有的权限数量"""
-        return obj.permissions.filter(is_active=True).count()
+        read_only_fields = ["created_at", "code"]
 
     def get_user_count(self, obj):
         """获取拥有该角色的用户数量"""
@@ -57,15 +48,8 @@ class RoleListSerializer(serializers.ModelSerializer):
 
 
 class RoleDetailSerializer(serializers.ModelSerializer):
-    """角色详情序列化器（包含完整权限列表）"""
+    """角色详情序列化器"""
 
-    permissions = PermissionSerializer(many=True, read_only=True)
-    permission_ids = serializers.ListField(
-        child=serializers.IntegerField(),
-        write_only=True,
-        required=False,
-        help_text="权限ID列表",
-    )
     user_count = serializers.SerializerMethodField()
 
     class Meta:
@@ -74,73 +58,65 @@ class RoleDetailSerializer(serializers.ModelSerializer):
             "id",
             "code",
             "name",
-            "description",
-            "permissions",
-            "permission_ids",
+            "scope_dimension",
             "is_system",
             "is_active",
-            "default_route",
-            "sort_order",
             "user_count",
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["created_at", "updated_at"]
+        read_only_fields = ["created_at", "updated_at", "code", "is_system"]
 
     def get_user_count(self, obj):
         """获取拥有该角色的用户数量"""
         return obj.users.filter(is_active=True).count()
 
-    def validate_code(self, value):
-        """验证角色代码"""
-        # 角色代码应该是大写字母、数字和下划线
+    def _generate_role_code(self, name):
+        """根据角色名称生成唯一的角色代码"""
         import re
+        import uuid
 
-        if not re.match(r"^[A-Z0-9_]+$", value):
-            raise serializers.ValidationError("角色代码只能包含大写字母、数字和下划线")
-        return value
+        # 尝试从名称提取字母
+        base = re.sub(r"[^A-Za-z0-9]", "", name).upper()
+        if not base:
+            base = "ROLE"
+
+        # 生成唯一代码
+        code = base[:20]  # 限制长度
+        counter = 1
+        while Role.objects.filter(code=code).exists():
+            suffix = str(uuid.uuid4().hex[:6]).upper()
+            code = f"{base[:14]}_{suffix}"
+            counter += 1
+            if counter > 10:  # 避免无限循环
+                code = f"ROLE_{uuid.uuid4().hex[:16].upper()}"
+                break
+
+        return code
 
     def validate(self, attrs):
         """验证数据"""
         # 如果是更新操作，检查是否是系统角色
         if self.instance and self.instance.is_system:
-            # 系统角色的 code 不可修改
-            if "code" in attrs and attrs["code"] != self.instance.code:
-                raise serializers.ValidationError(
-                    {"code": "系统内置角色的代码不可修改"}
-                )
+            # 系统角色不允许修改任何字段（除了is_active状态在视图层处理）
+            raise serializers.ValidationError("系统内置角色不可修改")
 
         return attrs
 
     def create(self, validated_data):
         """创建角色"""
-        permission_ids = validated_data.pop("permission_ids", [])
+        # 自动生成角色代码
+        validated_data["code"] = self._generate_role_code(validated_data["name"])
         role = Role.objects.create(**validated_data)
-
-        if permission_ids:
-            permissions = Permission.objects.filter(
-                id__in=permission_ids, is_active=True
-            )
-            role.permissions.set(permissions)
-
         return role
 
     def update(self, instance, validated_data):
         """更新角色"""
-        permission_ids = validated_data.pop("permission_ids", None)
-
-        # 更新基本字段
+        # 更新基本字段（code不可修改）
         for attr, value in validated_data.items():
-            setattr(instance, attr, value)
+            if attr != "code":  # 不允许修改code
+                setattr(instance, attr, value)
         instance.save()
-
-        # 更新权限关联
-        if permission_ids is not None:
-            permissions = Permission.objects.filter(
-                id__in=permission_ids, is_active=True
-            )
-            instance.permissions.set(permissions)
-
         return instance
 
 

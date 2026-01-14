@@ -46,6 +46,7 @@ class UserSerializer(RoleAssignMixin, serializers.ModelSerializer):
             "email",
             "major",
             "grade",
+            "gender",
             "class_name",
             "college",
             "department",
@@ -54,6 +55,7 @@ class UserSerializer(RoleAssignMixin, serializers.ModelSerializer):
             "is_active",
             "created_at",
             "updated_at",
+            "managed_scope_value",
         ]
         read_only_fields = ["id", "created_at", "updated_at"]
 

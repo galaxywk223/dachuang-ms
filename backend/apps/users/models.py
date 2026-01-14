@@ -56,7 +56,6 @@ class Role(models.Model):
         help_text="如：STUDENT, TEACHER, LEVEL1_ADMIN",
     )
     name = models.CharField(max_length=100, verbose_name="角色名称")
-    description = models.TextField(blank=True, verbose_name="角色描述")
     permissions = models.ManyToManyField(
         Permission, blank=True, related_name="roles", verbose_name="权限列表"
     )
@@ -66,7 +65,8 @@ class Role(models.Model):
             ("COLLEGE", "学院"),
             ("PROJECT_CATEGORY", "项目类别"),
             ("PROJECT_LEVEL", "项目级别"),
-            ("KEY_FIELD", "重点领域"),
+            ("PROJECT_SOURCE", "项目来源"),
+            ("KEY_FIELD", "重点领域代码"),
         ],
         null=True,
         blank=True,
@@ -112,9 +112,8 @@ class User(AbstractUser):
         """系统内置角色代码"""
 
         STUDENT = "STUDENT", "学生"
-        LEVEL2_ADMIN = "LEVEL2_ADMIN", "二级管理员"
-        LEVEL1_ADMIN = "LEVEL1_ADMIN", "一级管理员"
-        TEACHER = "TEACHER", "指导教师"
+        TEACHER = "TEACHER", "教师"
+        LEVEL1_ADMIN = "LEVEL1_ADMIN", "校级管理员"
 
     class ExpertScope(models.TextChoices):
         SCHOOL = "SCHOOL", "校级专家"
@@ -148,6 +147,12 @@ class User(AbstractUser):
     major = models.CharField(max_length=100, blank=True, verbose_name="专业")
     grade = models.CharField(max_length=10, blank=True, verbose_name="年级")
     class_name = models.CharField(max_length=50, blank=True, verbose_name="班级")
+    gender = models.CharField(
+        max_length=10, 
+        blank=True, 
+        choices=[("男", "男"), ("女", "女")], 
+        verbose_name="性别"
+    )
 
     # 管理员专属字段
     college = models.CharField(max_length=100, blank=True, verbose_name="所属学院")
