@@ -180,6 +180,14 @@
                     <el-icon><CircleCheck /></el-icon>
                     验证流程
                   </el-button>
+                  <el-button
+                    size="small"
+                    @click="openFullscreenGraph"
+                    title="全屏查看"
+                    style="margin-left: 8px"
+                  >
+                    <el-icon><FullScreen /></el-icon>
+                  </el-button>
                 </div>
               </template>
 
@@ -189,21 +197,21 @@
                 <span class="legend-item">
                   <span
                     class="legend-color"
-                    style="background-color: #52c41a"
+                    style="background-color: #10b981"
                   ></span>
                   提交
                 </span>
                 <span class="legend-item">
                   <span
                     class="legend-color"
-                    style="background-color: #1890ff"
+                    style="background-color: #3b82f6"
                   ></span>
                   审核
                 </span>
                 <span class="legend-item">
                   <span
                     class="legend-color"
-                    style="background-color: #fa8c16"
+                    style="background-color: #f59e0b"
                   ></span>
                   确认
                 </span>
@@ -337,6 +345,22 @@
         <el-button type="primary" @click="handleSaveDates">确定</el-button>
       </template>
     </el-dialog>
+
+    <!-- 全屏图表对话框 -->
+    <el-dialog
+      v-model="graphFullscreenVisible"
+      title="流程可视化（全屏）"
+      fullscreen
+      append-to-body
+      destroy-on-close
+      class="graph-fullscreen-dialog"
+      @opened="handleFullscreenOpened"
+      @closed="handleFullscreenClosed"
+    >
+      <div class="fullscreen-graph-container" v-if="fullscreenGraphReady">
+        <workflow-graph :nodes="nodes" :height="fullscreenHeight" />
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -348,7 +372,7 @@ import {
   type FormInstance,
   type FormRules,
 } from "element-plus";
-import { Plus, CircleCheck } from "@element-plus/icons-vue";
+import { Plus, CircleCheck, FullScreen } from "@element-plus/icons-vue";
 import WorkflowGraph from "@/components/business/WorkflowGraph.vue";
 import {
   getBatchWorkflow,
@@ -413,6 +437,26 @@ const dateForm = ref<{
   start_date: undefined,
   end_date: undefined,
 });
+
+// 全屏图表
+const graphFullscreenVisible = ref(false);
+const fullscreenGraphReady = ref(false);
+const fullscreenHeight = ref(window.innerHeight - 100);
+
+function openFullscreenGraph() {
+  fullscreenHeight.value = window.innerHeight - 100;
+  graphFullscreenVisible.value = true;
+  // Reset ready state, wait for opened event
+  fullscreenGraphReady.value = false;
+}
+
+function handleFullscreenOpened() {
+  fullscreenGraphReady.value = true;
+}
+
+function handleFullscreenClosed() {
+  fullscreenGraphReady.value = false;
+}
 
 const roleMap = computed(() => {
   const map = new Map<number, Role>();
@@ -763,6 +807,16 @@ watch(
     .date-item {
       color: #475569;
     }
+  }
+
+  .fullscreen-graph-container {
+    padding: 20px;
+    height: 100%;
+    width: 100%;
+    background: #f5f7fa;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
   }
 }
 </style>
