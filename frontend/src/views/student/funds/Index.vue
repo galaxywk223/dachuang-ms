@@ -76,11 +76,6 @@
             sortable
           />
           <el-table-column prop="title" label="支出事项" min-width="180" />
-          <el-table-column prop="category_name" label="类别" width="120">
-            <template #default="scope">
-              <el-tag>{{ scope.row.category_name || "未分类" }}</el-tag>
-            </template>
-          </el-table-column>
           <el-table-column
             prop="amount"
             label="金额 (元)"
@@ -144,7 +139,6 @@
     <AddExpenseDialog
       v-model:visible="dialogVisible"
       :project-id="project?.id || null"
-      :categories="categories"
       @success="fetchData"
     />
   </div>
@@ -152,6 +146,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, reactive } from "vue";
+import { useRoute } from "vue-router";
 import { Document } from "@element-plus/icons-vue";
 import AddExpenseDialog from "./components/AddExpenseDialog.vue";
 import request from "@/utils/request";
@@ -161,6 +156,8 @@ import { removeProjectExpenditure } from "@/api/projects";
 defineOptions({
   name: "StudentFundsView",
 });
+
+const route = useRoute();
 
 type ProjectItem = {
   id: number;
@@ -172,16 +169,9 @@ type ExpenditureItem = {
   id: number;
   expenditure_date?: string;
   title?: string;
-  category_name?: string;
   amount?: number | string;
   proof_file_url?: string;
   created_by_name?: string;
-};
-
-type CategoryItem = {
-  id: number;
-  label: string;
-  value: string;
 };
 
 type StatsPayload = {
@@ -217,7 +207,6 @@ const loading = ref(false);
 const dialogVisible = ref(false);
 const project = ref<ProjectItem | null>(null);
 const expenditures = ref<ExpenditureItem[]>([]);
-const categories = ref<CategoryItem[]>([]);
 
 const stats = reactive({
   total_budget: 0,
@@ -226,24 +215,18 @@ const stats = reactive({
   usage_rate: 0,
 });
 
-// 获取项目及相关数据
-const fetchProject = async () => {
+// 获取项目信息
+const fetchProject = async (projectId: number) => {
   try {
-    const { data } = await request.get("/projects/", {
-      // 获取进行中或各种状态的项目
-      params: {
-        status_in:
-          "IN_PROGRESS,MID_TERM_DRAFT,MID_TERM_SUBMITTED,MID_TERM_REVIEWING,MID_TERM_APPROVED,MID_TERM_REJECTED",
-      },
-    });
-    const list = resolveList<ProjectItem>(data);
-    if (list.length > 0) {
-      project.value = list[0]; // 默认取第一个
-      return project.value.id;
+    const { data } = await request.get(`/projects/${projectId}/`);
+    if (isRecord(data)) {
+      project.value = data as ProjectItem;
+      return projectId;
     }
     return null;
   } catch (error) {
     console.error("Failed to fetch project", error);
+    ElMessage.error("获取项目信息失败");
     return null;
   }
 };
@@ -268,48 +251,21 @@ const fetchExpenditures = async (projectId: number) => {
   }
 };
 
-const fetchCategories = async () => {
-  try {
-    // Code hardcoded for now or fetch by type code
-    // Assuming we have a dictionary API or we just mock it for now if strict logic not enforced
-    // Real logic: fetch by code 'EXPENDITURE_CATEGORY'
-    // For now, let's mock or try to fetch if we had the endpoint
-    // Let's assume we have /dictionaries/items/?type__code=EXPENDITURE_CATEGORY
-    const response = await request.get("/dictionaries/items/", {
-      params: { type_code: "EXPENDITURE_CATEGORY" },
-    });
-    const payload =
-      isRecord(response) && isRecord(response.data) ? response.data : response;
-    categories.value = resolveList<CategoryItem>(payload);
-
-    // Fail-safe mock if empty
-    if (categories.value.length === 0) {
-      categories.value = [
-        { id: 1, label: "设备费", value: "EQUIPMENT" },
-        { id: 2, label: "材料费", value: "MATERIAL" },
-        { id: 3, label: "差旅费", value: "TRAVEL" },
-        { id: 4, label: "版面费", value: "PUBLICATION" },
-        { id: 5, label: "服务费", value: "SERVICE" },
-        { id: 6, label: "其他", value: "OTHER" },
-      ];
-    }
-  } catch {
-    // Fallback default
-    categories.value = [
-      { id: 1, label: "设备费", value: "EQUIPMENT" },
-      { id: 2, label: "材料费", value: "MATERIAL" },
-    ];
-  }
-};
-
 const fetchData = async () => {
   loading.value = true;
   try {
-    const projectId = project.value?.id || (await fetchProject());
-    if (projectId) {
-      await Promise.all([fetchStats(projectId), fetchExpenditures(projectId)]);
+    const projectIdParam = route.params.projectId;
+    if (!projectIdParam) {
+      ElMessage.error("缺少项目ID参数");
+      return;
     }
-    await fetchCategories(); // One time ideally
+    const projectId = Number(projectIdParam);
+    if (isNaN(projectId)) {
+      ElMessage.error("项目ID格式错误");
+      return;
+    }
+    await fetchProject(projectId);
+    await Promise.all([fetchStats(projectId), fetchExpenditures(projectId)]);
   } finally {
     loading.value = false;
   }

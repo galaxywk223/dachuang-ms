@@ -11,10 +11,12 @@ from ...models import Project, ProjectExpenditure, ProjectRecycleBin
 from ...serializers import ProjectExpenditureSerializer
 from ...services import ProjectService, ProjectRecycleService
 
+
 class ProjectExpenditureViewSet(viewsets.ModelViewSet):
     """
     项目经费视图集
     """
+
     queryset = ProjectExpenditure.objects.all()
     serializer_class = ProjectExpenditureSerializer
     permission_classes = [IsAuthenticated]
@@ -25,7 +27,10 @@ class ProjectExpenditureViewSet(viewsets.ModelViewSet):
         if user.is_level1_admin or user.is_level2_admin:
             return True
         if user.is_student:
-            return project.leader_id == user.id or project.members.filter(id=user.id).exists()
+            return (
+                project.leader_id == user.id
+                or project.members.filter(id=user.id).exists()
+            )
         if user.is_teacher:
             return project.advisors.filter(user=user).exists()
         return False
@@ -61,14 +66,14 @@ class ProjectExpenditureViewSet(viewsets.ModelViewSet):
 
         if not self._ensure_project_status(project):
             raise serializers.ValidationError("当前项目状态不允许录入经费")
-        
+
         # 验证余额
         stats = ProjectService.get_budget_stats(project)
         if amount > stats["remaining_amount"]:
             raise serializers.ValidationError(
                 f"余额不足！当前剩余经费：{stats['remaining_amount']}元，本次申请：{amount}元"
             )
-            
+
         serializer.save(created_by=self.request.user)
 
     def list(self, request, *args, **kwargs):
@@ -101,7 +106,7 @@ class ProjectExpenditureViewSet(viewsets.ModelViewSet):
         try:
             return super().create(request, *args, **kwargs)
         except serializers.ValidationError as e:
-             raise e
+            raise e
         except ValueError as e:
             return Response(
                 {"code": 400, "message": str(e)},
@@ -133,7 +138,6 @@ class ProjectExpenditureViewSet(viewsets.ModelViewSet):
             "title": instance.title,
             "amount": instance.amount,
             "expenditure_date": instance.expenditure_date,
-            "category": instance.category_id,
             "proof_file": instance.proof_file.name if instance.proof_file else "",
             "created_by": instance.created_by_id,
         }
@@ -142,7 +146,9 @@ class ProjectExpenditureViewSet(viewsets.ModelViewSet):
             resource_type=ProjectRecycleBin.ResourceType.EXPENDITURE,
             resource_id=instance.id,
             payload=payload,
-            attachments=[payload.get("proof_file")] if payload.get("proof_file") else [],
+            attachments=[payload.get("proof_file")]
+            if payload.get("proof_file")
+            else [],
             deleted_by=request.user,
         )
         self.perform_destroy(instance)

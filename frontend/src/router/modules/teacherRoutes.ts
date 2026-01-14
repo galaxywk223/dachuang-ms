@@ -28,6 +28,12 @@ export const teacherRoutes: RouteRecordRaw[] = [
         component: () => import("@/views/admin/shared/Funds.vue"),
         meta: { title: "经费管理" },
       },
+      {
+        path: "projects/:id",
+        name: "teacher-project-detail",
+        component: () => import("@/views/admin/level1/projects/Detail.vue"),
+        meta: { title: "项目详情" },
+      },
     ],
   },
 ];

@@ -12,8 +12,9 @@ class ProjectExpenditureSerializer(serializers.ModelSerializer):
     项目经费支出序列化器
     """
 
-    category_name = serializers.CharField(source="category.label", read_only=True)
-    created_by_name = serializers.CharField(source="created_by.real_name", read_only=True)
+    created_by_name = serializers.CharField(
+        source="created_by.real_name", read_only=True
+    )
     proof_file_url = serializers.SerializerMethodField()
 
     class Meta:
@@ -24,8 +25,6 @@ class ProjectExpenditureSerializer(serializers.ModelSerializer):
             "title",
             "amount",
             "expenditure_date",
-            "category",
-            "category_name",
             "proof_file",
             "proof_file_url",
             "status",

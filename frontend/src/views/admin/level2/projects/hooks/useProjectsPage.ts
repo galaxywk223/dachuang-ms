@@ -1,4 +1,5 @@
 import { computed, onMounted, reactive, ref } from "vue";
+import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 
 import { useDictionary } from "@/composables/useDictionary";
@@ -40,7 +41,11 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (!isRecord(error)) return fallback;
   const response = error.response;
-  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === "string") {
+  if (
+    isRecord(response) &&
+    isRecord(response.data) &&
+    typeof response.data.message === "string"
+  ) {
     return response.data.message;
   }
   if (typeof error.message === "string") return error.message;
@@ -49,12 +54,15 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 
 const toBlob = (value: unknown, fallbackType: string) => {
   if (value instanceof Blob) return value;
-  if (value instanceof ArrayBuffer) return new Blob([value], { type: fallbackType });
-  if (typeof value === "string") return new Blob([value], { type: fallbackType });
+  if (value instanceof ArrayBuffer)
+    return new Blob([value], { type: fallbackType });
+  if (typeof value === "string")
+    return new Blob([value], { type: fallbackType });
   return new Blob([JSON.stringify(value ?? "")], { type: fallbackType });
 };
 
 export function useProjectsPage() {
+  const router = useRouter();
   const { loadDictionaries, getOptions } = useDictionary();
 
   const loading = ref(false);
@@ -81,7 +89,9 @@ export function useProjectsPage() {
   });
 
   const levelOptions = computed(() => getOptions(DICT_CODES.PROJECT_LEVEL));
-  const categoryOptions = computed(() => getOptions(DICT_CODES.PROJECT_CATEGORY));
+  const categoryOptions = computed(() =>
+    getOptions(DICT_CODES.PROJECT_CATEGORY)
+  );
   const statusOptions = computed(() => getOptions(DICT_CODES.PROJECT_STATUS));
 
   const fetchProjects = async () => {
@@ -96,11 +106,17 @@ export function useProjectsPage() {
         status: filters.status,
       };
 
-      const res = (await getProjects(params)) as ProjectListResponse | ProjectRow[];
+      const res = (await getProjects(params)) as
+        | ProjectListResponse
+        | ProjectRow[];
       if (isRecord(res) && Array.isArray(res.results)) {
         projects.value = res.results ?? [];
         total.value = res.count ?? projects.value.length;
-      } else if (isRecord(res) && isRecord(res.data) && Array.isArray(res.data?.results)) {
+      } else if (
+        isRecord(res) &&
+        isRecord(res.data) &&
+        Array.isArray(res.data?.results)
+      ) {
         projects.value = res.data?.results ?? [];
         total.value = res.data?.count ?? projects.value.length;
       } else {
@@ -138,8 +154,15 @@ export function useProjectsPage() {
     ElMessage.info("申报功能请在学生端进行或开发管理员代申请功能");
   };
 
-  const handleView = (row: ProjectRow) => ElMessage.success(`正在查看项目: ${row.title}`);
-  const handleEdit = (row: ProjectRow) => ElMessage.warning(`编辑项目: ${row.title}`);
+  const handleView = (row: ProjectRow) => {
+    if (row.id) {
+      router.push({ name: "level2-project-detail", params: { id: row.id } });
+    } else {
+      ElMessage.warning("项目ID缺失");
+    }
+  };
+  const handleEdit = (row: ProjectRow) =>
+    ElMessage.warning(`编辑项目: ${row.title}`);
   const handleDelete = async (row: ProjectRow) => {
     try {
       await ElMessageBox.confirm(
@@ -186,7 +209,10 @@ export function useProjectsPage() {
       }
 
       const res = await exportProjects(params);
-      const blob = toBlob(res, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      const blob = toBlob(
+        res,
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
       downloadFile(blob, "项目数据.xlsx");
       ElMessage.success("导出成功");
     } catch {

@@ -15,7 +15,15 @@ from apps.projects.models import (
 
 class ProjectRecycleService:
     @staticmethod
-    def add_item(*, project, resource_type, resource_id=None, payload=None, attachments=None, deleted_by=None):
+    def add_item(
+        *,
+        project,
+        resource_type,
+        resource_id=None,
+        payload=None,
+        attachments=None,
+        deleted_by=None,
+    ):
         return ProjectRecycleBin.objects.create(
             project=project,
             resource_type=resource_type,
@@ -62,7 +70,6 @@ class ProjectRecycleService:
                 title=payload.get("title", ""),
                 amount=payload.get("amount", 0),
                 expenditure_date=payload.get("expenditure_date"),
-                category_id=payload.get("category"),
                 proof_file=payload.get("proof_file") or None,
                 created_by_id=payload.get("created_by"),
             )
@@ -86,11 +93,19 @@ class ProjectRecycleService:
             project.submitted_at = payload.get("submitted_at")
             project.mid_term_submitted_at = payload.get("mid_term_submitted_at")
             project.closure_applied_at = payload.get("closure_applied_at")
-            project.proposal_file = payload.get("proposal_file") or project.proposal_file
-            project.attachment_file = payload.get("attachment_file") or project.attachment_file
-            project.mid_term_report = payload.get("mid_term_report") or project.mid_term_report
+            project.proposal_file = (
+                payload.get("proposal_file") or project.proposal_file
+            )
+            project.attachment_file = (
+                payload.get("attachment_file") or project.attachment_file
+            )
+            project.mid_term_report = (
+                payload.get("mid_term_report") or project.mid_term_report
+            )
             project.final_report = payload.get("final_report") or project.final_report
-            project.achievement_file = payload.get("achievement_file") or project.achievement_file
+            project.achievement_file = (
+                payload.get("achievement_file") or project.achievement_file
+            )
             project.save()
 
         else:
@@ -107,8 +122,12 @@ class ProjectRecycleService:
         return {
             "status": project.status,
             "submitted_at": project.submitted_at,
-            "proposal_file": project.proposal_file.name if project.proposal_file else "",
-            "attachment_file": project.attachment_file.name if project.attachment_file else "",
+            "proposal_file": project.proposal_file.name
+            if project.proposal_file
+            else "",
+            "attachment_file": project.attachment_file.name
+            if project.attachment_file
+            else "",
         }
 
     @staticmethod
@@ -116,7 +135,9 @@ class ProjectRecycleService:
         return {
             "status": project.status,
             "mid_term_submitted_at": project.mid_term_submitted_at,
-            "mid_term_report": project.mid_term_report.name if project.mid_term_report else "",
+            "mid_term_report": project.mid_term_report.name
+            if project.mid_term_report
+            else "",
         }
 
     @staticmethod
@@ -125,5 +146,7 @@ class ProjectRecycleService:
             "status": project.status,
             "closure_applied_at": project.closure_applied_at,
             "final_report": project.final_report.name if project.final_report else "",
-            "achievement_file": project.achievement_file.name if project.achievement_file else "",
+            "achievement_file": project.achievement_file.name
+            if project.achievement_file
+            else "",
         }

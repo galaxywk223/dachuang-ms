@@ -62,7 +62,6 @@ class BudgetService:
             title=data.get("title"),
             amount=new_amount,
             expenditure_date=data.get("expenditure_date"),
-            category_id=data.get("category"),
             proof_file=data.get("proof_file"),
             status=ProjectExpenditure.ExpenditureStatus.PENDING,
             created_by=user,

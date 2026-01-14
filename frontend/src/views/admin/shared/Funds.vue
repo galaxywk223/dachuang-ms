@@ -3,29 +3,40 @@
     <el-card class="main-card" shadow="never" v-loading="loading">
       <template #header>
         <div class="card-header">
-           <div class="header-left">
-             <span class="header-title">经费管理</span>
-             <el-tag v-if="activeProject" size="small" effect="plain" class="ml-2">{{ activeProject.title }}</el-tag>
-           </div>
-           <div class="header-actions">
-             <el-select
-               v-model="activeProjectId"
-               placeholder="选择项目"
-               filterable
-               clearable
-               style="width: 260px"
-               class="mr-2"
-               @change="handleProjectChange"
-             >
-               <el-option
-                 v-for="item in projects"
-                 :key="item.id"
-                 :label="`${item.project_no || ''} ${item.title}`"
-                 :value="item.id"
-               />
-             </el-select>
-             <el-button type="primary" :disabled="!activeProjectId" @click="showAddDialog">录入支出</el-button>
-           </div>
+          <div class="header-left">
+            <span class="header-title">经费管理</span>
+            <el-tag
+              v-if="activeProject"
+              size="small"
+              effect="plain"
+              class="ml-2"
+              >{{ activeProject.title }}</el-tag
+            >
+          </div>
+          <div class="header-actions">
+            <el-select
+              v-model="activeProjectId"
+              placeholder="选择项目"
+              filterable
+              clearable
+              style="width: 260px"
+              class="mr-2"
+              @change="handleProjectChange"
+            >
+              <el-option
+                v-for="item in projects"
+                :key="item.id"
+                :label="`${item.project_no || ''} ${item.title}`"
+                :value="item.id"
+              />
+            </el-select>
+            <el-button
+              type="primary"
+              :disabled="!activeProjectId"
+              @click="showAddDialog"
+              >录入支出</el-button
+            >
+          </div>
         </div>
       </template>
 
@@ -42,18 +53,38 @@
           <div class="stats-panel mb-4">
             <el-row :gutter="20">
               <el-col :span="6">
-                <el-statistic title="总预算" :value="stats.total_budget" :precision="2" suffix="元" />
+                <el-statistic
+                  title="总预算"
+                  :value="stats.total_budget"
+                  :precision="2"
+                  suffix="元"
+                />
               </el-col>
               <el-col :span="6">
-                <el-statistic title="已使用" :value="stats.used_amount" :precision="2" suffix="元" value-style="color: var(--el-color-danger)" />
+                <el-statistic
+                  title="已使用"
+                  :value="stats.used_amount"
+                  :precision="2"
+                  suffix="元"
+                  value-style="color: var(--el-color-danger)"
+                />
               </el-col>
               <el-col :span="6">
-                <el-statistic title="剩余额度" :value="stats.remaining_amount" :precision="2" suffix="元" value-style="color: var(--el-color-success)" />
+                <el-statistic
+                  title="剩余额度"
+                  :value="stats.remaining_amount"
+                  :precision="2"
+                  suffix="元"
+                  value-style="color: var(--el-color-success)"
+                />
               </el-col>
               <el-col :span="6">
                 <div class="statistic-card">
                   <div class="statistic-title">使用率</div>
-                  <el-progress :percentage="stats.usage_rate" :status="getUsageStatus(stats.usage_rate)" />
+                  <el-progress
+                    :percentage="stats.usage_rate"
+                    :status="getUsageStatus(stats.usage_rate)"
+                  />
                 </div>
               </el-col>
             </el-row>
@@ -62,30 +93,61 @@
           <el-divider />
 
           <el-table :data="expenditures" style="width: 100%" stripe border>
-            <el-table-column prop="expenditure_date" label="日期" width="120" sortable />
+            <el-table-column
+              prop="expenditure_date"
+              label="日期"
+              width="120"
+              sortable
+            />
             <el-table-column prop="title" label="支出事项" min-width="180" />
-            <el-table-column prop="category_name" label="类别" width="120">
-              <template #default="scope">
-                <el-tag>{{ scope.row.category_name || '未分类' }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="amount" label="金额 (元)" width="150" align="right">
+            <el-table-column
+              prop="amount"
+              label="金额 (元)"
+              width="150"
+              align="right"
+            >
               <template #default="scope">
                 {{ Number(scope.row.amount).toFixed(2) }}
               </template>
             </el-table-column>
-            <el-table-column prop="proof_file_url" label="凭证" width="100" align="center">
+            <el-table-column
+              prop="proof_file_url"
+              label="凭证"
+              width="100"
+              align="center"
+            >
               <template #default="scope">
-                <el-link v-if="scope.row.proof_file_url" type="primary" :href="scope.row.proof_file_url" target="_blank" :underline="false">
+                <el-link
+                  v-if="scope.row.proof_file_url"
+                  type="primary"
+                  :href="scope.row.proof_file_url"
+                  target="_blank"
+                  :underline="false"
+                >
                   查看
                 </el-link>
                 <span v-else class="text-gray-400">无</span>
               </template>
             </el-table-column>
-            <el-table-column prop="created_by_name" label="录入人" width="120" />
-            <el-table-column label="操作" width="120" align="center" fixed="right">
+            <el-table-column
+              prop="created_by_name"
+              label="录入人"
+              width="120"
+            />
+            <el-table-column
+              label="操作"
+              width="120"
+              align="center"
+              fixed="right"
+            >
               <template #default="scope">
-                <el-button link type="danger" size="small" @click="handleDelete(scope.row)">删除</el-button>
+                <el-button
+                  link
+                  type="danger"
+                  size="small"
+                  @click="handleDelete(scope.row)"
+                  >删除</el-button
+                >
               </template>
             </el-table-column>
           </el-table>
@@ -96,7 +158,6 @@
     <AddExpenseDialog
       v-model:visible="dialogVisible"
       :project-id="activeProjectId"
-      :categories="categories"
       @success="refreshProjectData"
     />
   </div>
@@ -123,16 +184,9 @@ type ExpenditureItem = {
   id: number;
   expenditure_date?: string;
   title?: string;
-  category_name?: string;
   amount?: number | string;
   proof_file_url?: string;
   created_by_name?: string;
-};
-
-type CategoryItem = {
-  id: number;
-  label: string;
-  value: string;
 };
 
 type StatsPayload = {
@@ -145,7 +199,7 @@ type StatsPayload = {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
-const normalizeList = <T,>(payload: unknown): T[] => {
+const normalizeList = <T>(payload: unknown): T[] => {
   if (!isRecord(payload)) return [];
   if (Array.isArray(payload.results)) return payload.results as T[];
   if (isRecord(payload.data) && Array.isArray(payload.data.results)) {
@@ -169,7 +223,6 @@ const loading = ref(false);
 const dialogVisible = ref(false);
 const projects = ref<ProjectItem[]>([]);
 const expenditures = ref<ExpenditureItem[]>([]);
-const categories = ref<CategoryItem[]>([]);
 const activeProjectId = ref<number | null>(null);
 
 const stats = reactive({
@@ -179,8 +232,8 @@ const stats = reactive({
   usage_rate: 0,
 });
 
-const activeProject = computed(() =>
-  projects.value.find((item) => item.id === activeProjectId.value) || null
+const activeProject = computed(
+  () => projects.value.find((item) => item.id === activeProjectId.value) || null
 );
 
 const fetchProjects = async () => {
@@ -208,7 +261,8 @@ const fetchStats = async (projectId: number) => {
   try {
     const res = await request.get(`/projects/${projectId}/budget-stats/`);
     const payload = isRecord(res) && isRecord(res.data) ? res.data : res;
-    const data = isRecord(payload) && isRecord(payload.data) ? payload.data : payload;
+    const data =
+      isRecord(payload) && isRecord(payload.data) ? payload.data : payload;
     Object.assign(stats, data as StatsPayload);
   } catch (error: unknown) {
     console.error(error);
@@ -229,41 +283,25 @@ const fetchExpenditures = async (projectId: number) => {
 
 const handleDelete = async (row: ExpenditureItem) => {
   try {
-    await ElMessageBox.confirm("确定删除该经费记录吗？删除后可在回收站恢复。", "提示", {
-      type: "warning",
-    });
+    await ElMessageBox.confirm(
+      "确定删除该经费记录吗？删除后可在回收站恢复。",
+      "提示",
+      {
+        type: "warning",
+      }
+    );
     const res = await removeProjectExpenditure(row.id);
     if (isRecord(res) && (res.code === 200 || res.status === 204)) {
       ElMessage.success("已移入回收站");
       refreshProjectData();
     } else {
-      ElMessage.error((isRecord(res) && typeof res.message === "string" && res.message) || "删除失败");
+      ElMessage.error(
+        (isRecord(res) && typeof res.message === "string" && res.message) ||
+          "删除失败"
+      );
     }
   } catch {
     // cancel
-  }
-};
-
-const fetchCategories = async () => {
-  try {
-    const response = await request.get("/dictionaries/items/", {
-      params: { type_code: "EXPENDITURE_CATEGORY" },
-    });
-    const payload = isRecord(response) && isRecord(response.data)
-      ? response.data
-      : response;
-    categories.value = normalizeList<CategoryItem>(payload);
-    if (categories.value.length === 0) {
-      categories.value = [
-        { id: 1, label: "设备费", value: "EQUIPMENT" },
-        { id: 2, label: "材料费", value: "MATERIAL" },
-        { id: 3, label: "差旅费", value: "TRAVEL" },
-        { id: 4, label: "会议费", value: "MEETING" },
-        { id: 5, label: "劳务费", value: "LABOR" },
-      ];
-    }
-  } catch (error: unknown) {
-    console.error(error);
   }
 };
 
@@ -294,7 +332,6 @@ const getUsageStatus = (rate: number) => {
 };
 
 onMounted(async () => {
-  await fetchCategories();
   await fetchProjects();
   if (activeProjectId.value) {
     await refreshProjectData();
@@ -312,9 +349,9 @@ onMounted(async () => {
 .main-card {
   border-radius: 8px;
   :deep(.el-card__header) {
-      padding: 16px 20px;
-      font-weight: 600;
-      border-bottom: 1px solid $color-border-light;
+    padding: 16px 20px;
+    font-weight: 600;
+    border-bottom: 1px solid $color-border-light;
   }
 }
 
@@ -325,25 +362,31 @@ onMounted(async () => {
 }
 
 .header-left {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .header-title {
-    font-size: 16px;
-    color: $slate-800;
+  font-size: 16px;
+  color: $slate-800;
 }
 
 .header-actions {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .stats-panel {
   margin-top: 8px;
 }
-  
-.ml-2 { margin-left: 8px; }
-.mr-2 { margin-right: 8px; }
-.mb-4 { margin-bottom: 16px; }
+
+.ml-2 {
+  margin-left: 8px;
+}
+.mr-2 {
+  margin-right: 8px;
+}
+.mb-4 {
+  margin-bottom: 16px;
+}
 </style>

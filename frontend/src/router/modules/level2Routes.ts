@@ -13,7 +13,8 @@ export const level2Routes: RouteRecordRaw[] = [
       {
         path: "review/establishment",
         name: "admin-review-establishment",
-        component: () => import("@/views/admin/level2/review/Establishment.vue"),
+        component: () =>
+          import("@/views/admin/level2/review/Establishment.vue"),
         meta: { title: "立项审核" },
       },
       {
@@ -25,7 +26,8 @@ export const level2Routes: RouteRecordRaw[] = [
       {
         path: "users/experts",
         name: "level2-users-experts",
-        component: () => import("@/views/admin/level2/users/ExpertManagement.vue"),
+        component: () =>
+          import("@/views/admin/level2/users/ExpertManagement.vue"),
         meta: { title: "院级专家库管理" },
       },
       {
@@ -43,7 +45,8 @@ export const level2Routes: RouteRecordRaw[] = [
           {
             path: "assignment",
             name: "admin-expert-assignment",
-            component: () => import("@/views/admin/shared/expert/Assignment.vue"),
+            component: () =>
+              import("@/views/admin/shared/expert/Assignment.vue"),
             meta: { title: "院系评审分配" },
           },
         ],
@@ -83,6 +86,12 @@ export const level2Routes: RouteRecordRaw[] = [
         name: "admin-statistics",
         component: () => import("@/views/admin/shared/Statistics.vue"),
         meta: { title: "统计概览" },
+      },
+      {
+        path: "projects/:id",
+        name: "level2-project-detail",
+        component: () => import("@/views/admin/level1/projects/Detail.vue"),
+        meta: { title: "项目详情" },
       },
     ],
   },

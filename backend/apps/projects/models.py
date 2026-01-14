@@ -515,14 +515,6 @@ class ProjectExpenditure(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="金额")
     expenditure_date = models.DateField(verbose_name="支出日期")
 
-    # 使用 DictionaryItem 管理类别更灵活，但为了简化先用 ForeignKey 指向 DictionaryItem
-    category = models.ForeignKey(
-        DictionaryItem,
-        on_delete=models.PROTECT,
-        related_name="project_expenditures",
-        verbose_name="支出类别",
-    )
-
     proof_file = models.FileField(
         upload_to="expenditures/",
         blank=True,

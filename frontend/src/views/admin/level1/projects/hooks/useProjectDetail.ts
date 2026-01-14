@@ -9,7 +9,8 @@ import {
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionaries";
 import { getAdminProjectDetail, updateProjectInfo } from "@/api/projects/admin";
-import { exportProjectDoc } from "@/api/projects";
+import { getProjectDetail, exportProjectDoc } from "@/api/projects";
+import { useUserStore } from "@/stores/user";
 
 type OptionItem = {
   value: string;
@@ -215,9 +216,19 @@ export function useProjectDetail() {
     }
     pageLoading.value = true;
     try {
-      const res = (await getAdminProjectDetail(id)) as
-        | ProjectDetailResponse
-        | Record<string, unknown>;
+      // 根据用户角色选择不同的API
+      const userStore = useUserStore();
+      const userRole = userStore.role;
+      
+      let res: ProjectDetailResponse | Record<string, unknown>;
+      
+      // 教师使用通用项目详情API，管理员使用管理员专用API
+      if (userRole === 'teacher') {
+        res = (await getProjectDetail(id)) as ProjectDetailResponse | Record<string, unknown>;
+      } else {
+        res = (await getAdminProjectDetail(id)) as ProjectDetailResponse | Record<string, unknown>;
+      }
+      
       const data = (isRecord(res) && "data" in res ? res.data : res) as
         | Record<string, unknown>
         | undefined;

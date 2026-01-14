@@ -64,6 +64,7 @@
             v-model="form.project"
             placeholder="请选择项目"
             style="width: 100%"
+            :disabled="!!route.params.projectId"
           >
             <el-option
               v-for="item in projectOptions"
@@ -140,6 +141,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from "vue";
+import { useRoute } from "vue-router";
 import { ElMessage, type UploadFile, type UploadUserFile } from "element-plus";
 import {
   getChangeRequests,
@@ -152,6 +154,8 @@ import request from "@/utils/request";
 defineOptions({
   name: "StudentChangeRequestsView",
 });
+
+const route = useRoute();
 
 type ProjectOption = {
   id: number;
@@ -233,7 +237,20 @@ const changeDataText = ref("{}");
 const fetchRequests = async () => {
   loading.value = true;
   try {
-    const res = await getChangeRequests();
+    const projectIdParam = route.params.projectId;
+    if (!projectIdParam) {
+      ElMessage.error("缺少项目ID参数");
+      return;
+    }
+    const projectId = Number(projectIdParam);
+    if (isNaN(projectId)) {
+      ElMessage.error("项目ID格式错误");
+      return;
+    }
+    // 获取指定项目的异动申请
+    const res = await request.get("/projects/change-requests/", {
+      params: { project: projectId },
+    });
     const payload = isRecord(res) && isRecord(res.data) ? res.data : res;
     requests.value = resolveList<ChangeRequest>(payload);
   } catch (error: unknown) {
@@ -244,19 +261,41 @@ const fetchRequests = async () => {
 };
 
 const fetchProjects = async () => {
-  const res = await request.get("/projects/", {
-    params: {
-      status_in:
-        "IN_PROGRESS,MID_TERM_DRAFT,MID_TERM_SUBMITTED,MID_TERM_REVIEWING,MID_TERM_APPROVED",
-    },
-  });
-  const payload = isRecord(res) && isRecord(res.data) ? res.data : res;
-  projectOptions.value = resolveList<ProjectOption>(payload);
+  try {
+    const projectIdParam = route.params.projectId;
+    if (projectIdParam) {
+      // 如果URL中有projectId，只获取该项目
+      const projectId = Number(projectIdParam);
+      const res = await request.get(`/projects/${projectId}/`);
+      const project = isRecord(res) && isRecord(res.data) ? res.data : res;
+      if (project && isRecord(project)) {
+        projectOptions.value = [
+          {
+            id: project.id as number,
+            title: project.title as string,
+          },
+        ];
+      }
+    } else {
+      // 否则获取所有可申请异动的项目
+      const res = await request.get("/projects/", {
+        params: {
+          status_in:
+            "IN_PROGRESS,MID_TERM_DRAFT,MID_TERM_SUBMITTED,MID_TERM_REVIEWING,MID_TERM_APPROVED",
+        },
+      });
+      const payload = isRecord(res) && isRecord(res.data) ? res.data : res;
+      projectOptions.value = resolveList<ProjectOption>(payload);
+    }
+  } catch (error) {
+    console.error("Failed to fetch projects", error);
+  }
 };
 
 const openDialog = () => {
   form.id = null;
-  form.project = null;
+  const projectIdParam = route.params.projectId;
+  form.project = projectIdParam ? Number(projectIdParam) : null;
   form.request_type = "CHANGE";
   form.reason = "";
   form.requested_end_date = "";

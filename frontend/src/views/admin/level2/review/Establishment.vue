@@ -339,6 +339,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import {
   Search,
@@ -474,7 +475,12 @@ const handleSelectionChange = (val: ProjectRow[]) => {
 };
 
 const handleViewDetail = (row: ProjectRow) => {
-  ElMessage.info(`查看详情：${row.title || "项目"}`);
+  if (row.id) {
+    router.push({ name: "level2-project-detail", params: { id: row.id } });
+  } else {
+    ElMessage.warning("项目ID缺失");
+  }
+};
 };
 
 const handleCommand = (command: string, row: ProjectRow) => {

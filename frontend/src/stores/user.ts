@@ -164,6 +164,7 @@ export const useUserStore = defineStore("user", () => {
     permissions,
     roleInfo,
     isLoggedIn,
+    role: computed(() => user.value?.role),
     hasPermission,
     hasAnyPermission,
     hasAllPermissions,

@@ -163,6 +163,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, reactive, computed, watch } from "vue";
+import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import type { FormInstance, FormRules } from "element-plus";
 import request from "@/utils/request";
@@ -179,6 +180,8 @@ import {
 defineOptions({
   name: "TeacherDashboardView",
 });
+
+const router = useRouter();
 
 type ProjectInfo = {
   project_no?: string;
@@ -412,8 +415,11 @@ const handleReview = async (project: TeacherProjectRow) => {
 };
 
 const handleView = (row: TeacherProjectRow) => {
-  void row;
-  // Navigate to detail?
+  if (row.id) {
+    router.push({ name: "teacher-project-detail", params: { id: row.id } });
+  } else {
+    ElMessage.warning("项目ID缺失");
+  }
 };
 
 const handleClose = () => {

@@ -397,6 +397,11 @@ const currentMenus = computed<MenuEntry[]>(() => {
     case "student":
       return [
         {
+          index: "/my-projects",
+          title: "我的项目",
+          icon: Folder,
+        },
+        {
           groupTitle: "项目流程",
           items: [
             {
@@ -405,7 +410,6 @@ const currentMenus = computed<MenuEntry[]>(() => {
               icon: DocumentAdd,
               children: [
                 { index: "/establishment/apply", title: "申请项目" },
-                { index: "/establishment/my-projects", title: "我的项目" },
                 { index: "/establishment/drafts", title: "草稿箱" },
               ],
             },
@@ -424,34 +428,8 @@ const currentMenus = computed<MenuEntry[]>(() => {
               icon: DocumentChecked,
               children: [
                 { index: "/closure/pending", title: "待结题项目" },
-                { index: "/closure/applied", title: "已申请结题" },
                 { index: "/closure/drafts", title: "草稿箱" },
               ],
-            },
-          ],
-        },
-        {
-          groupTitle: "项目管理",
-          items: [
-            {
-              index: "/progress",
-              title: "项目进度",
-              icon: Folder,
-            },
-            {
-              index: "/change-requests",
-              title: "项目异动",
-              icon: DocumentAdd,
-            },
-            {
-              index: "/funds",
-              title: "经费管理",
-              icon: Folder,
-            },
-            {
-              index: "/achievements",
-              title: "成果管理",
-              icon: Folder,
             },
           ],
         },

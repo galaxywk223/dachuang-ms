@@ -8,7 +8,13 @@ export const studentRoutes: RouteRecordRaw[] = [
     children: [
       {
         path: "",
-        redirect: "/establishment/apply",
+        redirect: "/my-projects",
+      },
+      {
+        path: "my-projects",
+        name: "student-my-projects",
+        component: () => import("@/views/student/establishment/MyProjects.vue"),
+        meta: { title: "我的项目" },
       },
       {
         path: "establishment",
@@ -21,13 +27,6 @@ export const studentRoutes: RouteRecordRaw[] = [
             name: "establishment-apply",
             component: () => import("@/views/student/establishment/Apply.vue"),
             meta: { title: "申请项目" },
-          },
-          {
-            path: "my-projects",
-            name: "establishment-my-projects",
-            component: () =>
-              import("@/views/student/establishment/MyProjects.vue"),
-            meta: { title: "我的项目" },
           },
           {
             path: "drafts",
@@ -64,30 +63,6 @@ export const studentRoutes: RouteRecordRaw[] = [
         ],
       },
       {
-        path: "funds",
-        name: "student-funds",
-        component: () => import("@/views/student/funds/Index.vue"),
-        meta: { title: "经费管理" },
-      },
-      {
-        path: "achievements",
-        name: "student-achievements",
-        component: () => import("@/views/student/achievements/Index.vue"),
-        meta: { title: "成果管理" },
-      },
-      {
-        path: "progress",
-        name: "student-progress",
-        component: () => import("@/views/student/progress/Index.vue"),
-        meta: { title: "项目进度" },
-      },
-      {
-        path: "change-requests",
-        name: "student-change-requests",
-        component: () => import("@/views/student/change/Requests.vue"),
-        meta: { title: "项目异动" },
-      },
-      {
         path: "closure",
         name: "closure",
         redirect: "/closure/pending",
@@ -106,18 +81,6 @@ export const studentRoutes: RouteRecordRaw[] = [
             meta: { title: "待结题项目" },
           },
           {
-            path: "applied",
-            name: "closure-applied",
-            component: () => import("@/views/student/closure/Applied.vue"),
-            meta: { title: "已申请结题项目" },
-          },
-          {
-            path: "detail",
-            name: "closure-detail",
-            component: () => import("@/views/student/closure/Detail.vue"),
-            meta: { title: "结题详情" },
-          },
-          {
             path: "drafts",
             name: "closure-drafts",
             component: () => import("@/views/student/closure/Drafts.vue"),
@@ -130,6 +93,18 @@ export const studentRoutes: RouteRecordRaw[] = [
         name: "help",
         component: () => import("@/views/common/Help.vue"),
         meta: { title: "使用帮助" },
+      },
+      {
+        path: "project/:projectId/change-requests",
+        name: "student-project-change-requests",
+        component: () => import("@/views/student/change/Requests.vue"),
+        meta: { title: "项目异动" },
+      },
+      {
+        path: "project/:projectId/funds",
+        name: "student-project-funds",
+        component: () => import("@/views/student/funds/Index.vue"),
+        meta: { title: "经费管理" },
       },
     ],
   },
