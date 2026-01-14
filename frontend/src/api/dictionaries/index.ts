@@ -106,6 +106,29 @@ export function deleteDictionaryItem(id: number) {
   });
 }
 
+export function bulkCreateDictionaryItems(data: {
+  dict_type?: number;
+  dict_type_code?: string;
+  items: DictionaryItem[];
+}) {
+  return request({
+    url: "/dictionaries/items/bulk/",
+    method: "post",
+    data,
+  });
+}
+
+export function clearDictionaryItems(data: {
+  dict_type?: number;
+  dict_type_code?: string;
+}) {
+  return request({
+    url: "/dictionaries/items/clear/",
+    method: "post",
+    data,
+  });
+}
+
 /**
  * 常用字典编码常量
  */

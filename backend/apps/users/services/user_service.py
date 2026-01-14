@@ -156,18 +156,75 @@ class UserService:
         """
         批量导入用户
         """
+        import io
+        import os
         import openpyxl  # type: ignore[import-untyped]
+        import xlrd  # type: ignore[import-untyped]
         from django.db import transaction
+        from django.db.models import Q
         from apps.users.models import User, Role
+        from apps.dictionaries.models import DictionaryItem
 
-        wb = openpyxl.load_workbook(file)
-        sheet = wb.active
+        data = file.read()
+        ext = os.path.splitext(file.name or "")[1].lower()
+        rows = []
+        is_zip = data[:2] == b"PK"
+        is_ole = data[:8] == b"\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1"
+
+        def load_xlsx():
+            wb = openpyxl.load_workbook(io.BytesIO(data), data_only=True)
+            sheet = wb.active
+            return list(sheet.iter_rows(values_only=True))
+
+        def load_xls():
+            book = xlrd.open_workbook(file_contents=data)
+            sheet = book.sheet_by_index(0)
+            return [sheet.row_values(idx) for idx in range(sheet.nrows)]
+
+        if is_zip:
+            rows = load_xlsx()
+        elif is_ole:
+            rows = load_xls()
+        elif ext in [".xlsx", ".xlsm", ".xltx", ".xltm"]:
+            rows = load_xlsx()
+        elif ext == ".xls":
+            rows = load_xls()
+        else:
+            raise ValueError("仅支持 xlsx/xls 文件")
         
         created_count = 0
         errors = []
 
-        # Assuming headers: 工号/学号, 姓名, 学院, 专业, 班级, 手机号, 邮箱
-        # Row 1 is header
+        def normalize_cell(value):
+            return str(value).strip() if value is not None else ""
+
+        if not rows:
+            return {"created": 0, "errors": ["Empty file"]}
+
+        header = [normalize_cell(cell) for cell in rows[0]]
+        header_map = {name: idx for idx, name in enumerate(header) if name}
+        header_lower = {name.lower(): idx for name, idx in header_map.items()}
+
+        def get_cell(row, key, lower=False):
+            idx = header_lower.get(key.lower()) if lower else header_map.get(key)
+            if idx is None or idx >= len(row):
+                return ""
+            return normalize_cell(row[idx])
+
+        is_student_format = "学号" in header_map and "姓名" in header_map
+        is_teacher_format = "tno" in header_lower and "tname" in header_lower
+
+        college_items = DictionaryItem.objects.filter(
+            dict_type__code="college"
+        ).values_list("value", "label")
+        college_map = {value: value for value, _ in college_items}
+        college_map.update({label: value for value, label in college_items})
+
+        def normalize_college(raw_value):
+            raw_value = (raw_value or "").strip()
+            if not raw_value:
+                return ""
+            return college_map.get(raw_value, raw_value)
         
         role_obj = Role.objects.filter(code=default_role).first()
         if not role_obj:
@@ -176,10 +233,20 @@ class UserService:
             raise ValueError("默认角色不存在")
 
         with transaction.atomic():
-            for row_idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
-                employee_id = str(row[0]).strip() if row[0] else None
-                real_name = str(row[1]).strip() if row[1] else None
-                
+            for row_idx, row in enumerate(rows[1:], start=2):
+                if not any(cell is not None and str(cell).strip() for cell in row):
+                    continue
+
+                if is_student_format:
+                    employee_id = get_cell(row, "学号")
+                    real_name = get_cell(row, "姓名")
+                elif is_teacher_format:
+                    employee_id = get_cell(row, "Tno", lower=True)
+                    real_name = get_cell(row, "TName", lower=True)
+                else:
+                    employee_id = normalize_cell(row[0]) if len(row) > 0 else ""
+                    real_name = normalize_cell(row[1]) if len(row) > 1 else ""
+
                 if not employee_id or not real_name:
                     continue
 
@@ -188,16 +255,55 @@ class UserService:
                     continue
                 
                 try:
+                    college_value = ""
+                    department_value = ""
+                    major_value = ""
+                    grade_value = ""
+                    class_value = ""
+                    gender_value = ""
+                    title_value = ""
+                    phone_value = ""
+                    email_value = ""
+
+                    if is_student_format:
+                        college_value = normalize_college(get_cell(row, "单位名称"))
+                        major_value = get_cell(row, "专业名称")
+                        grade_value = get_cell(row, "当前年级")
+                        class_value = get_cell(row, "班级")
+                        gender_value = get_cell(row, "性别")
+                    elif is_teacher_format:
+                        college_value = normalize_college(get_cell(row, "Cname", lower=True))
+                        department_value = college_value
+                        title_value = get_cell(row, "Ranks", lower=True)
+                    else:
+                        college_value = normalize_college(
+                            normalize_cell(row[2]) if len(row) > 2 else ""
+                        )
+                        major_value = normalize_cell(row[3]) if len(row) > 3 else ""
+                        class_value = normalize_cell(row[4]) if len(row) > 4 else ""
+                        phone_value = normalize_cell(row[5]) if len(row) > 5 else ""
+                        email_value = normalize_cell(row[6]) if len(row) > 6 else ""
+
+                    if default_college and not college_value:
+                        college_value = normalize_college(default_college)
+
+                    if gender_value not in ("男", "女"):
+                        gender_value = ""
+
                     user_data = {
                         "employee_id": employee_id,
                         "real_name": real_name,
                         "username": employee_id,
                         "role_fk": role_obj,
-                        "college": str(row[2]).strip() if len(row) > 2 and row[2] else "",
-                        "major": str(row[3]).strip() if len(row) > 3 and row[3] else "",
-                        "class_name": str(row[4]).strip() if len(row) > 4 and row[4] else "",
-                        "phone": str(row[5]).strip() if len(row) > 5 and row[5] else "",
-                        "email": str(row[6]).strip() if len(row) > 6 and row[6] else "",
+                        "college": college_value,
+                        "department": department_value,
+                        "major": major_value,
+                        "grade": grade_value,
+                        "class_name": class_value,
+                        "gender": gender_value,
+                        "title": title_value,
+                        "phone": phone_value,
+                        "email": email_value,
                     }
                     if role_obj.code == User.UserRole.EXPERT:
                         user_data["expert_scope"] = expert_scope or User.ExpertScope.COLLEGE

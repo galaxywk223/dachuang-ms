@@ -125,7 +125,7 @@ class RoleSimpleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Role
-        fields = ["id", "code", "name", "default_route"]
+        fields = ["id", "code", "name", "default_route", "scope_dimension"]
 
 
 class PermissionCategorySerializer(serializers.Serializer):

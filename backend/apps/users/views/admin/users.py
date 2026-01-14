@@ -2,6 +2,7 @@
 用户管理相关视图（管理员）
 """
 
+import logging
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -13,6 +14,9 @@ from django.conf import settings
 from ...models import User
 from ...serializers import UserSerializer, UserCreateSerializer
 from ...services import UserService
+from ...permissions import IsAdmin
+
+logger = logging.getLogger(__name__)
 
 
 class AdminUserViewSet(viewsets.ModelViewSet):
@@ -390,7 +394,13 @@ class AdminUserViewSet(viewsets.ModelViewSet):
                     "data": result,
                 }
             )
+        except ValueError as e:
+            return Response(
+                {"code": 400, "message": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         except Exception as e:
+            logger.exception(f"Error importing users: {str(e)}")
             return Response(
                 {"code": 500, "message": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,

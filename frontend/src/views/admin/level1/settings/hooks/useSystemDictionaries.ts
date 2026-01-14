@@ -12,6 +12,8 @@ import {
   DICT_CODES,
   createDictionaryItem,
   deleteDictionaryItem,
+  bulkCreateDictionaryItems,
+  clearDictionaryItems,
   updateDictionaryItem,
 } from "@/api/dictionaries";
 
@@ -71,6 +73,10 @@ export function useSystemDictionaries(
   const isEditMode = ref(false);
   const editingId = ref<number | null>(null);
   const formRef = ref<FormInstance>();
+  const importDialogVisible = ref(false);
+  const importLoading = ref(false);
+  const importFile = ref<File | null>(null);
+  const importText = ref("");
 
   const selectedFile = ref<File | null>(null);
   const fileList = ref<UploadUserFile[]>([]);
@@ -118,7 +124,10 @@ export function useSystemDictionaries(
   const fetchTypes = async () => {
     try {
       const response = await request.get("/dictionaries/types/");
-      const allTypes = resolveList<DictionaryType>(response);
+      const allTypes = resolveList<DictionaryType>(response).map((type) => ({
+        ...type,
+        name: type.code === DICT_CODES.COLLEGE ? "部门" : type.name,
+      }));
       const category = options.category || "";
 
       if (category && CATEGORY_GROUPS[category]) {
@@ -182,6 +191,155 @@ export function useSystemDictionaries(
     form.budget = 0;
     selectedFile.value = null;
     fileList.value = [];
+  };
+
+  const openImportDialog = () => {
+    importDialogVisible.value = true;
+    importFile.value = null;
+    importText.value = "";
+  };
+
+  const resetImport = () => {
+    importFile.value = null;
+    importText.value = "";
+  };
+
+  const handleImportFileChange = (file: UploadFile) => {
+    importFile.value = file.raw || null;
+  };
+
+  const readImportContent = async (): Promise<{
+    text: string;
+    rows: string[][] | null;
+  }> => {
+    if (!importFile.value) {
+      return { text: importText.value || "", rows: null };
+    }
+
+    const fileName = importFile.value.name.toLowerCase();
+    if (fileName.endsWith(".xlsx") || fileName.endsWith(".xls")) {
+      const { read, utils } = await import("xlsx");
+      const arrayBuffer = await importFile.value.arrayBuffer();
+      const workbook = read(arrayBuffer, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const rows = utils.sheet_to_json(sheet, { header: 1 }) as unknown[];
+      const normalized = rows
+        .map((row) =>
+          (row as unknown[])
+            .map((cell) => String(cell ?? "").trim())
+            .filter((cell) => cell !== "")
+        )
+        .filter((row) => row.length > 0);
+      return { text: "", rows: normalized };
+    }
+
+    return { text: await importFile.value.text(), rows: null };
+  };
+
+  const parseImportItems = (payload: {
+    text: string;
+    rows: string[][] | null;
+  }) => {
+    const typeCode = currentType.value?.code || "";
+    const isCollege = typeCode === DICT_CODES.COLLEGE;
+    const isMajorCategory = typeCode === DICT_CODES.MAJOR_CATEGORY;
+
+    const isHeader = (parts: string[]) => {
+      if (parts.length < 2) return false;
+      const header = parts.map((part) => part.toLowerCase());
+      if (isCollege) {
+        return header[0] === "cno" && header[1] === "cname";
+      }
+      if (isMajorCategory) {
+        return header[0] === "subno" && header[1] === "sub";
+      }
+      return false;
+    };
+
+    let rows: string[][] = [];
+    if (payload.rows && payload.rows.length > 0) {
+      rows = payload.rows;
+    } else {
+      const lines = payload.text
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+      rows = lines
+        .map((line) => line.split(/,|\t/).map((part) => part.trim()))
+        .filter((parts) => parts.length > 0);
+    }
+
+    if (rows.length > 0 && isHeader(rows[0])) {
+      rows.shift();
+    }
+
+    return rows
+      .map((parts) => {
+        let label = parts[0] || "";
+        let value = showCode.value ? parts[1] || label : label;
+        if (isCollege || isMajorCategory) {
+          value = parts[0] || "";
+          label = parts[1] || "";
+        }
+        return { label, value };
+      })
+      .filter((item) => item.label && item.value);
+  };
+
+  const submitImport = async () => {
+    const type = currentType.value;
+    if (!type) return;
+    importLoading.value = true;
+    try {
+      const content = await readImportContent();
+      if (!content.text.trim() && (!content.rows || content.rows.length === 0)) {
+        ElMessage.warning("请上传文件或填写导入内容");
+        return;
+      }
+      const itemsToImport = parseImportItems(content);
+      if (itemsToImport.length === 0) {
+        ElMessage.warning("没有可导入的数据");
+        return;
+      }
+      const res = (await bulkCreateDictionaryItems({
+        dict_type: type.id,
+        items: itemsToImport,
+      })) as { created?: number; skipped?: number };
+      const created = res?.created ?? 0;
+      const skipped = res?.skipped ?? 0;
+      ElMessage.success(`导入完成：新增 ${created} 条，跳过 ${skipped} 条`);
+      importDialogVisible.value = false;
+      await fetchItems(type.code);
+    } catch (error) {
+      console.error(error);
+      ElMessage.error("导入失败");
+    } finally {
+      importLoading.value = false;
+    }
+  };
+
+  const clearItems = async () => {
+    const type = currentType.value;
+    if (!type) return;
+    try {
+      await ElMessageBox.confirm(
+        `确认清空 ${type.name} 吗？此操作不可恢复。`,
+        "警告",
+        {
+          confirmButtonText: "确定清空",
+          cancelButtonText: "取消",
+          type: "warning",
+        }
+      );
+      await clearDictionaryItems({ dict_type: type.id });
+      ElMessage.success("清空成功");
+      await fetchItems(type.code);
+    } catch (error) {
+      if (error !== "cancel") {
+        ElMessage.error("清空失败，可能存在被引用的条目");
+      }
+    }
   };
 
   const openAddDialog = () => {
@@ -357,10 +515,18 @@ export function useSystemDictionaries(
     showCode,
     showBudget,
     showTemplate,
+    importDialogVisible,
+    importLoading,
+    importText,
     form,
     rules,
     fetchItems,
     handleTypeSelect,
+    openImportDialog,
+    handleImportFileChange,
+    submitImport,
+    clearItems,
+    resetImport,
     openAddDialog,
     editItem,
     resetForm,

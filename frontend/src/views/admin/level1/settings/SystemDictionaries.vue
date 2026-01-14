@@ -50,6 +50,12 @@
                   }}</span>
                 </div>
                 <div class="header-actions" v-if="currentType">
+                  <el-button @click="openImportDialog">
+                    <el-icon><Upload /></el-icon> 导入
+                  </el-button>
+                  <el-button type="warning" plain @click="clearItems">
+                    <el-icon><Delete /></el-icon> 清空
+                  </el-button>
                   <el-button type="primary" @click="openAddDialog">
                     <el-icon><Plus /></el-icon> 添加条目
                   </el-button>
@@ -189,12 +195,58 @@
         </span>
       </template>
     </el-dialog>
+
+    <el-dialog
+      v-model="importDialogVisible"
+      title="批量导入条目"
+      width="560px"
+      align-center
+      destroy-on-close
+      @closed="resetImport"
+    >
+      <el-form label-width="90px">
+        <el-form-item label="导入文件">
+          <el-upload
+            action="#"
+            :auto-upload="false"
+            :limit="1"
+            accept=".xlsx,.xls,.csv,.txt"
+            :on-change="handleImportFileChange"
+          >
+            <template #trigger>
+              <el-button type="primary" plain>选择文件</el-button>
+            </template>
+            <template #tip>
+              <div class="el-upload__tip">
+                支持 XLSX/XLS/CSV/TXT，每行一条；可用逗号或制表符分隔名称与代码
+              </div>
+            </template>
+          </el-upload>
+        </el-form-item>
+        <el-form-item label="或粘贴">
+          <el-input
+            v-model="importText"
+            type="textarea"
+            :rows="6"
+            placeholder="每行一条，格式：显示名称,代码（无代码可省略）"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="importDialogVisible = false">取消</el-button>
+          <el-button type="primary" :loading="importLoading" @click="submitImport"
+            >开始导入</el-button
+          >
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useRoute } from "vue-router";
-import { Plus, Collection, ArrowRight } from "@element-plus/icons-vue";
+import { Plus, Collection, ArrowRight, Upload, Delete } from "@element-plus/icons-vue";
 import { useSystemDictionaries } from "./hooks/useSystemDictionaries";
 
 // 支持props传入，也支持从route.meta获取
@@ -228,9 +280,17 @@ const {
   showCode,
   showBudget,
   showTemplate,
+  importDialogVisible,
+  importLoading,
+  importText,
   form,
   rules,
   handleTypeSelect,
+  openImportDialog,
+  handleImportFileChange,
+  submitImport,
+  clearItems,
+  resetImport,
   openAddDialog,
   editItem,
   resetForm,

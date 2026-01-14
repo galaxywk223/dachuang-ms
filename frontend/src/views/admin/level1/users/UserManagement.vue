@@ -1,10 +1,22 @@
 <template>
   <div class="user-management-page">
+    <el-tabs
+      v-model="activeTab"
+      class="custom-tabs user-tabs"
+      @tab-change="handleTabChange"
+    >
+      <el-tab-pane
+        v-for="tab in userTabs"
+        :key="tab.name"
+        :label="tab.label"
+        :name="tab.name"
+      />
+    </el-tabs>
     <el-card class="main-card" shadow="never">
       <template #header>
         <div class="card-header">
           <div class="header-left">
-            <span class="header-title">用户管理</span>
+            <span class="header-title">{{ activeTabLabel }}</span>
             <el-tag type="info" size="small" effect="plain"
               >共 {{ total }} 项</el-tag
             >
@@ -35,23 +47,6 @@
                 ><el-icon><Search /></el-icon
               ></template>
             </el-input>
-          </el-form-item>
-
-          <el-form-item label="角色">
-            <el-select
-              v-model="filters.role"
-              placeholder="全部角色"
-              clearable
-              filterable
-              style="width: 180px"
-            >
-              <el-option
-                v-for="role in roleOptions"
-                :key="role.code"
-                :label="role.name"
-                :value="role.code"
-              />
-            </el-select>
           </el-form-item>
 
           <el-form-item label="学院">
@@ -207,12 +202,19 @@
           <template v-if="isStudentRole">
             <el-col :span="12">
               <el-form-item label="学号" prop="employee_id">
-                <el-input v-model="formData.employee_id" :disabled="isEditMode" placeholder="请输入学号" />
+                <el-input
+                  v-model="formData.employee_id"
+                  :disabled="isEditMode"
+                  placeholder="请输入学号"
+                />
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item label="姓名" prop="real_name">
-                <el-input v-model="formData.real_name" placeholder="请输入姓名" />
+                <el-input
+                  v-model="formData.real_name"
+                  placeholder="请输入姓名"
+                />
               </el-form-item>
             </el-col>
             <el-col :span="12">
@@ -242,7 +244,10 @@
             </el-col>
             <el-col :span="12">
               <el-form-item label="专业名称" prop="major">
-                <el-input v-model="formData.major" placeholder="请输入专业名称" />
+                <el-input
+                  v-model="formData.major"
+                  placeholder="请输入专业名称"
+                />
               </el-form-item>
             </el-col>
             <el-col :span="12">
@@ -252,7 +257,10 @@
             </el-col>
             <el-col :span="12">
               <el-form-item label="班级" prop="class_name">
-                <el-input v-model="formData.class_name" placeholder="如：软231" />
+                <el-input
+                  v-model="formData.class_name"
+                  placeholder="如：软231"
+                />
               </el-form-item>
             </el-col>
           </template>
@@ -261,12 +269,19 @@
           <template v-if="isTeacherOrAdmin">
             <el-col :span="12">
               <el-form-item label="工号" prop="employee_id">
-                <el-input v-model="formData.employee_id" :disabled="isEditMode" placeholder="请输入工号" />
+                <el-input
+                  v-model="formData.employee_id"
+                  :disabled="isEditMode"
+                  placeholder="请输入工号"
+                />
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item label="姓名" prop="real_name">
-                <el-input v-model="formData.real_name" placeholder="请输入姓名" />
+                <el-input
+                  v-model="formData.real_name"
+                  placeholder="请输入姓名"
+                />
               </el-form-item>
             </el-col>
             <el-col :span="12">
@@ -306,7 +321,7 @@
           </template>
 
           <!-- 管理员额外字段 - 管理范围 -->
-          <el-col :span="12" v-if="isAdminRole">
+          <el-col :span="12" v-if="isAdminRole && selectedRoleScopeDimension">
             <el-form-item label="管理范围" prop="managed_scope_value">
               <el-select
                 v-model="formData.managed_scope_value"
@@ -331,7 +346,11 @@
           <!-- 联系方式 - 所有角色通用 -->
           <el-col :span="12" v-if="formData.role">
             <el-form-item label="手机号" prop="phone">
-              <el-input v-model="formData.phone" maxlength="11" placeholder="请输入手机号" />
+              <el-input
+                v-model="formData.phone"
+                maxlength="11"
+                placeholder="请输入手机号"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="12" v-if="formData.role">
@@ -424,7 +443,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { Search, Plus, Upload, UploadFilled } from "@element-plus/icons-vue";
 import {
   getUsers,
@@ -446,6 +465,19 @@ import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionaries";
 
 const route = useRoute();
+const router = useRouter();
+
+const userTabs = [
+  { label: "学生管理", name: "STUDENT" },
+  { label: "教师管理", name: "TEACHER" },
+  { label: "管理员管理", name: "LEVEL2_ADMIN" },
+] as const;
+
+const normalizeTab = (value?: string) => {
+  if (!value) return userTabs[0].name;
+  const hit = userTabs.find((tab) => tab.name === value);
+  return hit?.name || userTabs[0].name;
+};
 
 type RoleOption = {
   id: number;
@@ -502,6 +534,10 @@ const tableData = ref<UserRow[]>([]);
 const total = ref(0);
 const currentPage = ref(1);
 const pageSize = ref(10);
+const activeTab = ref(userTabs[0].name);
+const activeTabLabel = computed(
+  () => userTabs.find((tab) => tab.name === activeTab.value)?.label || "用户管理"
+);
 
 const formDialogVisible = ref(false);
 const importDialogVisible = ref(false);
@@ -527,18 +563,22 @@ const titleOptions = computed(() => getOptions(DICT_CODES.TITLE));
 
 // 角色判断
 const isStudentRole = computed(() => formData.role === "STUDENT");
-const isTeacherOrAdmin = computed(() => 
-  formData.role && formData.role !== "STUDENT"
+const isTeacherOrAdmin = computed(
+  () => formData.role && formData.role !== "STUDENT"
 );
 const isAdminRole = computed(() => {
   const role = roleOptions.value.find((r) => r.code === formData.role);
   return role?.code?.endsWith("_ADMIN") || false;
 });
 const isExpertRole = computed(() => formData.role === "EXPERT");
+const selectedRoleScopeDimension = computed(() => {
+  const role = roleOptions.value.find((r) => r.code === formData.role) as any;
+  return role?.scope_dimension || "";
+});
 
 const filters = reactive({
   search: "",
-  role: "",
+  role: activeTab.value,
   college: "",
   is_active: "",
 });
@@ -584,6 +624,7 @@ watch(
       ) as any;
       if (!roleDetail || !roleDetail.scope_dimension) {
         scopeValueOptions.value = [];
+        formData.managed_scope_value = null;
         return;
       }
 
@@ -712,7 +753,7 @@ const handleSearch = () => {
 
 const resetFilters = () => {
   filters.search = "";
-  filters.role = "";
+  filters.role = activeTab.value;
   filters.college = "";
   filters.is_active = "";
   handleSearch();
@@ -729,6 +770,7 @@ const handleCurrentChange = () => {
 
 const openCreateDialog = () => {
   isEditMode.value = false;
+  formData.role = filters.role || activeTab.value;
   formDialogVisible.value = true;
 };
 
@@ -887,12 +929,31 @@ const handleImport = async () => {
   }
 };
 
+const syncRoleFromRoute = (roleQuery?: string) => {
+  const tab = normalizeTab(roleQuery);
+  activeTab.value = tab;
+  filters.role = tab;
+  currentPage.value = 1;
+  loadData();
+};
+
+const handleTabChange = (tabName: string) => {
+  if (tabName === route.query.role) return;
+  void router.replace({
+    query: {
+      ...route.query,
+      role: tabName,
+    },
+  });
+};
+
 watch(
   () => route.query.role,
   (role) => {
     if (typeof role === "string") {
-      filters.role = role;
-      handleSearch();
+      syncRoleFromRoute(role);
+    } else if (!role) {
+      syncRoleFromRoute();
     }
   }
 );
@@ -900,11 +961,7 @@ watch(
 onMounted(async () => {
   loadDictionaries([DICT_CODES.COLLEGE, DICT_CODES.TITLE]);
   await loadRoles();
-  const roleQuery = route.query.role;
-  if (typeof roleQuery === "string") {
-    filters.role = roleQuery;
-  }
-  loadData();
+  syncRoleFromRoute(typeof route.query.role === "string" ? route.query.role : undefined);
 });
 </script>
 

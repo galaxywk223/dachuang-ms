@@ -112,7 +112,9 @@ class User(AbstractUser):
         """系统内置角色代码"""
 
         STUDENT = "STUDENT", "学生"
-        TEACHER = "TEACHER", "教师"
+        TEACHER = "TEACHER", "指导教师"
+        EXPERT = "EXPERT", "评审专家"
+        LEVEL2_ADMIN = "LEVEL2_ADMIN", "院级管理员"
         LEVEL1_ADMIN = "LEVEL1_ADMIN", "校级管理员"
 
     class ExpertScope(models.TextChoices):
@@ -148,10 +150,10 @@ class User(AbstractUser):
     grade = models.CharField(max_length=10, blank=True, verbose_name="年级")
     class_name = models.CharField(max_length=50, blank=True, verbose_name="班级")
     gender = models.CharField(
-        max_length=10, 
-        blank=True, 
-        choices=[("男", "男"), ("女", "女")], 
-        verbose_name="性别"
+        max_length=10,
+        blank=True,
+        choices=[("男", "男"), ("女", "女")],
+        verbose_name="性别",
     )
 
     # 管理员专属字段

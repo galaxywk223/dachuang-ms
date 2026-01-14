@@ -7,3 +7,12 @@ class IsLevel1Admin(permissions.BasePermission):
 
     def has_permission(self, request, view):
         return bool(request.user and request.user.is_authenticated and request.user.is_level1_admin)
+
+
+class IsAdmin(permissions.BasePermission):
+    """
+    允许任何管理员访问（支持多级管理员）
+    """
+
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated and request.user.is_admin)

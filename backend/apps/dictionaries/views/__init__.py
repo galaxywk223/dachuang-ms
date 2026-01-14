@@ -6,6 +6,8 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from django.db.models import Max
+from django.db.models.deletion import ProtectedError
 from django_filters.rest_framework import DjangoFilterBackend  # type: ignore[import-untyped]
 from rest_framework.filters import SearchFilter
 
@@ -16,6 +18,7 @@ from ..serializers import (
     DictionaryItemSerializer,
     DictionaryItemSimpleSerializer,
     DictionaryBatchSerializer,
+    DictionaryItemBulkSerializer,
 )
 from apps.users.permissions import IsLevel1Admin
 
@@ -161,3 +164,109 @@ class DictionaryItemViewSet(viewsets.ModelViewSet):
         if dict_type_code:
             queryset = queryset.filter(dict_type__code=dict_type_code)
         return queryset
+
+    @action(detail=False, methods=["post"], url_path="bulk")
+    def bulk_create(self, request):
+        """
+        批量导入字典条目
+        POST /api/dictionaries/items/bulk/
+        Body: { dict_type: 1 | dict_type_code: "college", items: [{label, value}] }
+        """
+        dict_type_id = request.data.get("dict_type")
+        dict_type_code = request.data.get("dict_type_code")
+        if not dict_type_id and not dict_type_code:
+            return Response(
+                {"detail": "缺少字典类型参数"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if dict_type_id:
+            dict_type = DictionaryType.objects.filter(id=dict_type_id).first()
+        else:
+            dict_type = DictionaryType.objects.filter(code=dict_type_code).first()
+
+        if not dict_type:
+            return Response(
+                {"detail": "字典类型不存在"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = DictionaryItemBulkSerializer(
+            data=request.data.get("items", []), many=True
+        )
+        serializer.is_valid(raise_exception=True)
+
+        existing_values = set(
+            DictionaryItem.objects.filter(dict_type=dict_type).values_list(
+                "value", flat=True
+            )
+        )
+        max_sort = (
+            DictionaryItem.objects.filter(dict_type=dict_type).aggregate(
+                Max("sort_order")
+            )["sort_order__max"]
+            or 0
+        )
+
+        created_count = 0
+        skipped_count = 0
+        for item in serializer.validated_data:
+            label = item.get("label", "").strip()
+            value = (item.get("value") or label).strip()
+            if not label or not value:
+                skipped_count += 1
+                continue
+            if value in existing_values:
+                skipped_count += 1
+                continue
+            max_sort += 1
+            DictionaryItem.objects.create(
+                dict_type=dict_type,
+                label=label,
+                value=value,
+                description=item.get("description", ""),
+                extra_data=item.get("extra_data") or {},
+                sort_order=max_sort,
+                is_active=True,
+            )
+            existing_values.add(value)
+            created_count += 1
+
+        return Response(
+            {"created": created_count, "skipped": skipped_count},
+            status=status.HTTP_200_OK,
+        )
+
+    @action(detail=False, methods=["post"], url_path="clear")
+    def clear_items(self, request):
+        """
+        清空字典条目
+        POST /api/dictionaries/items/clear/
+        Body: { dict_type: 1 | dict_type_code: "college" }
+        """
+        dict_type_id = request.data.get("dict_type")
+        dict_type_code = request.data.get("dict_type_code")
+        if not dict_type_id and not dict_type_code:
+            return Response(
+                {"detail": "缺少字典类型参数"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if dict_type_id:
+            dict_type = DictionaryType.objects.filter(id=dict_type_id).first()
+        else:
+            dict_type = DictionaryType.objects.filter(code=dict_type_code).first()
+
+        if not dict_type:
+            return Response(
+                {"detail": "字典类型不存在"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            deleted_count, _ = DictionaryItem.objects.filter(
+                dict_type=dict_type
+            ).delete()
+        except ProtectedError:
+            return Response(
+                {"detail": "存在被引用的条目，无法清空"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response({"deleted": deleted_count}, status=status.HTTP_200_OK)
