@@ -63,6 +63,9 @@
           <el-tab-pane label="工作流配置" name="workflow">
             <BatchWorkflowConfig v-if="batchId" :batch-id="batchId" />
           </el-tab-pane>
+          <el-tab-pane label="管理员分配" name="admin-assignments">
+            <BatchAdminAssignmentConfig v-if="batchId" :batch-id="batchId" />
+          </el-tab-pane>
         </el-tabs>
       </template>
     </el-card>
@@ -80,6 +83,7 @@ import {
 import { getProjectBatch } from "@/api/system-settings/batches";
 import SystemConfigLimitsTab from "./components/SystemConfigLimitsTab.vue";
 import BatchWorkflowConfig from "@/components/business/BatchWorkflowConfig.vue";
+import BatchAdminAssignmentConfig from "@/components/business/BatchAdminAssignmentConfig.vue";
 
 defineOptions({ name: "Level1SystemConfigView" });
 

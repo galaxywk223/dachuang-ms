@@ -48,6 +48,7 @@ export interface PendingReview {
   review_type_display?: string;
   review_level?: string;
   review_level_display?: string;
+  workflow_node?: number | null;
 }
 
 /**

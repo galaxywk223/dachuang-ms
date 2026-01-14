@@ -102,6 +102,23 @@
                     <span v-else class="text-gray">未设置</span>
                   </template>
                 </el-table-column>
+                <el-table-column
+                  prop="require_expert_review"
+                  label="专家评审"
+                  width="100"
+                  align="center"
+                >
+                  <template #default="{ row }">
+                    <el-tag
+                      v-if="row.require_expert_review"
+                      type="warning"
+                      size="small"
+                    >
+                      需要
+                    </el-tag>
+                    <span v-else class="text-gray">否</span>
+                  </template>
+                </el-table-column>
                 <el-table-column label="退回设置" width="100" align="center">
                   <template #default="{ row }">
                     <el-tag
@@ -195,13 +212,6 @@
                 <span class="legend-item">
                   <span
                     class="legend-color"
-                    style="background-color: #722ed1"
-                  ></span>
-                  专家评审
-                </span>
-                <span class="legend-item">
-                  <span
-                    class="legend-color"
                     style="background-color: #fa8c16"
                   ></span>
                   确认
@@ -232,7 +242,6 @@
         <el-form-item label="节点类型" prop="node_type">
           <el-select v-model="nodeForm.node_type" placeholder="选择类型">
             <el-option label="审核" value="REVIEW" />
-            <el-option label="专家评审" value="EXPERT_REVIEW" />
             <el-option label="确认" value="APPROVAL" />
           </el-select>
         </el-form-item>
@@ -251,18 +260,37 @@
             />
           </el-select>
         </el-form-item>
+        <el-form-item label="专家评审">
+          <el-switch
+            v-model="nodeForm.require_expert_review"
+            :disabled="!canEnableExpertReview"
+          />
+          <div class="form-hint">
+            仅管理员节点可开启，开启后需先完成专家评审再终审。
+          </div>
+        </el-form-item>
+        <el-form-item label="专家范围" v-if="nodeForm.require_expert_review">
+          <el-select
+            v-model="nodeForm.scope"
+            placeholder="选择范围"
+            style="width: 100%"
+          >
+            <el-option label="院级" value="COLLEGE" />
+            <el-option label="校级" value="SCHOOL" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="允许退回" prop="allowed_reject_to">
           <el-select
             v-model="nodeForm.allowed_reject_to"
             multiple
             placeholder="选择可退回的节点"
+            :disabled="nodeForm.node_type === 'SUBMIT'"
           >
             <el-option
-              v-for="node in nodes"
+              v-for="node in rejectTargetOptions"
               :key="node.id"
               :label="`${node.name} (${node.node_type})`"
               :value="node.id"
-              :disabled="editingNode && node.id === editingNode.id"
             />
           </el-select>
         </el-form-item>
@@ -340,7 +368,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import {
   ElMessage,
   ElMessageBox,
@@ -390,6 +418,8 @@ const nodeForm = ref<WorkflowNodeInput>({
   name: "",
   node_type: "REVIEW",
   role_fk: undefined,
+  require_expert_review: false,
+  scope: "",
   allowed_reject_to: [],
   notice: "",
   start_date: undefined,
@@ -411,6 +441,27 @@ const dateForm = ref<{
 }>({
   start_date: undefined,
   end_date: undefined,
+});
+
+const roleMap = computed(() => {
+  const map = new Map<number, Role>();
+  for (const role of availableRoles.value) {
+    map.set(role.id, role);
+  }
+  return map;
+});
+
+const canEnableExpertReview = computed(() => {
+  if (nodeForm.value.node_type === "SUBMIT") return false;
+  if (!nodeForm.value.role_fk) return false;
+  const role = roleMap.value.get(nodeForm.value.role_fk);
+  return Boolean(role?.code && role.code.endsWith("_ADMIN"));
+});
+
+const rejectTargetOptions = computed(() => {
+  const sorted = [...nodes.value].sort((a, b) => a.sort_order - b.sort_order);
+  if (!editingNode.value) return sorted;
+  return sorted.filter((node) => node.sort_order < editingNode.value!.sort_order);
 });
 
 onMounted(() => {
@@ -510,6 +561,8 @@ function handleAddNode() {
     name: "",
     node_type: "REVIEW",
     role_fk: undefined,
+    require_expert_review: false,
+    scope: "",
     allowed_reject_to: [],
     notice: "",
     start_date: undefined,
@@ -526,6 +579,8 @@ function handleEditNode(node: WorkflowNode) {
     name: node.name,
     node_type: node.node_type,
     role_fk: node.role_fk || undefined,
+    require_expert_review: node.require_expert_review || false,
+    scope: node.scope || "",
     allowed_reject_to: node.allowed_reject_to || [],
     notice: node.notice || "",
     start_date: node.start_date || undefined,
@@ -583,7 +638,6 @@ async function handleSaveNode() {
       // 新增节点时自动生成节点编码
       const nodeTypePrefix: Record<string, string> = {
         REVIEW: "REVIEW",
-        EXPERT_REVIEW: "EXPERT",
         APPROVAL: "APPROVAL",
       };
       const prefix = nodeTypePrefix[nodeForm.value.node_type] || "NODE";
@@ -651,7 +705,6 @@ function getNodeTypeName(type: string) {
   const names: Record<string, string> = {
     SUBMIT: "提交",
     REVIEW: "审核",
-    EXPERT_REVIEW: "专家评审",
     APPROVAL: "确认",
   };
   return names[type] || type;
@@ -661,11 +714,20 @@ function getNodeTypeTag(type: string) {
   const tags: Record<string, "" | "success" | "warning" | "danger"> = {
     SUBMIT: "success",
     REVIEW: "",
-    EXPERT_REVIEW: "warning",
     APPROVAL: "danger",
   };
   return tags[type] || "";
 }
+
+watch(
+  () => [nodeForm.value.node_type, nodeForm.value.role_fk],
+  () => {
+    if (!canEnableExpertReview.value) {
+      nodeForm.value.require_expert_review = false;
+      nodeForm.value.scope = "";
+    }
+  }
+);
 </script>
 
 <style scoped lang="scss">
@@ -739,6 +801,13 @@ function getNodeTypeTag(type: string) {
 
   .text-gray {
     color: #94a3b8;
+  }
+
+  .form-hint {
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 1.4;
+    margin-top: 6px;
   }
 
   .date-range {

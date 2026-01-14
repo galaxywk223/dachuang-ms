@@ -8,12 +8,13 @@ export interface WorkflowNode {
   id: number;
   code: string;
   name: string;
-  node_type: "SUBMIT" | "REVIEW" | "EXPERT_REVIEW" | "APPROVAL";
+  node_type: "SUBMIT" | "REVIEW" | "APPROVAL";
   role: string;
   role_fk: number | null;
   role_name: string | null;
   role_code: string | null;
   review_level: string;
+  require_expert_review: boolean;
   scope: string;
   return_policy: string;
   allowed_reject_to: number[];
@@ -60,9 +61,10 @@ export interface BatchWorkflowSummary {
 export interface WorkflowNodeInput {
   code: string;
   name: string;
-  node_type: "SUBMIT" | "REVIEW" | "EXPERT_REVIEW" | "APPROVAL";
+  node_type: "SUBMIT" | "REVIEW" | "APPROVAL";
   role_fk?: number;
   review_level?: string;
+  require_expert_review?: boolean;
   scope?: string;
   return_policy?: string;
   allowed_reject_to?: number[];

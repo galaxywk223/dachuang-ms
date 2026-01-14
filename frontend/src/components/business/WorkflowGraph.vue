@@ -18,14 +18,12 @@ let graph: Graph | null = null;
 const NODE_TYPE_COLORS = {
   SUBMIT: "#52c41a",
   REVIEW: "#1890ff",
-  EXPERT_REVIEW: "#722ed1",
   APPROVAL: "#fa8c16",
 };
 
 const NODE_TYPE_NAMES = {
   SUBMIT: "提交",
   REVIEW: "审核",
-  EXPERT_REVIEW: "专家评审",
   APPROVAL: "确认",
 };
 
@@ -93,6 +91,9 @@ function renderWorkflow() {
   props.nodes.forEach((node, index) => {
     const x = startX + index * nodeSpacing;
     const y = startY;
+    const isExpertRequired = Boolean(node.require_expert_review);
+    const typeName = NODE_TYPE_NAMES[node.node_type] || node.node_type;
+    const labelSuffix = isExpertRequired ? `${typeName}+专家` : typeName;
 
     const graphNode = graph!.addNode({
       id: `node-${node.id}`,
@@ -104,15 +105,13 @@ function renderWorkflow() {
       attrs: {
         body: {
           fill: NODE_TYPE_COLORS[node.node_type] || "#1890ff",
-          stroke: "#5c7bd9",
+          stroke: isExpertRequired ? "#faad14" : "#5c7bd9",
           strokeWidth: 2,
           rx: 6,
           ry: 6,
         },
         label: {
-          text: `${node.name}\n(${
-            NODE_TYPE_NAMES[node.node_type] || node.node_type
-          })`,
+          text: `${node.name}\n(${labelSuffix})`,
           fill: "#ffffff",
           fontSize: 12,
           textWrap: {

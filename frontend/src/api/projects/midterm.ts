@@ -2,7 +2,7 @@ import request from "@/utils/request";
 
 export function getProjectExpertSummary(
   projectId: number,
-  params?: { review_type?: string; scope?: string }
+  params?: { review_type?: string; scope?: string; node_id?: number }
 ) {
   return request({
     url: `/projects/${projectId}/expert-summary`,
@@ -21,4 +21,3 @@ export function finalizeMidterm(
     data,
   });
 }
-
