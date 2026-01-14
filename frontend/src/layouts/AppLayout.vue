@@ -429,6 +429,7 @@ const currentMenus = computed<MenuEntry[]>(() => {
               icon: DocumentChecked,
               children: [
                 { index: "/closure/pending", title: "待结题项目" },
+                { index: "/closure/applied", title: "已申请结题" },
                 { index: "/closure/drafts", title: "草稿箱" },
               ],
             },

@@ -118,14 +118,6 @@
         <el-table-column label="操作" width="220" align="center" fixed="right">
           <template #default="{ row }">
             <el-button
-              type="primary"
-              size="small"
-              link
-              @click="handleView(row)"
-            >
-              查看详情
-            </el-button>
-            <el-button
               v-if="
                 ['CLOSURE_LEVEL2_REJECTED', 'CLOSURE_LEVEL1_REJECTED'].includes(
                   row.status
@@ -327,12 +319,6 @@ const handleSizeChange = (size: number) => {
 const handleCurrentChange = (page: number) => {
   pagination.page = page;
   fetchAppliedProjects();
-};
-
-// 查看详情
-const handleView = (row: ProjectRow) => {
-  if (!row?.id) return;
-  router.push({ path: "/closure/detail", query: { projectId: row.id } });
 };
 
 const handleReapply = (row: ProjectRow) => {

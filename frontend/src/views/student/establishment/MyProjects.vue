@@ -264,43 +264,45 @@
               </template>
               <!-- View Action -->
               <template v-else>
-                <el-button
-                  type="primary"
-                  link
-                  size="small"
-                  @click="handleEdit(row)"
-                  >查看</el-button
-                >
-                <el-dropdown trigger="click">
-                  <el-button type="success" link size="small">
-                    管理
-                    <el-icon style="margin-left: 4px"><ArrowDown /></el-icon>
-                  </el-button>
-                  <template #dropdown>
-                    <el-dropdown-item @click="goToChangeRequests(row)"
-                      >项目异动</el-dropdown-item
-                    >
-                    <el-dropdown-item @click="goToFunds(row)"
-                      >经费管理</el-dropdown-item
-                    >
-                  </template>
-                </el-dropdown>
-                <el-button
-                  type="warning"
-                  link
-                  size="small"
-                  @click="handleWithdraw(row)"
-                  v-if="canWithdraw(row)"
-                  >撤回</el-button
-                >
-                <el-button
-                  type="danger"
-                  link
-                  size="small"
-                  @click="handleDeleteSubmission(row)"
-                  v-if="canDeleteSubmission(row)"
-                  >删除提交</el-button
-                >
+                <div class="action-wrap">
+                  <el-button
+                    type="primary"
+                    link
+                    size="small"
+                    @click="handleEdit(row)"
+                    >查看</el-button
+                  >
+                  <el-dropdown trigger="click">
+                    <el-button type="success" link size="small">
+                      管理
+                      <el-icon style="margin-left: 4px"><ArrowDown /></el-icon>
+                    </el-button>
+                    <template #dropdown>
+                      <el-dropdown-item @click="goToChangeRequests(row)"
+                        >项目异动</el-dropdown-item
+                      >
+                      <el-dropdown-item @click="goToFunds(row)"
+                        >经费管理</el-dropdown-item
+                      >
+                    </template>
+                  </el-dropdown>
+                  <el-button
+                    type="warning"
+                    link
+                    size="small"
+                    @click="handleWithdraw(row)"
+                    v-if="canWithdraw(row)"
+                    >撤回</el-button
+                  >
+                  <el-button
+                    type="danger"
+                    link
+                    size="small"
+                    @click="handleDeleteSubmission(row)"
+                    v-if="canDeleteSubmission(row)"
+                    >删除提交</el-button
+                  >
+                </div>
               </template>
             </template>
           </el-table-column>
@@ -655,5 +657,12 @@ const goToFunds = (row: ProjectRow) => {
 }
 .mr-1 {
   margin-right: 4px;
+}
+
+.action-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 </style>

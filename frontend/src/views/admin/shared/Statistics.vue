@@ -7,6 +7,37 @@
             <span class="header-title">统计概览</span>
           </div>
           <div class="header-actions">
+            <el-form inline class="filter-form">
+              <el-form-item label="年度" class="mb-0">
+                <el-input
+                  v-model="reportFilters.year"
+                  placeholder="如 2025"
+                  style="width: 120px"
+                  clearable
+                />
+              </el-form-item>
+              <el-form-item label="学院代码" class="mb-0">
+                <el-input
+                  v-model="reportFilters.college"
+                  placeholder="学院代码"
+                  style="width: 140px"
+                  clearable
+                />
+              </el-form-item>
+              <el-form-item label="状态筛选" class="mb-0">
+                <el-input
+                  v-model="reportFilters.status_in"
+                  placeholder="逗号分隔"
+                  style="width: 180px"
+                  clearable
+                />
+              </el-form-item>
+              <el-form-item class="mb-0">
+                <el-button type="primary" @click="fetchReport">查询</el-button>
+                <el-button @click="resetReport">重置</el-button>
+              </el-form-item>
+            </el-form>
+            <div class="divider"></div>
             <el-button type="primary" plain @click="refreshAll"
               >刷新数据</el-button
             >
@@ -14,43 +45,7 @@
         </div>
       </template>
 
-      <el-card class="tool-card mt-4">
-        <template #header>
-          <div class="card-header">
-            <span class="title">项目统计报表</span>
-            <el-button type="primary" plain @click="fetchReport"
-              >刷新</el-button
-            >
-          </div>
-        </template>
-        <el-form inline label-position="left" class="mb-2">
-          <el-form-item label="年度">
-            <el-input
-              v-model="reportFilters.year"
-              placeholder="如 2025"
-              style="width: 140px"
-            />
-          </el-form-item>
-          <el-form-item label="学院代码">
-            <el-input
-              v-model="reportFilters.college"
-              placeholder="学院代码"
-              style="width: 160px"
-            />
-          </el-form-item>
-          <el-form-item label="状态筛选">
-            <el-input
-              v-model="reportFilters.status_in"
-              placeholder="逗号分隔"
-              style="width: 220px"
-            />
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" @click="fetchReport">查询</el-button>
-            <el-button @click="resetReport">重置</el-button>
-          </el-form-item>
-        </el-form>
-
+      <div class="content-wrapper">
         <el-row :gutter="16" class="mb-4">
           <el-col :span="6">
             <el-statistic title="项目总数" :value="reportData.total" />
@@ -132,16 +127,14 @@
             </el-card>
           </el-col>
         </el-row>
-      </el-card>
+      </div>
     </el-card>
   </div>
 </template>
 
 <script setup lang="ts">
 import { reactive, onMounted } from "vue";
-import {
-  getProjectStatisticsReport,
-} from "@/api/projects/admin";
+import { getProjectStatisticsReport } from "@/api/projects/admin";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionaries";
 
@@ -235,7 +228,7 @@ onMounted(async () => {
 .main-card {
   border-radius: 8px;
   :deep(.el-card__header) {
-    padding: 16px 20px;
+    padding: 12px 20px;
     font-weight: 600;
     border-bottom: 1px solid $color-border-light;
   }
@@ -260,6 +253,49 @@ onMounted(async () => {
 .header-actions {
   display: flex;
   align-items: center;
+  gap: 12px;
+}
+
+.filter-form {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+
+  &::before,
+  &::after {
+    display: none !important;
+    content: none !important;
+  }
+
+  :deep(.el-form-item) {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0;
+    margin-right: 12px;
+
+    &:last-child {
+      margin-right: 0;
+    }
+
+    .el-form-item__label {
+      display: flex;
+      align-items: center;
+      height: 32px;
+      line-height: normal;
+    }
+
+    .el-form-item__content {
+      line-height: 32px;
+      vertical-align: middle;
+    }
+  }
+}
+
+.divider {
+  width: 1px;
+  height: 20px;
+  background-color: #e2e8f0;
+  margin: 0 8px;
 }
 
 .inner-card {
@@ -269,19 +305,8 @@ onMounted(async () => {
   }
 }
 
-.tool-card {
-  margin-top: 12px;
-}
-
-.tool-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.actions {
-  display: flex;
-  gap: 12px;
+.mb-0 {
+  margin-bottom: 0 !important;
 }
 
 .mb-4 {
