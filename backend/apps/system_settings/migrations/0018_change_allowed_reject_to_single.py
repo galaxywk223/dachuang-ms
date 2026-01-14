@@ -5,8 +5,6 @@ from django.db import migrations, models
 
 def convert_array_to_single(apps, schema_editor):
     """将allowed_reject_to从JSONB数组转换为单个整数"""
-    db_alias = schema_editor.connection.alias
-
     # 使用原生SQL来转换数据
     with schema_editor.connection.cursor() as cursor:
         # 首先添加临时列

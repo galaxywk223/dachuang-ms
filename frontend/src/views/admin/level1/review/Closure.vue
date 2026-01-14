@@ -264,7 +264,6 @@ import request from "@/utils/request";
 import {
   getPendingReviews,
   type PendingReview,
-  type WorkflowNode,
 } from "@/api/reviews";
 
 defineOptions({ name: "Level1ClosureReviewView" });
@@ -328,6 +327,7 @@ const reviewType = ref<"approve" | "reject">("approve");
 const reviewForm = ref({
   projectId: 0,
   comment: "",
+  return_to: "student" as "student" | "teacher",
 });
 
 const batchDialogVisible = ref(false);
@@ -335,6 +335,7 @@ const batchSubmitting = ref(false);
 const batchForm = ref({
   action: "approve",
   comments: "",
+  return_to: "student" as "student" | "teacher",
 });
 
 const resolveList = (payload: unknown): PendingReview[] => {

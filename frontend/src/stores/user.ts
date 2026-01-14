@@ -20,6 +20,7 @@ export const useUserStore = defineStore("user", () => {
     code: string;
     name: string;
     default_route: string;
+    scope_dimension?: string | null;
   } | null>(storedRoleInfo ? JSON.parse(storedRoleInfo) : null);
 
   const isLoggedIn = computed(() => !!token.value);
@@ -74,6 +75,7 @@ export const useUserStore = defineStore("user", () => {
               code: string;
               name: string;
               default_route: string;
+              scope_dimension?: string | null;
             };
             permissions?: string[];
             default_route?: string;

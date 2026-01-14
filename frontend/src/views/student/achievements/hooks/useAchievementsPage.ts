@@ -1,6 +1,11 @@
 import { computed, onMounted, reactive, ref } from "vue";
 import dayjs from "dayjs";
-import { ElMessage, ElMessageBox, type FormInstance, type UploadFile } from "element-plus";
+import {
+  ElMessage,
+  ElMessageBox,
+  type FormInstance,
+  type UploadFile,
+} from "element-plus";
 
 import {
   addProjectAchievement,
@@ -96,9 +101,13 @@ export function useAchievementsPage() {
   });
 
   const rules = {
-    achievement_type: [{ required: true, message: "请选择成果类型", trigger: "change" }],
+    achievement_type: [
+      { required: true, message: "请选择成果类型", trigger: "change" },
+    ],
     title: [{ required: true, message: "请输入成果名称", trigger: "blur" }],
-    description: [{ required: true, message: "请输入成果描述", trigger: "blur" }],
+    description: [
+      { required: true, message: "请输入成果描述", trigger: "blur" },
+    ],
   };
 
   const { loadDictionaries, getOptions } = useDictionary();
@@ -107,7 +116,8 @@ export function useAchievementsPage() {
   );
 
   const activeProject = computed(
-    () => projects.value.find((item) => item.id === activeProjectId.value) || null
+    () =>
+      projects.value.find((item) => item.id === activeProjectId.value) || null
   );
 
   const selectedType = computed(() => {
@@ -133,12 +143,20 @@ export function useAchievementsPage() {
   const isConferenceType = computed(() =>
     CONFERENCE_TYPES.includes(selectedTypeValue.value)
   );
-  const isReportType = computed(() => REPORT_TYPES.includes(selectedTypeValue.value));
-  const isMediaType = computed(() => MEDIA_TYPES.includes(selectedTypeValue.value));
+  const isReportType = computed(() =>
+    REPORT_TYPES.includes(selectedTypeValue.value)
+  );
+  const isMediaType = computed(() =>
+    MEDIA_TYPES.includes(selectedTypeValue.value)
+  );
 
   const canAdd = computed(() => {
     if (!activeProject.value) return false;
-    const allowedStatuses = ["IN_PROGRESS", "CLOSURE_DRAFT", "CLOSURE_SUBMITTED"];
+    const allowedStatuses = [
+      "IN_PROGRESS",
+      "CLOSURE_DRAFT",
+      "CLOSURE_SUBMITTED",
+    ];
     return allowedStatuses.includes(activeProject.value.status ?? "");
   });
 
@@ -243,7 +261,7 @@ export function useAchievementsPage() {
   const submitAchievement = async () => {
     const projectId = activeProjectId.value;
     if (!formRef.value || projectId === null) return;
-    
+
     try {
       await formRef.value.validate();
     } catch {
@@ -371,11 +389,15 @@ export function useAchievementsPage() {
   const handleDelete = async (row: AchievementItem) => {
     if (!activeProjectId.value) return;
     try {
-      await ElMessageBox.confirm("确认删除该成果记录？删除后可在回收站恢复。", "提示", {
-        type: "warning",
-        confirmButtonText: "删除",
-        cancelButtonText: "取消",
-      });
+      await ElMessageBox.confirm(
+        "确认删除该成果记录？删除后可在回收站恢复。",
+        "提示",
+        {
+          type: "warning",
+          confirmButtonText: "删除",
+          cancelButtonText: "取消",
+        }
+      );
       const response = (await removeProjectAchievement(
         activeProjectId.value,
         row.id

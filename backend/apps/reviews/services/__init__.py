@@ -16,7 +16,6 @@ from apps.projects.services.phase_service import ProjectPhaseService
 from apps.projects.services.archive_service import ensure_project_archive
 from apps.system_settings.services import SystemSettingService, WorkflowService
 from apps.system_settings.services import AdminAssignmentService
-from apps.system_settings.models import AdminAssignment
 from apps.notifications.services import NotificationService
 
 

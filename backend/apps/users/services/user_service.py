@@ -161,7 +161,6 @@ class UserService:
         import openpyxl  # type: ignore[import-untyped]
         import xlrd  # type: ignore[import-untyped]
         from django.db import transaction
-        from django.db.models import Q
         from apps.users.models import User, Role
         from apps.dictionaries.models import DictionaryItem
 

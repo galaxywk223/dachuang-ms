@@ -108,7 +108,7 @@ class DictionaryItemBulkSerializer(serializers.Serializer):
     批量导入字典条目
     """
 
-    label = serializers.CharField(max_length=255)
+    label = serializers.CharField(max_length=255)  # type: ignore[assignment]
     value = serializers.CharField(max_length=255, required=False, allow_blank=True)
     description = serializers.CharField(required=False, allow_blank=True)
     extra_data = serializers.JSONField(required=False)

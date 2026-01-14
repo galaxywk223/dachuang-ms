@@ -272,7 +272,6 @@ import request from "@/utils/request";
 import {
   getPendingReviews,
   type PendingReview,
-  type WorkflowNode,
 } from "@/api/reviews";
 
 defineOptions({ name: "Level2ClosureReviewView" });

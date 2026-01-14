@@ -165,8 +165,13 @@ function renderWorkflow() {
     }
 
     // 创建退回连线
-    if (node.allowed_reject_to && node.allowed_reject_to.length > 0) {
-      node.allowed_reject_to.forEach((targetId) => {
+    const rejectTargets = Array.isArray(node.allowed_reject_to)
+      ? node.allowed_reject_to
+      : node.allowed_reject_to
+      ? [node.allowed_reject_to]
+      : [];
+    if (rejectTargets.length > 0) {
+      rejectTargets.forEach((targetId: number) => {
         const targetIndex = props.nodes.findIndex((n) => n.id === targetId);
         if (targetIndex !== -1 && targetIndex < index) {
           graph!.addEdge({

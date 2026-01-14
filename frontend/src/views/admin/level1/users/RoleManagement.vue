@@ -153,7 +153,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from "vue";
+import { ref, reactive, onMounted } from "vue";
 import { Search, Plus } from "@element-plus/icons-vue";
 import {
   getRoles,
@@ -181,13 +181,6 @@ type RoleRow = {
   sort_order?: number;
   permission_count?: number;
   user_count?: number;
-};
-
-type Permission = {
-  id: number;
-  name: string;
-  code: string;
-  category?: string;
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>

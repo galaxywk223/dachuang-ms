@@ -115,7 +115,7 @@ router.beforeEach(async (to, _from, next) => {
     if (!userStore.user) {
       try {
         await userStore.fetchProfile();
-      } catch (error) {
+      } catch {
         // 获取用户信息失败（token无效），跳转到登录页
         next({ name: "login" });
         return;

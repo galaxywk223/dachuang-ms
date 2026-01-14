@@ -316,7 +316,6 @@ import {
   getPendingReviews,
   reviewAction,
   type PendingReview,
-  type WorkflowNode,
 } from "@/api/reviews";
 import ProjectStatusBadge from "@/components/business/project/StatusBadge.vue";
 import request from "@/utils/request";

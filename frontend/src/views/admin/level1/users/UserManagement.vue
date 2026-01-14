@@ -463,6 +463,7 @@ import {
   type UploadFile,
 } from "element-plus";
 import { useDictionary } from "@/composables/useDictionary";
+import type { DictionaryItem } from "@/api/dictionaries";
 import { DICT_CODES } from "@/api/dictionaries";
 
 const route = useRoute();
@@ -474,7 +475,9 @@ const userTabs = [
   { label: "管理员管理", name: "ADMIN" }, // 改为 ADMIN 表示所有管理员
 ] as const;
 
-const normalizeTab = (value?: string) => {
+type UserTabName = (typeof userTabs)[number]["name"];
+
+const normalizeTab = (value?: string): UserTabName => {
   if (!value) return userTabs[0].name;
   const hit = userTabs.find((tab) => tab.name === value);
   return hit?.name || userTabs[0].name;
@@ -493,6 +496,8 @@ type UserRow = {
   employee_id: string;
   real_name: string;
   role?: string;
+  gender?: string;
+  grade?: string;
   role_info?: {
     id: number;
     code: string;
@@ -508,6 +513,7 @@ type UserRow = {
   email?: string;
   is_active?: boolean;
   expert_scope?: string;
+  managed_scope_value?: number | null;
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -536,7 +542,7 @@ const tableData = ref<UserRow[]>([]);
 const total = ref(0);
 const currentPage = ref(1);
 const pageSize = ref(10);
-const activeTab = ref(userTabs[0].name);
+const activeTab = ref<UserTabName>(userTabs[0].name);
 const activeTabLabel = computed(
   () =>
     userTabs.find((tab) => tab.name === activeTab.value)?.label || "用户管理"
@@ -570,7 +576,7 @@ const isTeacherOrAdmin = computed(
   () => formData.role && formData.role !== "STUDENT"
 );
 const selectedRoleScopeDimension = computed(() => {
-  const role = roleOptions.value.find((r) => r.code === formData.role) as any;
+  const role = roleOptions.value.find((r) => r.code === formData.role);
   return role?.scope_dimension || "";
 });
 // 判断是否为管理员角色：有scope_dimension的角色需要选择管理范围
@@ -579,7 +585,12 @@ const isAdminRole = computed(() => {
 });
 const isExpertRole = computed(() => formData.role === "EXPERT");
 
-const filters = reactive({
+const filters = reactive<{
+  search: string;
+  role: UserTabName;
+  college: string;
+  is_active: string;
+}>({
   search: "",
   role: activeTab.value,
   college: "",
@@ -622,9 +633,7 @@ watch(
 
     try {
       // 获取角色详情以获取 scope_dimension
-      const roleDetail = roleOptions.value.find(
-        (r) => r.code === newRole
-      ) as any;
+      const roleDetail = roleOptions.value.find((r) => r.code === newRole);
       if (!roleDetail || !roleDetail.scope_dimension) {
         scopeValueOptions.value = [];
         formData.managed_scope_value = null;
@@ -650,12 +659,27 @@ watch(
       if (dictCode) {
         // 先加载字典数据
         await loadDictionaries([dictCode]);
-        const options = getOptions(dictCode);
-        scopeValueOptions.value = options.map((opt: any) => ({
-          id: opt.id,
-          label: opt.label,
-          value: opt.value,
-        }));
+        const options = getOptions(dictCode) as DictionaryItem[];
+        scopeValueOptions.value = options
+          .map((opt) => {
+            const id =
+              typeof opt.id === "number" ? opt.id : Number(opt.value);
+            if (!Number.isFinite(id)) return null;
+            return {
+              id,
+              label: opt.label,
+              value: opt.value,
+            };
+          })
+          .filter(
+            (
+              opt
+            ): opt is {
+              id: number;
+              label: string;
+              value: string;
+            } => Boolean(opt)
+          );
       }
     } catch (error) {
       console.error("加载管理范围选项失败:", error);
@@ -793,10 +817,10 @@ const openEditDialog = (row: UserRow) => {
   formData.employee_id = row.employee_id || "";
   formData.real_name = row.real_name || "";
   formData.role = row.role_info?.code || row.role || "";
-  formData.gender = (row as any).gender || "";
-  formData.grade = (row as any).grade || "";
+  formData.gender = row.gender || "";
+  formData.grade = row.grade || "";
   formData.expert_scope = row.expert_scope || "COLLEGE";
-  formData.managed_scope_value = (row as any).managed_scope_value || null;
+  formData.managed_scope_value = row.managed_scope_value || null;
   formData.department = row.college || "";
   formData.title = row.title || "";
   formData.major = row.major || "";

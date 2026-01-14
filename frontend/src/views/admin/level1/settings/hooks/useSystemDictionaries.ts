@@ -293,7 +293,10 @@ export function useSystemDictionaries(
     importLoading.value = true;
     try {
       const content = await readImportContent();
-      if (!content.text.trim() && (!content.rows || content.rows.length === 0)) {
+      if (
+        !content.text.trim() &&
+        (!content.rows || content.rows.length === 0)
+      ) {
         ElMessage.warning("请上传文件或填写导入内容");
         return;
       }
@@ -399,8 +402,7 @@ export function useSystemDictionaries(
       const normalizedLabel = form.label.trim();
       const duplicateLabel = items.value.some(
         (item) =>
-          item.id !== editingId.value &&
-          item.label.trim() === normalizedLabel
+          item.id !== editingId.value && item.label.trim() === normalizedLabel
       );
       if (duplicateLabel) {
         ElMessage.error("专业大类显示名称不能重复");

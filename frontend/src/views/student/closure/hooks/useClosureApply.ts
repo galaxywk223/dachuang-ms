@@ -487,7 +487,7 @@ export function useClosureApply() {
   const submit = async (isDraft: boolean) => {
     console.log("submit 函数被调用，isDraft:", isDraft);
     console.log("formRef.value:", formRef.value);
-    
+
     if (!isDraft) {
       if (!formRef.value) {
         console.error("formRef.value 为空！");
@@ -504,7 +504,7 @@ export function useClosureApply() {
         return;
       }
     }
-    
+
     // 将 doSubmit 的逻辑内联到这里，确保 loading 状态管理正确
     loading.value = true;
     try {

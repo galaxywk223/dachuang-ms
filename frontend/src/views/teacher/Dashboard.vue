@@ -135,7 +135,6 @@ import { useUserStore } from "@/stores/user";
 import StatsSection from "@/components/dashboard/StatsSection.vue";
 import {
   reviewAction,
-  type WorkflowNode,
   type ReviewActionParams,
 } from "@/api/reviews";
 import {
@@ -419,7 +418,6 @@ const handleView = (row: TeacherProjectRow) => {
 const handleClose = () => {
   dialogVisible.value = false;
   formRef.value?.resetFields();
-  rejectTargets.value = [];
 };
 
 const handleSubmit = async () => {

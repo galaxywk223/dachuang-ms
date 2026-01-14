@@ -73,7 +73,7 @@
             <template #default="{ row }">
               <el-switch
                 :model-value="row.is_expert"
-                @change="(value) => handleToggleExpert(row, value)"
+                @change="(value: boolean) => handleToggleExpert(row, value)"
               />
             </template>
           </el-table-column>

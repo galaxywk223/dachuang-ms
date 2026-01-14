@@ -545,7 +545,7 @@ export function useProjectApplication() {
         return;
       }
     }
-    
+
     await processRequest(isDraft);
   };
 

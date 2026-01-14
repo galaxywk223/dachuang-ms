@@ -14,7 +14,6 @@ from django.conf import settings
 from ...models import User
 from ...serializers import UserSerializer, UserCreateSerializer
 from ...services import UserService
-from ...permissions import IsAdmin
 
 logger = logging.getLogger(__name__)
 
