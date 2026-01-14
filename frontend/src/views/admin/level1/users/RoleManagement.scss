@@ -1,47 +1,7 @@
 @use "@/styles/variables.scss" as *;
 
 .role-management-page {
-  padding: 20px;
-}
-
-.main-card {
-  border-radius: 8px;
-
-  :deep(.el-card__header) {
-    padding: 16px 20px;
-    font-weight: 600;
-    border-bottom: 1px solid $color-border-light;
-  }
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.header-title {
-  font-size: 16px;
-  color: $slate-800;
-}
-
-.filter-section {
-  padding-bottom: 20px;
-  border-bottom: 1px dashed $color-border-light;
-  margin-bottom: 20px;
-
-  .filter-form {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-
-    :deep(.el-form-item) {
-      margin-bottom: 0;
-      margin-right: 0;
-    }
-  }
+  padding: 0;
 }
 
 .pagination-footer {
@@ -58,10 +18,6 @@
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-}
-
-.permission-select {
-  width: 100%;
 }
 
 .form-hint {

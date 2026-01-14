@@ -1,9 +1,25 @@
 <template>
   <div class="role-management-page">
-    <el-table v-loading="loading" :data="tableData" stripe style="width: 100%">
+    <el-table
+      v-loading="loading"
+      :data="tableData"
+      stripe
+      border
+      style="width: 100%"
+      :header-cell-style="{
+        background: '#f8fafc',
+        color: '#475569',
+        fontWeight: '600',
+      }"
+    >
       <el-table-column prop="name" label="角色名称" min-width="200" />
-      <el-table-column prop="user_count" label="用户数" width="120" />
-      <el-table-column label="操作" fixed="right" width="250">
+      <el-table-column
+        prop="user_count"
+        label="用户数"
+        width="120"
+        align="center"
+      />
+      <el-table-column label="操作" fixed="right" width="250" align="center">
         <template #default="{ row }">
           <el-button
             link
@@ -207,6 +223,11 @@ const handleCurrentChange = () => {
   loadRolesList();
 };
 
+const openCreateDialog = () => {
+  isEditMode.value = false;
+  formDialogVisible.value = true;
+};
+
 const openEditDialog = async (row: RoleRow) => {
   isEditMode.value = true;
   currentId.value = row.id;
@@ -283,6 +304,10 @@ const handleDelete = async (row: RoleRow) => {
 
 onMounted(() => {
   loadRolesList();
+});
+
+defineExpose({
+  openCreateDialog,
 });
 </script>
 

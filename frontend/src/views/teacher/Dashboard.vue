@@ -1,7 +1,6 @@
 <template>
   <div class="teacher-dashboard">
     <WelcomeSection :user="welcomeUser" />
-    <StatsSection :statistics="statistics" />
     <el-card class="box-card">
       <template #header>
         <div class="card-header">
@@ -132,7 +131,6 @@ import type { FormInstance, FormRules } from "element-plus";
 import request from "@/utils/request";
 import dayjs from "dayjs";
 import { useUserStore } from "@/stores/user";
-import StatsSection from "@/components/dashboard/StatsSection.vue";
 import {
   reviewAction,
   type ReviewActionParams,
@@ -235,28 +233,6 @@ const dashboardTitle = computed(() =>
 );
 const welcomeUser = computed(() => userStore.user ?? undefined);
 
-const statistics = reactive({
-  myProjects: 0,
-  pending: 0,
-  inProgress: 0,
-  unreadNotifications: 0,
-});
-const inProgressStatuses = new Set([
-  "IN_PROGRESS",
-  "MID_TERM_DRAFT",
-  "MID_TERM_SUBMITTED",
-  "MID_TERM_REVIEWING",
-  "MID_TERM_APPROVED",
-  "MID_TERM_REJECTED",
-  "CLOSURE_DRAFT",
-  "CLOSURE_SUBMITTED",
-  "CLOSURE_LEVEL2_REVIEWING",
-  "CLOSURE_LEVEL2_APPROVED",
-  "CLOSURE_LEVEL2_REJECTED",
-  "CLOSURE_LEVEL1_REVIEWING",
-  "CLOSURE_LEVEL1_APPROVED",
-  "CLOSURE_LEVEL1_REJECTED",
-]);
 
 const dialogVisible = ref(false);
 const currentProject = ref<TeacherProjectRow | null>(null);
@@ -293,25 +269,6 @@ const fetchPendingReviews = async () => {
 const fetchMyProjects = async () => {
   const res = await request.get("/projects/");
   return parseListResponse<ProjectInfo>(res);
-};
-
-const refreshStats = async () => {
-  try {
-    const [pendingRes, projectsRes, unreadRes] = await Promise.all([
-      fetchPendingReviews(),
-      fetchMyProjects(),
-      request.get("/notifications/unread_count/"),
-    ]);
-    statistics.pending = pendingRes.count;
-    statistics.myProjects = projectsRes.count;
-    statistics.inProgress = (projectsRes.results || []).filter((item) =>
-      inProgressStatuses.has(item.status || "")
-    ).length;
-    statistics.unreadNotifications =
-      unreadRes?.data?.data?.count ?? unreadRes?.data?.count ?? 0;
-  } catch (error) {
-    console.error(error);
-  }
 };
 
 const fetchProjects = async () => {
@@ -368,14 +325,9 @@ const fetchProjects = async () => {
       }));
 
       projects.value = [...rows, ...changeRows];
-      statistics.pending = count + changeRows.length;
     } else {
       const { results, count } = await fetchMyProjects();
       projects.value = results || [];
-      statistics.myProjects = count;
-      statistics.inProgress = (results || []).filter((item) =>
-        inProgressStatuses.has(item.status || "")
-      ).length;
     }
   } catch (error) {
     console.error(error);
@@ -453,7 +405,6 @@ const handleSubmit = async () => {
     dialogVisible.value = false;
     activeTab.value = "my_projects";
     fetchProjects();
-    refreshStats();
   } catch (error: unknown) {
     console.error(error);
     ElMessage.error(getErrorMessage(error, "提交失败"));
@@ -468,14 +419,12 @@ const formatDate = (date: string) => {
 
 onMounted(() => {
   fetchProjects();
-  refreshStats();
 });
 
 watch(
   () => activeTab.value,
   () => {
     fetchProjects();
-    refreshStats();
   }
 );
 

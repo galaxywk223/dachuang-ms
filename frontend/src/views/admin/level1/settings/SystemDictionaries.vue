@@ -63,6 +63,13 @@
                     <el-icon><Plus /></el-icon> 添加条目
                   </el-button>
                 </div>
+                <!-- Custom Header Actions Slot -->
+                <div
+                  class="header-actions"
+                  v-else-if="currentType && currentType.isLocal"
+                >
+                  <slot name="header-actions" :type="currentType"></slot>
+                </div>
               </div>
             </template>
 
