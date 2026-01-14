@@ -102,43 +102,6 @@
             <el-radio label="reject">驳回</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item
-          label="退回至"
-          v-if="form.action === 'reject' && rejectTargets.length > 0"
-        >
-          <el-select
-            v-model="form.target_node_id"
-            placeholder="请选择退回节点"
-            style="width: 100%"
-          >
-            <el-option
-              v-for="node in rejectTargets"
-              :key="node.id"
-              :label="node.name"
-              :value="node.id"
-            >
-              <span>{{ node.name }}</span>
-              <span
-                style="
-                  float: right;
-                  color: var(--el-text-color-secondary);
-                  font-size: 12px;
-                "
-              >
-                {{ node.role }}
-              </span>
-            </el-option>
-          </el-select>
-          <div
-            style="
-              color: var(--el-text-color-secondary);
-              font-size: 12px;
-              margin-top: 4px;
-            "
-          >
-            未选择时将退回到默认节点
-          </div>
-        </el-form-item>
         <el-form-item label="审核意见" prop="comments">
           <el-input
             v-model="form.comments"
@@ -172,7 +135,6 @@ import { useUserStore } from "@/stores/user";
 import StatsSection from "@/components/dashboard/StatsSection.vue";
 import {
   reviewAction,
-  getRejectTargets,
   type WorkflowNode,
   type ReviewActionParams,
 } from "@/api/reviews";
@@ -298,13 +260,10 @@ const formRef = ref<FormInstance>();
 const form = reactive<{
   action: "approve" | "reject";
   comments: string;
-  target_node_id: number | null;
 }>({
   action: "approve",
   comments: "",
-  target_node_id: null,
 });
-const rejectTargets = ref<WorkflowNode[]>([]);
 
 const rules = reactive<FormRules>({
   action: [{ required: true, message: "请选择结果", trigger: "change" }],
@@ -429,8 +388,6 @@ const handleReview = async (project: TeacherProjectRow) => {
     currentReviewId.value = null;
     form.action = "approve";
     form.comments = "";
-    form.target_node_id = null;
-    rejectTargets.value = [];
     dialogVisible.value = true;
     return;
   }
@@ -439,19 +396,6 @@ const handleReview = async (project: TeacherProjectRow) => {
     currentReviewId.value = project.review_id;
     form.action = "approve";
     form.comments = "";
-    form.target_node_id = null;
-    rejectTargets.value = [];
-
-    // Normal review: load reject targets
-    try {
-      const res = await getRejectTargets(project.review_id);
-      if (res.code === 200) {
-        rejectTargets.value = res.data || [];
-      }
-    } catch (error) {
-      console.error("获取退回节点失败", error);
-      rejectTargets.value = [];
-    }
     dialogVisible.value = true;
   } else {
     ElMessage.warning("未找到审核记录ID");
@@ -488,10 +432,6 @@ const handleSubmit = async () => {
           action: form.action,
           comments: form.comments,
         };
-        // 如果是退回且选择了目标节点
-        if (form.action === "reject" && form.target_node_id) {
-          payload.target_node_id = form.target_node_id;
-        }
 
         if (isChange && currentProject.value?.change_request_id) {
           await reviewChangeRequest(currentProject.value.change_request_id, {

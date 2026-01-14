@@ -80,7 +80,7 @@ class WorkflowNodeCreateUpdateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     "学生提交节点必须排在第一位（sort_order=0）"
                 )
-            if attrs.get("allowed_reject_to"):
+            if attrs.get("allowed_reject_to") is not None:
                 raise serializers.ValidationError("学生提交节点不允许退回")
             if attrs.get("require_expert_review"):
                 raise serializers.ValidationError("学生提交节点不能启用专家评审")

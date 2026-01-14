@@ -271,12 +271,12 @@ class WorkflowNode(models.Model):
         default=ReturnPolicy.NONE,
         verbose_name="退回规则",
     )
-    # 允许退回的目标节点ID列表（JSON格式）
-    allowed_reject_to = models.JSONField(
-        default=list,
+    # 允许退回的目标节点ID
+    allowed_reject_to = models.IntegerField(
+        null=True,
         blank=True,
-        verbose_name="允许退回的节点ID列表",
-        help_text="存储可以退回到的节点ID数组",
+        verbose_name="允许退回的节点ID",
+        help_text="存储可以退回到的节点ID",
     )
     # 节点的日期窗口配置
     start_date = models.DateField(

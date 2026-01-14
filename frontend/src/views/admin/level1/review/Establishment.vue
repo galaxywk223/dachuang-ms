@@ -205,43 +205,6 @@
           />
         </el-form-item>
         <el-form-item
-          label="退回至"
-          v-if="reviewType === 'reject' && rejectTargets.length > 0"
-        >
-          <el-select
-            v-model="reviewForm.target_node_id"
-            placeholder="请选择退回节点"
-            style="width: 100%"
-          >
-            <el-option
-              v-for="node in rejectTargets"
-              :key="node.id"
-              :label="node.name"
-              :value="node.id"
-            >
-              <span>{{ node.name }}</span>
-              <span
-                style="
-                  float: right;
-                  color: var(--el-text-color-secondary);
-                  font-size: 12px;
-                "
-              >
-                {{ node.role }}
-              </span>
-            </el-option>
-          </el-select>
-          <div
-            style="
-              color: var(--el-text-color-secondary);
-              font-size: 12px;
-              margin-top: 4px;
-            "
-          >
-            未选择时将退回到默认节点
-          </div>
-        </el-form-item>
-        <el-form-item
           :label="
             reviewType === 'approve' ? '审核意见 (可选)' : '驳回原因 (必填)'
           "
@@ -304,7 +267,6 @@ import { ElMessage } from "element-plus";
 import { Search, Check, Close, ArrowDown } from "@element-plus/icons-vue";
 import {
   getPendingReviews,
-  getRejectTargets,
   reviewAction,
   type PendingReview,
   type WorkflowNode,
@@ -374,9 +336,7 @@ const reviewForm = ref({
   projectId: 0,
   comment: "",
   approved_budget: null as number | null,
-  target_node_id: null as number | null,
 });
-const rejectTargets = ref<WorkflowNode[]>([]);
 
 const batchDialogVisible = ref(false);
 const batchSubmitting = ref(false);
@@ -493,20 +453,6 @@ const handleReject = async (row: ProjectRow) => {
   reviewForm.value.projectId = row.id;
   reviewForm.value.comment = "";
   reviewForm.value.approved_budget = null;
-  reviewForm.value.target_node_id = null;
-  rejectTargets.value = [];
-  // 加载可退回节点
-  try {
-    if (typeof row.review_id === "number") {
-      const res = await getRejectTargets(row.review_id);
-      if (res.code === 200) {
-        rejectTargets.value = res.data || [];
-      }
-    }
-  } catch (error) {
-    console.error("获取退回节点失败", error);
-    rejectTargets.value = [];
-  }
   reviewDialogVisible.value = true;
 };
 
@@ -530,7 +476,6 @@ const confirmReview = async () => {
     const data: {
       comment: string;
       approved_budget?: number | null;
-      target_node_id?: number | null;
     } = {
       comment: reviewForm.value.comment,
     };
@@ -547,15 +492,10 @@ const confirmReview = async () => {
         throw new Error("缺少审核记录");
       }
     } else {
-      // 如果是退回且选择了目标节点
-      if (reviewForm.value.target_node_id) {
-        data.target_node_id = reviewForm.value.target_node_id;
-      }
       if (typeof selectedRow?.review_id === "number") {
         response = (await reviewAction(selectedRow.review_id, {
           action: "reject",
           comments: reviewForm.value.comment,
-          target_node_id: data.target_node_id ?? null,
         })) as ReviewProjectsResponse;
       } else {
         throw new Error("缺少审核记录");

@@ -68,7 +68,13 @@
                 <el-table-column prop="name" label="节点名称" min-width="120" />
                 <el-table-column label="执行角色" width="120" align="center">
                   <template #default="{ row }">
-                    {{ row.role_name || "-" }}
+                    {{
+                      row.role_name ||
+                      (row.code === "STUDENT_SUBMIT" ||
+                      row.name.includes("学生提交")
+                        ? "学生"
+                        : "-")
+                    }}
                   </template>
                 </el-table-column>
                 <el-table-column label="日期范围" width="180" align="center">
@@ -251,7 +257,6 @@
         <el-form-item label="允许退回" prop="allowed_reject_to">
           <el-select
             v-model="nodeForm.allowed_reject_to"
-            multiple
             placeholder="选择可退回的节点"
           >
             <el-option
@@ -387,7 +392,7 @@ const nodeForm = ref<WorkflowNodeInput>({
   node_type: "REVIEW",
   role_fk: undefined,
   require_expert_review: false,
-  allowed_reject_to: [],
+  allowed_reject_to: null,
   notice: "",
   start_date: undefined,
   end_date: undefined,
@@ -529,7 +534,7 @@ function handleAddNode() {
     node_type: "REVIEW",
     role_fk: undefined,
     require_expert_review: false,
-    allowed_reject_to: [],
+    allowed_reject_to: null,
     notice: "",
     start_date: undefined,
     end_date: undefined,
@@ -546,7 +551,7 @@ function handleEditNode(node: WorkflowNode) {
     node_type: node.node_type,
     role_fk: node.role_fk || undefined,
     require_expert_review: node.require_expert_review || false,
-    allowed_reject_to: node.allowed_reject_to || [],
+    allowed_reject_to: node.allowed_reject_to || null,
     notice: node.notice || "",
     start_date: node.start_date || undefined,
     end_date: node.end_date || undefined,

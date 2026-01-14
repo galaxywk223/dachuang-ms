@@ -201,50 +201,6 @@
             resize="none"
           />
         </el-form-item>
-        <el-form-item
-          label="退回至"
-          v-if="reviewType === 'reject' && rejectTargets.length > 0"
-        >
-          <el-select
-            v-model="reviewForm.target_node_id"
-            placeholder="请选择退回节点"
-            style="width: 100%"
-            clearable
-          >
-            <el-option
-              v-for="node in rejectTargets"
-              :key="node.id"
-              :label="node.name"
-              :value="node.id"
-            >
-              <span>{{ node.name }}</span>
-              <span
-                style="
-                  float: right;
-                  color: var(--el-text-color-secondary);
-                  font-size: 12px;
-                "
-              >
-                {{ node.role }}
-              </span>
-            </el-option>
-          </el-select>
-          <div
-            style="
-              color: var(--el-text-color-secondary);
-              font-size: 12px;
-              margin-top: 4px;
-            "
-          >
-            未选择时将使用下方的退回规则
-          </div>
-        </el-form-item>
-        <el-form-item v-if="reviewType === 'reject'" label="退回到">
-          <el-radio-group v-model="reviewForm.return_to">
-            <el-radio label="student">退回学生</el-radio>
-            <el-radio label="teacher">退回导师</el-radio>
-          </el-radio-group>
-        </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
@@ -307,7 +263,6 @@ import ProjectStatusBadge from "@/components/business/project/StatusBadge.vue";
 import request from "@/utils/request";
 import {
   getPendingReviews,
-  getRejectTargets,
   type PendingReview,
   type WorkflowNode,
 } from "@/api/reviews";
@@ -373,17 +328,13 @@ const reviewType = ref<"approve" | "reject">("approve");
 const reviewForm = ref({
   projectId: 0,
   comment: "",
-  return_to: "student",
-  target_node_id: null as number | null,
 });
-const rejectTargets = ref<WorkflowNode[]>([]);
 
 const batchDialogVisible = ref(false);
 const batchSubmitting = ref(false);
 const batchForm = ref({
   action: "approve",
   comments: "",
-  return_to: "student",
 });
 
 const resolveList = (payload: unknown): PendingReview[] => {
@@ -477,21 +428,6 @@ const handleReject = async (row: ProjectRow) => {
   reviewType.value = "reject";
   reviewForm.value.projectId = row.id;
   reviewForm.value.comment = "";
-  reviewForm.value.return_to = "student";
-  reviewForm.value.target_node_id = null;
-  rejectTargets.value = [];
-  // 加载可退回节点
-  try {
-    if (typeof row.review_id === "number") {
-      const res = await getRejectTargets(row.review_id);
-      if (res.code === 200) {
-        rejectTargets.value = res.data || [];
-      }
-    }
-  } catch (error) {
-    console.error("获取退回节点失败", error);
-    rejectTargets.value = [];
-  }
   reviewDialogVisible.value = true;
 };
 
@@ -520,17 +456,10 @@ const confirmReview = async () => {
       const payload: {
         action: "return";
         reason: string;
-        return_to?: string;
-        target_node_id?: number | null;
       } = {
         action: "return",
         reason: reviewForm.value.comment,
       };
-      if (reviewForm.value.target_node_id) {
-        payload.target_node_id = reviewForm.value.target_node_id;
-      } else {
-        payload.return_to = reviewForm.value.return_to;
-      }
       const res = await request.post(
         `/projects/${reviewForm.value.projectId}/workflow/finalize-closure/`,
         payload

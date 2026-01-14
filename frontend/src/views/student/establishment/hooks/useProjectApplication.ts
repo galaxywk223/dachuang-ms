@@ -629,7 +629,7 @@ export function useProjectApplication() {
       if (response.code === 200 || response.status === 201) {
         ElMessage.success(isDraft ? "草稿已保存" : "申请已提交");
         if (!isDraft) {
-          router.push("/establishment/my-projects");
+          router.push("/my-projects");
         } else {
           if (response.data && response.data.id) {
             formData.id = response.data.id;

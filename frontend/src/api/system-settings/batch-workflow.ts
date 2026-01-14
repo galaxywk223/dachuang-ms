@@ -16,7 +16,7 @@ export interface WorkflowNode {
   review_level: string;
   require_expert_review: boolean;
   return_policy: string;
-  allowed_reject_to: number[];
+  allowed_reject_to: number | null;
   notice: string;
   start_date: string | null;
   end_date: string | null;
@@ -65,7 +65,7 @@ export interface WorkflowNodeInput {
   review_level?: string;
   require_expert_review?: boolean;
   return_policy?: string;
-  allowed_reject_to?: number[];
+  allowed_reject_to?: number | null;
   notice?: string;
   start_date?: string;
   end_date?: string;

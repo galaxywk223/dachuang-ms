@@ -147,7 +147,6 @@ class WorkflowNodeSerializer(serializers.ModelSerializer):
             "role_code",
             "review_level",
             "require_expert_review",
-            "scope",
             "return_policy",
             "allowed_reject_to",
             "notice",

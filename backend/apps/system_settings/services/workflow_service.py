@@ -17,9 +17,8 @@ class WorkflowNodeDef:
     role: str
     review_level: str
     require_expert_review: bool
-    scope: str
     return_policy: str
-    allowed_reject_to: List[int]  # 允许退回的目标节点ID列表
+    allowed_reject_to: Optional[int] = None  # 允许退回的目标节点ID
     role_fk_id: Optional[int] = None  # 角色外键ID
 
 
@@ -33,9 +32,8 @@ DEFAULT_WORKFLOWS = {
             role="STUDENT",
             review_level="",
             require_expert_review=False,
-            scope="",
             return_policy="NONE",
-            allowed_reject_to=[],
+            allowed_reject_to=None,
         ),
         WorkflowNodeDef(
             id=1,
@@ -45,9 +43,8 @@ DEFAULT_WORKFLOWS = {
             role="TEACHER",
             review_level="TEACHER",
             require_expert_review=False,
-            scope="",
             return_policy="STUDENT",
-            allowed_reject_to=[0],
+            allowed_reject_to=0,
         ),
         WorkflowNodeDef(
             id=2,
@@ -57,9 +54,8 @@ DEFAULT_WORKFLOWS = {
             role="LEVEL2_ADMIN",
             review_level="LEVEL2",
             require_expert_review=True,
-            scope="COLLEGE",
             return_policy="PREVIOUS",
-            allowed_reject_to=[0, 1],
+            allowed_reject_to=1,
         ),
         WorkflowNodeDef(
             id=3,
@@ -69,9 +65,8 @@ DEFAULT_WORKFLOWS = {
             role="LEVEL1_ADMIN",
             review_level="LEVEL1",
             require_expert_review=True,
-            scope="SCHOOL",
             return_policy="PREVIOUS",
-            allowed_reject_to=[0, 1, 2],
+            allowed_reject_to=2,
         ),
     ],
     "MID_TERM": [
@@ -83,9 +78,8 @@ DEFAULT_WORKFLOWS = {
             role="STUDENT",
             review_level="",
             require_expert_review=False,
-            scope="",
             return_policy="NONE",
-            allowed_reject_to=[],
+            allowed_reject_to=None,
         ),
         WorkflowNodeDef(
             id=1,
@@ -95,9 +89,8 @@ DEFAULT_WORKFLOWS = {
             role="TEACHER",
             review_level="TEACHER",
             require_expert_review=False,
-            scope="",
             return_policy="STUDENT",
-            allowed_reject_to=[0],
+            allowed_reject_to=0,
         ),
         WorkflowNodeDef(
             id=2,
@@ -107,9 +100,8 @@ DEFAULT_WORKFLOWS = {
             role="LEVEL2_ADMIN",
             review_level="LEVEL2",
             require_expert_review=True,
-            scope="COLLEGE",
             return_policy="STUDENT",
-            allowed_reject_to=[0, 1],
+            allowed_reject_to=1,
         ),
     ],
     "CLOSURE": [
@@ -121,9 +113,8 @@ DEFAULT_WORKFLOWS = {
             role="STUDENT",
             review_level="",
             require_expert_review=False,
-            scope="",
             return_policy="NONE",
-            allowed_reject_to=[],
+            allowed_reject_to=None,
         ),
         WorkflowNodeDef(
             id=1,
@@ -133,9 +124,8 @@ DEFAULT_WORKFLOWS = {
             role="TEACHER",
             review_level="TEACHER",
             require_expert_review=False,
-            scope="",
             return_policy="STUDENT",
-            allowed_reject_to=[0],
+            allowed_reject_to=0,
         ),
         WorkflowNodeDef(
             id=2,
@@ -145,9 +135,8 @@ DEFAULT_WORKFLOWS = {
             role="LEVEL2_ADMIN",
             review_level="LEVEL2",
             require_expert_review=True,
-            scope="COLLEGE",
             return_policy="PREVIOUS",
-            allowed_reject_to=[0, 1],
+            allowed_reject_to=1,
         ),
         WorkflowNodeDef(
             id=3,
@@ -157,9 +146,8 @@ DEFAULT_WORKFLOWS = {
             role="LEVEL1_ADMIN",
             review_level="LEVEL1",
             require_expert_review=True,
-            scope="SCHOOL",
             return_policy="STUDENT",
-            allowed_reject_to=[0, 1, 2],
+            allowed_reject_to=2,
         ),
     ],
 }
@@ -203,11 +191,8 @@ class WorkflowService:
                 role=node.get_role_code() or node.role,
                 review_level=node.review_level,
                 require_expert_review=node.require_expert_review,
-                scope=node.scope,
                 return_policy=node.return_policy,
-                allowed_reject_to=node.allowed_reject_to
-                if isinstance(node.allowed_reject_to, list)
-                else [],
+                allowed_reject_to=node.allowed_reject_to,
                 role_fk_id=cast(Any, node).role_fk_id,
             )
             for node in nodes
@@ -283,15 +268,13 @@ class WorkflowService:
     def find_expert_node(
         phase: str,
         review_level: str,
-        scope: str,
         batch: Optional[ProjectBatch] = None,
     ) -> Optional[WorkflowNodeDef]:
         """查找需要专家评审的节点"""
         nodes = WorkflowService.get_nodes(phase, batch)
         for node in nodes:
             if node.require_expert_review and node.review_level == review_level:
-                if not scope or node.scope == scope:
-                    return node
+                return node
         return None
 
     @staticmethod
@@ -301,10 +284,10 @@ class WorkflowService:
         if not current_node or not current_node.allowed_reject_to:
             return []
 
-        # 获取所有允许退回的节点
+        # 获取允许退回的节点
         target_nodes = (
             WorkflowNode.objects.filter(
-                id__in=current_node.allowed_reject_to, is_active=True
+                id=current_node.allowed_reject_to, is_active=True
             )
             .select_related("role_fk")
             .order_by("sort_order", "id")
@@ -319,11 +302,8 @@ class WorkflowService:
                 role=node.get_role_code() or node.role,
                 review_level=node.review_level,
                 require_expert_review=node.require_expert_review,
-                scope=node.scope,
                 return_policy=node.return_policy,
-                allowed_reject_to=node.allowed_reject_to
-                if isinstance(node.allowed_reject_to, list)
-                else [],
+                allowed_reject_to=node.allowed_reject_to,
                 role_fk_id=cast(Any, node).role_fk_id,
             )
             for node in target_nodes
@@ -362,7 +342,7 @@ class WorkflowService:
             if first_node.get_role_code() != "STUDENT":
                 errors.append("学生提交节点角色必须是学生（STUDENT）")
             # 验证学生节点不允许退回
-            if first_node.allowed_reject_to:
+            if first_node.allowed_reject_to is not None:
                 errors.append("学生提交节点不应允许退回")
             if first_node.require_expert_review:
                 errors.append("学生提交节点不能启用专家评审")
@@ -378,18 +358,16 @@ class WorkflowService:
                     )
 
                 # 验证退回目标节点存在
-                if node.allowed_reject_to:
-                    for target_id in node.allowed_reject_to:
-                        if target_id not in node_ids:
-                            errors.append(
-                                f"节点 '{node.name}': 退回目标节点ID {target_id} 不存在"
-                            )
-                        elif node_order.get(target_id, -1) >= node_order.get(
-                            cast(Any, node).id, idx
-                        ):
-                            errors.append(
-                                f"节点 '{node.name}': 退回目标必须为前序节点"
-                            )
+                if node.allowed_reject_to is not None:
+                    target_id = node.allowed_reject_to
+                    if target_id not in node_ids:
+                        errors.append(
+                            f"节点 '{node.name}': 退回目标节点ID {target_id} 不存在"
+                        )
+                    elif node_order.get(target_id, -1) >= node_order.get(
+                        cast(Any, node).id, idx
+                    ):
+                        errors.append(f"节点 '{node.name}': 退回目标必须为前序节点")
 
                 if node.node_type == "EXPERT_REVIEW":
                     errors.append(

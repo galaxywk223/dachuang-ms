@@ -126,40 +126,6 @@
               placeholder="请输入审核意见"
             />
           </el-form-item>
-          <el-form-item label="退回至" v-if="rejectTargets.length > 0">
-            <el-select
-              v-model="reviewTargetNodeId"
-              placeholder="请选择退回节点"
-              style="width: 100%"
-            >
-              <el-option
-                v-for="node in rejectTargets"
-                :key="node.id"
-                :label="node.name"
-                :value="node.id"
-              >
-                <span>{{ node.name }}</span>
-                <span
-                  style="
-                    float: right;
-                    color: var(--el-text-color-secondary);
-                    font-size: 12px;
-                  "
-                >
-                  {{ node.role }}
-                </span>
-              </el-option>
-            </el-select>
-            <div
-              style="
-                color: var(--el-text-color-secondary);
-                font-size: 12px;
-                margin-top: 4px;
-              "
-            >
-              未选择时将退回到默认节点
-            </div>
-          </el-form-item>
         </el-form>
       </div>
       <template #footer>
@@ -219,7 +185,6 @@ import { ElMessage } from "element-plus";
 import { useRouter } from "vue-router";
 import {
   getPendingReviews,
-  getRejectTargets,
   reviewAction,
   batchReview,
   type ReviewActionParams,
@@ -302,8 +267,6 @@ const searchQuery = ref("");
 const dialogVisible = ref(false);
 const currentRow = ref<ProjectRow | null>(null);
 const reviewComments = ref("");
-const reviewTargetNodeId = ref<number | null>(null);
-const rejectTargets = ref<WorkflowNode[]>([]);
 const reviewing = ref(false);
 const selectedRows = ref<ProjectRow[]>([]);
 const router = useRouter();
@@ -425,16 +388,6 @@ const handleReview = async (row: ProjectRow) => {
   }
   currentRow.value = row;
   reviewComments.value = "";
-  reviewTargetNodeId.value = null;
-  rejectTargets.value = [];
-  try {
-    const res = await getRejectTargets(row.review_id);
-    if (res.code === 200) {
-      rejectTargets.value = res.data || [];
-    }
-  } catch {
-    rejectTargets.value = [];
-  }
   dialogVisible.value = true;
 };
 
@@ -452,9 +405,6 @@ const submitReview = async (action: "approve" | "reject") => {
       action,
       comments: reviewComments.value,
     };
-    if (action === "reject" && reviewTargetNodeId.value) {
-      payload.target_node_id = reviewTargetNodeId.value;
-    }
     await reviewAction(currentRow.value.review_id, payload);
     ElMessage.success("操作完成");
     dialogVisible.value = false;

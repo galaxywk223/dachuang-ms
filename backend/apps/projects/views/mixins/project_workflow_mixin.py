@@ -114,7 +114,7 @@ class ProjectWorkflowMixin:
             node_id = phase_instance.current_node_id
         if not node_id and scope:
             for node in WorkflowService.get_nodes(review_type, project.batch):
-                if node.require_expert_review and node.scope == scope:
+                if node.require_expert_review:
                     node_id = node.id
                     break
         qs = self._get_expert_reviews_qs(

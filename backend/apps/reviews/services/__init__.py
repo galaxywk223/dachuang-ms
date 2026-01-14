@@ -101,9 +101,8 @@ class ReviewService:
             role=target_node_obj.get_role_code() or target_node_obj.role,
             review_level=target_node_obj.review_level,
             require_expert_review=target_node_obj.require_expert_review,
-            scope=target_node_obj.scope,
             return_policy=target_node_obj.return_policy,
-            allowed_reject_to=target_node_obj.allowed_reject_to or [],
+            allowed_reject_to=target_node_obj.allowed_reject_to,
             role_fk_id=target_node_obj.role_fk_id,
         )
 
@@ -259,9 +258,9 @@ class ReviewService:
         if phase == ProjectPhaseInstance.Phase.APPLICATION:
             if role_code == "TEACHER":
                 project.status = Project.ProjectStatus.TEACHER_AUDITING
-            elif role_code == "LEVEL2_ADMIN" or node.scope == "COLLEGE":
+            elif role_code == "LEVEL2_ADMIN":
                 project.status = Project.ProjectStatus.COLLEGE_AUDITING
-            elif role_code == "LEVEL1_ADMIN" or node.scope == "SCHOOL":
+            elif role_code == "LEVEL1_ADMIN":
                 project.status = Project.ProjectStatus.LEVEL1_AUDITING
             else:
                 # 其他角色：使用通用审核状态
@@ -274,9 +273,9 @@ class ReviewService:
         elif phase == ProjectPhaseInstance.Phase.CLOSURE:
             if role_code == "TEACHER":
                 project.status = Project.ProjectStatus.CLOSURE_SUBMITTED
-            elif node.scope == "COLLEGE":
+            elif role_code == "LEVEL2_ADMIN":
                 project.status = Project.ProjectStatus.CLOSURE_LEVEL2_REVIEWING
-            elif node.scope == "SCHOOL":
+            elif role_code == "LEVEL1_ADMIN":
                 project.status = Project.ProjectStatus.CLOSURE_LEVEL1_REVIEWING
             else:
                 # 其他角色：使用通用审核状态
@@ -477,7 +476,6 @@ class ReviewService:
         node = WorkflowService.find_expert_node(
             ProjectPhaseInstance.Phase.APPLICATION,
             "LEVEL2",
-            "COLLEGE",
             project.batch,
         )
         step = node.code if node else "COLLEGE_REVIEW"
@@ -501,7 +499,6 @@ class ReviewService:
         node = WorkflowService.find_expert_node(
             ProjectPhaseInstance.Phase.APPLICATION,
             "LEVEL1",
-            "SCHOOL",
             project.batch,
         )
         existing_qs = Review.objects.filter(

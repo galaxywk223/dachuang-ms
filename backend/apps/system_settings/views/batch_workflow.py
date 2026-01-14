@@ -160,9 +160,8 @@ class BatchWorkflowViewSet(viewsets.ViewSet):
                 role=node_def.role,
                 review_level=node_def.review_level,
                 require_expert_review=node_def.require_expert_review,
-                scope=node_def.scope,
                 return_policy=node_def.return_policy,
-                allowed_reject_to=[],
+                allowed_reject_to=None,
                 sort_order=idx,
                 is_active=True,
             )
@@ -170,15 +169,11 @@ class BatchWorkflowViewSet(viewsets.ViewSet):
 
         index_to_id = {idx: node.id for idx, node, _ in created_nodes}
         for _, node, node_def in created_nodes:
-            if not node_def.allowed_reject_to:
+            if node_def.allowed_reject_to is None:
                 continue
-            mapped_ids = [
-                index_to_id[i]
-                for i in node_def.allowed_reject_to
-                if i in index_to_id
-            ]
-            if mapped_ids:
-                node.allowed_reject_to = mapped_ids
+            # allowed_reject_to现在是单个ID，不是列表
+            if node_def.allowed_reject_to in index_to_id:
+                node.allowed_reject_to = index_to_id[node_def.allowed_reject_to]
                 node.save(update_fields=["allowed_reject_to", "updated_at"])
 
         serializer = WorkflowConfigSerializer(workflow)
