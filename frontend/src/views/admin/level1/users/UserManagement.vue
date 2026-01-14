@@ -716,11 +716,15 @@ const getRoleName = (code?: string) => {
 const loadRoles = async () => {
   const res = await getRoleSimpleList();
   if (Array.isArray(res)) {
-    roleOptions.value = res as RoleOption[];
+    roleOptions.value = (res as RoleOption[]).filter(
+      (role) => role.code !== "EXPERT"
+    );
     return;
   }
   if (isRecord(res) && Array.isArray(res.results)) {
-    roleOptions.value = res.results as RoleOption[];
+    roleOptions.value = (res.results as RoleOption[]).filter(
+      (role) => role.code !== "EXPERT"
+    );
   }
 };
 

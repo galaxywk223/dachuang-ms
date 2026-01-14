@@ -168,6 +168,15 @@ class User(AbstractUser):
         default=ExpertScope.COLLEGE,
         verbose_name="专家级别",
     )
+    is_expert = models.BooleanField(default=False, verbose_name="是否专家")
+    expert_assigned_by = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="assigned_experts",
+        verbose_name="专家设置人",
+    )
     managed_scope_value = models.ForeignKey(
         "dictionaries.DictionaryItem",
         on_delete=models.SET_NULL,
@@ -238,8 +247,8 @@ class User(AbstractUser):
         return self.role_fk is not None and self.role_fk.code == self.UserRole.TEACHER
 
     @property
-    def is_expert(self):
-        """向后兼容的角色判断"""
+    def is_expert_role(self):
+        """向后兼容：基于角色的专家判断"""
         return self.role_fk is not None and self.role_fk.code == self.UserRole.EXPERT
 
 

@@ -282,7 +282,7 @@ class ReviewService:
             else:
                 # 其他角色：使用通用审核状态
                 project.status = Project.ProjectStatus.CLOSURE_SUBMITTED
-        
+
         # 保存项目状态
         project.save(update_fields=["status", "updated_at"])
 
@@ -1085,36 +1085,40 @@ class ReviewService:
 
     @staticmethod
     def _build_admin_review_filter(admin_user):
-        assignments = (
-            AdminAssignment.objects.filter(admin_user=admin_user)
-            .select_related("batch", "workflow_node")
-            .all()
-        )
-        if not assignments:
+        """
+        根据管理员角色和工作流节点配置构建审核过滤条件
+        不再依赖AdminAssignment表，直接通过工作流节点的角色匹配
+        """
+        from apps.system_settings.models import WorkflowNode
+
+        # 获取管理员角色
+        role_code = admin_user.get_role_code()
+        if not role_code:
             return None
 
-        # 新的逻辑：直接根据管理员的管理范围查找项目
-        # 但为了保持向后兼容，我们仍然保留这个方法
-        # TODO: 后续可以直接通过 User.managed_scope_value 和 Role.scope_dimension 查询
-        review_type_map = {
-            ProjectPhaseInstance.Phase.APPLICATION: Review.ReviewType.APPLICATION,
-            ProjectPhaseInstance.Phase.MID_TERM: Review.ReviewType.MID_TERM,
-            ProjectPhaseInstance.Phase.CLOSURE: Review.ReviewType.CLOSURE,
-        }
+        # 查找所有该角色负责的工作流节点
+        nodes = WorkflowNode.objects.filter(
+            role=role_code, is_active=True
+        ).select_related("workflow")
 
+        if not nodes.exists():
+            return None
+
+        # 构建查询条件
         query = Q()
-        for assignment in assignments:
-            review_type = review_type_map.get(assignment.phase)
-            if not review_type:
-                continue
-            cond = Q(
-                project__batch_id=assignment.batch_id,
-                review_type=review_type,
-                workflow_node_id=assignment.workflow_node_id,
-            )
-            # 使用 scope_value 直接匹配
-            # 注意：AdminAssignment 表仍然存在，但新系统不再强制使用
+        for node in nodes:
+            # 基础条件：匹配工作流节点
+            cond = Q(workflow_node_id=node.id)
+
+            # 如果是学院管理员，还要匹配学院
+            if role_code == "LEVEL2_ADMIN" and admin_user.college:
+                cond &= Q(project__leader__college=admin_user.college)
+
+            # 如果管理员有其他管理范围限制，也可以在这里添加
+            # 例如：managed_scope_value
+
             query |= cond
+
         return query
 
     @staticmethod
@@ -1155,6 +1159,8 @@ class ReviewService:
         """
         group = ExpertGroup.objects.get(pk=group_id)
         experts = group.members.all()
+        if experts.filter(is_expert=False).exists():
+            raise ValueError("专家组包含未设置为专家的教师")
 
         # ===== 新增：学院限制检查 =====
         if creator and creator.role_fk and creator.role_fk.scope_dimension == "COLLEGE":

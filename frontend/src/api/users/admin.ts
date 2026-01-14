@@ -66,6 +66,17 @@ export function toggleUserStatus(id: number): Promise<unknown> {
 }
 
 /**
+ * 勾选/取消专家资格
+ */
+export function toggleExpertStatus(id: number, is_expert: boolean): Promise<unknown> {
+  return request({
+    url: `/auth/admin/users/${id}/toggle-expert/`,
+    method: "post",
+    data: { is_expert },
+  });
+}
+
+/**
  * 重置用户密码
  */
 export function resetUserPassword(id: number): Promise<unknown> {

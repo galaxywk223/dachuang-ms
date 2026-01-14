@@ -41,6 +41,10 @@ class ExpertGroupSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     f"用户 {member.real_name}({member.employee_id}) 不是教师角色，不能作为专家组成员"
                 )
+            if not member.is_expert:
+                raise serializers.ValidationError(
+                    f"教师 {member.real_name}({member.employee_id}) 未设置为专家"
+                )
 
         # 学院级管理员的学院限制检查
         if creator.role_fk and creator.role_fk.scope_dimension == "COLLEGE":
@@ -54,6 +58,10 @@ class ExpertGroupSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError(
                         f"学院级管理员只能选择本学院教师作为专家。"
                         f"教师 {member.real_name}({member.employee_id}) 不属于 {creator_college}"
+                    )
+                if member.expert_assigned_by_id and member.expert_assigned_by_id != creator.id:
+                    raise serializers.ValidationError(
+                        "无权限选择其他管理员设置的专家"
                     )
 
         return value

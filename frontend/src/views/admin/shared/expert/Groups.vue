@@ -189,13 +189,8 @@ const fetchGroups = async () => {
 
 const fetchExperts = async () => {
     try {
-        const userRole = userStore.user?.role || localStorage.getItem("user_role");
-        const expertScope =
-          userRole === "level1_admin" || userRole === "admin"
-            ? "SCHOOL"
-            : "COLLEGE";
         const res = await request.get("/auth/users/", {
-          params: { role: "EXPERT", expert_scope: expertScope },
+          params: { role: "TEACHER", is_expert: "true" },
         });
         expertList.value = resolveList<Expert>(res);
     } catch (error: unknown) {

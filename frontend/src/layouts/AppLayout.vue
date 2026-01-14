@@ -551,6 +551,11 @@ const currentMenus = computed<MenuEntry[]>(() => {
           groupTitle: "专家与评审",
           items: [
             {
+              index: "/level1-admin/users/experts",
+              title: "专家库管理",
+              icon: User,
+            },
+            {
               index: "/level1-admin/expert/groups",
               title: "校级专家组管理",
               icon: User,

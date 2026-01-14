@@ -19,7 +19,7 @@ export interface Expert {
   employee_id: string;
   college: string;
   title: string;
-  expert_scope: string;
+  is_expert: boolean;
 }
 
 /**
@@ -64,11 +64,10 @@ export function useExpertGroups(scope: "SCHOOL" | "COLLEGE") {
    */
   const loadExperts = async () => {
     try {
-      const expertScope = scope === "SCHOOL" ? "SCHOOL" : "COLLEGE";
       const response = await request.get("/auth/admin/users/", {
         params: {
-          role: "EXPERT",
-          expert_scope: expertScope,
+          role: "TEACHER",
+          is_expert: "true",
           page_size: 1000,
         },
       });

@@ -231,6 +231,8 @@ class UserService:
             role_obj = Role.objects.filter(code=User.UserRole.STUDENT).first()
         if not role_obj:
             raise ValueError("默认角色不存在")
+        if role_obj.code == User.UserRole.EXPERT:
+            raise ValueError("不支持直接导入专家，请先导入教师")
 
         with transaction.atomic():
             for row_idx, row in enumerate(rows[1:], start=2):
@@ -305,12 +307,6 @@ class UserService:
                         "phone": phone_value,
                         "email": email_value,
                     }
-                    if role_obj.code == User.UserRole.EXPERT:
-                        user_data["expert_scope"] = expert_scope or User.ExpertScope.COLLEGE
-                        if user_data["expert_scope"] == User.ExpertScope.SCHOOL:
-                            user_data["college"] = ""
-                        elif default_college:
-                            user_data["college"] = default_college
                     user = User.objects.create(**user_data)
                     user.set_password("123456") # Default password
                     user.save()

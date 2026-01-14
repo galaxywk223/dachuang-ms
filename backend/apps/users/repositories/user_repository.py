@@ -76,7 +76,8 @@ class UserRepository:
             "role_info": role_info,
             "permissions": permissions,
             "default_route": default_route,
-            "expert_scope": user.expert_scope if user.is_teacher else None,
+            "is_expert": user.is_expert,
+            "expert_scope": user.expert_scope if user.is_expert else None,
             "college": user.college,
             "department": user.department,
             "phone": user.phone,
@@ -127,7 +128,13 @@ class UserRepository:
         if filters:
             # 按角色过滤
             if "role" in filters:
-                queryset = queryset.filter(role_fk__code=filters["role"])
+                role = filters["role"]
+                if role == "EXPERT":
+                    queryset = queryset.filter(
+                        role_fk__code=User.UserRole.TEACHER, is_expert=True
+                    )
+                else:
+                    queryset = queryset.filter(role_fk__code=role)
 
             # 按学院过滤
             if "college" in filters:
@@ -136,6 +143,10 @@ class UserRepository:
             # 按专家级别过滤
             if "expert_scope" in filters:
                 queryset = queryset.filter(expert_scope=filters["expert_scope"])
+
+            # 按专家资格过滤
+            if "is_expert" in filters:
+                queryset = queryset.filter(is_expert=filters["is_expert"])
 
             # 按激活状态过滤
             if "is_active" in filters:

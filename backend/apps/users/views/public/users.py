@@ -6,6 +6,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from django.db.models import Q
 
 from ...serializers import UserSerializer, UserCreateSerializer
 from ...models import User
@@ -45,6 +46,10 @@ class UserViewSet(viewsets.ModelViewSet):
         if expert_scope:
             filters["expert_scope"] = expert_scope
 
+        is_expert = self.request.query_params.get("is_expert")
+        if is_expert in ("true", "false"):
+            filters["is_expert"] = is_expert == "true"
+
         # 根据激活状态过滤
         is_active = self.request.query_params.get("is_active")
         if is_active is not None:
@@ -56,14 +61,17 @@ class UserViewSet(viewsets.ModelViewSet):
             filters["search"] = search
 
         if current_user.is_admin and not current_user.is_level1_admin:
-            filters["role"] = User.UserRole.EXPERT
+            filters["role"] = User.UserRole.TEACHER
             if current_user.college:
                 filters["college"] = current_user.college
-                filters["expert_scope"] = User.ExpertScope.COLLEGE
             else:
                 return User.objects.none()
-
-        return self.user_service.get_user_list(filters)
+        queryset = self.user_service.get_user_list(filters)
+        if current_user.is_admin and not current_user.is_level1_admin:
+            queryset = queryset.filter(
+                Q(is_expert=False) | Q(expert_assigned_by=current_user)
+            )
+        return queryset
 
     @action(methods=["post"], detail=True)
     def reset_password(self, request, pk=None):
@@ -133,22 +141,15 @@ class UserViewSet(viewsets.ModelViewSet):
             current_user = request.user
             default_college = None
             if current_user.is_admin and not current_user.is_level1_admin:
-                if role != User.UserRole.EXPERT:
-                    return Response(
-                        {"code": 403, "message": "非校级管理员仅可导入院级专家"},
-                        status=status.HTTP_403_FORBIDDEN,
-                    )
-                if not current_user.college:
-                    return Response(
-                        {"code": 400, "message": "当前账号未设置学院信息"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-                expert_scope = User.ExpertScope.COLLEGE
-                default_college = current_user.college
-            elif role == User.UserRole.EXPERT:
-                expert_scope = expert_scope or User.ExpertScope.COLLEGE
-                if expert_scope == User.ExpertScope.SCHOOL:
-                    default_college = ""
+                return Response(
+                    {"code": 403, "message": "非校级管理员无权导入用户"},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+            if role == User.UserRole.EXPERT:
+                return Response(
+                    {"code": 400, "message": "不支持直接导入专家，请先导入教师"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             result = self.user_service.import_users(
                 file,
                 role,

@@ -13,6 +13,7 @@ export interface User {
   real_name?: string;
   email: string;
   role: UserRole;
+  is_expert?: boolean;
   expert_scope?: string;
   department?: string;
   college?: string;

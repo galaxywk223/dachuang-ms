@@ -41,6 +41,7 @@ class UserSerializer(RoleAssignMixin, serializers.ModelSerializer):
             "role_fk",
             "role_info",
             "permissions",
+            "is_expert",
             "expert_scope",
             "phone",
             "email",
@@ -55,9 +56,16 @@ class UserSerializer(RoleAssignMixin, serializers.ModelSerializer):
             "is_active",
             "created_at",
             "updated_at",
+            "expert_assigned_by",
             "managed_scope_value",
         ]
-        read_only_fields = ["id", "username", "created_at", "updated_at"]
+        read_only_fields = [
+            "id",
+            "username",
+            "created_at",
+            "updated_at",
+            "expert_assigned_by",
+        ]
 
     def to_representation(self, instance):
         # 检查实例是否有 role_fk 属性（防止 AnonymousUser 引起错误）
@@ -193,10 +201,9 @@ class UserCreateSerializer(RoleAssignMixin, serializers.ModelSerializer):
         role_code = (
             validated_data["role_fk"].code if validated_data.get("role_fk") else None
         )
-        if role_code != User.UserRole.EXPERT:
-            validated_data.pop("expert_scope", None)
-        elif not validated_data.get("expert_scope"):
-            validated_data["expert_scope"] = User.ExpertScope.COLLEGE
+        if role_code == User.UserRole.EXPERT:
+            raise serializers.ValidationError({"role": "不支持直接创建专家，请先创建教师"})
+        validated_data.pop("expert_scope", None)
         user = User.objects.create(**validated_data)
         user.username = user.employee_id  # 使用学号/工号作为用户名
         user.set_password(password)

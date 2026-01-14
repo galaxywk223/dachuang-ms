@@ -18,7 +18,7 @@ class ExpertGroupTestCase(TestCase):
         # Create Admin
         password = get_random_string(12)
         level2_role = Role.objects.get(code="LEVEL2_ADMIN")
-        expert_role = Role.objects.get(code="EXPERT")
+        teacher_role = Role.objects.get(code="TEACHER")
         student_role = Role.objects.get(code="STUDENT")
         self.admin = User.objects.create_user(
             username='admin',
@@ -33,16 +33,22 @@ class ExpertGroupTestCase(TestCase):
         self.expert1 = User.objects.create_user(
             username='expert1',
             password=password,
-            role_fk=expert_role,
+            role_fk=teacher_role,
             real_name='Expert1',
             employee_id='E001',
+            college='CS',
+            is_expert=True,
+            expert_assigned_by=self.admin,
         )
         self.expert2 = User.objects.create_user(
             username='expert2',
             password=password,
-            role_fk=expert_role,
+            role_fk=teacher_role,
             real_name='Expert2',
             employee_id='E002',
+            college='CS',
+            is_expert=True,
+            expert_assigned_by=self.admin,
         )
 
         # Create Group

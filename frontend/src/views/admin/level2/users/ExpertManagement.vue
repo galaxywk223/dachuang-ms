@@ -10,14 +10,6 @@
                 共 {{ total }} 项
               </el-tag>
             </div>
-            <div class="header-actions">
-              <el-button type="primary" @click="openCreateDialog">
-                <el-icon class="mr-1"><Plus /></el-icon>添加专家
-              </el-button>
-              <el-button @click="handleImportClick">
-                <el-icon class="mr-1"><Upload /></el-icon>批量导入
-              </el-button>
-            </div>
           </div>
         </template>
 
@@ -51,10 +43,10 @@
               </el-select>
             </el-form-item>
 
-            <el-form-item label="级别">
-              <el-select v-model="filters.expert_scope" placeholder="院级专家" disabled style="width: 160px">
+            <el-form-item label="专家">
+              <el-select v-model="filters.is_expert" placeholder="全部" style="width: 160px">
                 <el-option
-                  v-for="item in expertScopeOptions"
+                  v-for="item in expertStatusOptions"
                   :key="item.value"
                   :label="item.label"
                   :value="item.value"
@@ -77,11 +69,12 @@
               {{ getLabel(DICT_CODES.ADVISOR_TITLE, row.title) }}
             </template>
           </el-table-column>
-          <el-table-column prop="expert_scope" label="级别" width="120">
+          <el-table-column prop="is_expert" label="专家" width="120">
             <template #default="{ row }">
-              <el-tag size="small" effect="plain">
-                {{ getScopeLabel(row.expert_scope) }}
-              </el-tag>
+              <el-switch
+                :model-value="row.is_expert"
+                @change="(value) => handleToggleExpert(row, value)"
+              />
             </template>
           </el-table-column>
           <el-table-column prop="college" label="所属学院" width="180">
@@ -96,19 +89,6 @@
               <el-tag :type="scope.row.is_active ? 'success' : 'danger'" size="small">
                 {{ scope.row.is_active ? '正常' : '禁用' }}
               </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" fixed="right" width="150">
-            <template #default="scope">
-              <el-button link type="primary" size="small" @click="handleEdit(scope.row)"
-                >编辑</el-button
-              >
-              <el-button link type="danger" size="small" @click="handleToggleStatus(scope.row)">
-                {{ scope.row.is_active ? '禁用' : '激活' }}
-              </el-button>
-              <el-button link type="danger" size="small" @click="handleDelete(scope.row)">
-                删除
-              </el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -127,136 +107,14 @@
       </el-card>
     </div>
 
-    <el-dialog
-      v-model="addDialogVisible"
-      :title="isEditMode ? '编辑专家' : '添加专家'"
-      width="720px"
-      :close-on-click-modal="false"
-      @closed="resetFormState"
-    >
-      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="90px" class="admin-form">
-        <el-row :gutter="16">
-          <el-col :span="12">
-            <el-form-item label="工号" prop="employee_id">
-              <el-input v-model="formData.employee_id" placeholder="请输入工号" :disabled="isEditMode" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="姓名" prop="real_name">
-              <el-input v-model="formData.real_name" placeholder="请输入姓名" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12" v-if="!isEditMode">
-            <el-form-item label="密码" prop="password">
-              <el-input v-model="formData.password" placeholder="默认 123456" show-password />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="职称" prop="title">
-              <el-select v-model="formData.title" placeholder="请选择职称" style="width: 100%">
-                <el-option
-                  v-for="item in titleOptions"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="级别" prop="expert_scope">
-              <el-select v-model="formData.expert_scope" placeholder="院级专家" disabled style="width: 100%">
-                <el-option
-                  v-for="item in expertScopeOptions"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="手机号" prop="phone">
-              <el-input v-model="formData.phone" placeholder="可选，11位数字" maxlength="11" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="邮箱" prop="email">
-              <el-input v-model="formData.email" placeholder="可选，学校邮箱" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="学院" prop="college">
-              <el-select v-model="formData.college" placeholder="本院" disabled style="width: 100%">
-                <el-option
-                  v-for="item in collegeOptions"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="addDialogVisible = false">取消</el-button>
-          <el-button type="primary" :loading="submitLoading" @click="handleSubmit">
-            {{ isEditMode ? '保存修改' : '确认添加' }}
-          </el-button>
-        </span>
-      </template>
-    </el-dialog>
-
-    <!-- Import Dialog -->
-    <el-dialog v-model="importDialogVisible" title="批量导入专家" width="500px">
-      <div style="text-align: center; margin-bottom: 20px">
-        <el-upload
-          class="upload-demo"
-          drag
-          action="#"
-          :auto-upload="false"
-          :limit="1"
-          :on-change="handleFileChange"
-          accept=".xlsx, .xls"
-        >
-          <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-          <div class="el-upload__text">将文件拖到此处，或 <em>点击上传</em></div>
-          <template #tip>
-            <div class="el-upload__tip">只能上传 xlsx/xls 文件，且不超过 5MB</div>
-          </template>
-        </el-upload>
-      </div>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="importDialogVisible = false">取消</el-button>
-          <el-button type="primary" :loading="importLoading" @click="handleImportSubmit">
-            开始导入
-          </el-button>
-        </span>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from "vue";
-import { Search, Plus, Upload, UploadFilled } from "@element-plus/icons-vue";
-import {
-  getUsers,
-  toggleUserStatus,
-  createUser,
-  updateUser,
-  deleteUser,
-} from "@/api/users/admin";
-import {
-  ElMessage,
-  ElMessageBox,
-  type FormInstance,
-  type FormRules,
-  type UploadFile,
-} from "element-plus";
+import { Search } from "@element-plus/icons-vue";
+import { getUsers, toggleExpertStatus } from "@/api/users/admin";
+import { ElMessage } from "element-plus";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionaries";
 import { useUserStore } from "@/stores/user";
@@ -269,25 +127,14 @@ type ExpertRow = {
   email?: string;
   college?: string;
   title?: string;
-  expert_scope?: string;
+  is_expert?: boolean;
   is_active?: boolean;
-};
-
-type ExpertForm = {
-  employee_id: string;
-  real_name: string;
-  password: string;
-  phone: string;
-  email: string;
-  college: string;
-  title: string;
-  expert_scope: string;
 };
 
 type ExpertFilters = {
   search: string;
   college: string;
-  expert_scope: string;
+  is_expert: string;
   role: string;
 };
 
@@ -320,81 +167,26 @@ const tableData = ref<ExpertRow[]>([]);
 const total = ref(0);
 const currentPage = ref(1);
 const pageSize = ref(10);
-const addDialogVisible = ref(false);
-const submitLoading = ref(false);
-const isEditMode = ref(false);
-const currentId = ref<number | null>(null);
-
-const formRef = ref<FormInstance>();
 const { loadDictionaries, getOptions, getLabel } = useDictionary();
 
 const currentCollege = computed(() => userStore.user?.college || '');
 
-const formData = reactive<ExpertForm>({
-  employee_id: "",
-  real_name: "",
-  password: "123456",
-  phone: "",
-  email: "",
-  college: "",
-  title: "",
-  expert_scope: "COLLEGE",
-});
-
 const collegeOptions = computed(() => getOptions(DICT_CODES.COLLEGE));
-const titleOptions = computed(() => getOptions(DICT_CODES.ADVISOR_TITLE));
-const expertScopeOptions = [
-  { value: "SCHOOL", label: "校级专家" },
-  { value: "COLLEGE", label: "院级专家" },
+const expertStatusOptions = [
+  { value: "", label: "全部" },
+  { value: "true", label: "是" },
+  { value: "false", label: "否" },
 ];
-
-const getScopeLabel = (value: string) => {
-  const match = expertScopeOptions.find((item) => item.value === value);
-  return match?.label || "未设置";
-};
-
-const formRules: FormRules = {
-  employee_id: [
-    { required: true, message: "请输入工号", trigger: "blur" },
-    { min: 4, max: 20, message: "长度应在 4-20 个字符内", trigger: "blur" },
-  ],
-  real_name: [{ required: true, message: "请输入姓名", trigger: "blur" }],
-  password: [
-    { required: true, message: "请输入密码", trigger: "blur" },
-    { min: 6, message: "密码至少 6 位", trigger: "blur" },
-  ],
-  phone: [
-    {
-      validator: (_rule, value, callback) => {
-        if (!value) return callback();
-        if (!/^\d{11}$/.test(value)) {
-          return callback(new Error("手机号需为 11 位数字"));
-        }
-        return callback();
-      },
-      trigger: "blur",
-    },
-  ],
-  email: [{ type: "email", message: "邮箱格式不正确", trigger: "blur" }],
-  college: [{ required: true, message: "请选择学院", trigger: "change" }],
-  title: [{ required: true, message: "请选择职称", trigger: "change" }],
-  expert_scope: [
-    { required: true, message: "请选择级别", trigger: "change" },
-  ],
-};
 
 const filters = reactive<ExpertFilters>({
   search: "",
   college: "",
-  expert_scope: "COLLEGE",
-  role: "EXPERT",
+  is_expert: "",
+  role: "TEACHER",
 });
 
 const syncCollege = () => {
   filters.college = currentCollege.value || "";
-  filters.expert_scope = "COLLEGE";
-  formData.college = currentCollege.value || "";
-  formData.expert_scope = "COLLEGE";
 };
 
 const loadData = async () => {
@@ -405,12 +197,12 @@ const loadData = async () => {
       page_size: pageSize.value,
       search: filters.search,
       college: filters.college,
-      expert_scope: filters.expert_scope,
+      is_expert: filters.is_expert,
       role: filters.role,
     };
     if (!filters.search) delete params.search;
     if (!filters.college) delete params.college;
-    if (!filters.expert_scope) delete params.expert_scope;
+    if (!filters.is_expert) delete params.is_expert;
 
     const res = (await getUsers(params)) as ApiListResponse;
     if (isRecord(res) && res.code === 200 && res.data) {
@@ -451,160 +243,20 @@ const handleCurrentChange = (val: number) => {
   loadData();
 };
 
-const handleEdit = (row: ExpertRow) => {
-  isEditMode.value = true;
-  currentId.value = row.id;
-  Object.assign(formData, {
-    employee_id: row.employee_id,
-    real_name: row.real_name,
-    phone: row.phone,
-    email: row.email,
-    college: row.college,
-    title: row.title,
-    expert_scope: row.expert_scope || "COLLEGE",
-    password: "",
-  });
-  addDialogVisible.value = true;
-};
-
-const handleToggleStatus = async (row: ExpertRow) => {
+const handleToggleExpert = async (row: ExpertRow, value: string | number | boolean) => {
+  const nextValue = Boolean(value);
+  const previousValue = row.is_expert;
+  row.is_expert = nextValue;
   try {
-    const action = row.is_active ? "禁用" : "激活";
-    await ElMessageBox.confirm(`确定要${action}该专家吗？`, "提示", {
-      type: "warning",
-    });
-    const res = await toggleUserStatus(row.id);
+    const res = await toggleExpertStatus(row.id, nextValue);
     if (isRecord(res) && res.code === 200) {
-      ElMessage.success(`${action}成功`);
-      loadData();
+      ElMessage.success("专家资格已更新");
+      return;
     }
-  } catch {
-    // cancel
-  }
-};
-
-const handleDelete = async (row: ExpertRow) => {
-  try {
-    await ElMessageBox.confirm(
-      `确定要删除专家 "${row.real_name}" 吗？此操作不可恢复。`,
-      "警告",
-      {
-        confirmButtonText: "确定删除",
-        cancelButtonText: "取消",
-        type: "warning",
-      }
-    );
-
-    const res = await deleteUser(row.id);
-    if (isRecord(res) && (res.code === 200 || res.code === 204)) {
-      ElMessage.success("删除成功");
-      loadData();
-    } else {
-      ElMessage.success("删除成功");
-      loadData();
-    }
+    throw new Error("操作失败");
   } catch (error) {
-    if (error !== "cancel") {
-      ElMessage.error(getErrorMessage(error, "删除失败"));
-    }
-  }
-};
-
-const resetFormState = () => {
-  addDialogVisible.value = false;
-  isEditMode.value = false;
-  currentId.value = null;
-  Object.assign(formData, {
-    employee_id: "",
-    real_name: "",
-    password: "123456",
-    phone: "",
-    email: "",
-    college: currentCollege.value || "",
-    title: "",
-    expert_scope: "COLLEGE",
-  });
-  formRef.value?.clearValidate();
-};
-
-const openCreateDialog = () => {
-  resetFormState();
-  addDialogVisible.value = true;
-};
-
-const handleSubmit = async () => {
-  if (!formRef.value) return;
-  const valid = await formRef.value.validate().catch(() => false);
-  if (!valid) return;
-
-  submitLoading.value = true;
-  try {
-    const sanitizedId = formData.employee_id.replace(/[^a-zA-Z0-9]/g, '');
-    const payload = {
-      ...formData,
-      employee_id: sanitizedId,
-      role: "EXPERT",
-      college: currentCollege.value || formData.college,
-      expert_scope: "COLLEGE",
-    };
-
-    let res;
-    if (isEditMode.value && currentId.value) {
-      res = await updateUser(currentId.value, payload);
-    } else {
-      res = await createUser(payload);
-    }
-
-    if (isRecord(res) && res.code === 200) {
-      ElMessage.success(isEditMode.value ? "修改成功" : "添加成功");
-      addDialogVisible.value = false;
-      loadData();
-    }
-  } catch (error) {
-    ElMessage.error(getErrorMessage(error, "提交失败"));
-  } finally {
-    submitLoading.value = false;
-  }
-};
-
-const importDialogVisible = ref(false);
-const importFile = ref<File | null>(null);
-const importLoading = ref(false);
-
-const handleImportClick = () => {
-  importDialogVisible.value = true;
-  importFile.value = null;
-};
-
-const handleFileChange = (file: UploadFile) => {
-  importFile.value = file.raw || null;
-};
-
-const handleImportSubmit = async () => {
-  if (!importFile.value) {
-    ElMessage.warning("请选择文件");
-    return;
-  }
-
-  importLoading.value = true;
-  try {
-    const uploadData = new FormData();
-    uploadData.append("file", importFile.value);
-    uploadData.append("role", "EXPERT");
-    uploadData.append("expert_scope", "COLLEGE");
-
-    const { importUsers } = await import('@/api/users/admin');
-    const res = await importUsers(uploadData);
-
-    if (isRecord(res) && res.code === 200) {
-      ElMessage.success((typeof res.message === "string" && res.message) || "导入成功");
-      importDialogVisible.value = false;
-      loadData();
-    }
-  } catch (error: unknown) {
-    ElMessage.error(getErrorMessage(error, "导入失败"));
-  } finally {
-    importLoading.value = false;
+    row.is_expert = previousValue;
+    ElMessage.error(getErrorMessage(error, "更新失败"));
   }
 };
 

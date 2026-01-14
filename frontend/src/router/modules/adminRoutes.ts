@@ -39,7 +39,8 @@ export const adminRoutes: RouteRecordRaw[] = [
       {
         path: "users/experts",
         name: "level1-users-experts",
-        redirect: { path: "/level1-admin/users", query: { role: "EXPERT" } },
+        component: () => import("@/views/admin/level1/users/ExpertManagement.vue"),
+        meta: { title: "专家库管理" },
       },
       {
         path: "expert/groups",
