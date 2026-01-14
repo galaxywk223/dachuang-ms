@@ -310,6 +310,7 @@ const userRole = computed(() =>
     userStore.user?.role || localStorage.getItem("user_role") || "student"
   ).toLowerCase()
 );
+const isExpertUser = computed(() => Boolean(userStore.user?.is_expert));
 const userName = computed(
   () =>
     userStore.user?.real_name ||
@@ -617,7 +618,7 @@ const currentMenus = computed<MenuEntry[]>(() => {
       return [
         {
           index: "/teacher/dashboard",
-          title: "指导项目",
+          title: isExpertUser.value ? "评审任务" : "指导项目",
           icon: DocumentAdd,
         },
 

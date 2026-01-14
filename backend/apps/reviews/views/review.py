@@ -163,6 +163,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 action_type == "approve"
                 and review.review_type == Review.ReviewType.APPLICATION
                 and review.review_level == REVIEW_LEVEL_LEVEL1
+                and not review.is_expert_review
             ):
                 if approved_budget in (None, ""):
                     return Response(

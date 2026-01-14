@@ -5,7 +5,7 @@
     <el-card class="box-card">
       <template #header>
         <div class="card-header">
-          <span class="title">指导项目管理</span>
+          <span class="title">{{ dashboardTitle }}</span>
         </div>
       </template>
 
@@ -126,7 +126,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, reactive, computed, watch } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import type { FormInstance, FormRules } from "element-plus";
 import request from "@/utils/request";
@@ -148,6 +148,7 @@ defineOptions({
 });
 
 const router = useRouter();
+const route = useRoute();
 
 type ProjectInfo = {
   project_no?: string;
@@ -225,9 +226,14 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 const loading = ref(false);
 const submitting = ref(false);
 const projects = ref<TeacherProjectRow[]>([]);
-const activeTab = ref("pending");
+const activeTab = ref(
+  route.query.tab === "my_projects" ? "my_projects" : "pending"
+);
 
 const userStore = useUserStore();
+const dashboardTitle = computed(() =>
+  userStore.user?.is_expert ? "评审与指导项目" : "指导项目管理"
+);
 const welcomeUser = computed(() => userStore.user ?? undefined);
 
 const statistics = reactive({
@@ -280,7 +286,7 @@ const parseListResponse = <T>(payload: unknown) => {
 
 const fetchPendingReviews = async () => {
   const res = await request.get("/reviews/", {
-    params: { status: "PENDING", review_level: "TEACHER" },
+    params: { status: "PENDING" },
   });
   return parseListResponse<ReviewRecord>(res);
 };
@@ -470,6 +476,15 @@ watch(
   () => {
     fetchProjects();
     refreshStats();
+  }
+);
+
+watch(
+  () => route.query.tab,
+  (tab) => {
+    if (tab === "pending" || tab === "my_projects") {
+      activeTab.value = tab as "pending" | "my_projects";
+    }
   }
 );
 </script>
