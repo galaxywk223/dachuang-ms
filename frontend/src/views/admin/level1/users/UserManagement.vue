@@ -785,7 +785,7 @@ const openEditDialog = (row: UserRow) => {
   formData.grade = (row as any).grade || "";
   formData.expert_scope = row.expert_scope || "COLLEGE";
   formData.managed_scope_value = (row as any).managed_scope_value || null;
-  formData.department = row.department || "";
+  formData.department = row.college || "";
   formData.title = row.title || "";
   formData.major = row.major || "";
   formData.class_name = row.class_name || "";
@@ -826,7 +826,7 @@ const handleSubmit = async () => {
       grade: formData.grade,
       expert_scope: formData.expert_scope,
       managed_scope_value: formData.managed_scope_value,
-      department: formData.department,
+      college: formData.department,
       title: formData.title,
       major: formData.major,
       class_name: formData.class_name,
