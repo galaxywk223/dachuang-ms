@@ -200,12 +200,6 @@
             <el-option label="一级" value="LEVEL1" />
           </el-select>
         </el-form-item>
-        <el-form-item label="专家范围">
-          <el-select v-model="nodeForm.scope" placeholder="可选">
-            <el-option label="院级" value="COLLEGE" />
-            <el-option label="校级" value="SCHOOL" />
-          </el-select>
-        </el-form-item>
         <el-form-item label="退回规则">
           <el-select v-model="nodeForm.return_policy" placeholder="请选择">
             <el-option label="不允许退回" value="NONE" />
@@ -333,7 +327,6 @@ const nodeForm = ref({
   node_type: "REVIEW",
   role: "TEACHER",
   review_level: "TEACHER",
-  scope: "",
   return_policy: "STUDENT",
   notice: "",
 });
@@ -411,7 +404,6 @@ const openNodeDialog = () => {
     node_type: "REVIEW",
     role: "TEACHER",
     review_level: "TEACHER",
-    scope: "",
     return_policy: "STUDENT",
     notice: "",
   };
@@ -421,7 +413,6 @@ const openNodeDialog = () => {
 const editNode = (node: WorkflowNode) => {
   nodeForm.value = {
     ...node,
-    scope: node.scope ?? "",
     return_policy: node.return_policy ?? "STUDENT",
     notice: node.notice ?? "",
   };

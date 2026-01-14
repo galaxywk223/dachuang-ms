@@ -15,7 +15,6 @@ export interface WorkflowNode {
   role_code: string | null;
   review_level: string;
   require_expert_review: boolean;
-  scope: string;
   return_policy: string;
   allowed_reject_to: number[];
   notice: string;
@@ -65,7 +64,6 @@ export interface WorkflowNodeInput {
   role_fk?: number;
   review_level?: string;
   require_expert_review?: boolean;
-  scope?: string;
   return_policy?: string;
   allowed_reject_to?: number[];
   notice?: string;

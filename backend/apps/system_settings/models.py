@@ -265,9 +265,6 @@ class WorkflowNode(models.Model):
         verbose_name="是否需要专家评审",
         help_text="管理员节点开启后需先完成专家评审才能终审",
     )
-    scope = models.CharField(
-        max_length=20, blank=True, default="", verbose_name="专家范围"
-    )
     return_policy = models.CharField(
         max_length=20,
         choices=ReturnPolicy.choices,

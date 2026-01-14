@@ -269,16 +269,6 @@
             仅管理员节点可开启，开启后需先完成专家评审再终审。
           </div>
         </el-form-item>
-        <el-form-item label="专家范围" v-if="nodeForm.require_expert_review">
-          <el-select
-            v-model="nodeForm.scope"
-            placeholder="选择范围"
-            style="width: 100%"
-          >
-            <el-option label="院级" value="COLLEGE" />
-            <el-option label="校级" value="SCHOOL" />
-          </el-select>
-        </el-form-item>
         <el-form-item label="允许退回" prop="allowed_reject_to">
           <el-select
             v-model="nodeForm.allowed_reject_to"
@@ -419,7 +409,6 @@ const nodeForm = ref<WorkflowNodeInput>({
   node_type: "REVIEW",
   role_fk: undefined,
   require_expert_review: false,
-  scope: "",
   allowed_reject_to: [],
   notice: "",
   start_date: undefined,
@@ -562,7 +551,6 @@ function handleAddNode() {
     node_type: "REVIEW",
     role_fk: undefined,
     require_expert_review: false,
-    scope: "",
     allowed_reject_to: [],
     notice: "",
     start_date: undefined,
@@ -580,7 +568,6 @@ function handleEditNode(node: WorkflowNode) {
     node_type: node.node_type,
     role_fk: node.role_fk || undefined,
     require_expert_review: node.require_expert_review || false,
-    scope: node.scope || "",
     allowed_reject_to: node.allowed_reject_to || [],
     notice: node.notice || "",
     start_date: node.start_date || undefined,
@@ -724,7 +711,6 @@ watch(
   () => {
     if (!canEnableExpertReview.value) {
       nodeForm.value.require_expert_review = false;
-      nodeForm.value.scope = "";
     }
   }
 );
