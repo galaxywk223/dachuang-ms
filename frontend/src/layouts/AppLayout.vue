@@ -460,35 +460,21 @@ const currentMenus = computed<MenuEntry[]>(() => {
           title: "统计概览",
           icon: Folder,
         },
-
         {
-          index: "establishment",
-          title: "立项管理",
-          icon: DocumentAdd,
+          index: "level2-review",
+          title: "审核管理",
+          icon: DocumentChecked,
           children: [
             { index: "/level2-admin/review/establishment", title: "立项审核" },
-            { index: "/level2-admin/projects", title: "查看项目" },
-          ],
-        },
-        {
-          index: "midterm",
-          title: "中期管理",
-          icon: DocumentChecked,
-          children: [
             { index: "/level2-admin/review/midterm", title: "中期审核" },
+            { index: "/level2-admin/review/closure", title: "结题审核" },
+            { index: "/level2-admin/change/review", title: "异动审核" },
           ],
         },
         {
-          index: "closure",
-          title: "结题管理",
-          icon: DocumentChecked,
-          children: [
-            { index: "/level2-admin/review/closure", title: "结题项目审核" },
-            {
-              index: "/level2-admin/review/achievements",
-              title: "结题成果查看",
-            },
-          ],
+          index: "/level2-admin/projects",
+          title: "项目管理",
+          icon: Folder,
         },
         {
           index: "expert",
@@ -498,14 +484,6 @@ const currentMenus = computed<MenuEntry[]>(() => {
             { index: "/level2-admin/users/experts", title: "院级专家库管理" },
             { index: "/level2-admin/expert/groups", title: "院系专家组管理" },
             { index: "/level2-admin/expert/assignment", title: "院系评审分配" },
-          ],
-        },
-        {
-          index: "change",
-          title: "项目异动",
-          icon: DocumentAdd,
-          children: [
-            { index: "/level2-admin/change/review", title: "异动审核" },
           ],
         },
         {
@@ -522,94 +500,59 @@ const currentMenus = computed<MenuEntry[]>(() => {
     case "level1_admin":
       return [
         {
-          groupTitle: "概览与审核",
-          items: [
-            {
-              index: "/level1-admin/statistics",
-              title: "统计概览",
-              icon: Folder,
-            },
-            {
-              index: "/level1-admin/review",
-              title: "审核管理",
-              icon: DocumentChecked,
-            },
+          index: "/level1-admin/statistics",
+          title: "统计概览",
+          icon: Folder,
+        },
+        {
+          index: "level1-review",
+          title: "审核管理",
+          icon: DocumentChecked,
+          children: [
+            { index: "/level1-admin/review/establishment", title: "立项审核" },
+            { index: "/level1-admin/review/closure", title: "结题审核" },
+            { index: "/level1-admin/review/change", title: "异动审核" },
           ],
         },
         {
-          groupTitle: "项目与经费",
-          items: [
-            {
-              index: "/level1-admin/projects/all",
-              title: "项目库管理",
-              icon: Folder,
-            },
+          index: "/level1-admin/projects/all",
+          title: "项目管理",
+          icon: Folder,
+        },
+        {
+          index: "level1-experts",
+          title: "专家与评审",
+          icon: User,
+          children: [
+            { index: "/level1-admin/users/experts", title: "专家库管理" },
+            { index: "/level1-admin/expert/groups", title: "校级专家组管理" },
+            { index: "/level1-admin/expert/assignment", title: "校级评审分配" },
           ],
         },
         {
-          groupTitle: "专家与评审",
-          items: [
-            {
-              index: "/level1-admin/users/experts",
-              title: "专家库管理",
-              icon: User,
-            },
-            {
-              index: "/level1-admin/expert/groups",
-              title: "校级专家组管理",
-              icon: User,
-            },
-            {
-              index: "/level1-admin/expert/assignment",
-              title: "校级评审分配",
-              icon: User,
-            },
+          index: "/level1-admin/users",
+          title: "用户管理",
+          icon: User,
+        },
+        {
+          index: "level1-settings",
+          title: "系统配置",
+          icon: Setting,
+          children: [
+            { index: "/level1-admin/settings/batches", title: "批次管理" },
+            { index: "/level1-admin/settings/certificate", title: "结题证书" },
+            { index: "/level1-admin/settings/dictionaries", title: "系统参数" },
           ],
         },
         {
-          groupTitle: "用户管理",
-          items: [
-            {
-              index: "/level1-admin/users",
-              title: "用户管理",
-              icon: User,
-            },
-          ],
+          index: "/notifications",
+          title: "通知中心",
+          icon: Bell,
         },
         {
-          groupTitle: "系统配置",
-          items: [
-            {
-              index: "/level1-admin/settings/batches",
-              title: "批次管理",
-              icon: Setting,
-            },
-            {
-              index: "/level1-admin/settings/certificate",
-              title: "结题证书",
-              icon: Setting,
-            },
-            {
-              index: "/level1-admin/settings/dictionaries",
-              title: "系统参数",
-              icon: Setting,
-            },
-          ],
-        },
-        {
-          groupTitle: "消息与回收",
-          items: [
-            {
-              index: "/notifications",
-              title: "通知中心",
-              icon: Bell,
-            },
-            {
-              index: "/recycle-bin",
-              title: "回收站",
-              icon: Folder,
-            },
-          ],
+          index: "/recycle-bin",
+          title: "回收站",
+          icon: Folder,
         },
       ];
     case "teacher":

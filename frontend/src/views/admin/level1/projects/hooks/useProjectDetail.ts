@@ -55,6 +55,10 @@ type ProjectForm = {
   leader_email: string;
   expected_results: string;
   description: string;
+  proposal_file_url: string;
+  proposal_file_name: string;
+  attachment_file_url: string;
+  attachment_file_name: string;
   contract_file_url: string;
   contract_file_name: string;
   task_book_file_url: string;
@@ -115,6 +119,10 @@ export function useProjectDetail() {
     leader_email: "",
     expected_results: "",
     description: "",
+    proposal_file_url: "",
+    proposal_file_name: "",
+    attachment_file_url: "",
+    attachment_file_name: "",
     contract_file_url: "",
     contract_file_name: "",
     task_book_file_url: "",
@@ -265,6 +273,10 @@ export function useProjectDetail() {
       form.leader_email = String(data.leader_email || "");
       form.expected_results = String(data.expected_results || "");
       form.description = String(data.description || "");
+      form.proposal_file_url = String(data.proposal_file_url || "");
+      form.proposal_file_name = String(data.proposal_file_name || "");
+      form.attachment_file_url = String(data.attachment_file_url || "");
+      form.attachment_file_name = String(data.attachment_file_name || "");
       form.contract_file_url = String(data.contract_file_url || "");
       form.contract_file_name = String(data.contract_file_name || "");
       form.task_book_file_url = String(data.task_book_file_url || "");

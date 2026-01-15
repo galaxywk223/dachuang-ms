@@ -313,6 +313,38 @@
 
         <div class="form-section">
           <div class="section-header">
+            <span class="section-title">申报材料</span>
+          </div>
+          <el-row :gutter="24">
+            <el-col :span="12">
+              <el-form-item label="申报书">
+                <el-link
+                  v-if="form.proposal_file_url"
+                  :href="form.proposal_file_url"
+                  target="_blank"
+                >
+                  {{ form.proposal_file_name || "下载申报书" }}
+                </el-link>
+                <span v-else>无</span>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="其他附件">
+                <el-link
+                  v-if="form.attachment_file_url"
+                  :href="form.attachment_file_url"
+                  target="_blank"
+                >
+                  {{ form.attachment_file_name || "下载附件" }}
+                </el-link>
+                <span v-else>无</span>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </div>
+
+        <div class="form-section">
+          <div class="section-header">
             <span class="section-title">项目合同与任务书</span>
           </div>
           <el-row :gutter="24">

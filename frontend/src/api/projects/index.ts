@@ -254,7 +254,7 @@ export function getProjectCertificate(id: number): Promise<unknown> {
  */
 export function exportProjectDoc(id: number): Promise<unknown> {
   return request({
-    url: `/projects/${id}/export-doc/`,
+    url: `/projects/admin/manage/${id}/export-doc/`,
     method: "get",
     responseType: "blob",
   });

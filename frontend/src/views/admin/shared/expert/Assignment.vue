@@ -247,6 +247,7 @@ const fetchProjects = async () => {
       page_size: pageSize.value,
       search: searchQuery.value,
       review_type: reviewType.value,
+      exclude_expert_assigned: 1,
     };
     if (statusFilter.value) {
       params.project__status = statusFilter.value;
@@ -312,6 +313,8 @@ const handleAssign = () => {
       const dataMessage =
         isRecord(res) && isRecord(res.data) ? res.data.message : null;
       ElMessage.success(message || dataMessage || "分配成功");
+      selectedProjects.value = [];
+      fetchProjects();
     } catch (error: unknown) {
       console.error(error);
       ElMessage.error(getErrorMessage(error, "分配失败"));

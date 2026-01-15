@@ -123,6 +123,43 @@ interface FormDataState {
   attachment_file: File | null;
 }
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const isSuccessResponse = (response: ApiResponse<unknown> | unknown) => {
+  if (!isRecord(response)) return false;
+  const code = typeof response.code === "number" ? response.code : undefined;
+  const status =
+    typeof response.status === "number" ? response.status : undefined;
+  if (code !== undefined || status !== undefined) {
+    return (
+      code === 0 ||
+      code === 200 ||
+      code === 201 ||
+      status === 200 ||
+      status === 201
+    );
+  }
+  return true;
+};
+
+const getResponseId = (response: unknown): number | null => {
+  if (!isRecord(response)) return null;
+  if (typeof response.id === "number") return response.id;
+  if (isRecord(response.data)) {
+    if (typeof response.data.id === "number") return response.data.id;
+    if (
+      isRecord(response.data.data) &&
+      typeof response.data.data.id === "number"
+    ) {
+      return response.data.data.id;
+    }
+  } else if (typeof response.data === "number") {
+    return response.data;
+  }
+  return null;
+};
+
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (error instanceof Error) {
     return error.message || fallback;
@@ -625,16 +662,17 @@ export function useProjectApplication() {
         }>;
       }
 
-      if (response.code === 200 || response.status === 201) {
+      if (isSuccessResponse(response)) {
         ElMessage.success(isDraft ? "草稿已保存" : "申请已提交");
         if (!isDraft) {
           router.push("/my-projects");
         } else {
-          if (response.data && response.data.id) {
-            formData.id = response.data.id;
+          const responseId = getResponseId(response);
+          if (responseId) {
+            formData.id = responseId;
             router.replace({
               path: route.path,
-              query: { ...route.query, id: String(response.data.id) },
+              query: { ...route.query, id: String(responseId) },
             });
           }
         }

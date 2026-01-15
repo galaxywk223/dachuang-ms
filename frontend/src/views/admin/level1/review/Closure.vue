@@ -13,7 +13,7 @@
         </div>
       </template>
 
-      <div class="filter-section mb-4">
+      <div class="filter-row mb-4">
         <el-form :inline="true" class="filter-form">
           <el-form-item label="项目名称">
             <el-input
@@ -31,19 +31,18 @@
             <el-button @click="handleReset">重置</el-button>
           </el-form-item>
         </el-form>
-      </div>
-
-      <div class="action-bar mb-4">
-        <el-button type="primary" plain @click="openBatchDialog"
-          >批量审核</el-button
-        >
-        <el-button
-          type="warning"
-          plain
-          :icon="Download"
-          @click="handleBatchDownload"
-          >下载附件</el-button
-        >
+        <div class="action-bar">
+          <el-button type="primary" plain @click="openBatchDialog"
+            >批量审核</el-button
+          >
+          <el-button
+            type="warning"
+            plain
+            :icon="Download"
+            @click="handleBatchDownload"
+            >下载附件</el-button
+          >
+        </div>
       </div>
 
       <el-table
@@ -654,9 +653,19 @@ onMounted(() => {
   align-items: center;
 }
 
+.filter-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
 .action-bar {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
 }
 
 .pagination-container {

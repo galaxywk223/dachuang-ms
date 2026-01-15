@@ -44,8 +44,9 @@
             {{ formatDate(scope.row.created_at) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150" align="center" fixed="right">
+        <el-table-column label="操作" width="200" align="center" fixed="right">
           <template #default="scope">
+            <el-button size="small" @click="handleView(scope.row)">查看</el-button>
             <el-button
               v-if="
                 activeTab === 'pending' ||
@@ -56,9 +57,6 @@
               @click="handleReview(scope.row)"
             >
               审核
-            </el-button>
-            <el-button v-else size="small" @click="handleView(scope.row)">
-              查看
             </el-button>
           </template>
         </el-table-column>
@@ -362,9 +360,13 @@ const handleReview = async (project: TeacherProjectRow) => {
 const handleView = (row: TeacherProjectRow) => {
   if (row.id) {
     router.push({ name: "teacher-project-detail", params: { id: row.id } });
-  } else {
-    ElMessage.warning("项目ID缺失");
+    return;
   }
+  if (row.file_url) {
+    window.open(row.file_url, "_blank");
+    return;
+  }
+  ElMessage.warning("项目ID缺失");
 };
 
 const handleClose = () => {

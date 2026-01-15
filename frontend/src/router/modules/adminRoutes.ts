@@ -70,10 +70,30 @@ export const adminRoutes: RouteRecordRaw[] = [
       },
       {
         path: "review",
-        name: "level1-review",
-        component: () =>
-          import("@/views/admin/level1/review/ReviewManagement.vue"),
+        component: () => import("@/layouts/BlankLayout.vue"),
         meta: { title: "审核管理" },
+        redirect: "/level1-admin/review/establishment",
+        children: [
+          {
+            path: "establishment",
+            name: "level1-review-establishment",
+            component: () =>
+              import("@/views/admin/level1/review/Establishment.vue"),
+            meta: { title: "立项审核" },
+          },
+          {
+            path: "closure",
+            name: "level1-review-closure",
+            component: () => import("@/views/admin/level1/review/Closure.vue"),
+            meta: { title: "结题审核" },
+          },
+          {
+            path: "change",
+            name: "level1-review-change",
+            component: () => import("@/views/admin/level1/change/Reviews.vue"),
+            meta: { title: "异动审核" },
+          },
+        ],
       },
       {
         path: "projects/:id",

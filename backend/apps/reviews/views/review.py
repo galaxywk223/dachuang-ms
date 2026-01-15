@@ -3,6 +3,7 @@
 """
 
 from django.utils import timezone
+from django.db.models import Exists, OuterRef, Q
 from decimal import Decimal
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -387,6 +388,26 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
         # 应用过滤和排序
         queryset = self.filter_queryset(queryset)
+
+        exclude_expert_assigned = (
+            request.query_params.get("exclude_expert_assigned", "")
+            .strip()
+            .lower()
+            in {"1", "true", "yes"}
+        )
+        if exclude_expert_assigned:
+            expert_qs = Review.objects.filter(
+                project_id=OuterRef("project_id"),
+                phase_instance_id=OuterRef("phase_instance_id"),
+                review_type=OuterRef("review_type"),
+                is_expert_review=True,
+            ).filter(
+                Q(workflow_node_id=OuterRef("workflow_node_id"))
+                | (Q(workflow_node_id__isnull=True) & Q(review_level=OuterRef("review_level")))
+            )
+            queryset = queryset.annotate(_has_expert=Exists(expert_qs)).filter(
+                _has_expert=False
+            )
 
         page = self.paginate_queryset(queryset)
         if page is not None:
