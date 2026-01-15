@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict vp9ptfVMwPFzmfZErZvFRD0BpUOIEpyh0Z3sa7BtvCrRfIifkRpKfMo8cybCSxS
+\restrict I2fXreme3zado2ZcaYJlrKSy33aAPsJa23yQaLhdAhiBqLOcE0Eek1D2igN7hLD
 
 -- Dumped from database version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
 -- Dumped by pg_dump version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
@@ -18,244 +18,46 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
-ALTER TABLE IF EXISTS ONLY public.workflow_nodes DROP CONSTRAINT IF EXISTS workflow_nodes_workflow_id_411643ef_fk_workflow_configs_id;
-ALTER TABLE IF EXISTS ONLY public.workflow_nodes DROP CONSTRAINT IF EXISTS workflow_nodes_review_template_id_bf4b0c22_fk_review_te;
-ALTER TABLE IF EXISTS ONLY public.workflow_configs DROP CONSTRAINT IF EXISTS workflow_configs_updated_by_id_92af6584_fk_users_id;
-ALTER TABLE IF EXISTS ONLY public.workflow_configs DROP CONSTRAINT IF EXISTS workflow_configs_created_by_id_9ce1a151_fk_users_id;
-ALTER TABLE IF EXISTS ONLY public.workflow_configs DROP CONSTRAINT IF EXISTS workflow_configs_batch_id_537df69a_fk_project_batches_id;
-ALTER TABLE IF EXISTS ONLY public.users_user_permissions DROP CONSTRAINT IF EXISTS users_user_permissions_user_id_92473840_fk_users_id;
-ALTER TABLE IF EXISTS ONLY public.users_user_permissions DROP CONSTRAINT IF EXISTS users_user_permissio_permission_id_6d08dcd2_fk_auth_perm;
-ALTER TABLE IF EXISTS ONLY public.users_groups DROP CONSTRAINT IF EXISTS users_groups_user_id_f500bee5_fk_users_id;
-ALTER TABLE IF EXISTS ONLY public.users_groups DROP CONSTRAINT IF EXISTS users_groups_group_id_2f3517aa_fk_auth_group_id;
-ALTER TABLE IF EXISTS ONLY public.system_settings DROP CONSTRAINT IF EXISTS system_settings_updated_by_id_cf1dfbba_fk_users_id;
-ALTER TABLE IF EXISTS ONLY public.system_settings DROP CONSTRAINT IF EXISTS system_settings_batch_id_09927f7b_fk;
-ALTER TABLE IF EXISTS ONLY public.reviews DROP CONSTRAINT IF EXISTS reviews_reviewer_id_dbb954a8_fk_users_id;
-ALTER TABLE IF EXISTS ONLY public.reviews DROP CONSTRAINT IF EXISTS reviews_review_template_id_2422673c_fk_review_templates_id;
-ALTER TABLE IF EXISTS ONLY public.reviews DROP CONSTRAINT IF EXISTS reviews_project_id_1ffdb6d1_fk_projects_id;
-ALTER TABLE IF EXISTS ONLY public.reviews DROP CONSTRAINT IF EXISTS reviews_phase_instance_id_76b853a5_fk_project_p;
-ALTER TABLE IF EXISTS ONLY public.review_templates DROP CONSTRAINT IF EXISTS review_templates_updated_by_id_758db1b0_fk_users_id;
-ALTER TABLE IF EXISTS ONLY public.review_templates DROP CONSTRAINT IF EXISTS review_templates_created_by_id_4858a6a0_fk_users_id;
-ALTER TABLE IF EXISTS ONLY public.review_templates DROP CONSTRAINT IF EXISTS review_templates_batch_id_4ca9aed4_fk_project_batches_id;
-ALTER TABLE IF EXISTS ONLY public.review_template_items DROP CONSTRAINT IF EXISTS review_template_item_template_id_835bbf34_fk_review_te;
-ALTER TABLE IF EXISTS ONLY public.projects DROP CONSTRAINT IF EXISTS projects_source_id_4682911e_fk_dictionary_items_id;
-ALTER TABLE IF EXISTS ONLY public.projects DROP CONSTRAINT IF EXISTS projects_level_id_8a6f1c0b_fk_dictionary_items_id;
-ALTER TABLE IF EXISTS ONLY public.projects DROP CONSTRAINT IF EXISTS projects_leader_id_aabb0912_fk_users_id;
-ALTER TABLE IF EXISTS ONLY public.projects DROP CONSTRAINT IF EXISTS projects_discipline_id_a86933e6_fk_dictionary_items_id;
-ALTER TABLE IF EXISTS ONLY public.projects DROP CONSTRAINT IF EXISTS projects_category_id_2110ba9e_fk_dictionary_items_id;
-ALTER TABLE IF EXISTS ONLY public.projects DROP CONSTRAINT IF EXISTS projects_batch_id_67b3e4b1_fk;
-ALTER TABLE IF EXISTS ONLY public.project_recycle_bin DROP CONSTRAINT IF EXISTS project_recycle_bin_restored_by_id_2665a121_fk_users_id;
-ALTER TABLE IF EXISTS ONLY public.project_recycle_bin DROP CONSTRAINT IF EXISTS project_recycle_bin_project_id_b9c359f1_fk_projects_id;
-ALTER TABLE IF EXISTS ONLY public.project_recycle_bin DROP CONSTRAINT IF EXISTS project_recycle_bin_deleted_by_id_5d1409f9_fk_users_id;
-ALTER TABLE IF EXISTS ONLY public.project_push_records DROP CONSTRAINT IF EXISTS project_push_records_project_id_9dd8de15_fk_projects_id;
-ALTER TABLE IF EXISTS ONLY public.project_progress DROP CONSTRAINT IF EXISTS project_progress_project_id_c9b0d403_fk_projects_id;
-ALTER TABLE IF EXISTS ONLY public.project_progress DROP CONSTRAINT IF EXISTS project_progress_created_by_id_bfa96ce7_fk_users_id;
-ALTER TABLE IF EXISTS ONLY public.project_phase_instances DROP CONSTRAINT IF EXISTS project_phase_instances_project_id_9f3b1467_fk_projects_id;
-ALTER TABLE IF EXISTS ONLY public.project_phase_instances DROP CONSTRAINT IF EXISTS project_phase_instances_created_by_id_7783b14c_fk_users_id;
-ALTER TABLE IF EXISTS ONLY public.project_members DROP CONSTRAINT IF EXISTS project_members_user_id_2e9d44b1_fk_users_id;
-ALTER TABLE IF EXISTS ONLY public.project_members DROP CONSTRAINT IF EXISTS project_members_project_id_bf2e42ec_fk_projects_id;
-ALTER TABLE IF EXISTS ONLY public.project_expenditures DROP CONSTRAINT IF EXISTS project_expenditures_project_id_6c79dd16_fk_projects_id;
-ALTER TABLE IF EXISTS ONLY public.project_expenditures DROP CONSTRAINT IF EXISTS project_expenditures_created_by_id_283ff779_fk_users_id;
-ALTER TABLE IF EXISTS ONLY public.project_expenditures DROP CONSTRAINT IF EXISTS project_expenditures_category_id_b5d751a0_fk_dictionar;
-ALTER TABLE IF EXISTS ONLY public.project_change_reviews DROP CONSTRAINT IF EXISTS project_change_reviews_reviewer_id_3abd4640_fk_users_id;
-ALTER TABLE IF EXISTS ONLY public.project_change_reviews DROP CONSTRAINT IF EXISTS project_change_revie_change_request_id_7de00e2e_fk_project_c;
-ALTER TABLE IF EXISTS ONLY public.project_change_requests DROP CONSTRAINT IF EXISTS project_change_requests_project_id_3231f0af_fk_projects_id;
-ALTER TABLE IF EXISTS ONLY public.project_change_requests DROP CONSTRAINT IF EXISTS project_change_requests_created_by_id_58f7c62d_fk_users_id;
-ALTER TABLE IF EXISTS ONLY public.project_archives DROP CONSTRAINT IF EXISTS project_archives_project_id_9f133d5b_fk_projects_id;
-ALTER TABLE IF EXISTS ONLY public.project_advisors DROP CONSTRAINT IF EXISTS project_advisors_user_id_e397bc74_fk_users_id;
-ALTER TABLE IF EXISTS ONLY public.project_advisors DROP CONSTRAINT IF EXISTS project_advisors_project_id_d2ef5924_fk_projects_id;
-ALTER TABLE IF EXISTS ONLY public.project_achievements DROP CONSTRAINT IF EXISTS project_achievements_project_id_99c3182e_fk_projects_id;
-ALTER TABLE IF EXISTS ONLY public.project_achievements DROP CONSTRAINT IF EXISTS project_achievements_achievement_type_id_1d76d968_fk_dictionar;
-ALTER TABLE IF EXISTS ONLY public.notifications DROP CONSTRAINT IF EXISTS notifications_related_project_id_937ebb75_fk_projects_id;
-ALTER TABLE IF EXISTS ONLY public.notifications DROP CONSTRAINT IF EXISTS notifications_recipient_id_e1133bac_fk_users_id;
-ALTER TABLE IF EXISTS ONLY public.login_logs DROP CONSTRAINT IF EXISTS login_logs_user_id_d31d00a1_fk_users_id;
-ALTER TABLE IF EXISTS ONLY public.expert_groups_members DROP CONSTRAINT IF EXISTS expert_groups_members_user_id_94d717a7_fk_users_id;
-ALTER TABLE IF EXISTS ONLY public.expert_groups_members DROP CONSTRAINT IF EXISTS expert_groups_member_expertgroup_id_c0b06855_fk_expert_gr;
-ALTER TABLE IF EXISTS ONLY public.expert_groups DROP CONSTRAINT IF EXISTS expert_groups_created_by_id_ea191c03_fk_users_id;
-ALTER TABLE IF EXISTS ONLY public.django_admin_log DROP CONSTRAINT IF EXISTS django_admin_log_user_id_c564eba6_fk_users_id;
-ALTER TABLE IF EXISTS ONLY public.django_admin_log DROP CONSTRAINT IF EXISTS django_admin_log_content_type_id_c4bce8eb_fk_django_co;
-ALTER TABLE IF EXISTS ONLY public.dictionary_items DROP CONSTRAINT IF EXISTS dictionary_items_dict_type_id_08d3c96f_fk_dictionary_types_id;
-ALTER TABLE IF EXISTS ONLY public.certificate_settings DROP CONSTRAINT IF EXISTS certificate_settings_updated_by_id_2d83e676_fk_users_id;
-ALTER TABLE IF EXISTS ONLY public.certificate_settings DROP CONSTRAINT IF EXISTS certificate_settings_project_level_id_0ca1dab1_fk_dictionar;
-ALTER TABLE IF EXISTS ONLY public.certificate_settings DROP CONSTRAINT IF EXISTS certificate_settings_project_category_id_eb459b98_fk_dictionar;
-ALTER TABLE IF EXISTS ONLY public.auth_permission DROP CONSTRAINT IF EXISTS auth_permission_content_type_id_2f476e4b_fk_django_co;
-ALTER TABLE IF EXISTS ONLY public.auth_group_permissions DROP CONSTRAINT IF EXISTS auth_group_permissions_group_id_b120cbf9_fk_auth_group_id;
-ALTER TABLE IF EXISTS ONLY public.auth_group_permissions DROP CONSTRAINT IF EXISTS auth_group_permissio_permission_id_84c5c92e_fk_auth_perm;
-DROP INDEX IF EXISTS public.workflow_nodes_workflow_id_411643ef;
-DROP INDEX IF EXISTS public.workflow_nodes_review_template_id_bf4b0c22;
-DROP INDEX IF EXISTS public.workflow_configs_updated_by_id_92af6584;
-DROP INDEX IF EXISTS public.workflow_configs_created_by_id_9ce1a151;
-DROP INDEX IF EXISTS public.workflow_configs_batch_id_537df69a;
-DROP INDEX IF EXISTS public.users_username_e8658fc8_like;
-DROP INDEX IF EXISTS public.users_user_permissions_user_id_92473840;
-DROP INDEX IF EXISTS public.users_user_permissions_permission_id_6d08dcd2;
-DROP INDEX IF EXISTS public.users_groups_user_id_f500bee5;
-DROP INDEX IF EXISTS public.users_groups_group_id_2f3517aa;
-DROP INDEX IF EXISTS public.users_employee_id_7c8e0276_like;
-DROP INDEX IF EXISTS public.system_settings_updated_by_id_cf1dfbba;
-DROP INDEX IF EXISTS public.system_settings_batch_id_09927f7b;
-DROP INDEX IF EXISTS public.reviews_status_12ddaa_idx;
-DROP INDEX IF EXISTS public.reviews_reviewer_id_dbb954a8;
-DROP INDEX IF EXISTS public.reviews_review_template_id_2422673c;
-DROP INDEX IF EXISTS public.reviews_project_id_1ffdb6d1;
-DROP INDEX IF EXISTS public.reviews_project_1fd85d_idx;
-DROP INDEX IF EXISTS public.reviews_phase_instance_id_76b853a5;
-DROP INDEX IF EXISTS public.review_templates_updated_by_id_758db1b0;
-DROP INDEX IF EXISTS public.review_templates_created_by_id_4858a6a0;
-DROP INDEX IF EXISTS public.review_templates_batch_id_4ca9aed4;
-DROP INDEX IF EXISTS public.review_template_items_template_id_835bbf34;
-DROP INDEX IF EXISTS public.projects_status_6303d7_idx;
-DROP INDEX IF EXISTS public.projects_source_id_4682911e;
-DROP INDEX IF EXISTS public.projects_project_no_b1aacc70_like;
-DROP INDEX IF EXISTS public.projects_project_b2c64d_idx;
-DROP INDEX IF EXISTS public.projects_level_id_8a6f1c0b;
-DROP INDEX IF EXISTS public.projects_leader_id_aabb0912;
-DROP INDEX IF EXISTS public.projects_discipline_id_a86933e6;
-DROP INDEX IF EXISTS public.projects_category_id_2110ba9e;
-DROP INDEX IF EXISTS public.projects_batch_id_67b3e4b1;
-DROP INDEX IF EXISTS public.project_recycle_bin_restored_by_id_2665a121;
-DROP INDEX IF EXISTS public.project_recycle_bin_project_id_b9c359f1;
-DROP INDEX IF EXISTS public.project_recycle_bin_deleted_by_id_5d1409f9;
-DROP INDEX IF EXISTS public.project_push_records_project_id_9dd8de15;
-DROP INDEX IF EXISTS public.project_progress_project_id_c9b0d403;
-DROP INDEX IF EXISTS public.project_progress_created_by_id_bfa96ce7;
-DROP INDEX IF EXISTS public.project_phase_instances_project_id_9f3b1467;
-DROP INDEX IF EXISTS public.project_phase_instances_created_by_id_7783b14c;
-DROP INDEX IF EXISTS public.project_members_user_id_2e9d44b1;
-DROP INDEX IF EXISTS public.project_members_project_id_bf2e42ec;
-DROP INDEX IF EXISTS public.project_expenditures_project_id_6c79dd16;
-DROP INDEX IF EXISTS public.project_expenditures_created_by_id_283ff779;
-DROP INDEX IF EXISTS public.project_expenditures_category_id_b5d751a0;
-DROP INDEX IF EXISTS public.project_exp_project_fcb7bd_idx;
-DROP INDEX IF EXISTS public.project_change_reviews_reviewer_id_3abd4640;
-DROP INDEX IF EXISTS public.project_change_reviews_change_request_id_7de00e2e;
-DROP INDEX IF EXISTS public.project_change_requests_project_id_3231f0af;
-DROP INDEX IF EXISTS public.project_change_requests_created_by_id_58f7c62d;
-DROP INDEX IF EXISTS public.project_batches_code_560841e3_like;
-DROP INDEX IF EXISTS public.project_advisors_user_id_e397bc74;
-DROP INDEX IF EXISTS public.project_advisors_project_id_d2ef5924;
-DROP INDEX IF EXISTS public.project_achievements_project_id_99c3182e;
-DROP INDEX IF EXISTS public.project_achievements_achievement_type_id_1d76d968;
-DROP INDEX IF EXISTS public.project_ach_project_5cdff8_idx;
-DROP INDEX IF EXISTS public.notifications_related_project_id_937ebb75;
-DROP INDEX IF EXISTS public.notifications_recipient_id_e1133bac;
-DROP INDEX IF EXISTS public.notificatio_recipie_583549_idx;
-DROP INDEX IF EXISTS public.login_logs_user_id_d31d00a1;
-DROP INDEX IF EXISTS public.expert_groups_members_user_id_94d717a7;
-DROP INDEX IF EXISTS public.expert_groups_members_expertgroup_id_c0b06855;
-DROP INDEX IF EXISTS public.expert_groups_created_by_id_ea191c03;
-DROP INDEX IF EXISTS public.django_session_session_key_c0390e0f_like;
-DROP INDEX IF EXISTS public.django_session_expire_date_a5c62663;
-DROP INDEX IF EXISTS public.django_admin_log_user_id_c564eba6;
-DROP INDEX IF EXISTS public.django_admin_log_content_type_id_c4bce8eb;
-DROP INDEX IF EXISTS public.dictionary_types_code_0d0f74a4_like;
-DROP INDEX IF EXISTS public.dictionary_items_value_cc3d1c81_like;
-DROP INDEX IF EXISTS public.dictionary_items_value_cc3d1c81;
-DROP INDEX IF EXISTS public.dictionary_items_dict_type_id_08d3c96f;
-DROP INDEX IF EXISTS public.dictionary__dict_ty_efa91e_idx;
-DROP INDEX IF EXISTS public.certificate_settings_updated_by_id_2d83e676;
-DROP INDEX IF EXISTS public.certificate_settings_project_level_id_0ca1dab1;
-DROP INDEX IF EXISTS public.certificate_settings_project_category_id_eb459b98;
-DROP INDEX IF EXISTS public.auth_permission_content_type_id_2f476e4b;
-DROP INDEX IF EXISTS public.auth_group_permissions_permission_id_84c5c92e;
-DROP INDEX IF EXISTS public.auth_group_permissions_group_id_b120cbf9;
-DROP INDEX IF EXISTS public.auth_group_name_a6ea08ec_like;
-ALTER TABLE IF EXISTS ONLY public.workflow_nodes DROP CONSTRAINT IF EXISTS workflow_nodes_workflow_id_code_63ae61b1_uniq;
-ALTER TABLE IF EXISTS ONLY public.workflow_nodes DROP CONSTRAINT IF EXISTS workflow_nodes_pkey;
-ALTER TABLE IF EXISTS ONLY public.workflow_configs DROP CONSTRAINT IF EXISTS workflow_configs_pkey;
-ALTER TABLE IF EXISTS ONLY public.workflow_configs DROP CONSTRAINT IF EXISTS workflow_configs_phase_batch_id_version_06d76f32_uniq;
-ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_username_key;
-ALTER TABLE IF EXISTS ONLY public.users_user_permissions DROP CONSTRAINT IF EXISTS users_user_permissions_user_id_permission_id_3b86cbdf_uniq;
-ALTER TABLE IF EXISTS ONLY public.users_user_permissions DROP CONSTRAINT IF EXISTS users_user_permissions_pkey;
-ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_pkey;
-ALTER TABLE IF EXISTS ONLY public.users_groups DROP CONSTRAINT IF EXISTS users_groups_user_id_group_id_fc7788e8_uniq;
-ALTER TABLE IF EXISTS ONLY public.users_groups DROP CONSTRAINT IF EXISTS users_groups_pkey;
-ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_employee_id_key;
-ALTER TABLE IF EXISTS ONLY public.project_phase_instances DROP CONSTRAINT IF EXISTS uniq_project_phase_attempt;
-ALTER TABLE IF EXISTS ONLY public.system_settings DROP CONSTRAINT IF EXISTS system_settings_pkey;
-ALTER TABLE IF EXISTS ONLY public.system_settings DROP CONSTRAINT IF EXISTS system_settings_code_batch_id_9901544a_uniq;
-ALTER TABLE IF EXISTS ONLY public.reviews DROP CONSTRAINT IF EXISTS reviews_pkey;
-ALTER TABLE IF EXISTS ONLY public.review_templates DROP CONSTRAINT IF EXISTS review_templates_pkey;
-ALTER TABLE IF EXISTS ONLY public.review_template_items DROP CONSTRAINT IF EXISTS review_template_items_pkey;
-ALTER TABLE IF EXISTS ONLY public.projects DROP CONSTRAINT IF EXISTS projects_project_no_key;
-ALTER TABLE IF EXISTS ONLY public.projects DROP CONSTRAINT IF EXISTS projects_pkey;
-ALTER TABLE IF EXISTS ONLY public.project_recycle_bin DROP CONSTRAINT IF EXISTS project_recycle_bin_pkey;
-ALTER TABLE IF EXISTS ONLY public.project_push_records DROP CONSTRAINT IF EXISTS project_push_records_pkey;
-ALTER TABLE IF EXISTS ONLY public.project_progress DROP CONSTRAINT IF EXISTS project_progress_pkey;
-ALTER TABLE IF EXISTS ONLY public.project_phase_instances DROP CONSTRAINT IF EXISTS project_phase_instances_pkey;
-ALTER TABLE IF EXISTS ONLY public.project_members DROP CONSTRAINT IF EXISTS project_members_project_id_user_id_ab18bfcc_uniq;
-ALTER TABLE IF EXISTS ONLY public.project_members DROP CONSTRAINT IF EXISTS project_members_pkey;
-ALTER TABLE IF EXISTS ONLY public.project_expenditures DROP CONSTRAINT IF EXISTS project_expenditures_pkey;
-ALTER TABLE IF EXISTS ONLY public.project_change_reviews DROP CONSTRAINT IF EXISTS project_change_reviews_pkey;
-ALTER TABLE IF EXISTS ONLY public.project_change_requests DROP CONSTRAINT IF EXISTS project_change_requests_pkey;
-ALTER TABLE IF EXISTS ONLY public.project_batches DROP CONSTRAINT IF EXISTS project_batches_pkey;
-ALTER TABLE IF EXISTS ONLY public.project_batches DROP CONSTRAINT IF EXISTS project_batches_code_key;
-ALTER TABLE IF EXISTS ONLY public.project_archives DROP CONSTRAINT IF EXISTS project_archives_project_id_key;
-ALTER TABLE IF EXISTS ONLY public.project_archives DROP CONSTRAINT IF EXISTS project_archives_pkey;
-ALTER TABLE IF EXISTS ONLY public.project_advisors DROP CONSTRAINT IF EXISTS project_advisors_pkey;
-ALTER TABLE IF EXISTS ONLY public.project_achievements DROP CONSTRAINT IF EXISTS project_achievements_pkey;
-ALTER TABLE IF EXISTS ONLY public.notifications DROP CONSTRAINT IF EXISTS notifications_pkey;
-ALTER TABLE IF EXISTS ONLY public.login_logs DROP CONSTRAINT IF EXISTS login_logs_pkey;
-ALTER TABLE IF EXISTS ONLY public.expert_groups DROP CONSTRAINT IF EXISTS expert_groups_pkey;
-ALTER TABLE IF EXISTS ONLY public.expert_groups_members DROP CONSTRAINT IF EXISTS expert_groups_members_pkey;
-ALTER TABLE IF EXISTS ONLY public.expert_groups_members DROP CONSTRAINT IF EXISTS expert_groups_members_expertgroup_id_user_id_abc88dfa_uniq;
-ALTER TABLE IF EXISTS ONLY public.django_session DROP CONSTRAINT IF EXISTS django_session_pkey;
-ALTER TABLE IF EXISTS ONLY public.django_migrations DROP CONSTRAINT IF EXISTS django_migrations_pkey;
-ALTER TABLE IF EXISTS ONLY public.django_content_type DROP CONSTRAINT IF EXISTS django_content_type_pkey;
-ALTER TABLE IF EXISTS ONLY public.django_content_type DROP CONSTRAINT IF EXISTS django_content_type_app_label_model_76bd3d3b_uniq;
-ALTER TABLE IF EXISTS ONLY public.django_admin_log DROP CONSTRAINT IF EXISTS django_admin_log_pkey;
-ALTER TABLE IF EXISTS ONLY public.dictionary_types DROP CONSTRAINT IF EXISTS dictionary_types_pkey;
-ALTER TABLE IF EXISTS ONLY public.dictionary_types DROP CONSTRAINT IF EXISTS dictionary_types_code_key;
-ALTER TABLE IF EXISTS ONLY public.dictionary_items DROP CONSTRAINT IF EXISTS dictionary_items_pkey;
-ALTER TABLE IF EXISTS ONLY public.dictionary_items DROP CONSTRAINT IF EXISTS dictionary_items_dict_type_id_value_d443096c_uniq;
-ALTER TABLE IF EXISTS ONLY public.certificate_settings DROP CONSTRAINT IF EXISTS certificate_settings_pkey;
-ALTER TABLE IF EXISTS ONLY public.auth_permission DROP CONSTRAINT IF EXISTS auth_permission_pkey;
-ALTER TABLE IF EXISTS ONLY public.auth_permission DROP CONSTRAINT IF EXISTS auth_permission_content_type_id_codename_01ab375a_uniq;
-ALTER TABLE IF EXISTS ONLY public.auth_group DROP CONSTRAINT IF EXISTS auth_group_pkey;
-ALTER TABLE IF EXISTS ONLY public.auth_group_permissions DROP CONSTRAINT IF EXISTS auth_group_permissions_pkey;
-ALTER TABLE IF EXISTS ONLY public.auth_group_permissions DROP CONSTRAINT IF EXISTS auth_group_permissions_group_id_permission_id_0cd325b0_uniq;
-ALTER TABLE IF EXISTS ONLY public.auth_group DROP CONSTRAINT IF EXISTS auth_group_name_key;
-DROP TABLE IF EXISTS public.workflow_nodes;
-DROP TABLE IF EXISTS public.workflow_configs;
-DROP TABLE IF EXISTS public.users_user_permissions;
-DROP TABLE IF EXISTS public.users_groups;
-DROP TABLE IF EXISTS public.users;
-DROP TABLE IF EXISTS public.system_settings;
-DROP TABLE IF EXISTS public.reviews;
-DROP TABLE IF EXISTS public.review_templates;
-DROP TABLE IF EXISTS public.review_template_items;
-DROP TABLE IF EXISTS public.projects;
-DROP TABLE IF EXISTS public.project_recycle_bin;
-DROP TABLE IF EXISTS public.project_push_records;
-DROP TABLE IF EXISTS public.project_progress;
-DROP TABLE IF EXISTS public.project_phase_instances;
-DROP TABLE IF EXISTS public.project_members;
-DROP TABLE IF EXISTS public.project_expenditures;
-DROP TABLE IF EXISTS public.project_change_reviews;
-DROP TABLE IF EXISTS public.project_change_requests;
-DROP TABLE IF EXISTS public.project_batches;
-DROP TABLE IF EXISTS public.project_archives;
-DROP TABLE IF EXISTS public.project_advisors;
-DROP TABLE IF EXISTS public.project_achievements;
-DROP TABLE IF EXISTS public.notifications;
-DROP TABLE IF EXISTS public.login_logs;
-DROP TABLE IF EXISTS public.expert_groups_members;
-DROP TABLE IF EXISTS public.expert_groups;
-DROP TABLE IF EXISTS public.django_session;
-DROP TABLE IF EXISTS public.django_migrations;
-DROP TABLE IF EXISTS public.django_content_type;
-DROP TABLE IF EXISTS public.django_admin_log;
-DROP TABLE IF EXISTS public.dictionary_types;
-DROP TABLE IF EXISTS public.dictionary_items;
-DROP TABLE IF EXISTS public.certificate_settings;
-DROP TABLE IF EXISTS public.auth_permission;
-DROP TABLE IF EXISTS public.auth_group_permissions;
-DROP TABLE IF EXISTS public.auth_group;
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
--- Name: auth_group; Type: TABLE; Schema: public; Owner: -
+-- Name: admin_assignments; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.admin_assignments (
+    id bigint NOT NULL,
+    phase character varying(20) NOT NULL,
+    scope_value character varying(100) NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    admin_user_id bigint NOT NULL,
+    batch_id bigint NOT NULL,
+    created_by_id bigint,
+    updated_by_id bigint,
+    workflow_node_id bigint NOT NULL
+);
+
+
+ALTER TABLE public.admin_assignments OWNER TO postgres;
+
+--
+-- Name: admin_assignments_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.admin_assignments ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.admin_assignments_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: auth_group; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.auth_group (
@@ -264,8 +66,10 @@ CREATE TABLE public.auth_group (
 );
 
 
+ALTER TABLE public.auth_group OWNER TO postgres;
+
 --
--- Name: auth_group_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: auth_group_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.auth_group ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -279,7 +83,7 @@ ALTER TABLE public.auth_group ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTI
 
 
 --
--- Name: auth_group_permissions; Type: TABLE; Schema: public; Owner: -
+-- Name: auth_group_permissions; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.auth_group_permissions (
@@ -289,8 +93,10 @@ CREATE TABLE public.auth_group_permissions (
 );
 
 
+ALTER TABLE public.auth_group_permissions OWNER TO postgres;
+
 --
--- Name: auth_group_permissions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: auth_group_permissions_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.auth_group_permissions ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -304,7 +110,7 @@ ALTER TABLE public.auth_group_permissions ALTER COLUMN id ADD GENERATED BY DEFAU
 
 
 --
--- Name: auth_permission; Type: TABLE; Schema: public; Owner: -
+-- Name: auth_permission; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.auth_permission (
@@ -315,8 +121,10 @@ CREATE TABLE public.auth_permission (
 );
 
 
+ALTER TABLE public.auth_permission OWNER TO postgres;
+
 --
--- Name: auth_permission_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: auth_permission_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.auth_permission ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -330,7 +138,51 @@ ALTER TABLE public.auth_permission ALTER COLUMN id ADD GENERATED BY DEFAULT AS I
 
 
 --
--- Name: certificate_settings; Type: TABLE; Schema: public; Owner: -
+-- Name: budget_change_requests; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.budget_change_requests (
+    id bigint NOT NULL,
+    original_budget numeric(10,2) NOT NULL,
+    new_budget numeric(10,2) NOT NULL,
+    reason text NOT NULL,
+    budget_breakdown jsonb NOT NULL,
+    status character varying(30) NOT NULL,
+    teacher_comment text NOT NULL,
+    teacher_reviewed_at timestamp with time zone,
+    level2_comment text NOT NULL,
+    level2_reviewed_at timestamp with time zone,
+    level1_comment text NOT NULL,
+    level1_reviewed_at timestamp with time zone,
+    is_deleted boolean NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    created_by_id bigint NOT NULL,
+    level1_reviewed_by_id bigint,
+    level2_reviewed_by_id bigint,
+    project_id bigint NOT NULL,
+    teacher_reviewed_by_id bigint
+);
+
+
+ALTER TABLE public.budget_change_requests OWNER TO postgres;
+
+--
+-- Name: budget_change_requests_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.budget_change_requests ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.budget_change_requests_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: certificate_settings; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.certificate_settings (
@@ -351,8 +203,10 @@ CREATE TABLE public.certificate_settings (
 );
 
 
+ALTER TABLE public.certificate_settings OWNER TO postgres;
+
 --
--- Name: certificate_settings_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: certificate_settings_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.certificate_settings ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -366,7 +220,7 @@ ALTER TABLE public.certificate_settings ALTER COLUMN id ADD GENERATED BY DEFAULT
 
 
 --
--- Name: dictionary_items; Type: TABLE; Schema: public; Owner: -
+-- Name: dictionary_items; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.dictionary_items (
@@ -384,8 +238,10 @@ CREATE TABLE public.dictionary_items (
 );
 
 
+ALTER TABLE public.dictionary_items OWNER TO postgres;
+
 --
--- Name: dictionary_items_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: dictionary_items_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.dictionary_items ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -399,7 +255,7 @@ ALTER TABLE public.dictionary_items ALTER COLUMN id ADD GENERATED BY DEFAULT AS 
 
 
 --
--- Name: dictionary_types; Type: TABLE; Schema: public; Owner: -
+-- Name: dictionary_types; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.dictionary_types (
@@ -414,8 +270,10 @@ CREATE TABLE public.dictionary_types (
 );
 
 
+ALTER TABLE public.dictionary_types OWNER TO postgres;
+
 --
--- Name: dictionary_types_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: dictionary_types_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.dictionary_types ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -429,7 +287,7 @@ ALTER TABLE public.dictionary_types ALTER COLUMN id ADD GENERATED BY DEFAULT AS 
 
 
 --
--- Name: django_admin_log; Type: TABLE; Schema: public; Owner: -
+-- Name: django_admin_log; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.django_admin_log (
@@ -445,8 +303,10 @@ CREATE TABLE public.django_admin_log (
 );
 
 
+ALTER TABLE public.django_admin_log OWNER TO postgres;
+
 --
--- Name: django_admin_log_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: django_admin_log_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.django_admin_log ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -460,7 +320,7 @@ ALTER TABLE public.django_admin_log ALTER COLUMN id ADD GENERATED BY DEFAULT AS 
 
 
 --
--- Name: django_content_type; Type: TABLE; Schema: public; Owner: -
+-- Name: django_content_type; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.django_content_type (
@@ -470,8 +330,10 @@ CREATE TABLE public.django_content_type (
 );
 
 
+ALTER TABLE public.django_content_type OWNER TO postgres;
+
 --
--- Name: django_content_type_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: django_content_type_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.django_content_type ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -485,7 +347,7 @@ ALTER TABLE public.django_content_type ALTER COLUMN id ADD GENERATED BY DEFAULT 
 
 
 --
--- Name: django_migrations; Type: TABLE; Schema: public; Owner: -
+-- Name: django_migrations; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.django_migrations (
@@ -496,8 +358,10 @@ CREATE TABLE public.django_migrations (
 );
 
 
+ALTER TABLE public.django_migrations OWNER TO postgres;
+
 --
--- Name: django_migrations_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: django_migrations_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.django_migrations ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -511,7 +375,7 @@ ALTER TABLE public.django_migrations ALTER COLUMN id ADD GENERATED BY DEFAULT AS
 
 
 --
--- Name: django_session; Type: TABLE; Schema: public; Owner: -
+-- Name: django_session; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.django_session (
@@ -521,8 +385,10 @@ CREATE TABLE public.django_session (
 );
 
 
+ALTER TABLE public.django_session OWNER TO postgres;
+
 --
--- Name: expert_groups; Type: TABLE; Schema: public; Owner: -
+-- Name: expert_groups; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.expert_groups (
@@ -535,8 +401,10 @@ CREATE TABLE public.expert_groups (
 );
 
 
+ALTER TABLE public.expert_groups OWNER TO postgres;
+
 --
--- Name: expert_groups_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: expert_groups_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.expert_groups ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -550,7 +418,7 @@ ALTER TABLE public.expert_groups ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDE
 
 
 --
--- Name: expert_groups_members; Type: TABLE; Schema: public; Owner: -
+-- Name: expert_groups_members; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.expert_groups_members (
@@ -560,8 +428,10 @@ CREATE TABLE public.expert_groups_members (
 );
 
 
+ALTER TABLE public.expert_groups_members OWNER TO postgres;
+
 --
--- Name: expert_groups_members_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: expert_groups_members_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.expert_groups_members ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -575,7 +445,7 @@ ALTER TABLE public.expert_groups_members ALTER COLUMN id ADD GENERATED BY DEFAUL
 
 
 --
--- Name: login_logs; Type: TABLE; Schema: public; Owner: -
+-- Name: login_logs; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.login_logs (
@@ -588,8 +458,10 @@ CREATE TABLE public.login_logs (
 );
 
 
+ALTER TABLE public.login_logs OWNER TO postgres;
+
 --
--- Name: login_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: login_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.login_logs ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -603,7 +475,7 @@ ALTER TABLE public.login_logs ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTI
 
 
 --
--- Name: notifications; Type: TABLE; Schema: public; Owner: -
+-- Name: notifications; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.notifications (
@@ -619,8 +491,10 @@ CREATE TABLE public.notifications (
 );
 
 
+ALTER TABLE public.notifications OWNER TO postgres;
+
 --
--- Name: notifications_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: notifications_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.notifications ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -634,7 +508,39 @@ ALTER TABLE public.notifications ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDE
 
 
 --
--- Name: project_achievements; Type: TABLE; Schema: public; Owner: -
+-- Name: permissions; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.permissions (
+    id bigint NOT NULL,
+    code character varying(50) NOT NULL,
+    name character varying(100) NOT NULL,
+    description text NOT NULL,
+    category character varying(50) NOT NULL,
+    is_active boolean NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL
+);
+
+
+ALTER TABLE public.permissions OWNER TO postgres;
+
+--
+-- Name: permissions_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.permissions ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.permissions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: project_achievements; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.project_achievements (
@@ -662,8 +568,10 @@ CREATE TABLE public.project_achievements (
 );
 
 
+ALTER TABLE public.project_achievements OWNER TO postgres;
+
 --
--- Name: project_achievements_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: project_achievements_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.project_achievements ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -677,7 +585,7 @@ ALTER TABLE public.project_achievements ALTER COLUMN id ADD GENERATED BY DEFAULT
 
 
 --
--- Name: project_advisors; Type: TABLE; Schema: public; Owner: -
+-- Name: project_advisors; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.project_advisors (
@@ -688,8 +596,10 @@ CREATE TABLE public.project_advisors (
 );
 
 
+ALTER TABLE public.project_advisors OWNER TO postgres;
+
 --
--- Name: project_advisors_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: project_advisors_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.project_advisors ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -703,7 +613,7 @@ ALTER TABLE public.project_advisors ALTER COLUMN id ADD GENERATED BY DEFAULT AS 
 
 
 --
--- Name: project_archives; Type: TABLE; Schema: public; Owner: -
+-- Name: project_archives; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.project_archives (
@@ -711,12 +621,15 @@ CREATE TABLE public.project_archives (
     snapshot jsonb NOT NULL,
     attachments jsonb NOT NULL,
     archived_at timestamp with time zone NOT NULL,
-    project_id bigint NOT NULL
+    project_id bigint NOT NULL,
+    metadata jsonb NOT NULL
 );
 
 
+ALTER TABLE public.project_archives OWNER TO postgres;
+
 --
--- Name: project_archives_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: project_archives_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.project_archives ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -730,7 +643,7 @@ ALTER TABLE public.project_archives ALTER COLUMN id ADD GENERATED BY DEFAULT AS 
 
 
 --
--- Name: project_batches; Type: TABLE; Schema: public; Owner: -
+-- Name: project_batches; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.project_batches (
@@ -747,8 +660,10 @@ CREATE TABLE public.project_batches (
 );
 
 
+ALTER TABLE public.project_batches OWNER TO postgres;
+
 --
--- Name: project_batches_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: project_batches_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.project_batches ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -762,7 +677,7 @@ ALTER TABLE public.project_batches ALTER COLUMN id ADD GENERATED BY DEFAULT AS I
 
 
 --
--- Name: project_change_requests; Type: TABLE; Schema: public; Owner: -
+-- Name: project_change_requests; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.project_change_requests (
@@ -782,8 +697,10 @@ CREATE TABLE public.project_change_requests (
 );
 
 
+ALTER TABLE public.project_change_requests OWNER TO postgres;
+
 --
--- Name: project_change_requests_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: project_change_requests_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.project_change_requests ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -797,7 +714,7 @@ ALTER TABLE public.project_change_requests ALTER COLUMN id ADD GENERATED BY DEFA
 
 
 --
--- Name: project_change_reviews; Type: TABLE; Schema: public; Owner: -
+-- Name: project_change_reviews; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.project_change_reviews (
@@ -812,8 +729,10 @@ CREATE TABLE public.project_change_reviews (
 );
 
 
+ALTER TABLE public.project_change_reviews OWNER TO postgres;
+
 --
--- Name: project_change_reviews_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: project_change_reviews_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.project_change_reviews ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -827,7 +746,7 @@ ALTER TABLE public.project_change_reviews ALTER COLUMN id ADD GENERATED BY DEFAU
 
 
 --
--- Name: project_expenditures; Type: TABLE; Schema: public; Owner: -
+-- Name: project_expenditures; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.project_expenditures (
@@ -838,14 +757,20 @@ CREATE TABLE public.project_expenditures (
     proof_file character varying(255),
     status character varying(20) NOT NULL,
     created_at timestamp with time zone NOT NULL,
-    category_id bigint NOT NULL,
     created_by_id bigint NOT NULL,
-    project_id bigint NOT NULL
+    project_id bigint NOT NULL,
+    is_deleted boolean NOT NULL,
+    review_comment text NOT NULL,
+    reviewed_at timestamp with time zone,
+    reviewed_by_id bigint,
+    updated_at timestamp with time zone NOT NULL
 );
 
 
+ALTER TABLE public.project_expenditures OWNER TO postgres;
+
 --
--- Name: project_expenditures_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: project_expenditures_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.project_expenditures ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -859,7 +784,7 @@ ALTER TABLE public.project_expenditures ALTER COLUMN id ADD GENERATED BY DEFAULT
 
 
 --
--- Name: project_members; Type: TABLE; Schema: public; Owner: -
+-- Name: project_members; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.project_members (
@@ -872,8 +797,10 @@ CREATE TABLE public.project_members (
 );
 
 
+ALTER TABLE public.project_members OWNER TO postgres;
+
 --
--- Name: project_members_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: project_members_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.project_members ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -887,7 +814,7 @@ ALTER TABLE public.project_members ALTER COLUMN id ADD GENERATED BY DEFAULT AS I
 
 
 --
--- Name: project_phase_instances; Type: TABLE; Schema: public; Owner: -
+-- Name: project_phase_instances; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.project_phase_instances (
@@ -903,12 +830,15 @@ CREATE TABLE public.project_phase_instances (
     updated_at timestamp with time zone NOT NULL,
     created_by_id bigint,
     project_id bigint NOT NULL,
+    current_node_id integer,
     CONSTRAINT project_phase_instances_attempt_no_check CHECK ((attempt_no >= 0))
 );
 
 
+ALTER TABLE public.project_phase_instances OWNER TO postgres;
+
 --
--- Name: project_phase_instances_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: project_phase_instances_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.project_phase_instances ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -922,7 +852,7 @@ ALTER TABLE public.project_phase_instances ALTER COLUMN id ADD GENERATED BY DEFA
 
 
 --
--- Name: project_progress; Type: TABLE; Schema: public; Owner: -
+-- Name: project_progress; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.project_progress (
@@ -936,8 +866,10 @@ CREATE TABLE public.project_progress (
 );
 
 
+ALTER TABLE public.project_progress OWNER TO postgres;
+
 --
--- Name: project_progress_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: project_progress_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.project_progress ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -951,7 +883,7 @@ ALTER TABLE public.project_progress ALTER COLUMN id ADD GENERATED BY DEFAULT AS 
 
 
 --
--- Name: project_push_records; Type: TABLE; Schema: public; Owner: -
+-- Name: project_push_records; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.project_push_records (
@@ -966,8 +898,10 @@ CREATE TABLE public.project_push_records (
 );
 
 
+ALTER TABLE public.project_push_records OWNER TO postgres;
+
 --
--- Name: project_push_records_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: project_push_records_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.project_push_records ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -981,7 +915,7 @@ ALTER TABLE public.project_push_records ALTER COLUMN id ADD GENERATED BY DEFAULT
 
 
 --
--- Name: project_recycle_bin; Type: TABLE; Schema: public; Owner: -
+-- Name: project_recycle_bin; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.project_recycle_bin (
@@ -999,8 +933,10 @@ CREATE TABLE public.project_recycle_bin (
 );
 
 
+ALTER TABLE public.project_recycle_bin OWNER TO postgres;
+
 --
--- Name: project_recycle_bin_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: project_recycle_bin_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.project_recycle_bin ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -1014,7 +950,7 @@ ALTER TABLE public.project_recycle_bin ALTER COLUMN id ADD GENERATED BY DEFAULT 
 
 
 --
--- Name: projects; Type: TABLE; Schema: public; Owner: -
+-- Name: projects; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.projects (
@@ -1055,13 +991,14 @@ CREATE TABLE public.projects (
     contract_file character varying(255),
     task_book_file character varying(255),
     expected_results_data jsonb NOT NULL,
-    achievement_summary text NOT NULL,
-    discipline_id bigint
+    achievement_summary text NOT NULL
 );
 
 
+ALTER TABLE public.projects OWNER TO postgres;
+
 --
--- Name: projects_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: projects_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.projects ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -1075,81 +1012,13 @@ ALTER TABLE public.projects ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY
 
 
 --
--- Name: review_template_items; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.review_template_items (
-    id bigint NOT NULL,
-    title character varying(200) NOT NULL,
-    description text NOT NULL,
-    weight numeric(5,2) NOT NULL,
-    max_score integer NOT NULL,
-    is_required boolean NOT NULL,
-    sort_order integer NOT NULL,
-    created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL,
-    template_id bigint NOT NULL
-);
-
-
---
--- Name: review_template_items_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-ALTER TABLE public.review_template_items ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
-    SEQUENCE NAME public.review_template_items_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
-
-
---
--- Name: review_templates; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.review_templates (
-    id bigint NOT NULL,
-    name character varying(100) NOT NULL,
-    review_type character varying(20) NOT NULL,
-    review_level character varying(20) NOT NULL,
-    scope character varying(20) NOT NULL,
-    description text NOT NULL,
-    notice text NOT NULL,
-    is_active boolean NOT NULL,
-    is_locked boolean NOT NULL,
-    created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL,
-    batch_id bigint,
-    created_by_id bigint,
-    updated_by_id bigint
-);
-
-
---
--- Name: review_templates_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-ALTER TABLE public.review_templates ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
-    SEQUENCE NAME public.review_templates_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
-
-
---
--- Name: reviews; Type: TABLE; Schema: public; Owner: -
+-- Name: reviews; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.reviews (
     id bigint NOT NULL,
     review_type character varying(20) NOT NULL,
-    review_level character varying(20) NOT NULL,
+    review_level character varying(50) NOT NULL,
     status character varying(20) NOT NULL,
     comments text NOT NULL,
     score integer,
@@ -1160,12 +1029,15 @@ CREATE TABLE public.reviews (
     reviewer_id bigint,
     phase_instance_id bigint,
     score_details jsonb NOT NULL,
-    review_template_id bigint
+    workflow_node_id bigint,
+    is_expert_review boolean NOT NULL
 );
 
 
+ALTER TABLE public.reviews OWNER TO postgres;
+
 --
--- Name: reviews_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: reviews_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.reviews ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -1179,7 +1051,68 @@ ALTER TABLE public.reviews ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY 
 
 
 --
--- Name: system_settings; Type: TABLE; Schema: public; Owner: -
+-- Name: roles; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.roles (
+    id bigint NOT NULL,
+    code character varying(50) NOT NULL,
+    name character varying(100) NOT NULL,
+    is_system boolean NOT NULL,
+    is_active boolean NOT NULL,
+    default_route character varying(200) NOT NULL,
+    sort_order integer NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    scope_dimension character varying(50)
+);
+
+
+ALTER TABLE public.roles OWNER TO postgres;
+
+--
+-- Name: roles_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.roles ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.roles_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: roles_permissions; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.roles_permissions (
+    id bigint NOT NULL,
+    role_id bigint NOT NULL,
+    permission_id bigint NOT NULL
+);
+
+
+ALTER TABLE public.roles_permissions OWNER TO postgres;
+
+--
+-- Name: roles_permissions_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.roles_permissions ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.roles_permissions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: system_settings; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.system_settings (
@@ -1196,8 +1129,10 @@ CREATE TABLE public.system_settings (
 );
 
 
+ALTER TABLE public.system_settings OWNER TO postgres;
+
 --
--- Name: system_settings_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: system_settings_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.system_settings ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -1211,7 +1146,7 @@ ALTER TABLE public.system_settings ALTER COLUMN id ADD GENERATED BY DEFAULT AS I
 
 
 --
--- Name: users; Type: TABLE; Schema: public; Owner: -
+-- Name: users; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.users (
@@ -1224,7 +1159,6 @@ CREATE TABLE public.users (
     last_name character varying(150) NOT NULL,
     is_staff boolean NOT NULL,
     date_joined timestamp with time zone NOT NULL,
-    role character varying(20) NOT NULL,
     employee_id character varying(20) NOT NULL,
     real_name character varying(50) NOT NULL,
     phone character varying(11) NOT NULL,
@@ -1239,12 +1173,19 @@ CREATE TABLE public.users (
     created_at timestamp with time zone NOT NULL,
     updated_at timestamp with time zone NOT NULL,
     title character varying(50) NOT NULL,
-    expert_scope character varying(20) NOT NULL
+    expert_scope character varying(20) NOT NULL,
+    role_fk_id bigint,
+    managed_scope_value_id bigint,
+    gender character varying(10) NOT NULL,
+    is_expert boolean NOT NULL,
+    expert_assigned_by_id bigint
 );
 
 
+ALTER TABLE public.users OWNER TO postgres;
+
 --
--- Name: users_groups; Type: TABLE; Schema: public; Owner: -
+-- Name: users_groups; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.users_groups (
@@ -1254,8 +1195,10 @@ CREATE TABLE public.users_groups (
 );
 
 
+ALTER TABLE public.users_groups OWNER TO postgres;
+
 --
--- Name: users_groups_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: users_groups_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.users_groups ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -1269,7 +1212,7 @@ ALTER TABLE public.users_groups ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDEN
 
 
 --
--- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.users ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -1283,7 +1226,7 @@ ALTER TABLE public.users ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
 
 
 --
--- Name: users_user_permissions; Type: TABLE; Schema: public; Owner: -
+-- Name: users_user_permissions; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.users_user_permissions (
@@ -1293,8 +1236,10 @@ CREATE TABLE public.users_user_permissions (
 );
 
 
+ALTER TABLE public.users_user_permissions OWNER TO postgres;
+
 --
--- Name: users_user_permissions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: users_user_permissions_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.users_user_permissions ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -1308,7 +1253,7 @@ ALTER TABLE public.users_user_permissions ALTER COLUMN id ADD GENERATED BY DEFAU
 
 
 --
--- Name: workflow_configs; Type: TABLE; Schema: public; Owner: -
+-- Name: workflow_configs; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.workflow_configs (
@@ -1327,8 +1272,10 @@ CREATE TABLE public.workflow_configs (
 );
 
 
+ALTER TABLE public.workflow_configs OWNER TO postgres;
+
 --
--- Name: workflow_configs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: workflow_configs_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.workflow_configs ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -1342,7 +1289,7 @@ ALTER TABLE public.workflow_configs ALTER COLUMN id ADD GENERATED BY DEFAULT AS 
 
 
 --
--- Name: workflow_nodes; Type: TABLE; Schema: public; Owner: -
+-- Name: workflow_nodes; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.workflow_nodes (
@@ -1352,20 +1299,25 @@ CREATE TABLE public.workflow_nodes (
     node_type character varying(20) NOT NULL,
     role character varying(20) NOT NULL,
     review_level character varying(20) NOT NULL,
-    scope character varying(20) NOT NULL,
     return_policy character varying(20) NOT NULL,
     notice text NOT NULL,
     sort_order integer NOT NULL,
     is_active boolean NOT NULL,
     created_at timestamp with time zone NOT NULL,
     updated_at timestamp with time zone NOT NULL,
-    review_template_id bigint,
-    workflow_id bigint NOT NULL
+    workflow_id bigint NOT NULL,
+    role_fk_id bigint,
+    end_date date,
+    start_date date,
+    require_expert_review boolean NOT NULL,
+    allowed_reject_to integer
 );
 
 
+ALTER TABLE public.workflow_nodes OWNER TO postgres;
+
 --
--- Name: workflow_nodes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: workflow_nodes_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.workflow_nodes ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
@@ -1379,7 +1331,15 @@ ALTER TABLE public.workflow_nodes ALTER COLUMN id ADD GENERATED BY DEFAULT AS ID
 
 
 --
--- Data for Name: auth_group; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: admin_assignments; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.admin_assignments (id, phase, scope_value, created_at, updated_at, admin_user_id, batch_id, created_by_id, updated_by_id, workflow_node_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: auth_group; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.auth_group (id, name) FROM stdin;
@@ -1387,7 +1347,7 @@ COPY public.auth_group (id, name) FROM stdin;
 
 
 --
--- Data for Name: auth_group_permissions; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: auth_group_permissions; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.auth_group_permissions (id, group_id, permission_id) FROM stdin;
@@ -1395,7 +1355,7 @@ COPY public.auth_group_permissions (id, group_id, permission_id) FROM stdin;
 
 
 --
--- Data for Name: auth_permission; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: auth_permission; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.auth_permission (id, name, content_type_id, codename) FROM stdin;
@@ -1523,48 +1483,56 @@ COPY public.auth_permission (id, name, content_type_id, codename) FROM stdin;
 122	Can change 流程节点	31	change_workflownode
 123	Can delete 流程节点	31	delete_workflownode
 124	Can view 流程节点	31	view_workflownode
+125	Can add 预算变更申请	32	add_budgetchangerequest
+126	Can change 预算变更申请	32	change_budgetchangerequest
+127	Can delete 预算变更申请	32	delete_budgetchangerequest
+128	Can view 预算变更申请	32	view_budgetchangerequest
+129	Can add 权限	33	add_permission
+130	Can change 权限	33	change_permission
+131	Can delete 权限	33	delete_permission
+132	Can view 权限	33	view_permission
+133	Can add 角色	34	add_role
+134	Can change 角色	34	change_role
+135	Can delete 角色	34	delete_role
+136	Can view 角色	34	view_role
+137	Can add 阶段数据范围配置	36	add_phasescopeconfig
+138	Can change 阶段数据范围配置	36	change_phasescopeconfig
+139	Can delete 阶段数据范围配置	36	delete_phasescopeconfig
+140	Can view 阶段数据范围配置	36	view_phasescopeconfig
+141	Can add 管理员分配	35	add_adminassignment
+142	Can change 管理员分配	35	change_adminassignment
+143	Can delete 管理员分配	35	delete_adminassignment
+144	Can view 管理员分配	35	view_adminassignment
 \.
 
 
 --
--- Data for Name: certificate_settings; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: budget_change_requests; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.budget_change_requests (id, original_budget, new_budget, reason, budget_breakdown, status, teacher_comment, teacher_reviewed_at, level2_comment, level2_reviewed_at, level1_comment, level1_reviewed_at, is_deleted, created_at, updated_at, created_by_id, level1_reviewed_by_id, level2_reviewed_by_id, project_id, teacher_reviewed_by_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: certificate_settings; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.certificate_settings (id, name, school_name, issuer_name, template_code, background_image, seal_image, style_config, is_active, created_at, updated_at, project_category_id, project_level_id, updated_by_id) FROM stdin;
+1	默认模板	安徽工业大学	安徽工业大学	DEFAULT	certificates/backgrounds/Gemini_Generated_Image_tlx774tlx774tlx7.png	certificates/seals/ahut_logo.jpg	{}	f	2026-01-15 04:31:06.052924+08	2026-01-15 04:31:06.052935+08	\N	\N	1
 \.
 
 
 --
--- Data for Name: dictionary_items; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: dictionary_items; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.dictionary_items (id, value, label, sort_order, is_active, extra_data, description, created_at, updated_at, dict_type_id, template_file) FROM stdin;
 1	TEACHER_RESEARCH	面向教师科研类	1	t	\N		2025-12-16 17:16:42.577506+08	2025-12-16 17:16:42.577506+08	1	\N
-13	METALLURGY	冶金工程学院	1	t	\N		2025-12-16 17:16:42.577506+08	2025-12-16 17:16:42.577506+08	5	\N
-14	MATERIALS	材料科学与工程学院	2	t	\N		2025-12-16 17:16:42.577506+08	2025-12-16 17:16:42.577506+08	5	\N
-15	CHEMISTRY	化学与化工学院	3	t	\N		2025-12-16 17:16:42.577506+08	2025-12-16 17:16:42.577506+08	5	\N
-16	CIVIL_ENG	建筑工程学院	4	t	\N		2025-12-16 17:16:42.577506+08	2025-12-16 17:16:42.577506+08	5	\N
-17	MECHANICAL	机械工程学院	5	t	\N		2025-12-16 17:16:42.577506+08	2025-12-16 17:16:42.577506+08	5	\N
-18	ELECTRICAL	电气与信息工程学院	6	t	\N		2025-12-16 17:16:42.577506+08	2025-12-16 17:16:42.577506+08	5	\N
-19	CS	计算机科学与技术学院	7	t	\N		2025-12-16 17:16:42.577506+08	2025-12-16 17:16:42.577506+08	5	\N
-20	PHILOSOPHY	哲学类	1	t	\N		2025-12-16 17:16:42.577506+08	2025-12-16 17:16:42.577506+08	6	\N
-21	ECONOMICS	经济学类	2	t	\N		2025-12-16 17:16:42.577506+08	2025-12-16 17:16:42.577506+08	6	\N
-22	FINANCE	财政学类	3	t	\N		2025-12-16 17:16:42.577506+08	2025-12-16 17:16:42.577506+08	6	\N
-23	BANKING	金融学类	4	t	\N		2025-12-16 17:16:42.577506+08	2025-12-16 17:16:42.577506+08	6	\N
-24	TRADE	经济与贸易类	5	t	\N		2025-12-16 17:16:42.577506+08	2025-12-16 17:16:42.577506+08	6	\N
-25	LAW	法学类	6	t	\N		2025-12-16 17:16:42.577506+08	2025-12-16 17:16:42.577506+08	6	\N
-26	POLITICS	政治学类	7	t	\N		2025-12-16 17:16:42.577506+08	2025-12-16 17:16:42.577506+08	6	\N
-27	PROFESSOR	教授	1	t	\N		2025-12-16 17:16:42.577506+08	2025-12-16 23:43:15.694567+08	10	\N
-28	ASSOCIATE_PROFESSOR	副教授	2	t	\N		2025-12-16 17:16:42.577506+08	2025-12-16 23:43:15.696779+08	10	\N
-29	SENIOR_LAB_TECHNICIAN	高级实验师	3	t	\N		2025-12-16 17:16:42.577506+08	2025-12-16 23:43:15.697608+08	10	\N
-30	LECTURER	讲师(高校)	4	t	\N		2025-12-16 17:16:42.577506+08	2025-12-16 23:43:15.698461+08	10	\N
-31	ASSISTANT	助教(高校)	5	t	\N		2025-12-16 17:16:42.577506+08	2025-12-16 23:43:15.699188+08	10	\N
-32	ASSISTANT_LAB_TECHNICIAN	助理实验师	6	t	\N		2025-12-16 17:16:42.577506+08	2025-12-16 23:43:15.700015+08	10	\N
-37	研究员	研究员	7	t	\N		2025-12-16 23:14:22.736183+08	2025-12-16 23:43:15.700691+08	10	\N
+183	教工	教工	1	t	{}		2026-01-14 22:03:50.12191+08	2026-01-14 22:03:50.121947+08	10	
 8	创新训练项目	创新训练项目	1	t	{}		2025-12-16 17:16:42.577506+08	2025-12-17 00:47:12.829205+08	9	dictionary_templates/附件1安徽工业大学大学生创新训练项目申报书.doc
 10	创业实践项目	创业实践项目	3	t	{}		2025-12-16 17:16:42.577506+08	2025-12-17 00:47:27.823459+08	9	dictionary_templates/2021安徽工业大学大学生创业实践项目申报书.doc
 38	202406	测试	1	t	{}		2025-12-17 11:43:54.117801+08	2025-12-17 11:43:54.117821+08	13	
-39	0804	材料类	8	t	{}		2025-12-17 11:49:50.616269+08	2025-12-17 11:49:50.616279+08	6	
 44	ENTREPRENEURSHIP_TRAINING	创业训练项目	2	t	\N		2025-12-17 12:15:45.713708+08	2025-12-17 12:31:05.051555+08	9	
 54	省级	省级	2	t	{"budget": 3000}		2025-12-17 12:42:58.150703+08	2025-12-17 12:44:37.257857+08	2	
 55	国家级	国家级	3	t	{"budget": 10000}		2025-12-17 12:42:58.151891+08	2025-12-17 12:44:44.687174+08	2	
@@ -1575,11 +1543,124 @@ COPY public.dictionary_items (id, value, label, sort_order, is_active, extra_dat
 64	论文	论文	1	t	{}		2025-12-26 22:54:19.169413+08	2025-12-26 22:54:19.169422+08	12	
 65	专利	专利	2	t	{}		2025-12-26 22:54:24.807253+08	2025-12-26 22:54:24.807263+08	12	
 66	软著	软著	3	t	{}		2025-12-26 22:54:33.57505+08	2025-12-26 22:54:33.575059+08	12	
+70	00400	党委组织部（党校）	1	t	{}		2026-01-14 20:31:24.822769+08	2026-01-14 20:31:24.822806+08	5	
+71	00500	党委宣传（统战）部	2	t	{}		2026-01-14 20:31:24.826367+08	2026-01-14 20:31:24.826386+08	5	
+72	00600	学生工作部（处）（大学生就业创业指导中心）	3	t	{}		2026-01-14 20:31:24.827947+08	2026-01-14 20:31:24.827963+08	5	
+73	00700	纪委办公室（监察处、审计处）	4	t	{}		2026-01-14 20:31:24.829494+08	2026-01-14 20:31:24.829508+08	5	
+74	01000	工会	5	t	{}		2026-01-14 20:31:24.83075+08	2026-01-14 20:31:24.830758+08	5	
+75	01100	团委	6	t	{}		2026-01-14 20:31:24.831946+08	2026-01-14 20:31:24.831957+08	5	
+76	01400	教务处（招生办公室）	7	t	{}		2026-01-14 20:31:24.833284+08	2026-01-14 20:31:24.8333+08	5	
+77	01700	科研处（校学术委员会办公室）	8	t	{}		2026-01-14 20:31:24.834969+08	2026-01-14 20:31:24.834996+08	5	
+78	01900	人事处	9	t	{}		2026-01-14 20:31:24.836565+08	2026-01-14 20:31:24.836598+08	5	
+79	02000	财务处	10	t	{}		2026-01-14 20:31:24.83829+08	2026-01-14 20:31:24.838307+08	5	
+80	02100	资产管理处	11	t	{}		2026-01-14 20:31:24.840307+08	2026-01-14 20:31:24.840326+08	5	
+81	02500	保卫处（党委保卫部、党委武装部）	12	t	{}		2026-01-14 20:31:24.842497+08	2026-01-14 20:31:24.842519+08	5	
+82	02800	外事办公室（港澳台办公室）、国际教育学院	13	t	{}		2026-01-14 20:31:24.845643+08	2026-01-14 20:31:24.845663+08	5	
+83	03100	离退休工作处（关工委办公室）	14	t	{}		2026-01-14 20:31:24.848291+08	2026-01-14 20:31:24.848309+08	5	
+84	03400	工程实践与创新教育中心（创新教育学院）	15	t	{}		2026-01-14 20:31:24.850168+08	2026-01-14 20:31:24.850182+08	5	
+85	03500	现代教育技术与网络管理中心	16	t	{}		2026-01-14 20:31:24.853107+08	2026-01-14 20:31:24.853132+08	5	
+86	03600	图书馆	17	t	{}		2026-01-14 20:31:24.855281+08	2026-01-14 20:31:24.855299+08	5	
+87	03800	后勤处（后勤集团）	18	t	{}		2026-01-14 20:31:24.85728+08	2026-01-14 20:31:24.857306+08	5	
+88	03810	幼儿园	19	t	{}		2026-01-14 20:31:24.859641+08	2026-01-14 20:31:24.859668+08	5	
+89	03900	资产经营公司	20	t	{}		2026-01-14 20:31:24.862024+08	2026-01-14 20:31:24.862041+08	5	
+90	03901	资产经营公司办公室	21	t	{}		2026-01-14 20:31:24.864099+08	2026-01-14 20:31:24.864117+08	5	
+91	03907	自动化工程公司	22	t	{}		2026-01-14 20:31:24.866222+08	2026-01-14 20:31:24.866241+08	5	
+92	04100	睿安房地产公司	23	t	{}		2026-01-14 20:31:24.868164+08	2026-01-14 20:31:24.868182+08	5	
+93	04800	工程研究院	24	t	{}		2026-01-14 20:31:24.870111+08	2026-01-14 20:31:24.870127+08	5	
+94	05000	学校办公室	25	t	{}		2026-01-14 20:31:24.872782+08	2026-01-14 20:31:24.872812+08	5	
+95	05100	教师能力发展中心（教学质量监控与评价中心）	26	t	{}		2026-01-14 20:31:24.875024+08	2026-01-14 20:31:24.875049+08	5	
+96	05300	发展规划处（高教研究所）	27	t	{}		2026-01-14 20:31:24.877411+08	2026-01-14 20:31:24.877431+08	5	
+97	05400	后勤与基建管理处	28	t	{}		2026-01-14 20:31:24.879208+08	2026-01-14 20:31:24.879223+08	5	
+98	05405	校医院	29	t	{}		2026-01-14 20:31:24.880896+08	2026-01-14 20:31:24.880915+08	5	
+99	05406	车队	30	t	{}		2026-01-14 20:31:24.883277+08	2026-01-14 20:31:24.883296+08	5	
+100	05500	校友工作处（教育发展基金会秘书处）	31	t	{}		2026-01-14 20:31:24.884973+08	2026-01-14 20:31:24.884987+08	5	
+101	06000	研究生院（部）、学科建设办公室	32	t	{}		2026-01-14 20:31:24.886497+08	2026-01-14 20:31:24.886512+08	5	
+102	06100	基建管理办公室	33	t	{}		2026-01-14 20:31:24.88852+08	2026-01-14 20:31:24.88855+08	5	
+103	10100	冶金工程学院	34	t	{}		2026-01-14 20:31:24.891597+08	2026-01-14 20:31:24.891632+08	5	
+104	10200	材料科学与工程学院	35	t	{}		2026-01-14 20:31:24.894514+08	2026-01-14 20:31:24.894605+08	5	
+105	10300	化学与化工学院	36	t	{}		2026-01-14 20:31:24.897926+08	2026-01-14 20:31:24.897972+08	5	
+106	10400	建筑工程学院	37	t	{}		2026-01-14 20:31:24.901981+08	2026-01-14 20:31:24.902026+08	5	
+107	10500	机械工程学院	38	t	{}		2026-01-14 20:31:24.905921+08	2026-01-14 20:31:24.905963+08	5	
+108	10600	电气与信息工程学院	39	t	{}		2026-01-14 20:31:24.909902+08	2026-01-14 20:31:24.909949+08	5	
+109	10700	计算机科学与技术学院	40	t	{}		2026-01-14 20:31:24.913836+08	2026-01-14 20:31:24.913885+08	5	
+110	10800	数理科学与工程学院	41	t	{}		2026-01-14 20:31:24.917796+08	2026-01-14 20:31:24.917842+08	5	
+111	10900	管理科学与工程学院	42	t	{}		2026-01-14 20:31:24.9221+08	2026-01-14 20:31:24.922149+08	5	
+112	11200	公共管理与法学院	43	t	{}		2026-01-14 20:31:24.92613+08	2026-01-14 20:31:24.926172+08	5	
+113	11300	外国语学院	44	t	{}		2026-01-14 20:31:24.930345+08	2026-01-14 20:31:24.930398+08	5	
+114	11600	体育部	45	t	{}		2026-01-14 20:31:24.935452+08	2026-01-14 20:31:24.935502+08	5	
+115	12000	继续教育学院	46	t	{}		2026-01-14 20:31:24.9392+08	2026-01-14 20:31:24.939224+08	5	
+116	12100	工商学院	47	t	{}		2026-01-14 20:31:24.94281+08	2026-01-14 20:31:24.942854+08	5	
+117	13000	能源与环境学院	48	t	{}		2026-01-14 20:31:24.946252+08	2026-01-14 20:31:24.946267+08	5	
+118	13100	艺术与设计学院	49	t	{}		2026-01-14 20:31:24.948633+08	2026-01-14 20:31:24.948676+08	5	
+119	13200	商学院	50	t	{}		2026-01-14 20:31:24.95286+08	2026-01-14 20:31:24.952905+08	5	
+120	13300	马克思主义学院	51	t	{}		2026-01-14 20:31:24.957242+08	2026-01-14 20:31:24.957288+08	5	
+121	110	数学	1	t	{}		2026-01-14 20:31:43.624966+08	2026-01-14 20:31:43.625024+08	6	
+122	120	信息科学与系统科学	2	t	{}		2026-01-14 20:31:43.63427+08	2026-01-14 20:31:43.634314+08	6	
+123	130	力学	3	t	{}		2026-01-14 20:31:43.638641+08	2026-01-14 20:31:43.638696+08	6	
+124	140	物理学	4	t	{}		2026-01-14 20:31:43.64449+08	2026-01-14 20:31:43.644561+08	6	
+125	150	化学	5	t	{}		2026-01-14 20:31:43.649879+08	2026-01-14 20:31:43.649941+08	6	
+126	160	天文学	6	t	{}		2026-01-14 20:31:43.655209+08	2026-01-14 20:31:43.655302+08	6	
+127	170	地球科学	7	t	{}		2026-01-14 20:31:43.660831+08	2026-01-14 20:31:43.660909+08	6	
+128	180	生物学	8	t	{}		2026-01-14 20:31:43.665454+08	2026-01-14 20:31:43.665492+08	6	
+129	190	心理学	9	t	{}		2026-01-14 20:31:43.671203+08	2026-01-14 20:31:43.671244+08	6	
+130	210	农学	10	t	{}		2026-01-14 20:31:43.67601+08	2026-01-14 20:31:43.676075+08	6	
+131	220	林学	11	t	{}		2026-01-14 20:31:43.679247+08	2026-01-14 20:31:43.679277+08	6	
+132	230	畜牧、兽医科学	12	t	{}		2026-01-14 20:31:43.681399+08	2026-01-14 20:31:43.681423+08	6	
+133	240	水产学	13	t	{}		2026-01-14 20:31:43.683121+08	2026-01-14 20:31:43.68313+08	6	
+134	310	基础医学	14	t	{}		2026-01-14 20:31:43.684714+08	2026-01-14 20:31:43.684723+08	6	
+135	320	临床医学	15	t	{}		2026-01-14 20:31:43.685865+08	2026-01-14 20:31:43.685875+08	6	
+136	330	预防医学与公共卫生学	16	t	{}		2026-01-14 20:31:43.686699+08	2026-01-14 20:31:43.686704+08	6	
+137	340	军事医学与特种医学	17	t	{}		2026-01-14 20:31:43.687435+08	2026-01-14 20:31:43.687441+08	6	
+138	350	药学	18	t	{}		2026-01-14 20:31:43.688116+08	2026-01-14 20:31:43.688121+08	6	
+139	360	中医学与中药学	19	t	{}		2026-01-14 20:31:43.688766+08	2026-01-14 20:31:43.68877+08	6	
+140	410	工程与技术科学基础学科	20	t	{}		2026-01-14 20:31:43.689422+08	2026-01-14 20:31:43.689427+08	6	
+141	413	信息与系统科学相关工程与技术	21	t	{}		2026-01-14 20:31:43.690178+08	2026-01-14 20:31:43.690184+08	6	
+142	416	自然科学相关工程与技术	22	t	{}		2026-01-14 20:31:43.69119+08	2026-01-14 20:31:43.691205+08	6	
+143	420	测绘科学技术	23	t	{}		2026-01-14 20:31:43.692687+08	2026-01-14 20:31:43.692697+08	6	
+144	430	材料科学	24	t	{}		2026-01-14 20:31:43.693718+08	2026-01-14 20:31:43.693727+08	6	
+145	440	矿山工程技术	25	t	{}		2026-01-14 20:31:43.694731+08	2026-01-14 20:31:43.694737+08	6	
+146	450	冶金工程技术	26	t	{}		2026-01-14 20:31:43.69565+08	2026-01-14 20:31:43.695657+08	6	
+147	460	机械工程	27	t	{}		2026-01-14 20:31:43.696493+08	2026-01-14 20:31:43.696497+08	6	
+148	470	动力与电气工程	28	t	{}		2026-01-14 20:31:43.697331+08	2026-01-14 20:31:43.697335+08	6	
+149	480	能源科学技术	29	t	{}		2026-01-14 20:31:43.697918+08	2026-01-14 20:31:43.697922+08	6	
+150	490	核科学技术	30	t	{}		2026-01-14 20:31:43.698636+08	2026-01-14 20:31:43.698641+08	6	
+151	510	电子与通信技术	31	t	{}		2026-01-14 20:31:43.699759+08	2026-01-14 20:31:43.699769+08	6	
+152	520	计算机科学技术	32	t	{}		2026-01-14 20:31:43.700954+08	2026-01-14 20:31:43.700966+08	6	
+153	530	化学工程	33	t	{}		2026-01-14 20:31:43.702132+08	2026-01-14 20:31:43.702144+08	6	
+154	535	产品应用相关工程与技术	34	t	{}		2026-01-14 20:31:43.703277+08	2026-01-14 20:31:43.703287+08	6	
+155	540	纺织科学技术	35	t	{}		2026-01-14 20:31:43.704311+08	2026-01-14 20:31:43.70432+08	6	
+156	550	食品科学技术	36	t	{}		2026-01-14 20:31:43.705338+08	2026-01-14 20:31:43.705348+08	6	
+157	560	土木建筑工程	37	t	{}		2026-01-14 20:31:43.706428+08	2026-01-14 20:31:43.706437+08	6	
+158	570	水利工程	38	t	{}		2026-01-14 20:31:43.707835+08	2026-01-14 20:31:43.707848+08	6	
+159	580	交通运输工程	39	t	{}		2026-01-14 20:31:43.709617+08	2026-01-14 20:31:43.709626+08	6	
+160	590	航空、航天科学技术	40	t	{}		2026-01-14 20:31:43.710593+08	2026-01-14 20:31:43.7106+08	6	
+161	610	环境科学技术及资源科学技术	41	t	{}		2026-01-14 20:31:43.711471+08	2026-01-14 20:31:43.711476+08	6	
+162	620	安全科学技术	42	t	{}		2026-01-14 20:31:43.712311+08	2026-01-14 20:31:43.712316+08	6	
+163	630	管理学	43	t	{}		2026-01-14 20:31:43.713051+08	2026-01-14 20:31:43.713056+08	6	
+164	710	马克思主义	44	t	{}		2026-01-14 20:31:43.714082+08	2026-01-14 20:31:43.714089+08	6	
+165	720	哲学	45	t	{}		2026-01-14 20:31:43.714951+08	2026-01-14 20:31:43.714958+08	6	
+166	730	宗教学	46	t	{}		2026-01-14 20:31:43.715788+08	2026-01-14 20:31:43.715795+08	6	
+167	740	语言学	47	t	{}		2026-01-14 20:31:43.716665+08	2026-01-14 20:31:43.716672+08	6	
+168	750	文学	48	t	{}		2026-01-14 20:31:43.717514+08	2026-01-14 20:31:43.717521+08	6	
+169	760	艺术学	49	t	{}		2026-01-14 20:31:43.718321+08	2026-01-14 20:31:43.718329+08	6	
+170	770	历史学	50	t	{}		2026-01-14 20:31:43.719582+08	2026-01-14 20:31:43.719597+08	6	
+171	780	考古学	51	t	{}		2026-01-14 20:31:43.721015+08	2026-01-14 20:31:43.721029+08	6	
+172	790	经济学	52	t	{}		2026-01-14 20:31:43.722536+08	2026-01-14 20:31:43.722546+08	6	
+173	810	政治学	53	t	{}		2026-01-14 20:31:43.723823+08	2026-01-14 20:31:43.723834+08	6	
+174	820	法学	54	t	{}		2026-01-14 20:31:43.72501+08	2026-01-14 20:31:43.725021+08	6	
+175	830	军事学	55	t	{}		2026-01-14 20:31:43.727094+08	2026-01-14 20:31:43.727121+08	6	
+176	840	社会学	56	t	{}		2026-01-14 20:31:43.729376+08	2026-01-14 20:31:43.729392+08	6	
+177	850	民族学与文化学	57	t	{}		2026-01-14 20:31:43.731501+08	2026-01-14 20:31:43.731525+08	6	
+178	860	新闻学与传播学	58	t	{}		2026-01-14 20:31:43.73409+08	2026-01-14 20:31:43.734107+08	6	
+179	870	图书馆、情报与文献学	59	t	{}		2026-01-14 20:31:43.736131+08	2026-01-14 20:31:43.736145+08	6	
+180	880	教育学	60	t	{}		2026-01-14 20:31:43.737718+08	2026-01-14 20:31:43.737731+08	6	
+181	890	体育科学	61	t	{}		2026-01-14 20:31:43.739147+08	2026-01-14 20:31:43.739158+08	6	
+182	910	统计学	62	t	{}		2026-01-14 20:31:43.740313+08	2026-01-14 20:31:43.740323+08	6	
 \.
 
 
 --
--- Data for Name: dictionary_types; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: dictionary_types; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.dictionary_types (id, code, name, description, is_system, is_active, created_at, updated_at) FROM stdin;
@@ -1595,7 +1676,7 @@ COPY public.dictionary_types (id, code, name, description, is_system, is_active,
 
 
 --
--- Data for Name: django_admin_log; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: django_admin_log; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.django_admin_log (id, action_time, object_id, object_repr, action_flag, change_message, content_type_id, user_id) FROM stdin;
@@ -1603,7 +1684,7 @@ COPY public.django_admin_log (id, action_time, object_id, object_repr, action_fl
 
 
 --
--- Data for Name: django_content_type; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: django_content_type; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.django_content_type (id, app_label, model) FROM stdin;
@@ -1638,11 +1719,16 @@ COPY public.django_content_type (id, app_label, model) FROM stdin;
 29	system_settings	reviewtemplateitem
 30	system_settings	workflowconfig
 31	system_settings	workflownode
+32	projects	budgetchangerequest
+33	users	permission
+34	users	role
+35	system_settings	adminassignment
+36	system_settings	phasescopeconfig
 \.
 
 
 --
--- Data for Name: django_migrations; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: django_migrations; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.django_migrations (id, app, name, applied) FROM stdin;
@@ -1709,11 +1795,40 @@ COPY public.django_migrations (id, app, name, applied) FROM stdin;
 61	projects	0020_project_discipline	2025-12-27 23:49:35.830326+08
 62	system_settings	0008_workflow_review_templates	2025-12-27 23:49:35.930352+08
 63	reviews	0007_review_template_details	2025-12-27 23:49:35.963333+08
+64	projects	0021_budgetchangerequest_projectarchive_metadata_and_more	2026-01-13 12:11:47.45528+08
+65	reviews	0008_alter_review_review_type	2026-01-13 12:11:47.470934+08
+67	users	0005_add_role_permission_tables	2026-01-13 18:45:23.952997+08
+68	system_settings	0009_add_workflow_node_role_fk	2026-01-13 18:45:24.029+08
+69	users	0006_backfill_role_fk_and_drop_role	2026-01-13 18:45:24.157463+08
+70	projects	0022_projectphaseinstance_current_node_id	2026-01-13 20:48:10.477578+08
+71	system_settings	0010_workflownode_allowed_reject_to_and_more	2026-01-13 20:48:10.49899+08
+72	system_settings	0011_workflownode_end_date_workflownode_start_date	2026-01-13 22:24:39.540964+08
+73	projects	0023_remove_project_discipline	2026-01-13 23:35:13.701729+08
+74	reviews	0009_remove_review_review_template_and_more	2026-01-14 00:10:00.298981+08
+75	system_settings	0012_remove_workflownode_review_template_and_more	2026-01-14 00:10:00.371949+08
+76	reviews	0010_alter_review_review_level	2026-01-14 10:30:45.965375+08
+77	projects	0024_remove_projectexpenditure_category	2026-01-14 10:59:49.950405+08
+78	reviews	0011_review_workflow_node_and_expert_flag	2026-01-14 15:49:52.722021+08
+79	system_settings	0013_workflownode_require_expert_review	2026-01-14 15:49:52.740576+08
+80	system_settings	0014_phase_scope_and_admin_assignments	2026-01-14 15:49:52.847999+08
+81	reviews	0012_alter_expertgroup_members	2026-01-14 18:47:54.338184+08
+82	system_settings	0015_alter_workflownode_role	2026-01-14 18:47:54.347141+08
+83	system_settings	0016_delete_phase_scope_config	2026-01-14 18:47:54.350934+08
+84	users	0007_role_scope_dimension_user_managed_scope_value	2026-01-14 18:47:54.395775+08
+85	users	0008_migrate_expert_to_teacher	2026-01-14 18:47:54.438028+08
+86	users	0009_populate_admin_scope_values	2026-01-14 18:47:54.469397+08
+87	users	0010_fix_system_roles	2026-01-14 19:08:41.942227+08
+88	users	0011_remove_role_description	2026-01-14 19:10:50.415244+08
+89	users	0012_user_gender	2026-01-14 19:39:15.788525+08
+90	users	0013_alter_role_scope_dimension	2026-01-14 19:47:01.26903+08
+91	system_settings	0017_remove_workflownode_scope	2026-01-14 23:48:36.962562+08
+92	system_settings	0018_change_allowed_reject_to_single	2026-01-15 00:00:41.893909+08
+93	users	0014_add_expert_flags	2026-01-15 02:12:27.542782+08
 \.
 
 
 --
--- Data for Name: django_session; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: django_session; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.django_session (session_key, session_data, expire_date) FROM stdin;
@@ -1721,35 +1836,48 @@ COPY public.django_session (session_key, session_data, expire_date) FROM stdin;
 
 
 --
--- Data for Name: expert_groups; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: expert_groups; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.expert_groups (id, name, created_at, updated_at, created_by_id, scope) FROM stdin;
-1	专家组	2025-12-26 23:46:06.901573+08	2025-12-26 23:46:06.901582+08	21	COLLEGE
-2	校级审核	2025-12-27 00:00:31.232211+08	2025-12-27 00:00:31.23222+08	1	SCHOOL
+4	12	2026-01-15 02:27:35.352537+08	2026-01-15 02:27:35.352548+08	1	SCHOOL
+3	1	2026-01-15 02:14:11.692885+08	2026-01-15 03:48:41.093772+08	133	COLLEGE
 \.
 
 
 --
--- Data for Name: expert_groups_members; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: expert_groups_members; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.expert_groups_members (id, expertgroup_id, user_id) FROM stdin;
-1	1	22
-2	2	23
+5	3	170
+6	4	166
 \.
 
 
 --
--- Data for Name: login_logs; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: login_logs; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.login_logs (id, login_time, ip_address, user_agent, login_status, user_id) FROM stdin;
 1	2025-12-16 17:19:49.436992+08	127.0.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
 2	2025-12-16 17:21:06.174764+08	127.0.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+265	2026-01-14 19:17:11.549076+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
 4	2025-12-16 18:45:46.34029+08	127.0.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+270	2026-01-14 20:12:45.511283+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+275	2026-01-14 20:54:10.814613+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+280	2026-01-14 21:19:34.201942+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
 8	2025-12-16 19:31:38.586652+08	127.0.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+285	2026-01-14 22:20:57.684344+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+290	2026-01-14 22:32:05.913457+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
+295	2026-01-14 22:50:27.024906+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+300	2026-01-14 23:25:41.075328+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	145
 13	2025-12-16 19:36:31.428887+08	127.0.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+305	2026-01-14 23:31:55.119952+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+310	2026-01-15 00:01:20.939746+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+315	2026-01-15 00:25:23.533607+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	31
+320	2026-01-15 00:48:58.619989+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	31
+325	2026-01-15 01:05:15.801303+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
 29	2025-12-16 20:17:16.676634+08	127.0.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
 30	2025-12-16 20:22:00.360907+08	127.0.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
 31	2025-12-16 20:22:07.389461+08	127.0.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
@@ -1772,145 +1900,336 @@ COPY public.login_logs (id, login_time, ip_address, user_agent, login_status, us
 74	2025-12-23 20:24:16.352613+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
 75	2025-12-23 20:57:26.588574+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
 78	2025-12-24 14:18:51.992867+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
-79	2025-12-24 14:27:28.846244+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	21
 80	2025-12-24 14:37:30.632413+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
 81	2025-12-24 14:49:08.376468+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
-82	2025-12-24 14:54:57.199038+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	16
 83	2025-12-26 11:03:04.447593+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
-84	2025-12-26 11:06:19.17526+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	21
-85	2025-12-26 11:06:34.780739+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	20
-86	2025-12-26 11:06:49.811207+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	16
-87	2025-12-26 11:07:04.262965+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	22
-88	2025-12-26 11:07:19.75145+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	23
 89	2025-12-26 11:08:55.322256+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
-90	2025-12-26 13:36:53.838653+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	16
-91	2025-12-26 13:55:08.978645+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	21
 92	2025-12-26 13:56:56.217344+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
-93	2025-12-26 13:59:16.951768+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	20
-94	2025-12-26 14:00:05.867091+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	22
-95	2025-12-26 14:01:06.459565+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	16
-96	2025-12-26 14:23:17.191024+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	16
+266	2026-01-14 19:39:40.524761+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+271	2026-01-14 20:23:57.761442+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+276	2026-01-14 20:58:17.507634+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+281	2026-01-14 21:49:22.313918+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	98
 97	2025-12-26 14:50:48.933643+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
-98	2025-12-26 22:10:58.916657+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	16
+286	2026-01-14 22:29:10.509853+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
 99	2025-12-26 22:22:07.580953+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
-100	2025-12-26 22:40:50.235184+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	16
+291	2026-01-14 22:32:32.670899+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	145
 101	2025-12-26 22:49:27.073939+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
-102	2025-12-26 22:54:43.065758+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	16
-103	2025-12-26 23:07:55.920638+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	20
-104	2025-12-26 23:15:43.122824+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	16
-105	2025-12-26 23:25:49.367051+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	20
-106	2025-12-26 23:26:09.25066+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	16
-107	2025-12-26 23:31:09.94954+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	21
-108	2025-12-26 23:56:38.694971+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	16
-109	2025-12-26 23:57:21.597719+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	22
-110	2025-12-26 23:59:00.934966+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	16
+296	2026-01-14 22:50:38.611658+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	145
+301	2026-01-14 23:28:34.2953+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	145
+306	2026-01-14 23:32:22.308412+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	145
+311	2026-01-15 00:08:09.032621+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+316	2026-01-15 00:28:48.00285+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	31
+321	2026-01-15 00:49:48.766025+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	152
+326	2026-01-15 01:05:50.869623+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+330	2026-01-15 02:13:01.384021+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
 111	2025-12-26 23:59:38.90401+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
-112	2025-12-27 00:04:00.550686+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	16
-113	2025-12-27 00:04:40.11112+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	23
-114	2025-12-27 00:05:33.699826+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	16
-115	2025-12-27 00:38:59.039301+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	20
-116	2025-12-27 00:39:50.621231+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	21
-117	2025-12-27 00:41:59.973204+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	22
-118	2025-12-27 10:30:53.435663+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	21
-119	2025-12-27 11:26:35.856402+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	16
-120	2025-12-27 11:26:55.971706+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	20
-121	2025-12-27 11:27:27.675856+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	23
-122	2025-12-27 11:27:40.437582+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	22
-123	2025-12-27 11:28:14.757022+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	21
+333	2026-01-15 02:23:31.601242+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	169
+336	2026-01-15 02:24:46.595178+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
+339	2026-01-15 02:26:21.862536+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+342	2026-01-15 02:31:35.164605+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+345	2026-01-15 03:25:57.010733+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+348	2026-01-15 03:35:09.70857+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
+351	2026-01-15 03:36:29.483017+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	170
+354	2026-01-15 03:39:05.94125+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+357	2026-01-15 03:43:43.700298+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
 124	2025-12-27 11:35:07.930975+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
-125	2025-12-27 11:53:17.125342+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	21
-126	2025-12-27 11:55:52.793239+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	22
-127	2025-12-27 12:01:03.013518+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	21
+360	2026-01-15 03:49:13.076521+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	170
 128	2025-12-27 12:43:36.45652+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
-129	2025-12-27 12:44:35.0884+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	21
-130	2025-12-27 12:45:14.921476+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	16
-131	2025-12-27 12:45:46.641328+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	20
-132	2025-12-27 12:56:06.176997+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	21
-133	2025-12-27 13:09:47.643516+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	21
-134	2025-12-27 13:11:55.064841+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	22
-135	2025-12-27 13:14:31.985999+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	16
-136	2025-12-27 13:14:59.963049+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	21
-137	2025-12-27 13:21:22.325325+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	22
-138	2025-12-27 15:08:26.254512+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	21
-139	2025-12-27 15:24:23.741557+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	16
-140	2025-12-27 16:13:24.041873+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	20
-141	2025-12-27 16:14:39.061517+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	21
+363	2026-01-15 03:50:51.634584+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+366	2026-01-15 04:00:38.046917+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
+369	2026-01-15 04:02:12.258623+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	31
+372	2026-01-15 04:04:43.67755+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
+375	2026-01-15 04:06:16.315482+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
+378	2026-01-15 04:08:08.982215+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	166
+381	2026-01-15 04:09:12.491469+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	152
 142	2025-12-27 16:33:25.546227+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
-143	2025-12-27 16:34:31.563561+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	22
-144	2025-12-27 16:34:43.836821+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	23
+267	2026-01-14 19:47:34.382539+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+272	2026-01-14 20:43:45.42719+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
 145	2025-12-27 16:35:12.056516+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
-146	2025-12-27 16:35:33.223741+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	16
-147	2025-12-27 16:43:01.128181+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	20
-148	2025-12-27 16:43:21.238283+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	21
-149	2025-12-27 16:43:57.993677+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	22
-150	2025-12-27 16:44:18.108588+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	16
-151	2025-12-27 16:44:45.371291+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	21
-152	2025-12-27 16:45:08.684466+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	16
+277	2026-01-14 21:03:10.287601+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+282	2026-01-14 21:58:00.548516+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+287	2026-01-14 22:31:24.292385+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	31
+292	2026-01-14 22:34:53.858302+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	145
+297	2026-01-14 22:50:56.638445+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	145
 153	2025-12-27 16:46:34.753133+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
-154	2025-12-27 16:47:16.829135+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	16
+302	2026-01-14 23:28:41.088632+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	145
 155	2025-12-27 16:49:32.739484+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
 156	2025-12-28 16:21:59.14292+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+157	2026-01-13 11:34:35.324092+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+158	2026-01-13 13:01:16.741449+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+159	2026-01-13 13:46:12.237717+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+160	2026-01-13 13:55:05.354199+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+161	2026-01-13 14:00:33.917218+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+162	2026-01-13 15:13:06.526039+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+307	2026-01-14 23:32:25.565152+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	145
+312	2026-01-15 00:08:50.528907+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+317	2026-01-15 00:32:18.071557+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	31
+322	2026-01-15 00:50:25.173549+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
+167	2026-01-13 16:44:48.557891+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+168	2026-01-13 18:47:15.543274+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+169	2026-01-13 18:55:08.817631+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+170	2026-01-13 19:02:58.462584+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+171	2026-01-13 21:03:43.409753+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+172	2026-01-13 21:35:53.821164+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+173	2026-01-13 22:07:11.236593+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+174	2026-01-13 22:10:22.881628+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+175	2026-01-13 22:24:41.277515+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+176	2026-01-13 22:25:09.169224+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+177	2026-01-13 22:36:57.040187+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+178	2026-01-13 22:40:23.076916+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+179	2026-01-13 22:45:12.065307+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+180	2026-01-13 22:47:32.069641+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+181	2026-01-13 23:24:36.893613+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+182	2026-01-13 23:34:00.321743+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+183	2026-01-13 23:35:37.650991+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+184	2026-01-13 23:41:12.384854+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+185	2026-01-13 23:43:34.833304+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+186	2026-01-13 23:45:18.179038+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+187	2026-01-13 23:48:32.222918+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+188	2026-01-14 00:13:00.074811+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+327	2026-01-15 01:06:02.682359+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
+268	2026-01-14 19:53:48.055087+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+273	2026-01-14 20:50:52.345718+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+193	2026-01-14 00:31:36.365689+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+278	2026-01-14 21:13:27.410853+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+283	2026-01-14 22:11:50.365261+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+288	2026-01-14 22:31:35.170769+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	30
+293	2026-01-14 22:44:34.795787+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	145
+198	2026-01-14 00:37:23.484494+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+298	2026-01-14 23:21:46.904856+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	145
+303	2026-01-14 23:30:39.163255+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	145
+308	2026-01-14 23:42:56.754348+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+313	2026-01-15 00:11:56.8945+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+318	2026-01-15 00:33:18.556517+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	152
+323	2026-01-15 00:56:49.379236+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	152
+328	2026-01-15 01:12:39.727216+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	152
+206	2026-01-14 00:40:24.983004+08	127.0.0.1		t	1
+207	2026-01-14 00:40:53.649046+08	127.0.0.1		t	1
+209	2026-01-14 00:41:53.178153+08	127.0.0.1		t	1
+331	2026-01-15 02:15:25.463681+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	170
+334	2026-01-15 02:24:04.015049+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	169
+337	2026-01-15 02:25:10.399037+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	168
+213	2026-01-14 00:43:51.277902+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+214	2026-01-14 00:46:49.448422+08	127.0.0.1		t	1
+215	2026-01-14 01:08:05.352071+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+340	2026-01-15 02:28:11.839914+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	166
+217	2026-01-14 01:11:42.707373+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+218	2026-01-14 09:14:23.845586+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+343	2026-01-15 02:39:31.65219+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+346	2026-01-15 03:29:52.045799+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	31
+349	2026-01-15 03:35:34.540301+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	152
+352	2026-01-15 03:36:42.668597+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	166
+223	2026-01-14 09:42:08.732215+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+355	2026-01-15 03:42:28.942946+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	31
+358	2026-01-15 03:45:14.750863+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	31
+361	2026-01-15 03:49:28.116789+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
+364	2026-01-15 03:59:47.088273+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	31
+367	2026-01-15 04:01:32.808351+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	170
+229	2026-01-14 09:53:20.591849+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+232	2026-01-14 09:58:19.17228+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+233	2026-01-14 10:02:01.110291+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+370	2026-01-15 04:04:04.187929+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+235	2026-01-14 10:07:20.103797+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+236	2026-01-14 10:10:16.273582+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+373	2026-01-15 04:05:36.541113+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
+376	2026-01-15 04:06:41.696902+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+379	2026-01-15 04:08:22.533593+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+382	2026-01-15 04:09:28.544883+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
+245	2026-01-14 11:18:28.407129+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+269	2026-01-14 20:12:01.847259+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+274	2026-01-14 20:51:53.233016+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+279	2026-01-14 21:14:09.2425+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+284	2026-01-14 22:14:38.556115+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+253	2026-01-14 11:47:07.388366+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+254	2026-01-14 16:17:06.849826+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+255	2026-01-14 16:17:38.239607+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+289	2026-01-14 22:31:51.412094+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	152
+257	2026-01-14 16:18:22.377937+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+258	2026-01-14 17:02:45.965015+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+259	2026-01-14 18:48:06.632283+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+260	2026-01-14 18:52:17.107487+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+261	2026-01-14 18:55:55.839143+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+262	2026-01-14 19:04:34.053875+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+263	2026-01-14 19:11:40.401782+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+294	2026-01-14 22:47:47.479582+08	127.0.0.1	curl/8.5.0	t	145
+299	2026-01-14 23:22:31.277389+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	145
+304	2026-01-14 23:30:49.345374+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	145
+309	2026-01-14 23:49:45.854098+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+314	2026-01-15 00:13:59.197197+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	31
+319	2026-01-15 00:37:19.405841+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	152
+324	2026-01-15 00:57:02.502673+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
+329	2026-01-15 01:12:54.763944+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
+332	2026-01-15 02:23:01.035988+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
+335	2026-01-15 02:24:19.34433+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	170
+338	2026-01-15 02:25:56.947542+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
+341	2026-01-15 02:31:11.078617+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	166
+344	2026-01-15 03:09:35.458364+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+347	2026-01-15 03:32:10.234888+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	152
+350	2026-01-15 03:35:49.216152+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	145
+353	2026-01-15 03:37:37.557316+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	31
+356	2026-01-15 03:43:27.031644+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	152
+359	2026-01-15 03:47:08.410857+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
+362	2026-01-15 03:49:43.991233+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	170
+365	2026-01-15 04:00:27.01583+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	152
+368	2026-01-15 04:01:43.759404+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+371	2026-01-15 04:04:21.695597+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	152
+374	2026-01-15 04:06:00.410822+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	170
+377	2026-01-15 04:07:54.992265+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	170
+380	2026-01-15 04:08:40.790129+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	31
+383	2026-01-15 04:09:48.5908+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	31
+384	2026-01-15 04:14:06.156281+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+385	2026-01-15 04:17:56.434813+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+386	2026-01-15 04:31:26.969582+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	31
+387	2026-01-15 04:35:50.371628+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+388	2026-01-15 04:38:05.272121+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	31
+389	2026-01-15 04:39:29.198421+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+390	2026-01-15 09:58:05.163397+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+391	2026-01-15 10:00:00.175963+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	31
+392	2026-01-15 10:00:29.149168+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	30
+393	2026-01-15 10:00:53.325591+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	152
+394	2026-01-15 10:01:08.883895+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
+395	2026-01-15 10:01:36.812105+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	152
+396	2026-01-15 10:01:54.197452+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	166
+397	2026-01-15 10:03:41.894302+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+398	2026-01-15 10:15:09.127931+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	31
+399	2026-01-15 10:15:29.034192+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
+400	2026-01-15 10:19:27.209413+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	169
+401	2026-01-15 10:19:40.933457+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	30
+402	2026-01-15 10:30:55.235418+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	152
+403	2026-01-15 10:41:21.00408+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+404	2026-01-15 10:41:34.975819+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	152
+405	2026-01-15 10:42:53.414938+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+406	2026-01-15 10:42:53.669982+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+407	2026-01-15 10:44:05.703529+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+408	2026-01-15 10:44:15.869904+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	152
+409	2026-01-15 10:44:50.24397+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
+410	2026-01-15 10:52:01.636525+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+411	2026-01-15 10:52:14.282032+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
+412	2026-01-15 10:52:36.302215+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	152
+413	2026-01-15 10:52:55.063522+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	170
+414	2026-01-15 10:55:57.925349+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	170
+415	2026-01-15 10:57:07.333157+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
+416	2026-01-15 10:59:57.244429+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+417	2026-01-15 11:07:25.685906+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+418	2026-01-15 11:07:54.726993+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	166
+419	2026-01-15 11:08:25.606361+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+420	2026-01-15 11:09:18.645332+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	25
+421	2026-01-15 11:12:36.945945+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	168
+422	2026-01-15 11:12:59.514486+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
+423	2026-01-15 11:13:43.349019+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	170
+424	2026-01-15 11:14:01.468867+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	133
+425	2026-01-15 11:15:34.877746+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	1
+426	2026-01-15 11:16:22.950336+08	127.0.0.1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36	t	30
 \.
 
 
 --
--- Data for Name: notifications; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: notifications; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.notifications (id, title, content, notification_type, is_read, read_at, created_at, recipient_id, related_project_id) FROM stdin;
-1	项目审核未通过	很抱歉，您的项目《镁电解熔盐中杂质的绿色高效分离》审核未通过。\n审核意见：请补充经费预算明细	REVIEW	f	\N	2025-12-26 23:15:04.152215+08	16	4
-2	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：同意申报	REVIEW	f	\N	2025-12-26 23:25:54.545234+08	16	4
-3	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：院级评审通过	REVIEW	f	\N	2025-12-26 23:58:09.094102+08	16	4
-4	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：校级评审通过	REVIEW	f	\N	2025-12-27 00:05:03.415822+08	16	4
-5	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：中期导师审核通过	REVIEW	f	\N	2025-12-27 00:39:21.201596+08	16	4
-6	项目审核未通过	很抱歉，您的项目《镁电解熔盐中杂质的绿色高效分离》审核未通过。	REVIEW	f	\N	2025-12-27 12:45:02.577892+08	16	4
-7	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：通过	REVIEW	f	\N	2025-12-27 12:46:05.258911+08	16	4
-8	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：院级中期审核通过	REVIEW	f	\N	2025-12-27 13:12:13.007944+08	16	4
-9	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：结题导师审核通过	REVIEW	f	\N	2025-12-27 16:13:39.063182+08	16	4
-10	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：123	REVIEW	f	\N	2025-12-27 16:34:59.129884+08	16	4
-11	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：90	REVIEW	f	\N	2025-12-27 16:43:06.473937+08	16	4
-12	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：0	REVIEW	f	\N	2025-12-27 16:44:08.387967+08	16	4
+36	项目审核通过	恭喜！您的项目《12345123》审核通过。\n审核意见：123	REVIEW	f	\N	2026-01-15 04:04:26.261064+08	31	17
+37	新的评审任务	项目《12345123》已分配给您评审，请及时处理。	REVIEW	f	\N	2026-01-15 04:05:30.646355+08	170	17
+38	项目审核通过	恭喜！您的项目《12345123》审核通过。\n审核意见：1	REVIEW	f	\N	2026-01-15 04:06:05.452151+08	31	17
+39	项目审核通过	恭喜！您的项目《12345123》审核通过。\n审核意见：1	REVIEW	f	\N	2026-01-15 04:06:26.01816+08	31	17
+40	新的评审任务	项目《12345123》已分配给您评审，请及时处理。	REVIEW	f	\N	2026-01-15 04:07:23.52445+08	166	17
+41	项目审核通过	恭喜！您的项目《12345123》审核通过。\n审核意见：1	REVIEW	f	\N	2026-01-15 04:08:13.44758+08	31	17
+42	项目审核通过	恭喜！您的项目《12345123》审核通过。\n审核意见：1	REVIEW	f	\N	2026-01-15 04:08:29.714565+08	31	17
+43	中期报告提交成功	项目《12345123》中期报告已提交，等待审核。	PROJECT	f	\N	2026-01-15 04:08:52.31178+08	31	17
+44	中期报告待审核	项目《12345123》中期报告已提交，请及时审核。	REVIEW	f	\N	2026-01-15 04:08:52.313915+08	152	17
+45	项目审核通过	恭喜！您的项目《12345123》审核通过。\n审核意见：123	REVIEW	f	\N	2026-01-15 04:09:17.077473+08	31	17
+46	项目审核通过	恭喜！您的项目《12345123》审核通过。\n审核意见：123	REVIEW	f	\N	2026-01-15 04:09:36.063496+08	31	17
+47	项目审核通过	恭喜！您的项目《1234》审核通过。\n审核意见：123	REVIEW	f	\N	2026-01-15 10:44:25.858627+08	30	20
+48	新的评审任务	项目《1234》已分配给您评审，请及时处理。	REVIEW	f	\N	2026-01-15 10:46:58.107371+08	170	20
+49	项目审核通过	恭喜！您的项目《1234》审核通过。\n审核意见：123	REVIEW	f	\N	2026-01-15 10:56:53.799493+08	30	20
+50	项目审核通过	恭喜！您的项目《1234》审核通过。	REVIEW	f	\N	2026-01-15 10:57:25.906062+08	30	20
+51	新的评审任务	项目《1234》已分配给您评审，请及时处理。	REVIEW	f	\N	2026-01-15 11:07:41.185411+08	166	20
+52	项目审核通过	恭喜！您的项目《1234》审核通过。\n审核意见：12	REVIEW	f	\N	2026-01-15 11:08:11.95727+08	30	20
+53	项目审核通过	恭喜！您的项目《1234》审核通过。\n审核意见：1	REVIEW	f	\N	2026-01-15 11:08:34.648809+08	30	20
+54	项目审核通过	恭喜！您的项目《1》审核通过。\n审核意见：123	REVIEW	f	\N	2026-01-15 11:12:46.498731+08	25	21
+55	新的评审任务	项目《1》已分配给您评审，请及时处理。	REVIEW	f	\N	2026-01-15 11:13:32.725527+08	170	21
+56	项目审核通过	恭喜！您的项目《1》审核通过。\n审核意见：1	REVIEW	f	\N	2026-01-15 11:13:50.456386+08	25	21
+57	项目审核通过	恭喜！您的项目《1》审核通过。	REVIEW	f	\N	2026-01-15 11:15:26.140312+08	25	21
 \.
 
 
 --
--- Data for Name: project_achievements; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: permissions; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.permissions (id, code, name, description, category, is_active, created_at, updated_at) FROM stdin;
+1	manage_students	管理学生	查看、创建、编辑、删除学生用户	用户管理	t	2026-01-13 18:45:23.893817+08	2026-01-13 18:45:23.893826+08
+2	manage_teachers	管理教师	查看、创建、编辑、删除教师用户	用户管理	t	2026-01-13 18:45:23.894681+08	2026-01-13 18:45:23.894686+08
+3	manage_experts	管理专家	查看、创建、编辑、删除专家用户	用户管理	t	2026-01-13 18:45:23.895113+08	2026-01-13 18:45:23.895118+08
+4	manage_level2_admins	管理二级管理员	查看、创建、编辑、删除二级管理员	用户管理	t	2026-01-13 18:45:23.895487+08	2026-01-13 18:45:23.895493+08
+5	manage_level1_admins	管理一级管理员	查看、创建、编辑、删除一级管理员	用户管理	t	2026-01-13 18:45:23.895739+08	2026-01-13 18:45:23.895743+08
+6	view_all_users	查看所有用户	查看系统中所有用户信息	用户管理	t	2026-01-13 18:45:23.896341+08	2026-01-13 18:45:23.896355+08
+7	manage_own_projects	管理自己的项目	创建、编辑、删除自己的项目	项目管理	t	2026-01-13 18:45:23.896873+08	2026-01-13 18:45:23.896882+08
+8	view_college_projects	查看本学院项目	查看本学院的所有项目	项目管理	t	2026-01-13 18:45:23.897327+08	2026-01-13 18:45:23.897336+08
+9	manage_college_projects	管理本学院项目	管理本学院的所有项目	项目管理	t	2026-01-13 18:45:23.897791+08	2026-01-13 18:45:23.897799+08
+10	view_all_projects	查看所有项目	查看系统中所有项目	项目管理	t	2026-01-13 18:45:23.89825+08	2026-01-13 18:45:23.898258+08
+11	manage_all_projects	管理所有项目	管理系统中所有项目	项目管理	t	2026-01-13 18:45:23.898691+08	2026-01-13 18:45:23.898699+08
+12	export_projects	导出项目数据	导出项目相关数据	项目管理	t	2026-01-13 18:45:23.899158+08	2026-01-13 18:45:23.899166+08
+13	review_as_teacher	导师审核	作为导师审核指导的项目	审核管理	t	2026-01-13 18:45:23.899736+08	2026-01-13 18:45:23.899747+08
+14	review_as_college_expert	院级专家评审	作为院级专家评审项目	审核管理	t	2026-01-13 18:45:23.900232+08	2026-01-13 18:45:23.900242+08
+15	review_as_school_expert	校级专家评审	作为校级专家评审项目	审核管理	t	2026-01-13 18:45:23.900742+08	2026-01-13 18:45:23.900751+08
+16	manage_college_reviews	管理本学院审核	管理本学院的审核流程	审核管理	t	2026-01-13 18:45:23.90123+08	2026-01-13 18:45:23.901239+08
+17	manage_all_reviews	管理所有审核	管理系统中所有审核流程	审核管理	t	2026-01-13 18:45:23.901789+08	2026-01-13 18:45:23.9018+08
+18	assign_reviewers	分配评审人	为项目分配评审专家	审核管理	t	2026-01-13 18:45:23.902292+08	2026-01-13 18:45:23.9023+08
+19	manage_batches	管理批次	创建、编辑、删除项目批次	批次管理	t	2026-01-13 18:45:23.902741+08	2026-01-13 18:45:23.902749+08
+20	view_batches	查看批次	查看项目批次信息	批次管理	t	2026-01-13 18:45:23.903173+08	2026-01-13 18:45:23.903181+08
+21	manage_roles	管理角色	创建、编辑、删除角色及配置权限	系统配置	t	2026-01-13 18:45:23.903607+08	2026-01-13 18:45:23.903615+08
+22	manage_workflows	管理工作流	配置审核工作流程	系统配置	t	2026-01-13 18:45:23.904056+08	2026-01-13 18:45:23.904064+08
+23	manage_dictionaries	管理数据字典	管理系统数据字典	系统配置	t	2026-01-13 18:45:23.904497+08	2026-01-13 18:45:23.904506+08
+24	manage_system_settings	管理系统设置	配置系统参数和设置	系统配置	t	2026-01-13 18:45:23.904973+08	2026-01-13 18:45:23.904983+08
+25	view_system_logs	查看系统日志	查看系统操作日志	系统配置	t	2026-01-13 18:45:23.905479+08	2026-01-13 18:45:23.905488+08
+26	send_notifications	发送通知	发送系统通知	通知管理	t	2026-01-13 18:45:23.90611+08	2026-01-13 18:45:23.906122+08
+27	manage_notifications	管理通知	管理系统通知	通知管理	t	2026-01-13 18:45:23.906947+08	2026-01-13 18:45:23.906957+08
+\.
+
+
+--
+-- Data for Name: project_achievements; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.project_achievements (id, title, description, authors, journal, publication_date, doi, patent_no, patent_type, applicant, copyright_no, copyright_owner, competition_name, award_level, award_date, attachment, created_at, updated_at, achievement_type_id, project_id, extra_data) FROM stdin;
-1	123456				\N									\N	achievements/89d5bca79a244f12aade8b3642a3fa01_PCqAWdK.pdf	2025-12-27 15:52:02.770989+08	2025-12-27 16:42:47.488537+08	64	4	{}
+3	123	123			\N									\N	achievements/0_lp8To1M.pdf	2026-01-15 04:10:42.49589+08	2026-01-15 04:13:11.411629+08	64	17	{}
 \.
 
 
 --
--- Data for Name: project_advisors; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: project_advisors; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.project_advisors (id, "order", project_id, user_id) FROM stdin;
-20	0	4	20
+44	0	17	152
+49	0	20	152
+51	0	21	168
 \.
 
 
 --
--- Data for Name: project_archives; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: project_archives; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.project_archives (id, snapshot, attachments, archived_at, project_id) FROM stdin;
-1	{"title": "镁电解熔盐中杂质的绿色高效分离", "leader": 16, "status": "CLOSED", "project_no": "2025METALLURGY0001"}	[]	2025-12-27 16:46:57.108142+08	4
+COPY public.project_archives (id, snapshot, attachments, archived_at, project_id, metadata) FROM stdin;
+2	{"id": 17, "batch": 7, "level": "省级", "title": "12345123", "budget": "3000.00", "leader": 31, "source": "TEACHER_RESEARCH", "status": "CLOSED", "college": "计算机科学与技术学院", "ranking": null, "category": "ENTREPRENEURSHIP_TRAINING", "end_date": null, "batch_name": "2026第二批", "batch_year": 2026, "created_at": "2026-01-15 04:03:29", "major_code": "110", "project_no": "2026107000001", "start_date": null, "updated_at": "2026-01-15 04:13:11", "description": "1234", "leader_name": "王凯", "final_report": "/media/final_reports/0_h57niS4.pdf", "is_key_field": true, "leader_email": "wangk2829@gmail.com", "leader_grade": "2023", "leader_major": "110", "members_info": [{"id": 95, "name": "姜茹茹", "role": "MEMBER", "user": 30, "join_date": "2026-01-15", "user_name": "姜茹茹", "student_id": "239074320", "contribution": ""}], "self_funding": "0.00", "submitted_at": "2026-01-15 04:03:49", "advisors_info": [{"id": 44, "name": "周建平", "user": 152, "email": "", "order": 0, "title": "教工", "contact": "", "user_name": "周建平", "department": "教工", "job_number": "052812"}], "contract_file": null, "level_display": "省级", "proposal_file": "/media/proposals/0_vHjJ3uu.pdf", "research_plan": "", "leader_contact": "18297838360", "source_display": "面向教师科研类", "status_display": "已结题", "task_book_file": null, "approved_budget": "3000.00", "attachment_file": null, "key_domain_code": "202406", "mid_term_report": "/media/mid_term_reports/0_IjzOokF.pdf", "achievement_file": "/media/achievements/0_VahHwDB.pdf", "category_display": "创业训练项目", "expected_results": "1234", "final_report_url": "/media/final_reports/0_h57niS4.pdf", "research_content": "", "contract_file_url": "", "final_report_name": "final_reports/0_h57niS4.pdf", "innovation_points": "", "leader_class_name": "软232", "leader_department": "", "leader_student_id": "239074336", "proposal_file_url": "/media/proposals/0_vHjJ3uu.pdf", "achievements_count": 1, "closure_applied_at": "2026-01-15 04:13:11", "contract_file_name": "", "proposal_file_name": "proposals/0_vHjJ3uu.pdf", "task_book_file_url": "", "achievement_summary": "123", "attachment_file_url": "", "mid_term_report_url": "/media/mid_term_reports/0_IjzOokF.pdf", "task_book_file_name": "", "achievement_file_url": "/media/achievements/0_VahHwDB.pdf", "attachment_file_name": "", "category_description": "", "mid_term_report_name": "mid_term_reports/0_IjzOokF.pdf", "achievement_file_name": "achievements/0_VahHwDB.pdf", "expected_results_data": [{"expected_count": 1, "achievement_type": "论文"}]}	[{"url": "/media/proposals/0_vHjJ3uu.pdf", "name": "proposals/0_vHjJ3uu.pdf", "size": 13, "field": "proposal_file"}, {"url": "/media/mid_term_reports/0_IjzOokF.pdf", "name": "mid_term_reports/0_IjzOokF.pdf", "size": 13, "field": "mid_term_report"}, {"url": "/media/final_reports/0_h57niS4.pdf", "name": "final_reports/0_h57niS4.pdf", "size": 13, "field": "final_report"}, {"url": "/media/achievements/0_VahHwDB.pdf", "name": "achievements/0_VahHwDB.pdf", "size": 13, "field": "achievement_file"}, {"name": "achievements/0_lp8To1M.pdf", "type": "achievement", "field": "achievement_3", "achievement_type": "论文"}]	2026-01-15 04:18:08.842386+08	17	{}
 \.
 
 
 --
--- Data for Name: project_batches; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: project_batches; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.project_batches (id, name, year, code, is_current, is_active, created_at, updated_at, status, is_deleted) FROM stdin;
-3	2025第一批	2025	2025A	t	t	2025-12-26 21:38:24.329666+08	2025-12-26 22:07:09.341425+08	active	f
+3	2025第一批	2025	2025A	f	t	2025-12-26 21:38:24.329666+08	2026-01-14 00:31:50.490379+08	finished	f
+4	2026 第一批	2026	2026-A	f	t	2026-01-13 22:17:48.992012+08	2026-01-14 16:17:50.11511+08	finished	f
+7	2026第二批	2026	2026B	t	t	2026-01-14 23:43:32.929939+08	2026-01-15 00:13:45.114234+08	active	f
 \.
 
 
 --
--- Data for Name: project_change_requests; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: project_change_requests; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.project_change_requests (id, request_type, reason, change_data, requested_end_date, attachment, status, submitted_at, reviewed_at, created_at, updated_at, created_by_id, project_id) FROM stdin;
@@ -1918,7 +2237,7 @@ COPY public.project_change_requests (id, request_type, reason, change_data, requ
 
 
 --
--- Data for Name: project_change_reviews; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: project_change_reviews; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.project_change_reviews (id, review_level, status, comments, reviewed_at, created_at, change_request_id, reviewer_id) FROM stdin;
@@ -1926,37 +2245,40 @@ COPY public.project_change_reviews (id, review_level, status, comments, reviewed
 
 
 --
--- Data for Name: project_expenditures; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: project_expenditures; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.project_expenditures (id, title, amount, expenditure_date, proof_file, status, created_at, category_id, created_by_id, project_id) FROM stdin;
+COPY public.project_expenditures (id, title, amount, expenditure_date, proof_file, status, created_at, created_by_id, project_id, is_deleted, review_comment, reviewed_at, reviewed_by_id, updated_at) FROM stdin;
+2	12	500.00	2026-01-21	expenditures/pdf模板_-_Google_搜索_Pk4URbA.pdf	RECORDED	2026-01-15 11:16:49.877374+08	30	20	f		\N	\N	2026-01-15 11:16:49.877383+08
 \.
 
 
 --
--- Data for Name: project_members; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: project_members; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.project_members (id, role, join_date, contribution, project_id, user_id) FROM stdin;
-62	MEMBER	2025-12-26		4	17
-63	MEMBER	2025-12-26		4	18
-64	MEMBER	2025-12-26		4	19
-37	LEADER	2025-12-26		4	16
+95	MEMBER	2026-01-15		17	30
+100	MEMBER	2026-01-15		20	31
+102	MEMBER	2026-01-15		21	31
 \.
 
 
 --
--- Data for Name: project_phase_instances; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: project_phase_instances; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.project_phase_instances (id, phase, attempt_no, step, state, return_to, returned_reason, returned_at, created_at, updated_at, created_by_id, project_id) FROM stdin;
-1	MID_TERM	1	COMPLETED	COMPLETED			\N	2025-12-27 12:45:33.059223+08	2025-12-27 15:24:09.135012+08	\N	4
-2	CLOSURE	1	COMPLETED	COMPLETED	STUDENT	0	2025-12-27 16:35:25.54402+08	2025-12-27 16:12:16.703329+08	2025-12-27 16:46:57.109184+08	\N	4
+COPY public.project_phase_instances (id, phase, attempt_no, step, state, return_to, returned_reason, returned_at, created_at, updated_at, created_by_id, project_id, current_node_id) FROM stdin;
+10	APPLICATION	1	PUBLISHED	COMPLETED			\N	2026-01-15 04:03:49.598384+08	2026-01-15 04:08:29.712296+08	\N	17	39
+11	MID_TERM	1	COMPLETED	COMPLETED			\N	2026-01-15 04:08:52.30736+08	2026-01-15 04:09:36.056547+08	\N	17	42
+12	CLOSURE	1	COMPLETED	COMPLETED			\N	2026-01-15 04:13:11.418452+08	2026-01-15 04:18:08.867937+08	31	17	46
+13	APPLICATION	1	PUBLISHED	COMPLETED			\N	2026-01-15 10:28:29.953098+08	2026-01-15 11:08:34.646599+08	\N	20	39
+14	APPLICATION	1	SCHOOL_PUBLISH	IN_PROGRESS			\N	2026-01-15 11:12:24.76305+08	2026-01-15 11:12:24.763059+08	\N	21	39
 \.
 
 
 --
--- Data for Name: project_progress; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: project_progress; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.project_progress (id, title, content, attachment, created_at, created_by_id, project_id) FROM stdin;
@@ -1964,7 +2286,7 @@ COPY public.project_progress (id, title, content, attachment, created_at, create
 
 
 --
--- Data for Name: project_push_records; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: project_push_records; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.project_push_records (id, target, payload, response_message, status, created_at, updated_at, project_id) FROM stdin;
@@ -1972,7 +2294,7 @@ COPY public.project_push_records (id, target, payload, response_message, status,
 
 
 --
--- Data for Name: project_recycle_bin; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: project_recycle_bin; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.project_recycle_bin (id, resource_type, resource_id, payload, attachments, deleted_at, restored_at, is_restored, deleted_by_id, project_id, restored_by_id) FROM stdin;
@@ -1980,96 +2302,282 @@ COPY public.project_recycle_bin (id, resource_type, resource_id, payload, attach
 
 
 --
--- Data for Name: projects; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: projects; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.projects (id, project_no, title, description, is_key_field, self_funding, category_description, start_date, end_date, budget, research_content, research_plan, expected_results, innovation_points, proposal_file, attachment_file, final_report, achievement_file, status, ranking, created_at, updated_at, submitted_at, closure_applied_at, category_id, leader_id, level_id, source_id, year, key_domain_code, mid_term_report, mid_term_submitted_at, approved_budget, batch_id, contract_file, task_book_file, expected_results_data, achievement_summary, discipline_id) FROM stdin;
-4	2025METALLURGY0001	镁电解熔盐中杂质的绿色高效分离	熔盐电解法是工业上生产金属镁的常用方法。在电解法生产金属镁的过程中，氯化镁原料和电解槽损耗会引入有害的金属杂质，对镁电解过程产生不利影响。本项目通过控电位电解的方法对熔盐中的Fe(III)、Mn(II)和Al(III)等典型杂质进行分离，为熔盐电解制备高纯度金属镁提供理论依据。采用控电位电解法对NaCl-KCl-MgCl2熔盐中的金属杂质进行分离并计算镁电解质体系中杂质的去除率。	t	0.00		\N	\N	10000.00			调研报告		proposals/WeTab_新标签页.pdf		final_reports/WeTab_新标签页.pdf	achievements/89d5bca79a244f12aade8b3642a3fa01.pdf	CLOSED	\N	2025-12-26 22:21:32.535193+08	2025-12-27 16:46:57.102708+08	2025-12-26 23:21:05.894839+08	2025-12-27 16:42:47.48456+08	8	16	55	1	2025	202406		2025-12-27 12:45:33.039172+08	\N	3			[{"expected_count": 1, "achievement_type": "论文"}]	123	\N
+COPY public.projects (id, project_no, title, description, is_key_field, self_funding, category_description, start_date, end_date, budget, research_content, research_plan, expected_results, innovation_points, proposal_file, attachment_file, final_report, achievement_file, status, ranking, created_at, updated_at, submitted_at, closure_applied_at, category_id, leader_id, level_id, source_id, year, key_domain_code, mid_term_report, mid_term_submitted_at, approved_budget, batch_id, contract_file, task_book_file, expected_results_data, achievement_summary) FROM stdin;
+17	2026107000001	12345123	1234	t	0.00		\N	\N	3000.00			1234		proposals/0_vHjJ3uu.pdf		final_reports/0_h57niS4.pdf	achievements/0_VahHwDB.pdf	CLOSED	\N	2026-01-15 04:03:29.478575+08	2026-01-15 04:13:11.421882+08	2026-01-15 04:03:49.588525+08	2026-01-15 04:13:11.407042+08	44	31	54	1	2026	202406	mid_term_reports/0_IjzOokF.pdf	2026-01-15 04:08:52.293516+08	3000.00	7			[{"expected_count": 1, "achievement_type": "论文"}]	123
+21	2026107000003	1	123	f	0.00		\N	\N	1000.00			123		proposals/pdf模板_-_Google_搜索_ykmRPy6.pdf				LEVEL1_AUDITING	\N	2026-01-15 11:12:13.711141+08	2026-01-15 11:15:26.132408+08	2026-01-15 11:12:24.754577+08	\N	8	25	53	1	2026			\N	\N	7			[{"expected_count": 1, "achievement_type": "论文"}]	
+20	2026107000002	1234	123	t	0.00		\N	\N	1000.00			123		proposals/pdf模板_-_Google_搜索_jUTNZUa.pdf				IN_PROGRESS	\N	2026-01-15 10:28:17.364829+08	2026-01-15 11:08:34.634701+08	2026-01-15 10:28:29.946222+08	\N	8	30	53	1	2026	202406		\N	999.00	7			[{"expected_count": 1, "achievement_type": "论文"}]	
 \.
 
 
 --
--- Data for Name: review_template_items; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: reviews; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.review_template_items (id, title, description, weight, max_score, is_required, sort_order, created_at, updated_at, template_id) FROM stdin;
+COPY public.reviews (id, review_type, review_level, status, comments, score, closure_rating, created_at, reviewed_at, project_id, reviewer_id, phase_instance_id, score_details, workflow_node_id, is_expert_review) FROM stdin;
+38	APPLICATION	TEACHER	APPROVED	123	0	\N	2026-01-15 04:03:49.601554+08	2026-01-15 04:04:26.251668+08	17	152	10	[]	37	f
+40	APPLICATION	LEVEL2	APPROVED	1	0	\N	2026-01-15 04:05:30.645899+08	2026-01-15 04:06:05.445404+08	17	170	10	[]	38	t
+39	APPLICATION	LEVEL2	APPROVED	1	0	\N	2026-01-15 04:04:26.258465+08	2026-01-15 04:06:26.006337+08	17	133	10	[]	38	f
+42	APPLICATION	LEVEL1	APPROVED	1	0	\N	2026-01-15 04:07:23.523502+08	2026-01-15 04:08:13.441258+08	17	166	10	[]	39	t
+41	APPLICATION	LEVEL1	APPROVED	1	0	\N	2026-01-15 04:06:26.012412+08	2026-01-15 04:08:29.706801+08	17	1	10	[]	39	f
+43	MID_TERM	TEACHER	APPROVED	123	0	\N	2026-01-15 04:08:52.310519+08	2026-01-15 04:09:17.060472+08	17	152	11	[]	41	f
+44	MID_TERM	LEVEL2	APPROVED	123	0	\N	2026-01-15 04:09:17.069731+08	2026-01-15 04:09:36.052872+08	17	133	11	[]	42	f
+45	CLOSURE	LEVEL1	APPROVED		\N	\N	2026-01-15 04:13:11.425622+08	2026-01-15 04:18:08.824645+08	17	1	12	[]	46	f
+46	APPLICATION	TEACHER	APPROVED	123	0	\N	2026-01-15 10:28:29.955758+08	2026-01-15 10:44:25.846851+08	20	152	13	[]	37	f
+48	APPLICATION	LEVEL2	APPROVED	123	0	\N	2026-01-15 10:46:58.106121+08	2026-01-15 10:56:53.793221+08	20	170	13	[]	38	t
+47	APPLICATION	LEVEL2	APPROVED		0	\N	2026-01-15 10:44:25.856017+08	2026-01-15 10:57:25.894384+08	20	133	13	[]	38	f
+50	APPLICATION	LEVEL1	APPROVED	12	0	\N	2026-01-15 11:07:41.184601+08	2026-01-15 11:08:11.929339+08	20	166	13	[]	39	t
+49	APPLICATION	LEVEL1	APPROVED	1	0	\N	2026-01-15 10:57:25.900754+08	2026-01-15 11:08:34.641997+08	20	1	13	[]	39	f
+51	APPLICATION	TEACHER	APPROVED	123	0	\N	2026-01-15 11:12:24.765959+08	2026-01-15 11:12:46.48439+08	21	168	14	[]	37	f
+53	APPLICATION	LEVEL2	APPROVED	1	0	\N	2026-01-15 11:13:32.724744+08	2026-01-15 11:13:50.453635+08	21	170	14	[]	38	t
+52	APPLICATION	LEVEL2	APPROVED		0	\N	2026-01-15 11:12:46.490973+08	2026-01-15 11:15:26.128732+08	21	133	14	[]	38	f
+54	APPLICATION	LEVEL1	PENDING		\N	\N	2026-01-15 11:15:26.134698+08	\N	21	\N	14	[]	39	f
 \.
 
 
 --
--- Data for Name: review_templates; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: roles; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.review_templates (id, name, review_type, review_level, scope, description, notice, is_active, is_locked, created_at, updated_at, batch_id, created_by_id, updated_by_id) FROM stdin;
+COPY public.roles (id, code, name, is_system, is_active, default_route, sort_order, created_at, updated_at, scope_dimension) FROM stdin;
+2	TEACHER	教师	t	t	/teacher/dashboard	2	2026-01-13 18:45:23.914927+08	2026-01-14 19:08:41.940838+08	\N
+4	LEVEL2_ADMIN	学院管理员	f	t	/level2-admin/projects	4	2026-01-13 18:45:23.922797+08	2026-01-14 19:48:08.152256+08	COLLEGE
+1	STUDENT	学生	t	t	/establishment/apply	1	2026-01-13 18:45:23.90865+08	2026-01-13 18:45:23.908659+08	\N
+5	LEVEL1_ADMIN	校级管理员	t	t	/level1-admin/statistics	5	2026-01-13 18:45:23.928367+08	2026-01-14 19:08:41.941854+08	\N
+6	ROLE	项目类别管理员	f	t	/level2-admin/projects	0	2026-01-14 22:16:26.085578+08	2026-01-14 23:56:44.27034+08	PROJECT_CATEGORY
 \.
 
 
 --
--- Data for Name: reviews; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: roles_permissions; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.reviews (id, review_type, review_level, status, comments, score, closure_rating, created_at, reviewed_at, project_id, reviewer_id, phase_instance_id, score_details, review_template_id) FROM stdin;
-5	APPLICATION	TEACHER	REJECTED	请补充经费预算明细	\N	\N	2025-12-26 23:06:44.27701+08	2025-12-26 23:15:04.143807+08	4	20	\N	[]	\N
-6	APPLICATION	TEACHER	APPROVED	同意申报	\N	\N	2025-12-26 23:21:05.898005+08	2025-12-26 23:25:54.514517+08	4	20	\N	[]	\N
-7	APPLICATION	LEVEL2	PENDING		\N	\N	2025-12-26 23:25:54.516754+08	\N	4	\N	\N	[]	\N
-8	APPLICATION	LEVEL2	APPROVED	院级评审通过	98	\N	2025-12-26 23:46:25.078908+08	2025-12-26 23:58:09.082679+08	4	22	\N	[]	\N
-9	APPLICATION	LEVEL1	PENDING		\N	\N	2025-12-26 23:58:09.085931+08	\N	4	\N	\N	[]	\N
-10	APPLICATION	LEVEL1	APPROVED	校级评审通过	95	\N	2025-12-27 00:03:36.89531+08	2025-12-27 00:05:03.403946+08	4	23	\N	[]	\N
-11	MID_TERM	TEACHER	APPROVED	中期导师审核通过	\N	\N	2025-12-27 00:36:40.777808+08	2025-12-27 00:39:21.169242+08	4	20	\N	[]	\N
-12	MID_TERM	LEVEL2	REJECTED		\N	\N	2025-12-27 00:39:21.180223+08	2025-12-27 12:45:02.569627+08	4	21	\N	[]	\N
-13	MID_TERM	TEACHER	APPROVED	通过	\N	\N	2025-12-27 12:45:33.066425+08	2025-12-27 12:46:05.235597+08	4	20	1	[]	\N
-14	MID_TERM	LEVEL2	PENDING		\N	\N	2025-12-27 12:46:05.247814+08	\N	4	\N	1	[]	\N
-15	MID_TERM	LEVEL2	APPROVED	院级中期审核通过	\N	\N	2025-12-27 13:10:43.353539+08	2025-12-27 13:12:12.99934+08	4	22	1	[]	\N
-16	CLOSURE	TEACHER	APPROVED	结题导师审核通过	\N	\N	2025-12-27 16:12:16.708367+08	2025-12-27 16:13:39.05349+08	4	20	2	[]	\N
-17	CLOSURE	LEVEL1	PENDING		\N	\N	2025-12-27 16:13:39.056122+08	\N	4	\N	2	[]	\N
-18	CLOSURE	LEVEL1	APPROVED	123	90	\N	2025-12-27 16:34:07.996581+08	2025-12-27 16:34:59.122849+08	4	23	2	[]	\N
-19	CLOSURE	TEACHER	APPROVED	90	\N	\N	2025-12-27 16:42:47.492429+08	2025-12-27 16:43:06.461989+08	4	20	2	[]	\N
-20	CLOSURE	LEVEL2	APPROVED	0	90	\N	2025-12-27 16:43:37.175243+08	2025-12-27 16:44:08.381694+08	4	22	2	[]	\N
+COPY public.roles_permissions (id, role_id, permission_id) FROM stdin;
+1	1	7
+2	2	8
+3	2	13
+6	4	1
+7	4	2
+8	4	3
+9	4	8
+10	4	9
+11	4	12
+12	4	16
+13	4	18
+14	4	20
+15	4	26
+16	5	1
+17	5	2
+18	5	3
+19	5	4
+20	5	5
+21	5	6
+22	5	7
+23	5	8
+24	5	9
+25	5	10
+26	5	11
+27	5	12
+28	5	13
+29	5	14
+30	5	15
+31	5	16
+32	5	17
+33	5	18
+34	5	19
+35	5	20
+36	5	21
+37	5	22
+38	5	23
+39	5	24
+40	5	25
+41	5	26
+42	5	27
 \.
 
 
 --
--- Data for Name: system_settings; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: system_settings; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.system_settings (id, code, name, data, is_locked, is_active, created_at, updated_at, updated_by_id, batch_id) FROM stdin;
-1	APPLICATION_WINDOW	项目申报时间设置	{"end": "2025-12-25", "start": "2025-12-23", "enabled": true}	f	t	2025-12-24 14:54:21.527563+08	2025-12-24 14:54:22.627171+08	1	\N
-2	MIDTERM_WINDOW	中期提交时间设置	{"end": "2025-12-25", "start": "2025-12-23", "enabled": true}	f	t	2025-12-24 14:54:21.546862+08	2025-12-24 14:54:22.646826+08	1	\N
-3	CLOSURE_WINDOW	结题提交时间设置	{"end": "2025-12-25", "start": "2025-12-23", "enabled": true}	f	t	2025-12-24 14:54:21.562951+08	2025-12-24 14:54:22.658746+08	1	\N
-4	REVIEW_WINDOW	审核时间设置	{"closure": {"level1": {"end": "2025-12-25", "start": "2025-12-23", "enabled": true}, "level2": {"end": "2025-12-25", "start": "2025-12-23", "enabled": true}, "teacher": {"end": "2025-12-25", "start": "2025-12-23", "enabled": true}}, "midterm": {"level2": {"end": "2025-12-25", "start": "2025-12-23", "enabled": true}, "teacher": {"end": "2025-12-25", "start": "2025-12-23", "enabled": true}}, "application": {"level1": {"end": "2025-12-25", "start": "2025-12-23", "enabled": true}, "level2": {"end": "2025-12-25", "start": "2025-12-23", "enabled": true}, "teacher": {"end": "2025-12-25", "start": "2025-12-23", "enabled": true}}}	f	t	2025-12-24 14:54:21.579286+08	2025-12-24 14:54:22.670333+08	1	\N
-5	LIMIT_RULES	限制与校验规则	{"max_members": 5, "dedupe_title": true, "max_advisors": 2, "college_quota": {}, "max_student_active": 1, "max_student_member": 1, "max_teacher_active": 5, "advisor_title_required": false, "teacher_excellent_bonus": 0}	f	t	2025-12-24 14:54:21.595625+08	2025-12-24 14:54:22.685558+08	1	\N
-6	PROCESS_RULES	流程规则配置	{"reject_to_previous": false, "allow_active_reapply": false, "show_material_in_closure_review": true}	f	t	2025-12-24 14:54:21.609459+08	2025-12-24 14:54:22.701391+08	1	\N
-7	REVIEW_RULES	审核规则配置	{"teacher_application_comment_min": 0}	f	t	2025-12-24 14:54:21.623013+08	2025-12-24 14:54:22.715487+08	1	\N
-19	REVIEW_WINDOW	审核时间设置	{"closure": {"level1": {"end": "2026-01-31", "start": "2025-12-01", "enabled": true}, "level2": {"end": "2026-01-31", "start": "2025-12-01", "enabled": true}, "teacher": {"end": "2026-01-31", "start": "2025-12-01", "enabled": true}}, "midterm": {"level2": {"end": "2026-01-31", "start": "2025-12-01", "enabled": true}, "teacher": {"end": "2026-01-31", "start": "2025-12-01", "enabled": true}}, "application": {"level1": {"end": "2026-01-31", "start": "2025-12-01", "enabled": true}, "level2": {"end": "2026-01-31", "start": "2025-12-01", "enabled": true}, "teacher": {"end": "2026-01-31", "start": "2025-12-01", "enabled": true}}}	f	t	2025-12-26 21:56:37.45627+08	2025-12-26 22:07:03.418369+08	1	3
+37	PROCESS_RULES	流程规则配置	{"reject_to_previous": false, "allow_active_reapply": false, "show_material_in_closure_review": true}	f	t	2026-01-15 00:13:40.138323+08	2026-01-15 00:13:40.138363+08	1	7
 20	LIMIT_RULES	限制与校验规则	{"max_members": 5, "dedupe_title": true, "max_advisors": 2, "college_quota": {}, "max_student_active": 1, "max_student_member": 1, "max_teacher_active": 5, "advisor_title_required": false, "teacher_excellent_bonus": 0}	f	t	2025-12-26 21:56:37.471173+08	2025-12-26 22:07:03.431676+08	1	3
 21	PROCESS_RULES	流程规则配置	{"reject_to_previous": false, "allow_active_reapply": false, "show_material_in_closure_review": true}	f	t	2025-12-26 21:56:37.488568+08	2025-12-26 22:07:03.44801+08	1	3
 22	REVIEW_RULES	审核规则配置	{"teacher_application_comment_min": 0}	f	t	2025-12-26 21:56:37.506499+08	2025-12-26 22:07:03.464329+08	1	3
-15	APPLICATION_WINDOW	项目申报时间设置	{"end": "2026-01-31", "start": "2025-12-01", "enabled": true}	f	t	2025-12-26 21:56:37.384786+08	2025-12-26 22:07:03.344464+08	1	3
-16	MIDTERM_WINDOW	中期提交时间设置	{"end": "2026-01-31", "start": "2025-12-01", "enabled": true}	f	t	2025-12-26 21:56:37.407741+08	2025-12-26 22:07:03.367456+08	1	3
-17	CLOSURE_WINDOW	结题提交时间设置	{"end": "2026-01-31", "start": "2025-12-01", "enabled": true}	f	t	2025-12-26 21:56:37.422189+08	2025-12-26 22:07:03.380131+08	1	3
-18	EXPERT_REVIEW_WINDOW	专家评审时间设置	{"end": "2026-01-31", "start": "2025-12-01", "enabled": true}	f	t	2025-12-26 21:56:37.439704+08	2025-12-26 22:07:03.397758+08	1	3
+27	LIMIT_RULES	限制与校验规则	{"max_members": 5, "dedupe_title": true, "max_advisors": 2, "college_quota": {}, "max_student_active": 1, "max_student_member": 1, "max_teacher_active": 5, "advisor_title_required": false, "teacher_excellent_bonus": 0}	f	t	2026-01-14 09:49:07.338215+08	2026-01-14 09:49:07.338241+08	\N	4
+28	PROCESS_RULES	流程规则配置	{"reject_to_previous": false, "allow_active_reapply": false, "show_material_in_closure_review": true}	f	t	2026-01-14 09:49:07.351808+08	2026-01-14 09:49:07.351837+08	\N	4
+29	REVIEW_RULES	审核规则配置	{"teacher_application_comment_min": 0}	f	t	2026-01-14 09:49:07.36087+08	2026-01-14 09:49:07.360896+08	\N	4
+38	REVIEW_RULES	审核规则配置	{"teacher_application_comment_min": 0}	f	t	2026-01-15 00:13:40.175151+08	2026-01-15 00:13:40.175167+08	1	7
+39	VALIDATION_RULES	校验规则配置	{"title_regex": "", "title_max_length": 200, "title_min_length": 0, "allowed_project_types": [], "allowed_levels_by_college": {}, "allowed_project_types_by_college": {}}	f	t	2026-01-15 00:13:40.220952+08	2026-01-15 00:13:40.220969+08	1	7
+36	LIMIT_RULES	限制与校验规则	{"max_members": 5, "dedupe_title": true, "max_advisors": 2, "college_quota": {}, "max_student_active": 1, "max_student_member": 1, "max_teacher_active": 5, "advisor_title_required": false, "teacher_excellent_bonus": 0}	f	t	2026-01-15 00:13:40.037584+08	2026-01-15 00:13:40.037632+08	1	7
+31	APPLICATION_WINDOW	项目申报时间设置	{"end": "", "start": "", "enabled": false}	f	t	2026-01-15 00:13:39.731274+08	2026-01-15 03:41:58.321552+08	1	7
+32	MIDTERM_WINDOW	中期提交时间设置	{"end": "", "start": "", "enabled": false}	f	t	2026-01-15 00:13:39.831697+08	2026-01-15 03:41:58.341198+08	1	7
+33	CLOSURE_WINDOW	结题提交时间设置	{"end": "", "start": "", "enabled": false}	f	t	2026-01-15 00:13:39.901099+08	2026-01-15 03:41:58.355932+08	1	7
+34	EXPERT_REVIEW_WINDOW	专家评审时间设置	{"end": "", "start": "", "enabled": false}	f	t	2026-01-15 00:13:39.950392+08	2026-01-15 03:41:58.376276+08	1	7
+35	REVIEW_WINDOW	审核时间设置	{"closure": {"level1": {"end": "", "start": "", "enabled": false}, "level2": {"end": "", "start": "", "enabled": false}, "teacher": {"end": "", "start": "", "enabled": false}}, "midterm": {"level2": {"end": "", "start": "", "enabled": false}, "teacher": {"end": "", "start": "", "enabled": false}}, "application": {"level1": {"end": "", "start": "", "enabled": false}, "level2": {"end": "", "start": "", "enabled": false}, "teacher": {"end": "", "start": "", "enabled": false}}}	f	t	2026-01-15 00:13:39.977771+08	2026-01-15 03:41:58.396084+08	1	7
 \.
 
 
 --
--- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.users (id, password, last_login, is_superuser, username, first_name, last_name, is_staff, date_joined, role, employee_id, real_name, phone, email, major, grade, class_name, college, department, avatar, is_active, created_at, updated_at, title, expert_scope) FROM stdin;
-1	pbkdf2_sha256$1200000$34mk2wHfjYAmQmhNASjcbM$U/iJnXcx+Eo7fWrVTZYBKP6D8tI/CacIvdz+BT/f4dI=	\N	t	admin			t	2025-12-16 17:15:53.245779+08	LEVEL1_ADMIN	admin			admin123@qq.com							t	2025-12-16 17:15:53.495549+08	2025-12-16 17:15:53.495554+08		COLLEGE
-19	pbkdf2_sha256$1200000$3pUL6tb9PQszikGMOGhXeB$KV46zBzfNqQXHWI4jrH9m1oHxlCmp8bThTuFSPgBJlY=	\N	f	239014243			f	2025-12-24 14:23:22.133196+08	STUDENT	239014243	耿文涛									t	2025-12-24 14:23:22.133385+08	2025-12-24 14:23:22.357852+08		COLLEGE
-21	pbkdf2_sha256$1200000$2p3XOH1jvUzCZkhOq2hoBU$JgWJ/sYgqfTabAmRYuK/L5Uh58gNuVkSf0LbzyBysDc=	\N	f	00000001			f	2025-12-24 14:24:55.392936+08	LEVEL2_ADMIN	00000001	张三						METALLURGY			t	2025-12-24 14:24:55.393101+08	2025-12-24 14:24:55.617266+08		COLLEGE
-22	pbkdf2_sha256$1200000$19t0LEedWU4KIPSrs46RXh$XLyAvA2xgYQxW0oD9kWA+WWFUlvgBaHaCmJlfS61obQ=	\N	f	20250002			f	2025-12-24 14:25:36.622831+08	EXPERT	20250002	李四						METALLURGY			t	2025-12-24 14:25:36.622989+08	2025-12-24 14:25:36.851639+08	PROFESSOR	COLLEGE
-23	pbkdf2_sha256$1200000$HK2wJYyWKpTr77dMX4jd2w$/E9VK9Snkcp0FtKYjMOzcP0Lu6QYozN9GfdK0H91rWM=	\N	f	00000003			f	2025-12-24 14:50:15.286489+08	EXPERT	00000003	王五									t	2025-12-24 14:50:15.286925+08	2025-12-24 14:50:15.540203+08	PROFESSOR	SCHOOL
-20	pbkdf2_sha256$1200000$9ATy5kSvdrFWWMnNdaMEpM$d2V+yKb3NyDnu1MUmIolFYgTeqJ9Clj5f2YLM/+0zFI=	\N	f	20250001			f	2025-12-24 14:24:22.87073+08	TEACHER	20250001	华中胜	18225551375	huazs83@163.com				METALLURGY	PROFESSOR		t	2025-12-24 14:24:22.870938+08	2025-12-24 14:24:23.099378+08	PROFESSOR	COLLEGE
-17	pbkdf2_sha256$1200000$MPJulnzkB2oIOFany9B7mV$hL46wcYE+tIuWkUFaNsnTpdsLadxfLMhLB9RVzQWiok=	\N	f	229014231			f	2025-12-24 14:22:36.589194+08	STUDENT	229014231	杨竞择									t	2025-12-24 14:22:36.589371+08	2025-12-24 14:22:36.817725+08		COLLEGE
-18	pbkdf2_sha256$1200000$cEGGtfI3STTifOZzIqY6EU$LQ+6jg+rFjlMT4Kvot0ZhbkFd+7LyUE42aRLl2logZg=	\N	f	239014352			f	2025-12-24 14:22:58.765389+08	STUDENT	239014352	汤培									t	2025-12-24 14:22:58.765579+08	2025-12-24 14:22:59.009303+08		COLLEGE
-16	pbkdf2_sha256$1200000$0CM9UKpWe0Lecv46xAZNEX$hlYfWP4cz7aSbCUSWGTpF25YB3u/Nd+l+kbXZUrVyYQ=	\N	f	229014363			f	2025-12-24 14:22:09.08125+08	STUDENT	229014363	蒋文君	17755531945	2509421760@qq.com	0804			METALLURGY			t	2025-12-24 14:22:09.081497+08	2025-12-24 14:22:09.308072+08		COLLEGE
+COPY public.users (id, password, last_login, is_superuser, username, first_name, last_name, is_staff, date_joined, employee_id, real_name, phone, email, major, grade, class_name, college, department, avatar, is_active, created_at, updated_at, title, expert_scope, role_fk_id, managed_scope_value_id, gender, is_expert, expert_assigned_by_id) FROM stdin;
+30	pbkdf2_sha256$1200000$qMzUo2wZb3Btgjd5Tena9X$7FlrHEn0ac61QoUjZzFzCakMH5M7te9o5LPwwLpUsRM=	\N	f	239074320			f	2026-01-14 21:14:24.74192+08	239074320	姜茹茹	18297838360	123@qq.com	110	2023	软232	10700			t	2026-01-14 21:14:24.742168+08	2026-01-14 21:14:25.017319+08		COLLEGE	1	\N	女	f	\N
+31	pbkdf2_sha256$1200000$FEf28yJOihBLbC3AF3ecjq$0DhN7S/9rnURykBvFytY0wWJlRkFu4cMXrnoQnWHc7Q=	\N	f	239074336			f	2026-01-14 21:14:25.019176+08	239074336	王凯	18297838360	wangk2829@gmail.com	110	2023	软232	10700			t	2026-01-14 21:14:25.019372+08	2026-01-14 21:14:25.292041+08		COLLEGE	1	\N	男	f	\N
+25	pbkdf2_sha256$1200000$mVDnisDrFymufM6IPZPDP6$k2VcC9SnNwM/4kUqmIP69ZfmvSFX6sKQzgSn5Hb0sgo=	\N	f	239074280			f	2026-01-14 21:14:23.335668+08	239074280	陈诗卉	18297838360	123@q.com	110	2023	软231	10700			t	2026-01-14 21:14:23.336122+08	2026-01-14 21:14:23.613196+08		COLLEGE	1	\N	女	f	\N
+27	pbkdf2_sha256$1200000$IeXOsJMkQGuzNhmDOlWhjn$ST+kvDzmD8gFsqUTHv9mXQaJisLSMqWu/B7WeqMPCPU=	\N	f	239074295			f	2026-01-14 21:14:23.909548+08	239074295	刘丹丹			软件工程	2023	软231	10700			t	2026-01-14 21:14:23.909882+08	2026-01-14 21:14:24.181937+08		COLLEGE	1	\N	女	f	\N
+28	pbkdf2_sha256$1200000$EIdCMMmjllY3XcgQOpLdA3$OVeypgk6oRPm/D0kPSCiboriM2EQhzuCRGjO142bQLU=	\N	f	239074299			f	2026-01-14 21:14:24.183869+08	239074299	祁瑞			软件工程	2023	软231	10700			t	2026-01-14 21:14:24.184405+08	2026-01-14 21:14:24.463655+08		COLLEGE	1	\N	女	f	\N
+29	pbkdf2_sha256$1200000$N3b3sm4gOjbdGoZKTIeztj$LyqqaRD9T4+1SCIuDkOKIYhe78puz/UMG2AL93Qr04k=	\N	f	239074306			f	2026-01-14 21:14:24.46563+08	239074306	杨安瑜			软件工程	2023	软231	10700			t	2026-01-14 21:14:24.465838+08	2026-01-14 21:14:24.7399+08		COLLEGE	1	\N	女	f	\N
+32	pbkdf2_sha256$1200000$1Ime6ROLcSvNNzoeWBa7MJ$hDjZfFqXnW25dL0QZlIoWgnvykdMy+5S/swcpI6z8mo=	\N	f	229044465			f	2026-01-14 21:14:25.294275+08	229044465	刘易水			软件工程	2023	软233	10700			t	2026-01-14 21:14:25.294601+08	2026-01-14 21:14:25.568478+08		COLLEGE	1	\N	男	f	\N
+1	pbkdf2_sha256$1200000$34mk2wHfjYAmQmhNASjcbM$U/iJnXcx+Eo7fWrVTZYBKP6D8tI/CacIvdz+BT/f4dI=	\N	t	admin			t	2025-12-16 17:15:53.245779+08	admin			admin123@qq.com							t	2025-12-16 17:15:53.495549+08	2025-12-16 17:15:53.495554+08		COLLEGE	5	\N		f	\N
+33	pbkdf2_sha256$1200000$aOzL5NFEasasIOnf3y3OP4$jqbWm9+Uc36Wt/yW5RgCITRy4SwnXERMf7DyFNTjeXM=	\N	f	229094234			f	2026-01-14 21:14:25.570189+08	229094234	刘修亮			软件工程	2023	软233	10700			t	2026-01-14 21:14:25.570397+08	2026-01-14 21:14:25.847333+08		COLLEGE	1	\N	男	f	\N
+34	pbkdf2_sha256$1200000$MubPM95PAzFxVfoU1ZET3K$+zzDdY8vx54o2C7iTIKTiP5WIUA+qKFRBRSZy8/He6M=	\N	f	239044427			f	2026-01-14 21:14:25.849258+08	239044427	胡鹏			软件工程	2023	软233	10700			t	2026-01-14 21:14:25.849453+08	2026-01-14 21:14:26.12054+08		COLLEGE	1	\N	男	f	\N
+35	pbkdf2_sha256$1200000$ca2IaEjgtB1En8MPRT9Iz9$vxRgHjg3PFV0YM3xkuiMWnBYASI9efs0zkYXLcdr4iQ=	\N	f	239074350			f	2026-01-14 21:14:26.122062+08	239074350	崔帅龙			软件工程	2023	软233	10700			t	2026-01-14 21:14:26.122249+08	2026-01-14 21:14:26.393993+08		COLLEGE	1	\N	男	f	\N
+36	pbkdf2_sha256$1200000$ypZsIFULCC98VOkrKCwiq6$IYDsbe/nkF2j0fnmEMPnldkau+o7yM9zDUBoARXVOGA=	\N	f	239074351			f	2026-01-14 21:14:26.396106+08	239074351	高宇亮			软件工程	2023	软233	10700			t	2026-01-14 21:14:26.396499+08	2026-01-14 21:14:26.679906+08		COLLEGE	1	\N	男	f	\N
+37	pbkdf2_sha256$1200000$GLA4j3eFFLYM4iFE8dOHqc$my/NktSv6mhnEzlQlV9D1XE+moW9fiWwXe7VQv3epGA=	\N	f	239074352			f	2026-01-14 21:14:26.68179+08	239074352	耿宝国			软件工程	2023	软233	10700			t	2026-01-14 21:14:26.681994+08	2026-01-14 21:14:26.957592+08		COLLEGE	1	\N	男	f	\N
+26	pbkdf2_sha256$1200000$qjnpGhGROpXuHHntOJ1h5L$gI/ucMi10FjO7DE6M6jh92Cmc40B1X28HSbjjBkxnug=	\N	f	239074281			f	2026-01-14 21:14:23.625903+08	239074281	程祥露			软件工程	2023	软231	10700			t	2026-01-14 21:14:23.626215+08	2026-01-14 21:14:23.907697+08		COLLEGE	1	\N	女	f	\N
+38	pbkdf2_sha256$1200000$PjClxewwUGVBsjukVrHVJk$GYYfBZJ5un2ttS2AHv9G8GUTOa74HT6IV71CyHKstVU=	\N	f	239074353			f	2026-01-14 21:14:26.959339+08	239074353	郭家豪			软件工程	2023	软233	10700			t	2026-01-14 21:14:26.959585+08	2026-01-14 21:14:27.231818+08		COLLEGE	1	\N	男	f	\N
+39	pbkdf2_sha256$1200000$PSK6EStUNL6VcHPuz0EBHp$312x/OoZqtIdIRV0o5DXR2A0+gj4FiBtHvhkHMLLENs=	\N	f	239074354			f	2026-01-14 21:14:27.233736+08	239074354	郭康			软件工程	2023	软233	10700			t	2026-01-14 21:14:27.233968+08	2026-01-14 21:14:27.502262+08		COLLEGE	1	\N	男	f	\N
+40	pbkdf2_sha256$1200000$MBnyiuedfjCA85P6T5nhyr$PH+maZdC1LH/oFBYuIQrwvEQ4grGWJFmwiNuhE2u7S4=	\N	f	239074355			f	2026-01-14 21:14:27.504396+08	239074355	郭孝懿			软件工程	2023	软233	10700			t	2026-01-14 21:14:27.504605+08	2026-01-14 21:14:27.776277+08		COLLEGE	1	\N	男	f	\N
+41	pbkdf2_sha256$1200000$nyEv76H1YZ32aLXWSUk3gR$jSdnfwPyWOjGN/a1t8AiJ1K8iyJYR1qZnMpehnS4DXw=	\N	f	239074356			f	2026-01-14 21:14:27.777853+08	239074356	黄志远			软件工程	2023	软233	10700			t	2026-01-14 21:14:27.778103+08	2026-01-14 21:14:28.047135+08		COLLEGE	1	\N	男	f	\N
+42	pbkdf2_sha256$1200000$9eEtxrx9U6K4Adx2hfvnnN$nzg1HLH4lBvLSchMHGd4eWoSw3sQoeB20QhMPvH9ruM=	\N	f	239074358			f	2026-01-14 21:14:28.049937+08	239074358	江兆坤			软件工程	2023	软233	10700			t	2026-01-14 21:14:28.050279+08	2026-01-14 21:14:28.323638+08		COLLEGE	1	\N	男	f	\N
+43	pbkdf2_sha256$1200000$Giblz5SgUdKc8Fxd9lasgY$bkx+hrciBUUf+TUuYh47hFgyyfNMDJezReGfakDC4Qc=	\N	f	239074359			f	2026-01-14 21:14:28.326213+08	239074359	解夏一			软件工程	2023	软233	10700			t	2026-01-14 21:14:28.32648+08	2026-01-14 21:14:28.599645+08		COLLEGE	1	\N	男	f	\N
+44	pbkdf2_sha256$1200000$0VYGP3NKiU1plbrYttKxj5$7i1nY2alWEAV7fwUAxzU3A0FrGuO6YZ9v8EwOHGW7bE=	\N	f	239074360			f	2026-01-14 21:14:28.601512+08	239074360	赖晓风			软件工程	2023	软233	10700			t	2026-01-14 21:14:28.601801+08	2026-01-14 21:14:28.874179+08		COLLEGE	1	\N	男	f	\N
+45	pbkdf2_sha256$1200000$UpP49F21R67J0PiNkHJyQ4$iTtvp+cwuxyu2eKANn+5JaxNuvAT3VoICI9qr/nnN+I=	\N	f	239074361			f	2026-01-14 21:14:28.875851+08	239074361	李冰冰			软件工程	2023	软233	10700			t	2026-01-14 21:14:28.876137+08	2026-01-14 21:14:29.146558+08		COLLEGE	1	\N	女	f	\N
+46	pbkdf2_sha256$1200000$S3XSoB7OBmznuwbgTivkUU$UCrKlaXZLjxnDFR5z2LFtzzRYf14BWCv1ZBdsZ58CA8=	\N	f	239074362			f	2026-01-14 21:14:29.148877+08	239074362	李冠庭			软件工程	2023	软233	10700			t	2026-01-14 21:14:29.149094+08	2026-01-14 21:14:29.425918+08		COLLEGE	1	\N	男	f	\N
+47	pbkdf2_sha256$1200000$DUWfTzcf30KNjxVsT4kTy3$D7VJJ7LEogIb7U4Bkvz69QM3eMeyyaRiXQriHIB3ROg=	\N	f	239074363			f	2026-01-14 21:14:29.427769+08	239074363	李金杰			软件工程	2023	软233	10700			t	2026-01-14 21:14:29.427985+08	2026-01-14 21:14:29.701744+08		COLLEGE	1	\N	男	f	\N
+48	pbkdf2_sha256$1200000$LFftURnAsn1Bl4RqVIN7Gu$KuUuHc+O+j3rOqtIrPnMHBhCxCa5In9AXfyaDlHYIDE=	\N	f	239074364			f	2026-01-14 21:14:29.703678+08	239074364	李晶晶			软件工程	2023	软233	10700			t	2026-01-14 21:14:29.703917+08	2026-01-14 21:14:29.99299+08		COLLEGE	1	\N	女	f	\N
+49	pbkdf2_sha256$1200000$HD924RsGaxEHbRtYKXhOYs$v0jqUed1FJNqTksd3CQUkLcXchaTbxazT8V9s2aF+no=	\N	f	239074365			f	2026-01-14 21:14:29.994793+08	239074365	李熙钰			软件工程	2023	软233	10700			t	2026-01-14 21:14:29.995133+08	2026-01-14 21:14:30.270587+08		COLLEGE	1	\N	女	f	\N
+50	pbkdf2_sha256$1200000$I911aTJjreUgXAwSIn81rL$2+XF/j0Tu5fCewosBwbvk2N9u9Vi78ASL+4U2QillPE=	\N	f	239074366			f	2026-01-14 21:14:30.272808+08	239074366	刘伟杰			软件工程	2023	软233	10700			t	2026-01-14 21:14:30.273079+08	2026-01-14 21:14:30.549233+08		COLLEGE	1	\N	男	f	\N
+51	pbkdf2_sha256$1200000$MHfHrxS3Fx5YfeuhbzVYQg$1XTqmACfN2xhuWSyIg4uPbzG2OzUT6wOoozF5UqmgpM=	\N	f	239074367			f	2026-01-14 21:14:30.550975+08	239074367	马胜哲			软件工程	2023	软233	10700			t	2026-01-14 21:14:30.551175+08	2026-01-14 21:14:30.816711+08		COLLEGE	1	\N	男	f	\N
+52	pbkdf2_sha256$1200000$SlORnyAFdgLYWzlt4OIyeC$kTVdbCzUG0/r82hkE8m1afWyTI170cpJkM35v499UL4=	\N	f	239074368			f	2026-01-14 21:14:30.818642+08	239074368	明宝智			软件工程	2023	软233	10700			t	2026-01-14 21:14:30.818889+08	2026-01-14 21:14:31.084698+08		COLLEGE	1	\N	男	f	\N
+53	pbkdf2_sha256$1200000$B5oGhhk9vWFFYc2HvMrDlo$0FvLHu7VmVQtw0fTuOsQdRnW5abALQRiPnIfx5sXjL4=	\N	f	239074369			f	2026-01-14 21:14:31.08665+08	239074369	庞维妙			软件工程	2023	软233	10700			t	2026-01-14 21:14:31.086894+08	2026-01-14 21:14:31.35215+08		COLLEGE	1	\N	女	f	\N
+54	pbkdf2_sha256$1200000$10tfGdQsTD3BN5kjnoihko$v1Dsvq5YtMRFl70msgT5VeGJPSu94Q0U5f0F8nm5pzg=	\N	f	239074370			f	2026-01-14 21:14:31.354237+08	239074370	邱奕			软件工程	2023	软233	10700			t	2026-01-14 21:14:31.354446+08	2026-01-14 21:14:31.631346+08		COLLEGE	1	\N	男	f	\N
+55	pbkdf2_sha256$1200000$GohASWfFne1KOgSL5XQyjm$ADPTc/lqPcTItYsMGFuw1ay8AYT/cZ+PFLZHScksnMo=	\N	f	239074371			f	2026-01-14 21:14:31.633056+08	239074371	任鸣辉			软件工程	2023	软233	10700			t	2026-01-14 21:14:31.63329+08	2026-01-14 21:14:31.905148+08		COLLEGE	1	\N	男	f	\N
+56	pbkdf2_sha256$1200000$aAL5PYTAHNZxk7efczwjUb$U+qp1NV2pN8il0Qic8Ni0RlKjLVBMyqHzqG6lHc0wAE=	\N	f	239074374			f	2026-01-14 21:14:31.90702+08	239074374	檀思颖			软件工程	2023	软233	10700			t	2026-01-14 21:14:31.907237+08	2026-01-14 21:14:32.176051+08		COLLEGE	1	\N	男	f	\N
+57	pbkdf2_sha256$1200000$1jW9NykiISxXKzZUUcmFbP$xFo+WXP/6+qEKtc8+8nFZWpJTru785169NhZf0lIxW8=	\N	f	239074375			f	2026-01-14 21:14:32.178052+08	239074375	王强讯			软件工程	2023	软233	10700			t	2026-01-14 21:14:32.178246+08	2026-01-14 21:14:32.447818+08		COLLEGE	1	\N	男	f	\N
+58	pbkdf2_sha256$1200000$zgYKnqRFcRPa5yToGe2lmS$tScYKaukMG0Xs43uYF/oxo3ACtzt7P235OKFdHpvxnw=	\N	f	239074376			f	2026-01-14 21:14:32.449723+08	239074376	王胜			软件工程	2023	软233	10700			t	2026-01-14 21:14:32.449952+08	2026-01-14 21:14:32.719776+08		COLLEGE	1	\N	男	f	\N
+59	pbkdf2_sha256$1200000$vMzLui3pGGsbolpT1rhL3e$je3Z+VTLnBmxbJ2EZqY2KjUP4HeBPqxADeic2Ajyjgs=	\N	f	239074377			f	2026-01-14 21:14:32.721641+08	239074377	吴博			软件工程	2023	软233	10700			t	2026-01-14 21:14:32.721824+08	2026-01-14 21:14:32.990945+08		COLLEGE	1	\N	男	f	\N
+60	pbkdf2_sha256$1200000$4lmpsVCvc62ajKGkfCotbR$9MmPFKniLs6pNkQ1xBip8b+z+fWSNRZLXomlWZlUDnU=	\N	f	239074379			f	2026-01-14 21:14:32.992701+08	239074379	夏伟豪			软件工程	2023	软233	10700			t	2026-01-14 21:14:32.992893+08	2026-01-14 21:14:33.266258+08		COLLEGE	1	\N	男	f	\N
+61	pbkdf2_sha256$1200000$wib97CGe6Q6A5yOiOeh9YC$YK4uiPulcQUkY7wLKchmQNZrHoX/l7iIMc7qvzRpW7c=	\N	f	239074380			f	2026-01-14 21:14:33.267734+08	239074380	殷天祎			软件工程	2023	软233	10700			t	2026-01-14 21:14:33.267916+08	2026-01-14 21:14:33.54114+08		COLLEGE	1	\N	女	f	\N
+62	pbkdf2_sha256$1200000$8i2FhZIkoxtux7TH3Exxqb$s5phb05/8c5SSRuwJmqgYqy2PPwVHiH8qaNTZFcmMcw=	\N	f	239074381			f	2026-01-14 21:14:33.543149+08	239074381	张春娇			软件工程	2023	软233	10700			t	2026-01-14 21:14:33.543346+08	2026-01-14 21:14:33.81535+08		COLLEGE	1	\N	女	f	\N
+63	pbkdf2_sha256$1200000$kTyIMSzzb3uI3KQvZhKz8m$2tAZx0zOnPzaM5mMiqDELR+vPP6nR0b2CG8St06+c/E=	\N	f	239074382			f	2026-01-14 21:14:33.816577+08	239074382	张美婷			软件工程	2023	软233	10700			t	2026-01-14 21:14:33.816801+08	2026-01-14 21:14:34.086615+08		COLLEGE	1	\N	女	f	\N
+64	pbkdf2_sha256$1200000$XsdjL36uZf0X7PquawnD4c$bmYJSZ02TXU18OOjlAi3W1AD3DBvBeDb+PMd1tqUNO4=	\N	f	239074383			f	2026-01-14 21:14:34.088036+08	239074383	张瑞哲			软件工程	2023	软233	10700			t	2026-01-14 21:14:34.088227+08	2026-01-14 21:14:34.356977+08		COLLEGE	1	\N	男	f	\N
+65	pbkdf2_sha256$1200000$rLtJADepivTrIQdF3nijpS$lhJo3IulaIxafxQYZ0uTMlV6ncATa7J1BMRf2eQkphU=	\N	f	239074384			f	2026-01-14 21:14:34.358786+08	239074384	訾浩然			软件工程	2023	软233	10700			t	2026-01-14 21:14:34.359078+08	2026-01-14 21:14:34.632225+08		COLLEGE	1	\N	男	f	\N
+66	pbkdf2_sha256$1200000$6m1IcKTX7mfILlmLZYhemw$xEn1NSzxRsb7WtrcIPawLsP056sCznVOdsKWgIBQZyY=	\N	f	219044546			f	2026-01-14 21:14:34.633629+08	219044546	随创			软件工程	2023	软234	10700			t	2026-01-14 21:14:34.633822+08	2026-01-14 21:14:34.908937+08		COLLEGE	1	\N	男	f	\N
+67	pbkdf2_sha256$1200000$y3wjO1cnZfJAQZWwkvZLwi$JIqEnjXsQwQNaeEqcg72UBBR4zfUIIfjJ1mzMg2SNac=	\N	f	239014171			f	2026-01-14 21:14:34.910773+08	239014171	陈保姜			软件工程	2023	软234	10700			t	2026-01-14 21:14:34.910985+08	2026-01-14 21:14:35.188898+08		COLLEGE	1	\N	男	f	\N
+68	pbkdf2_sha256$1200000$bIdyLden0aJaKZK71rV2v0$fPqfL+ZPcZXzw3Glzs+M13YN1MfHzT8eI/scV3s52nM=	\N	f	239074385			f	2026-01-14 21:14:35.190867+08	239074385	蔡浩			软件工程	2023	软234	10700			t	2026-01-14 21:14:35.191109+08	2026-01-14 21:14:35.458817+08		COLLEGE	1	\N	男	f	\N
+69	pbkdf2_sha256$1200000$w5ReSR6y87D213LiJz0s7P$hrQ1THL2boiDJbhI3xQzcTYvVgkq7VuodCBzSlWMJN0=	\N	f	239074386			f	2026-01-14 21:14:35.460232+08	239074386	常昊			软件工程	2023	软234	10700			t	2026-01-14 21:14:35.460427+08	2026-01-14 21:14:35.731862+08		COLLEGE	1	\N	男	f	\N
+70	pbkdf2_sha256$1200000$D2xHzsSGxTGGWIO4ihsXqs$4Mxk5biexNXbNjl1rgfAjcDy+8rKxoXj3MKO3ZJcFL0=	\N	f	239074387			f	2026-01-14 21:14:35.733415+08	239074387	陈同熙			软件工程	2023	软234	10700			t	2026-01-14 21:14:35.733629+08	2026-01-14 21:14:36.006663+08		COLLEGE	1	\N	男	f	\N
+71	pbkdf2_sha256$1200000$bM3imfI7Zj2lLFHMa418Rq$xcFjLAsMty438E3F57dtdG8ycZYt2tprJglAFjJhPTc=	\N	f	239074389			f	2026-01-14 21:14:36.008415+08	239074389	何弦			软件工程	2023	软234	10700			t	2026-01-14 21:14:36.008621+08	2026-01-14 21:14:36.281373+08		COLLEGE	1	\N	男	f	\N
+72	pbkdf2_sha256$1200000$3za1iMVdCDJI0KzdPF3wsl$qhtAIPYkbATb95sVbpjnoc+02xrhjq6sz93G7jljtwc=	\N	f	239074391			f	2026-01-14 21:14:36.283018+08	239074391	江龙高			软件工程	2023	软234	10700			t	2026-01-14 21:14:36.283209+08	2026-01-14 21:14:36.565165+08		COLLEGE	1	\N	男	f	\N
+73	pbkdf2_sha256$1200000$0350lTa1YRxeoZEd3RG9Kc$WLMLIDf3c5umBqvGsq55/jXDZ3HxfTANR6rqeyQm0P8=	\N	f	239074392			f	2026-01-14 21:14:36.567186+08	239074392	康福			软件工程	2023	软234	10700			t	2026-01-14 21:14:36.567441+08	2026-01-14 21:14:36.838911+08		COLLEGE	1	\N	男	f	\N
+74	pbkdf2_sha256$1200000$5QX0WrttjSWDYlJfYi7no7$EVAx4k4XPFwpyUDrEyPm/bg73qeVN+b5u07GWzU1uNQ=	\N	f	239074393			f	2026-01-14 21:14:36.840269+08	239074393	兰天成			软件工程	2023	软234	10700			t	2026-01-14 21:14:36.840464+08	2026-01-14 21:14:37.113774+08		COLLEGE	1	\N	男	f	\N
+75	pbkdf2_sha256$1200000$cAMIEoowBSNEH12ZGr35cX$fP09/tztmav6MkSTsjnnW7fxCSvuHFCiW14xE+moZfQ=	\N	f	239074394			f	2026-01-14 21:14:37.115794+08	239074394	乐如			软件工程	2023	软234	10700			t	2026-01-14 21:14:37.116072+08	2026-01-14 21:14:37.396774+08		COLLEGE	1	\N	女	f	\N
+76	pbkdf2_sha256$1200000$Ma2nOjCURCZZBsEA9qN8Ue$15loHi2ynUMzh440+7TdC3/QT3r453pr9VKChzCCK8c=	\N	f	239074395			f	2026-01-14 21:14:37.398085+08	239074395	李甫城			软件工程	2023	软234	10700			t	2026-01-14 21:14:37.398266+08	2026-01-14 21:14:37.666126+08		COLLEGE	1	\N	男	f	\N
+77	pbkdf2_sha256$1200000$pqE3hhhaNEWOQxqWqHAnuA$Lv2mDFRwAyr9APinmIm+mmd+tlEVMhLhniXVIGBHeTQ=	\N	f	239074396			f	2026-01-14 21:14:37.667874+08	239074396	李利娟			软件工程	2023	软234	10700			t	2026-01-14 21:14:37.668101+08	2026-01-14 21:14:37.936486+08		COLLEGE	1	\N	女	f	\N
+78	pbkdf2_sha256$1200000$tm9D8AsGSMtEdcolaTxiq9$tP8gd6lz55YQrJJ3B+pYg6fLS+7CB9yqL2IFpQLwuZk=	\N	f	239074397			f	2026-01-14 21:14:37.938427+08	239074397	李洋涛			软件工程	2023	软234	10700			t	2026-01-14 21:14:37.938629+08	2026-01-14 21:14:38.211338+08		COLLEGE	1	\N	男	f	\N
+79	pbkdf2_sha256$1200000$0zPhI3nHhAXGmxSVPVqlAR$KZ15LEjtNU7oPJTdq6lh8UpJOyAsk3phJihMRATJ758=	\N	f	239074398			f	2026-01-14 21:14:38.213864+08	239074398	李志远			软件工程	2023	软234	10700			t	2026-01-14 21:14:38.214195+08	2026-01-14 21:14:38.48777+08		COLLEGE	1	\N	男	f	\N
+80	pbkdf2_sha256$1200000$U79y5ROHVqgZuJNlVxsIdd$JPKCadODnsOleYBPvIpmGRl9X9elbQyo2dYyUkAy/EY=	\N	f	239074399			f	2026-01-14 21:14:38.489554+08	239074399	刘靖豪			软件工程	2023	软234	10700			t	2026-01-14 21:14:38.489727+08	2026-01-14 21:14:38.759521+08		COLLEGE	1	\N	男	f	\N
+81	pbkdf2_sha256$1200000$zTuxGfwtjpy1Frggj8lxoU$TIAiU9+451O61CoJAL9UFQ2zwbtJJkYR7HXHgHDt8FY=	\N	f	239074401			f	2026-01-14 21:14:38.761853+08	239074401	刘玉叶			软件工程	2023	软234	10700			t	2026-01-14 21:14:38.762119+08	2026-01-14 21:14:39.029862+08		COLLEGE	1	\N	女	f	\N
+82	pbkdf2_sha256$1200000$nF8kUrAXzZWf5pnbbEtl9U$nfqgKLu/nX6hgfW09z8dIfg+1upgEksOH6p0bBzL0sA=	\N	f	239074403			f	2026-01-14 21:14:39.031796+08	239074403	秦文宇			软件工程	2023	软234	10700			t	2026-01-14 21:14:39.032004+08	2026-01-14 21:14:39.300207+08		COLLEGE	1	\N	男	f	\N
+83	pbkdf2_sha256$1200000$nMzmnJGFn0l28vWPq9OaC2$oD6ZEF8Exdw7lRUEreFoEH9JqWx6rU2MwtFpW1vb9A4=	\N	f	239074404			f	2026-01-14 21:14:39.302298+08	239074404	任婷菲			软件工程	2023	软234	10700			t	2026-01-14 21:14:39.302605+08	2026-01-14 21:14:39.575691+08		COLLEGE	1	\N	女	f	\N
+84	pbkdf2_sha256$1200000$SM6dtbkU1nG1y0eBKEsvoW$X4Johm6pwhWaozmWcpB50cxQUH5r6MStIJo7EGL7oUk=	\N	f	239074405			f	2026-01-14 21:14:39.577845+08	239074405	孙合镇			软件工程	2023	软234	10700			t	2026-01-14 21:14:39.578082+08	2026-01-14 21:14:39.853101+08		COLLEGE	1	\N	男	f	\N
+85	pbkdf2_sha256$1200000$fS5qqPXdaqMoFuzyFDIrL0$86buGOODqy7suC9uJelPLV7N430VF/TkKFENcL7Vmck=	\N	f	239074407			f	2026-01-14 21:14:39.855259+08	239074407	汪晨			软件工程	2023	软234	10700			t	2026-01-14 21:14:39.855512+08	2026-01-14 21:14:40.126819+08		COLLEGE	1	\N	男	f	\N
+86	pbkdf2_sha256$1200000$eumMz4nXZZfcmQdXQrRYtJ$cTRhokYgYxPX3jTxB5dKe6YFdTXgxj+rIUZHT4DrLkQ=	\N	f	239074408			f	2026-01-14 21:14:40.128389+08	239074408	王少强			软件工程	2023	软234	10700			t	2026-01-14 21:14:40.128596+08	2026-01-14 21:14:40.398659+08		COLLEGE	1	\N	男	f	\N
+87	pbkdf2_sha256$1200000$4ABdAhJMsogEvqC9gWp1ZL$vrTlC8H7IRDCTl82E9mIVqFELf+bdkOyNthWGGqwsvY=	\N	f	239074409			f	2026-01-14 21:14:40.400449+08	239074409	王乙安			软件工程	2023	软234	10700			t	2026-01-14 21:14:40.400681+08	2026-01-14 21:14:40.668877+08		COLLEGE	1	\N	男	f	\N
+88	pbkdf2_sha256$1200000$ayqZmCufueG7E0IMV9b3M0$yMhvNxPZpdG1qFGtk48y7/ljykC0ji7tHpGb+IQjQ8I=	\N	f	239074410			f	2026-01-14 21:14:40.670939+08	239074410	韦旭			软件工程	2023	软234	10700			t	2026-01-14 21:14:40.671186+08	2026-01-14 21:14:40.941382+08		COLLEGE	1	\N	男	f	\N
+89	pbkdf2_sha256$1200000$FDagBkfjswS6DlNGDEMQXo$gK2cNy3VNPF+SsPWfq7izs7fG3LB3gdad4Jallqbsqc=	\N	f	239074411			f	2026-01-14 21:14:40.943046+08	239074411	吴宏胜			软件工程	2023	软234	10700			t	2026-01-14 21:14:40.943264+08	2026-01-14 21:14:41.211192+08		COLLEGE	1	\N	男	f	\N
+90	pbkdf2_sha256$1200000$kBrESJkAkwhCwh5OwmZ14L$P/+BTNjm/j/rd2hLnyvL69Auwflj3FGKzoEQLOVUE+A=	\N	f	239074412			f	2026-01-14 21:14:41.213073+08	239074412	吴逍睿			软件工程	2023	软234	10700			t	2026-01-14 21:14:41.21328+08	2026-01-14 21:14:41.483699+08		COLLEGE	1	\N	女	f	\N
+91	pbkdf2_sha256$1200000$ko2MJBpNpQFiIccZc8PIla$yw+GLS2EwiWeKTEZOcxhQSuWRvYxXv2c7raGxrs8bmc=	\N	f	239074413			f	2026-01-14 21:14:41.485755+08	239074413	吴运辰			软件工程	2023	软234	10700			t	2026-01-14 21:14:41.485999+08	2026-01-14 21:14:41.754644+08		COLLEGE	1	\N	男	f	\N
+92	pbkdf2_sha256$1200000$pOYZGY9yTaj5T7laQYexPY$G1JgZpPD+8nSu+fxRZA/hoyLc18eQGO9Gv5Fv+R56Gg=	\N	f	239074414			f	2026-01-14 21:14:41.75627+08	239074414	许欣怡			软件工程	2023	软234	10700			t	2026-01-14 21:14:41.756499+08	2026-01-14 21:14:42.023989+08		COLLEGE	1	\N	女	f	\N
+93	pbkdf2_sha256$1200000$tuJTe7BNoU6572ADfF43pY$m6yo5goQr/RuBOtKLxcjxcgEYKIDQt2/hPvB/LnKqrg=	\N	f	239074415			f	2026-01-14 21:14:42.025736+08	239074415	杨磊			软件工程	2023	软234	10700			t	2026-01-14 21:14:42.025972+08	2026-01-14 21:14:42.299461+08		COLLEGE	1	\N	男	f	\N
+94	pbkdf2_sha256$1200000$ZGBtTqiC4R0D4Imlk4H9Th$v9tWfy0h9hw1TfMrL25QAzfldjhHDJrW3cyCEP/dNQ4=	\N	f	239074416			f	2026-01-14 21:14:42.30119+08	239074416	杨瑞			软件工程	2023	软234	10700			t	2026-01-14 21:14:42.30143+08	2026-01-14 21:14:42.624927+08		COLLEGE	1	\N	男	f	\N
+95	pbkdf2_sha256$1200000$eXY53WvJ2SKn0kKppxu5hB$HrX0pqYTChkf0n3qi5fVZtsUngLEgMxCGuT0bprQJAY=	\N	f	239074417			f	2026-01-14 21:14:42.626172+08	239074417	张恩涛			软件工程	2023	软234	10700			t	2026-01-14 21:14:42.626357+08	2026-01-14 21:14:42.905457+08		COLLEGE	1	\N	男	f	\N
+96	pbkdf2_sha256$1200000$0dZkyo5rCmHeS7q7XE8f9t$FibS7VjdRPHhLyHW1d9KTVubmjjXFhzdLOcSrUjDtw8=	\N	f	239074418			f	2026-01-14 21:14:42.907539+08	239074418	赵浩宇			软件工程	2023	软234	10700			t	2026-01-14 21:14:42.90781+08	2026-01-14 21:14:43.180938+08		COLLEGE	1	\N	男	f	\N
+97	pbkdf2_sha256$1200000$lm4JhNbaFWuD98vS0U4Ye8$OInd/6v8qktEg8lIQUcCdNgt52FzFZB7+bvpftXrQZY=	\N	f	239074419			f	2026-01-14 21:14:43.1827+08	239074419	赵英博			软件工程	2023	软234	10700			t	2026-01-14 21:14:43.182877+08	2026-01-14 21:14:43.45476+08		COLLEGE	1	\N	男	f	\N
+98	pbkdf2_sha256$1200000$ghigMfnGIFf5AzCUJIaU4E$ZAx+h3oSN3q0uBKgAx/0BtY5QQyvTST4OT5QURnD3bo=	\N	f	239074420			f	2026-01-14 21:14:43.456298+08	239074420	周全			软件工程	2023	软234	10700			t	2026-01-14 21:14:43.456474+08	2026-01-14 21:14:43.726357+08		COLLEGE	1	\N	男	f	\N
+99	pbkdf2_sha256$1200000$iiiIEPLbAYWkLRyIRvf2ye$BcHxId/LAeqE+cyuS1C7jx2kFzroVNGchiWsbNkEAas=	\N	f	050309			f	2026-01-14 21:19:41.293596+08	050309	陶陶						10700	10700		t	2026-01-14 21:19:41.293921+08	2026-01-14 21:19:41.57281+08	教工	COLLEGE	2	\N		f	\N
+100	pbkdf2_sha256$1200000$ena2vKPl4f3bFQBJVY6hpb$PS1BbJETpzHPN1XwPaT4BWsuaPASrajOlNrTO+9NnT0=	\N	f	050310			f	2026-01-14 21:19:41.580184+08	050310	黄瑾娉						10700	10700		t	2026-01-14 21:19:41.580407+08	2026-01-14 21:19:41.855397+08	教工	COLLEGE	2	\N		f	\N
+101	pbkdf2_sha256$1200000$GbJRcb3gKhzDgBzFu7X8HO$YqgcxZo2CY7Q0XH7n8rVM2Zh5kzysqCzOZdwAjVJ6po=	\N	f	050311			f	2026-01-14 21:19:41.857216+08	050311	陆勤						10700	10700		t	2026-01-14 21:19:41.857449+08	2026-01-14 21:19:42.128662+08	教工	COLLEGE	2	\N		f	\N
+102	pbkdf2_sha256$1200000$1sonBtQU5BrK7USm1jBO0e$mKr49wD0DtS7mOhBJpIIRaFCJ8iVCCJFHKWDkSK2dQ8=	\N	f	050312			f	2026-01-14 21:19:42.130496+08	050312	骆力						10700	10700		t	2026-01-14 21:19:42.130742+08	2026-01-14 21:19:42.403354+08	教工	COLLEGE	2	\N		f	\N
+103	pbkdf2_sha256$1200000$xjqnhZlmIhWyqo6TgKlB91$oBEXWRRgkgzeV2HI4YmN7pWjedacVJEA4u2X7cKAS4w=	\N	f	050313			f	2026-01-14 21:19:42.405423+08	050313	吴光龙						10700	10700		t	2026-01-14 21:19:42.405652+08	2026-01-14 21:19:42.674578+08	教工	COLLEGE	2	\N		f	\N
+104	pbkdf2_sha256$1200000$UWPVgn2IkuuMlF6NbdJj8p$YAC2hv8kuzMCGCMVOxU9WRaAoLLpWWCg8AYX6nM2qGE=	\N	f	050315			f	2026-01-14 21:19:42.676687+08	050315	顾斌						10700	10700		t	2026-01-14 21:19:42.677019+08	2026-01-14 21:19:42.949522+08	教工	COLLEGE	2	\N		f	\N
+105	pbkdf2_sha256$1200000$u4nuoUIgkcHe81zNvHzHJQ$C4yymIoK5wXWBajD+pVGBFbSN/7exdjdEGcIOTMM97s=	\N	f	050316			f	2026-01-14 21:19:42.951359+08	050316	陈小平						10700	10700		t	2026-01-14 21:19:42.951583+08	2026-01-14 21:19:43.226228+08	教工	COLLEGE	2	\N		f	\N
+106	pbkdf2_sha256$1200000$u1Xs3Ut55wFJti9zNtbNF5$fpWuNG6HuAWFOT9PhkHI1yZHIpOn5x1YLKvVnbpoamY=	\N	f	050324			f	2026-01-14 21:19:43.22792+08	050324	许精明						10700	10700		t	2026-01-14 21:19:43.228144+08	2026-01-14 21:19:43.50406+08	教工	COLLEGE	2	\N		f	\N
+107	pbkdf2_sha256$1200000$AI2Cc3DNdOyViJPoeOfrY5$Ou19ci79DvqbZ6HHwsTiUOhZ+Bjk9QjFzocsNPuNNhA=	\N	f	050326			f	2026-01-14 21:19:43.506111+08	050326	徐国雄						10700	10700		t	2026-01-14 21:19:43.506319+08	2026-01-14 21:19:43.778264+08	教工	COLLEGE	2	\N		f	\N
+109	pbkdf2_sha256$1200000$qaZSmvKnvqHhIUlxnrYw5V$U2gklG2p9kuSOR1yxQ0KsPBCWX0M8P5Xbgpgou2yoyo=	\N	f	050328			f	2026-01-14 21:19:44.065614+08	050328	李金厚						10700	10700		t	2026-01-14 21:19:44.065991+08	2026-01-14 21:19:44.344376+08	教工	COLLEGE	2	\N		f	\N
+110	pbkdf2_sha256$1200000$Zh3BiGkUUDl4Bx4CYTo91D$tZ8sLWl+W/0uPw9WOxzOrHz0ZapStr0EOmpD106kqsU=	\N	f	050330			f	2026-01-14 21:19:44.346223+08	050330	程泽凯						10700	10700		t	2026-01-14 21:19:44.346494+08	2026-01-14 21:19:44.612818+08	教工	COLLEGE	2	\N		f	\N
+111	pbkdf2_sha256$1200000$haX75PRUp5U2B5bQIXQlHp$/IQLZ70ch/AD0FABommHkLOmGKouK1EybDq00sYzvXQ=	\N	f	050331			f	2026-01-14 21:19:44.61422+08	050331	汤亚玲						10700	10700		t	2026-01-14 21:19:44.614396+08	2026-01-14 21:19:44.880478+08	教工	COLLEGE	2	\N		f	\N
+112	pbkdf2_sha256$1200000$TuUMEamp9WjCEyYTCvOoT8$xZYtak86TYgW9Yx9ndVisckSAL/bLIo91egSg16ktHs=	\N	f	050333			f	2026-01-14 21:19:44.882489+08	050333	王森玉						10700	10700		t	2026-01-14 21:19:44.882726+08	2026-01-14 21:19:45.148959+08	教工	COLLEGE	2	\N		f	\N
+113	pbkdf2_sha256$1200000$2Q3V8l5O15GbqqHbS5W6Fo$DP7L6gEq52kTn6J+Tw13g3W3vhYH+8UgITkNCM+Ev8E=	\N	f	050334			f	2026-01-14 21:19:45.15065+08	050334	戴小平						10700	10700		t	2026-01-14 21:19:45.150842+08	2026-01-14 21:19:45.416275+08	教工	COLLEGE	2	\N		f	\N
+114	pbkdf2_sha256$1200000$UOh1iueYvHNxA9IpMChidB$JCkN0c29mIvvBiaXuG8oiOBRLAulURI2pKi2Pj/jSbc=	\N	f	050335			f	2026-01-14 21:19:45.417721+08	050335	肖维民						10700	10700		t	2026-01-14 21:19:45.417896+08	2026-01-14 21:19:45.684206+08	教工	COLLEGE	2	\N		f	\N
+115	pbkdf2_sha256$1200000$wnOZCKtrZ8x2Rz0sqQV7hX$UNv7CPGm0qm/jnM3kd4HkkM48OBzrSwBvxAwQphgukU=	\N	f	050343			f	2026-01-14 21:19:45.685388+08	050343	陈莉						10700	10700		t	2026-01-14 21:19:45.685568+08	2026-01-14 21:19:45.951215+08	教工	COLLEGE	2	\N		f	\N
+116	pbkdf2_sha256$1200000$0ulVhOuWaNrUIrpH51b1AT$8HlfRhlgokKZcKNN+yfmn5kq2P5DFl5nBE3HrLcHOPM=	\N	f	050392			f	2026-01-14 21:19:45.95238+08	050392	郑啸						10700	10700		t	2026-01-14 21:19:45.952559+08	2026-01-14 21:19:46.222402+08	教工	COLLEGE	2	\N		f	\N
+117	pbkdf2_sha256$1200000$3VB2Mz33hGdL4PreW7OSk4$rRYcHsu5f+aH4lfCgbCL873qkw5RUdhvaXpfguC302s=	\N	f	050305			f	2026-01-14 21:19:46.224234+08	050305	吴曼						10700	10700		t	2026-01-14 21:19:46.224534+08	2026-01-14 21:19:46.49916+08	教工	COLLEGE	2	\N		f	\N
+108	pbkdf2_sha256$1200000$6GygNsFRfbBisIeR9pDG4h$cffnITKBdi9nC2EXbB/na4wH8EhMA0NmD+tsXeq4Q4c=	\N	f	050327			f	2026-01-14 21:19:43.780138+08	050327	许文方						10700	10700		t	2026-01-14 21:19:43.780386+08	2026-01-14 21:19:44.06299+08	教工	COLLEGE	2	\N		f	\N
+118	pbkdf2_sha256$1200000$DJrVc1bPYqL8CqbBIAGSen$5lSkSwcbPyDnFvkBZX1yZ6RT1OXYN5MZAiOe8Emoi0s=	\N	f	050236			f	2026-01-14 21:19:46.500782+08	050236	汤志贵						10700	10700		t	2026-01-14 21:19:46.500961+08	2026-01-14 21:19:46.772037+08	教工	COLLEGE	2	\N		f	\N
+119	pbkdf2_sha256$1200000$F1XqSvMFbKx1H1nFbMEMv0$NOqi6SdOCgPsVccrwARPZ9qrsL2P05ZwASEXXN+22b0=	\N	f	050298			f	2026-01-14 21:19:46.773806+08	050298	段晓军						10700	10700		t	2026-01-14 21:19:46.774125+08	2026-01-14 21:19:47.052942+08	教工	COLLEGE	2	\N		f	\N
+120	pbkdf2_sha256$1200000$pXuGhBCKjJTcfCHAftNk4R$74K0iTCa1uf+kC9dNRO2/HdZd9Jex9cufgToSQP+O8g=	\N	f	050319			f	2026-01-14 21:19:47.054142+08	050319	叶红						10700	10700		t	2026-01-14 21:19:47.054319+08	2026-01-14 21:19:47.327661+08	教工	COLLEGE	2	\N		f	\N
+121	pbkdf2_sha256$1200000$FPNG5b7L54uQfXsu2NiFBv$W20mNuyzVR7V555MfddqV9Xq0xZvHIpIMiUbAwpQ8HQ=	\N	f	050321			f	2026-01-14 21:19:47.329316+08	050321	周兵						10700	10700		t	2026-01-14 21:19:47.32949+08	2026-01-14 21:19:47.603084+08	教工	COLLEGE	2	\N		f	\N
+122	pbkdf2_sha256$1200000$eUEC34xTRAkBiAKGWPLQ61$lJoQQJXQzPuGdFjcbQWv5bmuFg2iAZSEYvMt6adk6zU=	\N	f	050322			f	2026-01-14 21:19:47.604672+08	050322	刘宏申						10700	10700		t	2026-01-14 21:19:47.604853+08	2026-01-14 21:19:47.874598+08	教工	COLLEGE	2	\N		f	\N
+123	pbkdf2_sha256$1200000$QO3flDe3JgCk7RXDQZlSB5$yMCvCuv08/R9kTeTRA6VPOSLRT3/sOUTXC5ZW+8gNDs=	\N	f	050734			f	2026-01-14 21:19:47.875981+08	050734	方木云						10700	10700		t	2026-01-14 21:19:47.876158+08	2026-01-14 21:19:48.148165+08	教工	COLLEGE	2	\N		f	\N
+124	pbkdf2_sha256$1200000$q0wWWH2nm67hQLE0Ak31QV$wYfwNsE8PcoKjp9E6AEg5ZpKE8hNQObzY0zdUsLuMUo=	\N	f	051073			f	2026-01-14 21:19:48.149459+08	051073	王危						10700	10700		t	2026-01-14 21:19:48.149631+08	2026-01-14 21:19:48.422773+08	教工	COLLEGE	2	\N		f	\N
+125	pbkdf2_sha256$1200000$SmnYFa11bYg33Z0BsYYAKH$tw4HyDCfOeEuhW/Zg/+FK5q1tr66q7dLh1BNRNs+9gw=	\N	f	051074			f	2026-01-14 21:19:48.424264+08	051074	刘凤声						10700	10700		t	2026-01-14 21:19:48.424583+08	2026-01-14 21:19:48.701593+08	教工	COLLEGE	2	\N		f	\N
+126	pbkdf2_sha256$1200000$027sP02wc9GtljRkPQ5R3A$hv1SO4KeI4JehqiLZGbW2fchfiQUqB8m+o6WYKWdPZI=	\N	f	051156			f	2026-01-14 21:19:48.703067+08	051156	汪小燕						10700	10700		t	2026-01-14 21:19:48.703255+08	2026-01-14 21:19:48.970001+08	教工	COLLEGE	2	\N		f	\N
+127	pbkdf2_sha256$1200000$zLc5JStn0tZ57c0XlRziBI$Ibv0V/1uijLmp/mX9QOr/pLgvwF6Kr6rLxM9tixQaIM=	\N	f	051157			f	2026-01-14 21:19:48.971457+08	051157	苏小虎						10700	10700		t	2026-01-14 21:19:48.971635+08	2026-01-14 21:19:49.238483+08	教工	COLLEGE	2	\N		f	\N
+128	pbkdf2_sha256$1200000$0rc1x3jrhwahXnASL4WrIb$R4wDr7gCqcC/9lYsnVQyOi0252fXI33ObRjwGRnbLmU=	\N	f	051160			f	2026-01-14 21:19:49.239979+08	051160	杨思春						10700	10700		t	2026-01-14 21:19:49.240161+08	2026-01-14 21:19:49.506021+08	教工	COLLEGE	2	\N		f	\N
+129	pbkdf2_sha256$1200000$5MGiFKNqB5T94PF0pNj6G0$r/XgeDbQ932kiLNANT+PykWjqA0jRS49ZNio8/cbcrs=	\N	f	051161			f	2026-01-14 21:19:49.507402+08	051161	黄洪超						10700	10700		t	2026-01-14 21:19:49.507587+08	2026-01-14 21:19:49.772883+08	教工	COLLEGE	2	\N		f	\N
+130	pbkdf2_sha256$1200000$DwYYYI5qHJ8S6idZO0ojRK$z1s1sztLxuBSxhtHiDLpVqankveF5JCTr/XCfUXMrAw=	\N	f	051163			f	2026-01-14 21:19:49.77438+08	051163	许华利						10700	10700		t	2026-01-14 21:19:49.774565+08	2026-01-14 21:19:50.039355+08	教工	COLLEGE	2	\N		f	\N
+131	pbkdf2_sha256$1200000$RNb39Rziafb59cqp1IHbTu$d3xs+EASFDs6NOeMfeL+tK2WJxK5MYn758hQPe2PL0I=	\N	f	051165			f	2026-01-14 21:19:50.040898+08	051165	陈学进						10700	10700		t	2026-01-14 21:19:50.041064+08	2026-01-14 21:19:50.306734+08	教工	COLLEGE	2	\N		f	\N
+132	pbkdf2_sha256$1200000$ZWcsSUArtnukFmdJcQXQZr$9Ufw9jrq25Z/IIJD7FvvBHKsLZVFlmFkb3D0snLZR64=	\N	f	051167			f	2026-01-14 21:19:50.307883+08	051167	夏敏						10700	10700		t	2026-01-14 21:19:50.308048+08	2026-01-14 21:19:50.573306+08	教工	COLLEGE	2	\N		f	\N
+134	pbkdf2_sha256$1200000$mKL5arLIJQxlUWompZwbwq$dllj5rsUAgcMZsuKlkbF0/lKGl96PGFJpg2VrTvxqw8=	\N	f	051313			f	2026-01-14 21:19:50.853426+08	051313	边琼芳						10700	10700		t	2026-01-14 21:19:50.8536+08	2026-01-14 21:19:51.127931+08	教工	COLLEGE	2	\N		f	\N
+135	pbkdf2_sha256$1200000$Gbe2bXh3uiyR1vzjD1WLrA$h8WzAd2oHyDVcjgc9syP+Tb0pssoYbs04VBSPxHz5fo=	\N	f	052226			f	2026-01-14 21:19:51.129655+08	052226	李晓岚						10700	10700		t	2026-01-14 21:19:51.129844+08	2026-01-14 21:19:51.444547+08	教工	COLLEGE	2	\N		f	\N
+136	pbkdf2_sha256$1200000$ZMSU5qm7JMNSZR5Q0oTHjB$5L2zQqzKcz80DYpLy2F0JC7JIpHDLbpA0ry0po5hwQo=	\N	f	052239			f	2026-01-14 21:19:51.446158+08	052239	纪平						10700	10700		t	2026-01-14 21:19:51.446358+08	2026-01-14 21:19:51.717905+08	教工	COLLEGE	2	\N		f	\N
+137	pbkdf2_sha256$1200000$aYunHguDYhKcQFFduipsA9$nRdpPn6mevhIGFMCXuT1IHSwbYFiyqeM9s952rEhG8I=	\N	f	052310			f	2026-01-14 21:19:51.719922+08	052310	周建钦						10700	10700		t	2026-01-14 21:19:51.720162+08	2026-01-14 21:19:51.992055+08	教工	COLLEGE	2	\N		f	\N
+133	pbkdf2_sha256$1200000$rOdEPHhgSnQcajY4igYA04$V7iZKnUoOB8+b+UnKMSUbenRGFXoWBQ9bDaJGsJz23E=	\N	f	051285			f	2026-01-14 21:19:50.574798+08	051285	刘辉						10700	10700		t	2026-01-14 21:19:50.574967+08	2026-01-14 22:15:00.199747+08	教工	COLLEGE	4	109		f	\N
+138	pbkdf2_sha256$1200000$SFgCS3NcI6Nue6WV5lcgiT$7KXuv8j2WDzb6VsclDSl39HIAgUeW6x6RZISlZqSXYM=	\N	f	052328			f	2026-01-14 21:19:51.993424+08	052328	阮越						10700	10700		t	2026-01-14 21:19:51.993595+08	2026-01-14 21:19:52.265374+08	教工	COLLEGE	2	\N		f	\N
+139	pbkdf2_sha256$1200000$7VP7fiOzmjurLPrAr9q2pK$D3uvul4sOKqCaGawksOXg9QLX/Bo78+QBwKqGUZsruU=	\N	f	052429			f	2026-01-14 21:19:52.267464+08	052429	胡增涛						10700	10700		t	2026-01-14 21:19:52.267656+08	2026-01-14 21:19:52.539963+08	教工	COLLEGE	2	\N		f	\N
+140	pbkdf2_sha256$1200000$xxcwPlnq245yfNzKqtwuhX$IObQ16eOWbTWnZcc8BCQCAaNxYA5LlRH7P/FCQV3mUQ=	\N	f	052458			f	2026-01-14 21:19:52.541109+08	052458	纪滨						10700	10700		t	2026-01-14 21:19:52.54127+08	2026-01-14 21:19:52.812638+08	教工	COLLEGE	2	\N		f	\N
+141	pbkdf2_sha256$1200000$Uix9zVaMY9BXj2eNn8Ayzm$iGh9+mwS2izWM/bU8G5O7jPF1Dr/Al7yntWy2C0+psI=	\N	f	052486			f	2026-01-14 21:19:52.813884+08	052486	赵帼英						10700	10700		t	2026-01-14 21:19:52.814051+08	2026-01-14 21:19:53.083824+08	教工	COLLEGE	2	\N		f	\N
+142	pbkdf2_sha256$1200000$5RUHjbNAWqYLoKDvv7KvcV$m8F2wj+V2BCTdsh3B2VYouLMHVUVa4GUrZeVf/VNx5A=	\N	f	052488			f	2026-01-14 21:19:53.085293+08	052488	李伟						10700	10700		t	2026-01-14 21:19:53.085461+08	2026-01-14 21:19:53.353871+08	教工	COLLEGE	2	\N		f	\N
+143	pbkdf2_sha256$1200000$vsZA6W8miMGwUF57vIAANb$Qe5lLbGrO0PPyR/yrH7orAX06050FiNWigY09MjziOs=	\N	f	052502			f	2026-01-14 21:19:53.355509+08	052502	陈业斌						10700	10700		t	2026-01-14 21:19:53.355795+08	2026-01-14 21:19:53.62507+08	教工	COLLEGE	2	\N		f	\N
+144	pbkdf2_sha256$1200000$3ux5qYPKk4ztlyhtlxd5Z4$jGww0yRrn5EWyW4+SMGbFl2mzYVpeMkJ1CEyqAF6VuY=	\N	f	052678			f	2026-01-14 21:19:53.626339+08	052678	储岳中						10700	10700		t	2026-01-14 21:19:53.626509+08	2026-01-14 21:19:53.89684+08	教工	COLLEGE	2	\N		f	\N
+146	pbkdf2_sha256$1200000$BwDo60lp39wQUIY5Y1cIXg$6mshYvTw+02N0LqldwBaGtE6CZAP3s0jJRGBBq5aZgI=	\N	f	052746			f	2026-01-14 21:19:54.173511+08	052746	柯栋梁						10700	10700		t	2026-01-14 21:19:54.173696+08	2026-01-14 21:19:54.458531+08	教工	COLLEGE	2	\N		f	\N
+147	pbkdf2_sha256$1200000$oPKLjNYoX7djZqV6bwEqNA$7zW0g21PYY1qexBlZWQbVhn61vOG4SGn8H0RLHG8jrw=	\N	f	052750			f	2026-01-14 21:19:54.460953+08	052750	周义莲						10700	10700		t	2026-01-14 21:19:54.461332+08	2026-01-14 21:19:54.748382+08	教工	COLLEGE	2	\N		f	\N
+148	pbkdf2_sha256$1200000$jcIGQbbTP1TgdbeAaLk9Fn$I6Tm28wNqmqtOlkTiy5rthT6lonpmceKFKGfEx4xi3E=	\N	f	052762			f	2026-01-14 21:19:54.74975+08	052762	郝静						10700	10700		t	2026-01-14 21:19:54.749954+08	2026-01-14 21:19:55.020619+08	教工	COLLEGE	2	\N		f	\N
+149	pbkdf2_sha256$1200000$ngLeAEQL3QwL3zxWdlbVWy$2mitytUo4vwSS40Cn5t8V/TswCSVRJrSrbCVetYceC8=	\N	f	052771			f	2026-01-14 21:19:55.021867+08	052771	张学锋						10700	10700		t	2026-01-14 21:19:55.022033+08	2026-01-14 21:19:55.291159+08	教工	COLLEGE	2	\N		f	\N
+150	pbkdf2_sha256$1200000$eMUpG38t4MaJozF7vkQfPz$i47UDw65zK4EAlGER6MaFaOhs9L4nOM5gdrXrmYahHc=	\N	f	052798			f	2026-01-14 21:19:55.293011+08	052798	王喜凤						10700	10700		t	2026-01-14 21:19:55.293259+08	2026-01-14 21:19:55.565005+08	教工	COLLEGE	2	\N		f	\N
+151	pbkdf2_sha256$1200000$KoUoBPN81aU6oBfrg1bOmE$mlGqdYYLa6TckkebsEmxYh877OzHHb2isb3DWIQIaPM=	\N	f	052804			f	2026-01-14 21:19:55.566675+08	052804	毛绪纹						10700	10700		t	2026-01-14 21:19:55.56685+08	2026-01-14 21:19:55.839607+08	教工	COLLEGE	2	\N		f	\N
+153	pbkdf2_sha256$1200000$8xuzND0uUpruDbBk4PeFjA$pUlSImxK0kKEWbBAJ/dXD4k/+py32wuAt2ePnfLAPMg=	\N	f	052824			f	2026-01-14 21:19:56.114991+08	052824	郭玉华						10700	10700		t	2026-01-14 21:19:56.115166+08	2026-01-14 21:19:56.385551+08	教工	COLLEGE	2	\N		f	\N
+154	pbkdf2_sha256$1200000$YZR59V5hQJLBgaLS33bVj0$6BsUzTKok8SB2Rz9V1TD8HldhWXhdw2aUEiUmfDCtKU=	\N	f	052831			f	2026-01-14 21:19:56.386972+08	052831	高云全						10700	10700		t	2026-01-14 21:19:56.387149+08	2026-01-14 21:19:56.65827+08	教工	COLLEGE	2	\N		f	\N
+155	pbkdf2_sha256$1200000$TzBghPiMiT6hp6ZSWnUe7J$zY/pR7OGUE4nZXbuYAHFlko2RWE7VFIJ/DK8TLYOGFc=	\N	f	052841			f	2026-01-14 21:19:56.659628+08	052841	王广正						10700	10700		t	2026-01-14 21:19:56.659926+08	2026-01-14 21:19:56.950849+08	教工	COLLEGE	2	\N		f	\N
+156	pbkdf2_sha256$1200000$B5f3yTbqNatSOi7uztuFa0$vCwxYTq6uP7N5wTLj5wcVwB90TEAQqBc3KuH0A5tSTs=	\N	f	052845			f	2026-01-14 21:19:56.95247+08	052845	刘卫红						10700	10700		t	2026-01-14 21:19:56.952663+08	2026-01-14 21:19:57.225415+08	教工	COLLEGE	2	\N		f	\N
+157	pbkdf2_sha256$1200000$RDk6RrvL5P9siMNBfmqCYI$x8oAnaliGqVSkMGRoi93/xvzb8ncTrXseCoUFXW7y+g=	\N	f	052846			f	2026-01-14 21:19:57.226874+08	052846	王朋飞						10700	10700		t	2026-01-14 21:19:57.227057+08	2026-01-14 21:19:57.493949+08	教工	COLLEGE	2	\N		f	\N
+145	pbkdf2_sha256$1200000$WvTRXxY2lhiMSbtq52iR6F$+8vBgthtNWIGS9NH7uQ63aeeqkNOVsap899SLrpYzqk=	\N	f	052718			f	2026-01-14 21:19:53.89866+08	052718	邰伟鹏						10700	10700		t	2026-01-14 21:19:53.898943+08	2026-01-14 22:25:40.218291+08	教工	COLLEGE	6	8		f	\N
+152	pbkdf2_sha256$1200000$u4bMD4NH2AGnAgDkNTsZIo$5bBe28fPpMoYJqVcYUwyohU8P6djPoKwnKRU0LinS5g=	\N	f	052812			f	2026-01-14 21:19:55.841182+08	052812	周建平						10700	教工		t	2026-01-14 21:19:55.841401+08	2026-01-14 21:19:56.113295+08	教工	COLLEGE	2	\N		f	\N
+158	pbkdf2_sha256$1200000$218ga49SGDOL78v8PYNIdd$NM9PKi9jKOyE42OpMuEzwMu7rTTguSVaYBi8G2ft48c=	\N	f	052904			f	2026-01-14 21:19:57.495782+08	052904	李乔						10700	10700		t	2026-01-14 21:19:57.496062+08	2026-01-14 21:19:57.761295+08	教工	COLLEGE	2	\N		f	\N
+159	pbkdf2_sha256$1200000$WbjeUOOa3fUHZm3pMV03Q8$AVUjOaGJzHi5WxRb9vDTvaDL9B0e52irPDwSnUKmAmE=	\N	f	052910			f	2026-01-14 21:19:57.762584+08	052910	孙国华						10700	10700		t	2026-01-14 21:19:57.762764+08	2026-01-14 21:19:58.028235+08	教工	COLLEGE	2	\N		f	\N
+160	pbkdf2_sha256$1200000$3xDtC6NxVbOhsxbgj1ZMSr$lW5OTg76okM/rBiCCtOYPDoVnbez3ugqE4oKkr/9AC8=	\N	f	053037			f	2026-01-14 21:19:58.029502+08	053037	姜太平						10700	10700		t	2026-01-14 21:19:58.029711+08	2026-01-14 21:19:58.29538+08	教工	COLLEGE	2	\N		f	\N
+161	pbkdf2_sha256$1200000$wGEy1f6QyKh5pIqa7UieOw$G3An2Z028XAxqiwkG94znpgIdXAD3OdKrez6S0wQ7F4=	\N	f	053119			f	2026-01-14 21:19:58.297272+08	053119	王功成						10700	10700		t	2026-01-14 21:19:58.297567+08	2026-01-14 21:19:58.563967+08	教工	COLLEGE	2	\N		f	\N
+162	pbkdf2_sha256$1200000$OmDkiPMwswryGThBzAiR6F$0E0v+JnhjCAQ9AV6P9rl82QI3l0QdSMWzWmKDt1MZUs=	\N	f	053179			f	2026-01-14 21:19:58.565294+08	053179	李沁						10700	10700		t	2026-01-14 21:19:58.565483+08	2026-01-14 21:19:58.831759+08	教工	COLLEGE	2	\N		f	\N
+163	pbkdf2_sha256$1200000$Ek3uK104ADxlFjkNmlDj2j$wFJW6gXAteM74X8A1AXDjnFKoE5MJ23ZyoIhOT1ZZEU=	\N	f	053209			f	2026-01-14 21:19:58.833024+08	053209	张慧						10700	10700		t	2026-01-14 21:19:58.833192+08	2026-01-14 21:19:59.099161+08	教工	COLLEGE	2	\N		f	\N
+170	pbkdf2_sha256$1200000$2n7C7IxT0AufxmyiwDfWc3$gXjrQnfKCO2dSmcY747T1Cpht3AntVd7Z1a1k2JaTeo=	\N	f	20140070			f	2026-01-14 21:20:00.750687+08	20140070	刘恒						10700	10700		t	2026-01-14 21:20:00.750889+08	2026-01-14 21:20:01.018644+08	教工	COLLEGE	2	\N		t	133
+167	pbkdf2_sha256$1200000$2E6eGUCIpHUI3vfERHtnga$Zv2My3GPy1bmFrPmpdMFGyBbdzz9HWyAcSLPntCxAvU=	\N	f	053486			f	2026-01-14 21:19:59.904339+08	053486	卫琳娜						10700	10700		t	2026-01-14 21:19:59.904574+08	2026-01-14 21:20:00.202091+08	教工	COLLEGE	2	\N		f	\N
+164	pbkdf2_sha256$1200000$1V2qbnIDr4XmAZnMQvGZv5$8UywBtwWSF29JtNJHwVNbFsyF8cz2AM6d31L+l51N4U=	\N	f	053370			f	2026-01-14 21:19:59.101039+08	053370	申元霞						10700	10700		t	2026-01-14 21:19:59.101238+08	2026-01-14 21:19:59.366942+08	教工	COLLEGE	2	\N		f	\N
+168	pbkdf2_sha256$1200000$nBBNlLivHDHx19ivyxm5h3$kwARy9kxLyagEIRbF8AFRmCQgVOut8faXjlolh2gV7c=	\N	f	20130016			f	2026-01-14 21:20:00.204745+08	20130016	吴宣够						10700	教工		t	2026-01-14 21:20:00.205139+08	2026-01-14 21:20:00.477903+08	教工	COLLEGE	2	\N		f	\N
+166	pbkdf2_sha256$1200000$zEstwGLUyYRBzPmtaR8bYm$O4Hlm9ZECEDzr9s/h4F2qND33ss002dUg1zF1NRCwxI=	\N	f	053400			f	2026-01-14 21:19:59.635746+08	053400	黄俊						10700	10700		t	2026-01-14 21:19:59.635923+08	2026-01-14 21:19:59.902655+08	教工	COLLEGE	2	\N		t	1
+165	pbkdf2_sha256$1200000$uIwmsyQFaC65FJisEUBDvV$FjzpcGUMCflgORq3fpN49QYgwuXWoPWJrLxzrc7UdPc=	\N	f	053387			f	2026-01-14 21:19:59.368972+08	053387	王修君						10700	10700		t	2026-01-14 21:19:59.369158+08	2026-01-14 21:19:59.634499+08	教工	COLLEGE	2	\N		f	\N
+169	pbkdf2_sha256$1200000$6mG1IvFt4h39xjZxiRvhFb$M2R7ucoX8LsfvL5Zre1HULY0lpzcFZNCRo4Sto8wX3s=	\N	f	20160004			f	2026-01-14 21:20:00.479415+08	20160004	侯书东						10700	10700		t	2026-01-14 21:20:00.479589+08	2026-01-14 21:20:00.748781+08	教工	COLLEGE	2	\N		f	\N
 \.
 
 
 --
--- Data for Name: users_groups; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: users_groups; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.users_groups (id, user_id, group_id) FROM stdin;
@@ -2077,7 +2585,7 @@ COPY public.users_groups (id, user_id, group_id) FROM stdin;
 
 
 --
--- Data for Name: users_user_permissions; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: users_user_permissions; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.users_user_permissions (id, user_id, permission_id) FROM stdin;
@@ -2085,268 +2593,338 @@ COPY public.users_user_permissions (id, user_id, permission_id) FROM stdin;
 
 
 --
--- Data for Name: workflow_configs; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: workflow_configs; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.workflow_configs (id, name, phase, version, description, is_active, is_locked, created_at, updated_at, batch_id, created_by_id, updated_by_id) FROM stdin;
+1	1	APPLICATION	1		t	f	2026-01-13 19:04:21.460266+08	2026-01-13 19:04:21.460291+08	3	1	1
+2	2026 第一批-立项工作流	APPLICATION	1	立项阶段默认工作流	t	f	2026-01-13 22:18:05.980133+08	2026-01-13 22:18:05.980153+08	4	1	1
+3	2026 第一批-中期工作流	MID_TERM	1	中期阶段默认工作流	t	f	2026-01-13 22:32:32.162624+08	2026-01-13 22:32:32.162635+08	4	1	1
+4	2026 第一批-结题工作流	CLOSURE	1	结题阶段默认工作流	t	f	2026-01-13 22:32:39.069478+08	2026-01-13 22:32:39.069503+08	4	1	1
+9	2026第二批-立项工作流	APPLICATION	1	立项阶段默认工作流	t	f	2026-01-14 23:43:47.740507+08	2026-01-14 23:43:47.740558+08	7	1	1
+10	2026第二批-中期工作流	MID_TERM	1	中期阶段默认工作流	t	f	2026-01-14 23:43:52.030745+08	2026-01-14 23:43:52.030772+08	7	1	1
+11	2026第二批-结题工作流	CLOSURE	1	结题阶段默认工作流	t	f	2026-01-14 23:43:54.794313+08	2026-01-14 23:43:54.794367+08	7	1	1
 \.
 
 
 --
--- Data for Name: workflow_nodes; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: workflow_nodes; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.workflow_nodes (id, code, name, node_type, role, review_level, scope, return_policy, notice, sort_order, is_active, created_at, updated_at, review_template_id, workflow_id) FROM stdin;
+COPY public.workflow_nodes (id, code, name, node_type, role, review_level, return_policy, notice, sort_order, is_active, created_at, updated_at, workflow_id, role_fk_id, end_date, start_date, require_expert_review, allowed_reject_to) FROM stdin;
+36	STUDENT_SUBMIT	学生提交立项	SUBMIT	STUDENT		NONE		0	t	2026-01-14 23:43:47.744875+08	2026-01-15 04:49:07.395553+08	9	\N	2026-01-31	2026-01-01	f	\N
+6	STUDENT_SUBMIT	学生提交中期	SUBMIT	STUDENT		NONE		0	t	2026-01-13 22:32:32.163481+08	2026-01-13 22:54:14.512868+08	3	\N	2026-01-31	2026-01-01	f	\N
+10	STUDENT_SUBMIT	学生提交结题	SUBMIT	STUDENT		NONE		0	t	2026-01-13 22:32:39.07225+08	2026-01-13 22:55:19.625934+08	4	\N	2026-01-31	2026-01-01	f	\N
+1	STUDENT_SUBMIT	学生提交立项	SUBMIT	STUDENT		NONE		0	t	2026-01-13 22:18:05.982913+08	2026-01-14 16:17:20.291736+08	2	\N	2026-01-31	2026-01-01	f	\N
+39	SCHOOL_PUBLISH	校级发布立项	APPROVAL	LEVEL1_ADMIN	LEVEL1	PREVIOUS		3	t	2026-01-14 23:43:47.754997+08	2026-01-15 00:12:54.659269+08	9	5	2026-01-31	2026-01-01	t	38
+38	COLLEGE_REVIEW	学院审核	APPROVAL	LEVEL2_ADMIN	LEVEL2	PREVIOUS		2	t	2026-01-14 23:43:47.752019+08	2026-01-15 00:13:08.447304+08	9	4	2026-01-31	2026-01-01	t	36
+40	STUDENT_SUBMIT	学生提交中期	SUBMIT	STUDENT		NONE		0	t	2026-01-14 23:43:52.033076+08	2026-01-15 03:40:02.980663+08	10	\N	2026-01-31	2026-01-01	f	\N
+43	STUDENT_SUBMIT	学生提交结题	SUBMIT	STUDENT		NONE		0	t	2026-01-14 23:43:54.798825+08	2026-01-15 03:40:49.67609+08	11	\N	2026-01-31	2026-01-01	f	\N
+7	TEACHER_REVIEW	导师审核	REVIEW	TEACHER	TEACHER	STUDENT		1	f	2026-01-13 22:32:32.165013+08	2026-01-13 22:32:32.165026+08	3	\N	\N	\N	f	0
+8	COLLEGE_EXPERT	院级专家评审	EXPERT_REVIEW	EXPERT	LEVEL2	PREVIOUS		2	f	2026-01-13 22:32:32.165794+08	2026-01-13 22:32:32.165805+08	3	\N	\N	\N	f	0
+9	COLLEGE_FINALIZE	学院确认	APPROVAL	LEVEL2_ADMIN	LEVEL2	STUDENT		3	f	2026-01-13 22:32:32.166779+08	2026-01-13 22:32:32.166791+08	3	\N	\N	\N	f	0
+11	TEACHER_REVIEW	导师审核	REVIEW	TEACHER	TEACHER	STUDENT		1	f	2026-01-13 22:32:39.076832+08	2026-01-13 22:32:39.076843+08	4	\N	\N	\N	f	0
+12	COLLEGE_EXPERT	院级专家评审	EXPERT_REVIEW	EXPERT	LEVEL2	PREVIOUS		2	f	2026-01-13 22:32:39.077779+08	2026-01-13 22:32:39.077791+08	4	\N	\N	\N	f	0
+13	SCHOOL_EXPERT	校级专家评审	EXPERT_REVIEW	EXPERT	LEVEL1	PREVIOUS		3	f	2026-01-13 22:32:39.078753+08	2026-01-13 22:32:39.078763+08	4	\N	\N	\N	f	0
+14	SCHOOL_FINALIZE	校级确认结题	APPROVAL	LEVEL1_ADMIN	LEVEL1	STUDENT		4	f	2026-01-13 22:32:39.079603+08	2026-01-13 22:32:39.079614+08	4	\N	\N	\N	f	0
+18	导师审核	导师审核	REVIEW			NONE		1	t	2026-01-13 22:55:43.283447+08	2026-01-13 22:55:43.283463+08	4	2	2026-01-31	2026-01-01	f	10
+17	导师审核	导师审核	REVIEW			NONE		1	t	2026-01-13 22:54:53.744684+08	2026-01-14 10:06:29.941992+08	3	2	2026-01-31	2026-01-01	f	6
+19	管理员审核	管理员审核	REVIEW			NONE		2	t	2026-01-13 22:56:16.401907+08	2026-01-14 10:06:34.492303+08	4	5	2026-01-31	2026-01-01	f	18
+20	TEACHER_REVIEW	导师审核	REVIEW	TEACHER	TEACHER	NONE		1	t	2026-01-14 10:01:08.073322+08	2026-01-14 16:17:25.330385+08	2	2	2026-01-31	2026-01-01	f	1
+16	管理员审核	管理员审核	REVIEW			NONE		2	t	2026-01-13 22:50:51.083747+08	2026-01-14 16:17:27.852779+08	2	5	2026-01-31	2026-01-01	f	20
+42	COLLEGE_FINALIZE	学院确认	APPROVAL	LEVEL2_ADMIN	LEVEL2	STUDENT		2	t	2026-01-14 23:43:52.038551+08	2026-01-15 03:41:56.226469+08	10	4	2026-01-31	2026-01-01	f	40
+37	TEACHER_REVIEW	导师审核	REVIEW	TEACHER	TEACHER	STUDENT		1	t	2026-01-14 23:43:47.749251+08	2026-01-15 04:43:23.039456+08	9	2	2026-01-31	2026-01-01	f	36
+41	TEACHER_REVIEW	导师审核	REVIEW	TEACHER	TEACHER	STUDENT		1	t	2026-01-14 23:43:52.035511+08	2026-01-15 03:40:18.095455+08	10	2	2026-01-31	2026-01-01	f	40
+44	TEACHER_REVIEW	导师审核	REVIEW	TEACHER	TEACHER	STUDENT		1	f	2026-01-14 23:43:54.802918+08	2026-01-15 03:41:08.530888+08	11	\N	\N	\N	f	43
+45	COLLEGE_REVIEW	学院审核	APPROVAL	LEVEL2_ADMIN	LEVEL2	PREVIOUS		2	f	2026-01-14 23:43:54.805541+08	2026-01-15 03:41:10.979506+08	11	\N	\N	\N	t	43
+46	SCHOOL_FINALIZE	校级确认结题	APPROVAL	LEVEL1_ADMIN	LEVEL1	STUDENT		3	t	2026-01-14 23:43:54.808185+08	2026-01-15 03:41:35.05783+08	11	5	2026-01-31	2026-01-01	f	43
 \.
 
 
 --
--- Name: auth_group_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: admin_assignments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.admin_assignments_id_seq', 1, false);
+
+
+--
+-- Name: auth_group_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.auth_group_id_seq', 1, false);
 
 
 --
--- Name: auth_group_permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: auth_group_permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.auth_group_permissions_id_seq', 1, false);
 
 
 --
--- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.auth_permission_id_seq', 124, true);
-
-
---
--- Name: certificate_settings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.certificate_settings_id_seq', 1, false);
+SELECT pg_catalog.setval('public.auth_permission_id_seq', 144, true);
 
 
 --
--- Name: dictionary_items_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: budget_change_requests_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.dictionary_items_id_seq', 66, true);
+SELECT pg_catalog.setval('public.budget_change_requests_id_seq', 1, false);
 
 
 --
--- Name: dictionary_types_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: certificate_settings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.certificate_settings_id_seq', 1, true);
+
+
+--
+-- Name: dictionary_items_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.dictionary_items_id_seq', 183, true);
+
+
+--
+-- Name: dictionary_types_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.dictionary_types_id_seq', 17, true);
 
 
 --
--- Name: django_admin_log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: django_admin_log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.django_admin_log_id_seq', 1, false);
 
 
 --
--- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.django_content_type_id_seq', 31, true);
-
-
---
--- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.django_migrations_id_seq', 63, true);
+SELECT pg_catalog.setval('public.django_content_type_id_seq', 36, true);
 
 
 --
--- Name: expert_groups_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.expert_groups_id_seq', 2, true);
-
-
---
--- Name: expert_groups_members_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.expert_groups_members_id_seq', 2, true);
+SELECT pg_catalog.setval('public.django_migrations_id_seq', 93, true);
 
 
 --
--- Name: login_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: expert_groups_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.login_logs_id_seq', 156, true);
-
-
---
--- Name: notifications_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.notifications_id_seq', 12, true);
+SELECT pg_catalog.setval('public.expert_groups_id_seq', 4, true);
 
 
 --
--- Name: project_achievements_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: expert_groups_members_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.project_achievements_id_seq', 1, true);
-
-
---
--- Name: project_advisors_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.project_advisors_id_seq', 20, true);
+SELECT pg_catalog.setval('public.expert_groups_members_id_seq', 6, true);
 
 
 --
--- Name: project_archives_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: login_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.project_archives_id_seq', 1, true);
-
-
---
--- Name: project_batches_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.project_batches_id_seq', 3, true);
+SELECT pg_catalog.setval('public.login_logs_id_seq', 426, true);
 
 
 --
--- Name: project_change_requests_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: notifications_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.notifications_id_seq', 57, true);
+
+
+--
+-- Name: permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.permissions_id_seq', 27, true);
+
+
+--
+-- Name: project_achievements_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.project_achievements_id_seq', 3, true);
+
+
+--
+-- Name: project_advisors_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.project_advisors_id_seq', 51, true);
+
+
+--
+-- Name: project_archives_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.project_archives_id_seq', 2, true);
+
+
+--
+-- Name: project_batches_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.project_batches_id_seq', 7, true);
+
+
+--
+-- Name: project_change_requests_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.project_change_requests_id_seq', 1, false);
 
 
 --
--- Name: project_change_reviews_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: project_change_reviews_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.project_change_reviews_id_seq', 1, false);
 
 
 --
--- Name: project_expenditures_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: project_expenditures_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.project_expenditures_id_seq', 1, false);
-
-
---
--- Name: project_members_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.project_members_id_seq', 64, true);
+SELECT pg_catalog.setval('public.project_expenditures_id_seq', 2, true);
 
 
 --
--- Name: project_phase_instances_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: project_members_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.project_phase_instances_id_seq', 2, true);
+SELECT pg_catalog.setval('public.project_members_id_seq', 102, true);
 
 
 --
--- Name: project_progress_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: project_phase_instances_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.project_phase_instances_id_seq', 14, true);
+
+
+--
+-- Name: project_progress_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.project_progress_id_seq', 1, false);
 
 
 --
--- Name: project_push_records_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: project_push_records_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.project_push_records_id_seq', 1, false);
 
 
 --
--- Name: project_recycle_bin_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: project_recycle_bin_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.project_recycle_bin_id_seq', 1, false);
 
 
 --
--- Name: projects_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: projects_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.projects_id_seq', 4, true);
-
-
---
--- Name: review_template_items_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.review_template_items_id_seq', 1, false);
+SELECT pg_catalog.setval('public.projects_id_seq', 21, true);
 
 
 --
--- Name: review_templates_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: reviews_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.review_templates_id_seq', 1, false);
-
-
---
--- Name: reviews_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.reviews_id_seq', 20, true);
+SELECT pg_catalog.setval('public.reviews_id_seq', 54, true);
 
 
 --
--- Name: system_settings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: roles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.system_settings_id_seq', 22, true);
+SELECT pg_catalog.setval('public.roles_id_seq', 6, true);
 
 
 --
--- Name: users_groups_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: roles_permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.roles_permissions_id_seq', 42, true);
+
+
+--
+-- Name: system_settings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.system_settings_id_seq', 39, true);
+
+
+--
+-- Name: users_groups_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.users_groups_id_seq', 1, false);
 
 
 --
--- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.users_id_seq', 23, true);
+SELECT pg_catalog.setval('public.users_id_seq', 170, true);
 
 
 --
--- Name: users_user_permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: users_user_permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.users_user_permissions_id_seq', 1, false);
 
 
 --
--- Name: workflow_configs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: workflow_configs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.workflow_configs_id_seq', 1, false);
-
-
---
--- Name: workflow_nodes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.workflow_nodes_id_seq', 1, false);
+SELECT pg_catalog.setval('public.workflow_configs_id_seq', 11, true);
 
 
 --
--- Name: auth_group auth_group_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: workflow_nodes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.workflow_nodes_id_seq', 46, true);
+
+
+--
+-- Name: admin_assignments admin_assignments_batch_id_phase_workflow__479d12ae_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.admin_assignments
+    ADD CONSTRAINT admin_assignments_batch_id_phase_workflow__479d12ae_uniq UNIQUE (batch_id, phase, workflow_node_id, scope_value);
+
+
+--
+-- Name: admin_assignments admin_assignments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.admin_assignments
+    ADD CONSTRAINT admin_assignments_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: auth_group auth_group_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_group
@@ -2354,7 +2932,7 @@ ALTER TABLE ONLY public.auth_group
 
 
 --
--- Name: auth_group_permissions auth_group_permissions_group_id_permission_id_0cd325b0_uniq; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: auth_group_permissions auth_group_permissions_group_id_permission_id_0cd325b0_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_group_permissions
@@ -2362,7 +2940,7 @@ ALTER TABLE ONLY public.auth_group_permissions
 
 
 --
--- Name: auth_group_permissions auth_group_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: auth_group_permissions auth_group_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_group_permissions
@@ -2370,7 +2948,7 @@ ALTER TABLE ONLY public.auth_group_permissions
 
 
 --
--- Name: auth_group auth_group_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: auth_group auth_group_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_group
@@ -2378,7 +2956,7 @@ ALTER TABLE ONLY public.auth_group
 
 
 --
--- Name: auth_permission auth_permission_content_type_id_codename_01ab375a_uniq; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: auth_permission auth_permission_content_type_id_codename_01ab375a_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_permission
@@ -2386,7 +2964,7 @@ ALTER TABLE ONLY public.auth_permission
 
 
 --
--- Name: auth_permission auth_permission_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: auth_permission auth_permission_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_permission
@@ -2394,7 +2972,15 @@ ALTER TABLE ONLY public.auth_permission
 
 
 --
--- Name: certificate_settings certificate_settings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: budget_change_requests budget_change_requests_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.budget_change_requests
+    ADD CONSTRAINT budget_change_requests_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: certificate_settings certificate_settings_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.certificate_settings
@@ -2402,7 +2988,7 @@ ALTER TABLE ONLY public.certificate_settings
 
 
 --
--- Name: dictionary_items dictionary_items_dict_type_id_value_d443096c_uniq; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: dictionary_items dictionary_items_dict_type_id_value_d443096c_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.dictionary_items
@@ -2410,7 +2996,7 @@ ALTER TABLE ONLY public.dictionary_items
 
 
 --
--- Name: dictionary_items dictionary_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: dictionary_items dictionary_items_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.dictionary_items
@@ -2418,7 +3004,7 @@ ALTER TABLE ONLY public.dictionary_items
 
 
 --
--- Name: dictionary_types dictionary_types_code_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: dictionary_types dictionary_types_code_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.dictionary_types
@@ -2426,7 +3012,7 @@ ALTER TABLE ONLY public.dictionary_types
 
 
 --
--- Name: dictionary_types dictionary_types_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: dictionary_types dictionary_types_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.dictionary_types
@@ -2434,7 +3020,7 @@ ALTER TABLE ONLY public.dictionary_types
 
 
 --
--- Name: django_admin_log django_admin_log_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: django_admin_log django_admin_log_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_admin_log
@@ -2442,7 +3028,7 @@ ALTER TABLE ONLY public.django_admin_log
 
 
 --
--- Name: django_content_type django_content_type_app_label_model_76bd3d3b_uniq; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: django_content_type django_content_type_app_label_model_76bd3d3b_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_content_type
@@ -2450,7 +3036,7 @@ ALTER TABLE ONLY public.django_content_type
 
 
 --
--- Name: django_content_type django_content_type_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: django_content_type django_content_type_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_content_type
@@ -2458,7 +3044,7 @@ ALTER TABLE ONLY public.django_content_type
 
 
 --
--- Name: django_migrations django_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: django_migrations django_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_migrations
@@ -2466,7 +3052,7 @@ ALTER TABLE ONLY public.django_migrations
 
 
 --
--- Name: django_session django_session_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: django_session django_session_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_session
@@ -2474,7 +3060,7 @@ ALTER TABLE ONLY public.django_session
 
 
 --
--- Name: expert_groups_members expert_groups_members_expertgroup_id_user_id_abc88dfa_uniq; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: expert_groups_members expert_groups_members_expertgroup_id_user_id_abc88dfa_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.expert_groups_members
@@ -2482,7 +3068,7 @@ ALTER TABLE ONLY public.expert_groups_members
 
 
 --
--- Name: expert_groups_members expert_groups_members_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: expert_groups_members expert_groups_members_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.expert_groups_members
@@ -2490,7 +3076,7 @@ ALTER TABLE ONLY public.expert_groups_members
 
 
 --
--- Name: expert_groups expert_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: expert_groups expert_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.expert_groups
@@ -2498,7 +3084,7 @@ ALTER TABLE ONLY public.expert_groups
 
 
 --
--- Name: login_logs login_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: login_logs login_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.login_logs
@@ -2506,7 +3092,7 @@ ALTER TABLE ONLY public.login_logs
 
 
 --
--- Name: notifications notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: notifications notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.notifications
@@ -2514,7 +3100,23 @@ ALTER TABLE ONLY public.notifications
 
 
 --
--- Name: project_achievements project_achievements_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: permissions permissions_code_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.permissions
+    ADD CONSTRAINT permissions_code_key UNIQUE (code);
+
+
+--
+-- Name: permissions permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.permissions
+    ADD CONSTRAINT permissions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: project_achievements project_achievements_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_achievements
@@ -2522,7 +3124,7 @@ ALTER TABLE ONLY public.project_achievements
 
 
 --
--- Name: project_advisors project_advisors_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: project_advisors project_advisors_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_advisors
@@ -2530,7 +3132,7 @@ ALTER TABLE ONLY public.project_advisors
 
 
 --
--- Name: project_archives project_archives_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: project_archives project_archives_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_archives
@@ -2538,7 +3140,7 @@ ALTER TABLE ONLY public.project_archives
 
 
 --
--- Name: project_archives project_archives_project_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: project_archives project_archives_project_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_archives
@@ -2546,7 +3148,7 @@ ALTER TABLE ONLY public.project_archives
 
 
 --
--- Name: project_batches project_batches_code_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: project_batches project_batches_code_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_batches
@@ -2554,7 +3156,7 @@ ALTER TABLE ONLY public.project_batches
 
 
 --
--- Name: project_batches project_batches_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: project_batches project_batches_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_batches
@@ -2562,7 +3164,7 @@ ALTER TABLE ONLY public.project_batches
 
 
 --
--- Name: project_change_requests project_change_requests_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: project_change_requests project_change_requests_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_change_requests
@@ -2570,7 +3172,7 @@ ALTER TABLE ONLY public.project_change_requests
 
 
 --
--- Name: project_change_reviews project_change_reviews_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: project_change_reviews project_change_reviews_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_change_reviews
@@ -2578,7 +3180,7 @@ ALTER TABLE ONLY public.project_change_reviews
 
 
 --
--- Name: project_expenditures project_expenditures_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: project_expenditures project_expenditures_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_expenditures
@@ -2586,7 +3188,7 @@ ALTER TABLE ONLY public.project_expenditures
 
 
 --
--- Name: project_members project_members_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: project_members project_members_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_members
@@ -2594,7 +3196,7 @@ ALTER TABLE ONLY public.project_members
 
 
 --
--- Name: project_members project_members_project_id_user_id_ab18bfcc_uniq; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: project_members project_members_project_id_user_id_ab18bfcc_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_members
@@ -2602,7 +3204,7 @@ ALTER TABLE ONLY public.project_members
 
 
 --
--- Name: project_phase_instances project_phase_instances_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: project_phase_instances project_phase_instances_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_phase_instances
@@ -2610,7 +3212,7 @@ ALTER TABLE ONLY public.project_phase_instances
 
 
 --
--- Name: project_progress project_progress_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: project_progress project_progress_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_progress
@@ -2618,7 +3220,7 @@ ALTER TABLE ONLY public.project_progress
 
 
 --
--- Name: project_push_records project_push_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: project_push_records project_push_records_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_push_records
@@ -2626,7 +3228,7 @@ ALTER TABLE ONLY public.project_push_records
 
 
 --
--- Name: project_recycle_bin project_recycle_bin_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: project_recycle_bin project_recycle_bin_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_recycle_bin
@@ -2634,7 +3236,7 @@ ALTER TABLE ONLY public.project_recycle_bin
 
 
 --
--- Name: projects projects_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: projects projects_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.projects
@@ -2642,7 +3244,7 @@ ALTER TABLE ONLY public.projects
 
 
 --
--- Name: projects projects_project_no_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: projects projects_project_no_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.projects
@@ -2650,23 +3252,7 @@ ALTER TABLE ONLY public.projects
 
 
 --
--- Name: review_template_items review_template_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.review_template_items
-    ADD CONSTRAINT review_template_items_pkey PRIMARY KEY (id);
-
-
---
--- Name: review_templates review_templates_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.review_templates
-    ADD CONSTRAINT review_templates_pkey PRIMARY KEY (id);
-
-
---
--- Name: reviews reviews_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: reviews reviews_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.reviews
@@ -2674,7 +3260,39 @@ ALTER TABLE ONLY public.reviews
 
 
 --
--- Name: system_settings system_settings_code_batch_id_9901544a_uniq; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: roles roles_code_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.roles
+    ADD CONSTRAINT roles_code_key UNIQUE (code);
+
+
+--
+-- Name: roles_permissions roles_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.roles_permissions
+    ADD CONSTRAINT roles_permissions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: roles_permissions roles_permissions_role_id_permission_id_d2305313_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.roles_permissions
+    ADD CONSTRAINT roles_permissions_role_id_permission_id_d2305313_uniq UNIQUE (role_id, permission_id);
+
+
+--
+-- Name: roles roles_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.roles
+    ADD CONSTRAINT roles_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: system_settings system_settings_code_batch_id_9901544a_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.system_settings
@@ -2682,7 +3300,7 @@ ALTER TABLE ONLY public.system_settings
 
 
 --
--- Name: system_settings system_settings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: system_settings system_settings_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.system_settings
@@ -2690,7 +3308,15 @@ ALTER TABLE ONLY public.system_settings
 
 
 --
--- Name: project_phase_instances uniq_project_phase_attempt; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: admin_assignments uniq_admin_assignment_user; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.admin_assignments
+    ADD CONSTRAINT uniq_admin_assignment_user UNIQUE (batch_id, phase, scope_value, admin_user_id);
+
+
+--
+-- Name: project_phase_instances uniq_project_phase_attempt; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_phase_instances
@@ -2698,7 +3324,7 @@ ALTER TABLE ONLY public.project_phase_instances
 
 
 --
--- Name: users users_employee_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: users users_employee_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users
@@ -2706,7 +3332,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: users_groups users_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: users_groups users_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users_groups
@@ -2714,7 +3340,7 @@ ALTER TABLE ONLY public.users_groups
 
 
 --
--- Name: users_groups users_groups_user_id_group_id_fc7788e8_uniq; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: users_groups users_groups_user_id_group_id_fc7788e8_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users_groups
@@ -2722,7 +3348,7 @@ ALTER TABLE ONLY public.users_groups
 
 
 --
--- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users
@@ -2730,7 +3356,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: users_user_permissions users_user_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: users_user_permissions users_user_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users_user_permissions
@@ -2738,7 +3364,7 @@ ALTER TABLE ONLY public.users_user_permissions
 
 
 --
--- Name: users_user_permissions users_user_permissions_user_id_permission_id_3b86cbdf_uniq; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: users_user_permissions users_user_permissions_user_id_permission_id_3b86cbdf_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users_user_permissions
@@ -2746,7 +3372,7 @@ ALTER TABLE ONLY public.users_user_permissions
 
 
 --
--- Name: users users_username_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: users users_username_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users
@@ -2754,7 +3380,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: workflow_configs workflow_configs_phase_batch_id_version_06d76f32_uniq; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: workflow_configs workflow_configs_phase_batch_id_version_06d76f32_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.workflow_configs
@@ -2762,7 +3388,7 @@ ALTER TABLE ONLY public.workflow_configs
 
 
 --
--- Name: workflow_configs workflow_configs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: workflow_configs workflow_configs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.workflow_configs
@@ -2770,7 +3396,7 @@ ALTER TABLE ONLY public.workflow_configs
 
 
 --
--- Name: workflow_nodes workflow_nodes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: workflow_nodes workflow_nodes_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.workflow_nodes
@@ -2778,7 +3404,7 @@ ALTER TABLE ONLY public.workflow_nodes
 
 
 --
--- Name: workflow_nodes workflow_nodes_workflow_id_code_63ae61b1_uniq; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: workflow_nodes workflow_nodes_workflow_id_code_63ae61b1_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.workflow_nodes
@@ -2786,560 +3412,705 @@ ALTER TABLE ONLY public.workflow_nodes
 
 
 --
--- Name: auth_group_name_a6ea08ec_like; Type: INDEX; Schema: public; Owner: -
+-- Name: admin_assignments_admin_user_id_143852ba; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX admin_assignments_admin_user_id_143852ba ON public.admin_assignments USING btree (admin_user_id);
+
+
+--
+-- Name: admin_assignments_batch_id_5b4be28f; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX admin_assignments_batch_id_5b4be28f ON public.admin_assignments USING btree (batch_id);
+
+
+--
+-- Name: admin_assignments_created_by_id_4c9607e3; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX admin_assignments_created_by_id_4c9607e3 ON public.admin_assignments USING btree (created_by_id);
+
+
+--
+-- Name: admin_assignments_updated_by_id_a52954d4; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX admin_assignments_updated_by_id_a52954d4 ON public.admin_assignments USING btree (updated_by_id);
+
+
+--
+-- Name: admin_assignments_workflow_node_id_8b3a8ed2; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX admin_assignments_workflow_node_id_8b3a8ed2 ON public.admin_assignments USING btree (workflow_node_id);
+
+
+--
+-- Name: auth_group_name_a6ea08ec_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX auth_group_name_a6ea08ec_like ON public.auth_group USING btree (name varchar_pattern_ops);
 
 
 --
--- Name: auth_group_permissions_group_id_b120cbf9; Type: INDEX; Schema: public; Owner: -
+-- Name: auth_group_permissions_group_id_b120cbf9; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX auth_group_permissions_group_id_b120cbf9 ON public.auth_group_permissions USING btree (group_id);
 
 
 --
--- Name: auth_group_permissions_permission_id_84c5c92e; Type: INDEX; Schema: public; Owner: -
+-- Name: auth_group_permissions_permission_id_84c5c92e; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX auth_group_permissions_permission_id_84c5c92e ON public.auth_group_permissions USING btree (permission_id);
 
 
 --
--- Name: auth_permission_content_type_id_2f476e4b; Type: INDEX; Schema: public; Owner: -
+-- Name: auth_permission_content_type_id_2f476e4b; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX auth_permission_content_type_id_2f476e4b ON public.auth_permission USING btree (content_type_id);
 
 
 --
--- Name: certificate_settings_project_category_id_eb459b98; Type: INDEX; Schema: public; Owner: -
+-- Name: budget_chan_project_e9ed22_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX budget_chan_project_e9ed22_idx ON public.budget_change_requests USING btree (project_id, status);
+
+
+--
+-- Name: budget_change_requests_created_by_id_2ed7737a; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX budget_change_requests_created_by_id_2ed7737a ON public.budget_change_requests USING btree (created_by_id);
+
+
+--
+-- Name: budget_change_requests_level1_reviewed_by_id_8334240d; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX budget_change_requests_level1_reviewed_by_id_8334240d ON public.budget_change_requests USING btree (level1_reviewed_by_id);
+
+
+--
+-- Name: budget_change_requests_level2_reviewed_by_id_34302869; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX budget_change_requests_level2_reviewed_by_id_34302869 ON public.budget_change_requests USING btree (level2_reviewed_by_id);
+
+
+--
+-- Name: budget_change_requests_project_id_b110f56f; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX budget_change_requests_project_id_b110f56f ON public.budget_change_requests USING btree (project_id);
+
+
+--
+-- Name: budget_change_requests_teacher_reviewed_by_id_959e494e; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX budget_change_requests_teacher_reviewed_by_id_959e494e ON public.budget_change_requests USING btree (teacher_reviewed_by_id);
+
+
+--
+-- Name: certificate_settings_project_category_id_eb459b98; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX certificate_settings_project_category_id_eb459b98 ON public.certificate_settings USING btree (project_category_id);
 
 
 --
--- Name: certificate_settings_project_level_id_0ca1dab1; Type: INDEX; Schema: public; Owner: -
+-- Name: certificate_settings_project_level_id_0ca1dab1; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX certificate_settings_project_level_id_0ca1dab1 ON public.certificate_settings USING btree (project_level_id);
 
 
 --
--- Name: certificate_settings_updated_by_id_2d83e676; Type: INDEX; Schema: public; Owner: -
+-- Name: certificate_settings_updated_by_id_2d83e676; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX certificate_settings_updated_by_id_2d83e676 ON public.certificate_settings USING btree (updated_by_id);
 
 
 --
--- Name: dictionary__dict_ty_efa91e_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: dictionary__dict_ty_efa91e_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX dictionary__dict_ty_efa91e_idx ON public.dictionary_items USING btree (dict_type_id, is_active);
 
 
 --
--- Name: dictionary_items_dict_type_id_08d3c96f; Type: INDEX; Schema: public; Owner: -
+-- Name: dictionary_items_dict_type_id_08d3c96f; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX dictionary_items_dict_type_id_08d3c96f ON public.dictionary_items USING btree (dict_type_id);
 
 
 --
--- Name: dictionary_items_value_cc3d1c81; Type: INDEX; Schema: public; Owner: -
+-- Name: dictionary_items_value_cc3d1c81; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX dictionary_items_value_cc3d1c81 ON public.dictionary_items USING btree (value);
 
 
 --
--- Name: dictionary_items_value_cc3d1c81_like; Type: INDEX; Schema: public; Owner: -
+-- Name: dictionary_items_value_cc3d1c81_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX dictionary_items_value_cc3d1c81_like ON public.dictionary_items USING btree (value varchar_pattern_ops);
 
 
 --
--- Name: dictionary_types_code_0d0f74a4_like; Type: INDEX; Schema: public; Owner: -
+-- Name: dictionary_types_code_0d0f74a4_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX dictionary_types_code_0d0f74a4_like ON public.dictionary_types USING btree (code varchar_pattern_ops);
 
 
 --
--- Name: django_admin_log_content_type_id_c4bce8eb; Type: INDEX; Schema: public; Owner: -
+-- Name: django_admin_log_content_type_id_c4bce8eb; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_admin_log_content_type_id_c4bce8eb ON public.django_admin_log USING btree (content_type_id);
 
 
 --
--- Name: django_admin_log_user_id_c564eba6; Type: INDEX; Schema: public; Owner: -
+-- Name: django_admin_log_user_id_c564eba6; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_admin_log_user_id_c564eba6 ON public.django_admin_log USING btree (user_id);
 
 
 --
--- Name: django_session_expire_date_a5c62663; Type: INDEX; Schema: public; Owner: -
+-- Name: django_session_expire_date_a5c62663; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_session_expire_date_a5c62663 ON public.django_session USING btree (expire_date);
 
 
 --
--- Name: django_session_session_key_c0390e0f_like; Type: INDEX; Schema: public; Owner: -
+-- Name: django_session_session_key_c0390e0f_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_session_session_key_c0390e0f_like ON public.django_session USING btree (session_key varchar_pattern_ops);
 
 
 --
--- Name: expert_groups_created_by_id_ea191c03; Type: INDEX; Schema: public; Owner: -
+-- Name: expert_groups_created_by_id_ea191c03; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX expert_groups_created_by_id_ea191c03 ON public.expert_groups USING btree (created_by_id);
 
 
 --
--- Name: expert_groups_members_expertgroup_id_c0b06855; Type: INDEX; Schema: public; Owner: -
+-- Name: expert_groups_members_expertgroup_id_c0b06855; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX expert_groups_members_expertgroup_id_c0b06855 ON public.expert_groups_members USING btree (expertgroup_id);
 
 
 --
--- Name: expert_groups_members_user_id_94d717a7; Type: INDEX; Schema: public; Owner: -
+-- Name: expert_groups_members_user_id_94d717a7; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX expert_groups_members_user_id_94d717a7 ON public.expert_groups_members USING btree (user_id);
 
 
 --
--- Name: login_logs_user_id_d31d00a1; Type: INDEX; Schema: public; Owner: -
+-- Name: login_logs_user_id_d31d00a1; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX login_logs_user_id_d31d00a1 ON public.login_logs USING btree (user_id);
 
 
 --
--- Name: notificatio_recipie_583549_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: notificatio_recipie_583549_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX notificatio_recipie_583549_idx ON public.notifications USING btree (recipient_id, is_read);
 
 
 --
--- Name: notifications_recipient_id_e1133bac; Type: INDEX; Schema: public; Owner: -
+-- Name: notifications_recipient_id_e1133bac; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX notifications_recipient_id_e1133bac ON public.notifications USING btree (recipient_id);
 
 
 --
--- Name: notifications_related_project_id_937ebb75; Type: INDEX; Schema: public; Owner: -
+-- Name: notifications_related_project_id_937ebb75; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX notifications_related_project_id_937ebb75 ON public.notifications USING btree (related_project_id);
 
 
 --
--- Name: project_ach_project_5cdff8_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: permissions_code_c5331a5c_like; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX permissions_code_c5331a5c_like ON public.permissions USING btree (code varchar_pattern_ops);
+
+
+--
+-- Name: project_ach_project_5cdff8_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX project_ach_project_5cdff8_idx ON public.project_achievements USING btree (project_id, achievement_type_id);
 
 
 --
--- Name: project_achievements_achievement_type_id_1d76d968; Type: INDEX; Schema: public; Owner: -
+-- Name: project_achievements_achievement_type_id_1d76d968; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX project_achievements_achievement_type_id_1d76d968 ON public.project_achievements USING btree (achievement_type_id);
 
 
 --
--- Name: project_achievements_project_id_99c3182e; Type: INDEX; Schema: public; Owner: -
+-- Name: project_achievements_project_id_99c3182e; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX project_achievements_project_id_99c3182e ON public.project_achievements USING btree (project_id);
 
 
 --
--- Name: project_advisors_project_id_d2ef5924; Type: INDEX; Schema: public; Owner: -
+-- Name: project_advisors_project_id_d2ef5924; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX project_advisors_project_id_d2ef5924 ON public.project_advisors USING btree (project_id);
 
 
 --
--- Name: project_advisors_user_id_e397bc74; Type: INDEX; Schema: public; Owner: -
+-- Name: project_advisors_user_id_e397bc74; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX project_advisors_user_id_e397bc74 ON public.project_advisors USING btree (user_id);
 
 
 --
--- Name: project_batches_code_560841e3_like; Type: INDEX; Schema: public; Owner: -
+-- Name: project_arc_archive_aee040_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX project_arc_archive_aee040_idx ON public.project_archives USING btree (archived_at DESC);
+
+
+--
+-- Name: project_batches_code_560841e3_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX project_batches_code_560841e3_like ON public.project_batches USING btree (code varchar_pattern_ops);
 
 
 --
--- Name: project_change_requests_created_by_id_58f7c62d; Type: INDEX; Schema: public; Owner: -
+-- Name: project_change_requests_created_by_id_58f7c62d; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX project_change_requests_created_by_id_58f7c62d ON public.project_change_requests USING btree (created_by_id);
 
 
 --
--- Name: project_change_requests_project_id_3231f0af; Type: INDEX; Schema: public; Owner: -
+-- Name: project_change_requests_project_id_3231f0af; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX project_change_requests_project_id_3231f0af ON public.project_change_requests USING btree (project_id);
 
 
 --
--- Name: project_change_reviews_change_request_id_7de00e2e; Type: INDEX; Schema: public; Owner: -
+-- Name: project_change_reviews_change_request_id_7de00e2e; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX project_change_reviews_change_request_id_7de00e2e ON public.project_change_reviews USING btree (change_request_id);
 
 
 --
--- Name: project_change_reviews_reviewer_id_3abd4640; Type: INDEX; Schema: public; Owner: -
+-- Name: project_change_reviews_reviewer_id_3abd4640; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX project_change_reviews_reviewer_id_3abd4640 ON public.project_change_reviews USING btree (reviewer_id);
 
 
 --
--- Name: project_exp_project_fcb7bd_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: project_exp_project_fcb7bd_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX project_exp_project_fcb7bd_idx ON public.project_expenditures USING btree (project_id, expenditure_date);
 
 
 --
--- Name: project_expenditures_category_id_b5d751a0; Type: INDEX; Schema: public; Owner: -
+-- Name: project_exp_status_86c717_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
-CREATE INDEX project_expenditures_category_id_b5d751a0 ON public.project_expenditures USING btree (category_id);
+CREATE INDEX project_exp_status_86c717_idx ON public.project_expenditures USING btree (status);
 
 
 --
--- Name: project_expenditures_created_by_id_283ff779; Type: INDEX; Schema: public; Owner: -
+-- Name: project_expenditures_created_by_id_283ff779; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX project_expenditures_created_by_id_283ff779 ON public.project_expenditures USING btree (created_by_id);
 
 
 --
--- Name: project_expenditures_project_id_6c79dd16; Type: INDEX; Schema: public; Owner: -
+-- Name: project_expenditures_project_id_6c79dd16; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX project_expenditures_project_id_6c79dd16 ON public.project_expenditures USING btree (project_id);
 
 
 --
--- Name: project_members_project_id_bf2e42ec; Type: INDEX; Schema: public; Owner: -
+-- Name: project_expenditures_reviewed_by_id_4a719410; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX project_expenditures_reviewed_by_id_4a719410 ON public.project_expenditures USING btree (reviewed_by_id);
+
+
+--
+-- Name: project_members_project_id_bf2e42ec; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX project_members_project_id_bf2e42ec ON public.project_members USING btree (project_id);
 
 
 --
--- Name: project_members_user_id_2e9d44b1; Type: INDEX; Schema: public; Owner: -
+-- Name: project_members_user_id_2e9d44b1; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX project_members_user_id_2e9d44b1 ON public.project_members USING btree (user_id);
 
 
 --
--- Name: project_phase_instances_created_by_id_7783b14c; Type: INDEX; Schema: public; Owner: -
+-- Name: project_phase_instances_created_by_id_7783b14c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX project_phase_instances_created_by_id_7783b14c ON public.project_phase_instances USING btree (created_by_id);
 
 
 --
--- Name: project_phase_instances_project_id_9f3b1467; Type: INDEX; Schema: public; Owner: -
+-- Name: project_phase_instances_project_id_9f3b1467; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX project_phase_instances_project_id_9f3b1467 ON public.project_phase_instances USING btree (project_id);
 
 
 --
--- Name: project_progress_created_by_id_bfa96ce7; Type: INDEX; Schema: public; Owner: -
+-- Name: project_progress_created_by_id_bfa96ce7; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX project_progress_created_by_id_bfa96ce7 ON public.project_progress USING btree (created_by_id);
 
 
 --
--- Name: project_progress_project_id_c9b0d403; Type: INDEX; Schema: public; Owner: -
+-- Name: project_progress_project_id_c9b0d403; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX project_progress_project_id_c9b0d403 ON public.project_progress USING btree (project_id);
 
 
 --
--- Name: project_push_records_project_id_9dd8de15; Type: INDEX; Schema: public; Owner: -
+-- Name: project_push_records_project_id_9dd8de15; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX project_push_records_project_id_9dd8de15 ON public.project_push_records USING btree (project_id);
 
 
 --
--- Name: project_recycle_bin_deleted_by_id_5d1409f9; Type: INDEX; Schema: public; Owner: -
+-- Name: project_recycle_bin_deleted_by_id_5d1409f9; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX project_recycle_bin_deleted_by_id_5d1409f9 ON public.project_recycle_bin USING btree (deleted_by_id);
 
 
 --
--- Name: project_recycle_bin_project_id_b9c359f1; Type: INDEX; Schema: public; Owner: -
+-- Name: project_recycle_bin_project_id_b9c359f1; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX project_recycle_bin_project_id_b9c359f1 ON public.project_recycle_bin USING btree (project_id);
 
 
 --
--- Name: project_recycle_bin_restored_by_id_2665a121; Type: INDEX; Schema: public; Owner: -
+-- Name: project_recycle_bin_restored_by_id_2665a121; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX project_recycle_bin_restored_by_id_2665a121 ON public.project_recycle_bin USING btree (restored_by_id);
 
 
 --
--- Name: projects_batch_id_67b3e4b1; Type: INDEX; Schema: public; Owner: -
+-- Name: projects_batch_id_67b3e4b1; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX projects_batch_id_67b3e4b1 ON public.projects USING btree (batch_id);
 
 
 --
--- Name: projects_category_id_2110ba9e; Type: INDEX; Schema: public; Owner: -
+-- Name: projects_category_id_2110ba9e; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX projects_category_id_2110ba9e ON public.projects USING btree (category_id);
 
 
 --
--- Name: projects_discipline_id_a86933e6; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX projects_discipline_id_a86933e6 ON public.projects USING btree (discipline_id);
-
-
---
--- Name: projects_leader_id_aabb0912; Type: INDEX; Schema: public; Owner: -
+-- Name: projects_leader_id_aabb0912; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX projects_leader_id_aabb0912 ON public.projects USING btree (leader_id);
 
 
 --
--- Name: projects_level_id_8a6f1c0b; Type: INDEX; Schema: public; Owner: -
+-- Name: projects_level_id_8a6f1c0b; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX projects_level_id_8a6f1c0b ON public.projects USING btree (level_id);
 
 
 --
--- Name: projects_project_b2c64d_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: projects_project_b2c64d_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX projects_project_b2c64d_idx ON public.projects USING btree (project_no);
 
 
 --
--- Name: projects_project_no_b1aacc70_like; Type: INDEX; Schema: public; Owner: -
+-- Name: projects_project_no_b1aacc70_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX projects_project_no_b1aacc70_like ON public.projects USING btree (project_no varchar_pattern_ops);
 
 
 --
--- Name: projects_source_id_4682911e; Type: INDEX; Schema: public; Owner: -
+-- Name: projects_source_id_4682911e; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX projects_source_id_4682911e ON public.projects USING btree (source_id);
 
 
 --
--- Name: projects_status_6303d7_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: projects_status_6303d7_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX projects_status_6303d7_idx ON public.projects USING btree (status);
 
 
 --
--- Name: review_template_items_template_id_835bbf34; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX review_template_items_template_id_835bbf34 ON public.review_template_items USING btree (template_id);
-
-
---
--- Name: review_templates_batch_id_4ca9aed4; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX review_templates_batch_id_4ca9aed4 ON public.review_templates USING btree (batch_id);
-
-
---
--- Name: review_templates_created_by_id_4858a6a0; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX review_templates_created_by_id_4858a6a0 ON public.review_templates USING btree (created_by_id);
-
-
---
--- Name: review_templates_updated_by_id_758db1b0; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX review_templates_updated_by_id_758db1b0 ON public.review_templates USING btree (updated_by_id);
-
-
---
--- Name: reviews_phase_instance_id_76b853a5; Type: INDEX; Schema: public; Owner: -
+-- Name: reviews_phase_instance_id_76b853a5; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX reviews_phase_instance_id_76b853a5 ON public.reviews USING btree (phase_instance_id);
 
 
 --
--- Name: reviews_project_1fd85d_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: reviews_project_1fd85d_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX reviews_project_1fd85d_idx ON public.reviews USING btree (project_id, review_level);
 
 
 --
--- Name: reviews_project_id_1ffdb6d1; Type: INDEX; Schema: public; Owner: -
+-- Name: reviews_project_id_1ffdb6d1; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX reviews_project_id_1ffdb6d1 ON public.reviews USING btree (project_id);
 
 
 --
--- Name: reviews_review_template_id_2422673c; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX reviews_review_template_id_2422673c ON public.reviews USING btree (review_template_id);
-
-
---
--- Name: reviews_reviewer_id_dbb954a8; Type: INDEX; Schema: public; Owner: -
+-- Name: reviews_reviewer_id_dbb954a8; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX reviews_reviewer_id_dbb954a8 ON public.reviews USING btree (reviewer_id);
 
 
 --
--- Name: reviews_status_12ddaa_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: reviews_status_12ddaa_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX reviews_status_12ddaa_idx ON public.reviews USING btree (status);
 
 
 --
--- Name: system_settings_batch_id_09927f7b; Type: INDEX; Schema: public; Owner: -
+-- Name: reviews_workflow_node_id_ac4266fc; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX reviews_workflow_node_id_ac4266fc ON public.reviews USING btree (workflow_node_id);
+
+
+--
+-- Name: roles_code_e726c310_like; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX roles_code_e726c310_like ON public.roles USING btree (code varchar_pattern_ops);
+
+
+--
+-- Name: roles_permissions_permission_id_1f74cd91; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX roles_permissions_permission_id_1f74cd91 ON public.roles_permissions USING btree (permission_id);
+
+
+--
+-- Name: roles_permissions_role_id_e913de52; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX roles_permissions_role_id_e913de52 ON public.roles_permissions USING btree (role_id);
+
+
+--
+-- Name: system_settings_batch_id_09927f7b; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX system_settings_batch_id_09927f7b ON public.system_settings USING btree (batch_id);
 
 
 --
--- Name: system_settings_updated_by_id_cf1dfbba; Type: INDEX; Schema: public; Owner: -
+-- Name: system_settings_updated_by_id_cf1dfbba; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX system_settings_updated_by_id_cf1dfbba ON public.system_settings USING btree (updated_by_id);
 
 
 --
--- Name: users_employee_id_7c8e0276_like; Type: INDEX; Schema: public; Owner: -
+-- Name: users_employee_id_7c8e0276_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX users_employee_id_7c8e0276_like ON public.users USING btree (employee_id varchar_pattern_ops);
 
 
 --
--- Name: users_groups_group_id_2f3517aa; Type: INDEX; Schema: public; Owner: -
+-- Name: users_expert_assigned_by_id_174c6b8c; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX users_expert_assigned_by_id_174c6b8c ON public.users USING btree (expert_assigned_by_id);
+
+
+--
+-- Name: users_groups_group_id_2f3517aa; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX users_groups_group_id_2f3517aa ON public.users_groups USING btree (group_id);
 
 
 --
--- Name: users_groups_user_id_f500bee5; Type: INDEX; Schema: public; Owner: -
+-- Name: users_groups_user_id_f500bee5; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX users_groups_user_id_f500bee5 ON public.users_groups USING btree (user_id);
 
 
 --
--- Name: users_user_permissions_permission_id_6d08dcd2; Type: INDEX; Schema: public; Owner: -
+-- Name: users_managed_scope_value_id_b94b760f; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX users_managed_scope_value_id_b94b760f ON public.users USING btree (managed_scope_value_id);
+
+
+--
+-- Name: users_role_fk_id_59b0f6c3; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX users_role_fk_id_59b0f6c3 ON public.users USING btree (role_fk_id);
+
+
+--
+-- Name: users_user_permissions_permission_id_6d08dcd2; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX users_user_permissions_permission_id_6d08dcd2 ON public.users_user_permissions USING btree (permission_id);
 
 
 --
--- Name: users_user_permissions_user_id_92473840; Type: INDEX; Schema: public; Owner: -
+-- Name: users_user_permissions_user_id_92473840; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX users_user_permissions_user_id_92473840 ON public.users_user_permissions USING btree (user_id);
 
 
 --
--- Name: users_username_e8658fc8_like; Type: INDEX; Schema: public; Owner: -
+-- Name: users_username_e8658fc8_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX users_username_e8658fc8_like ON public.users USING btree (username varchar_pattern_ops);
 
 
 --
--- Name: workflow_configs_batch_id_537df69a; Type: INDEX; Schema: public; Owner: -
+-- Name: workflow_configs_batch_id_537df69a; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX workflow_configs_batch_id_537df69a ON public.workflow_configs USING btree (batch_id);
 
 
 --
--- Name: workflow_configs_created_by_id_9ce1a151; Type: INDEX; Schema: public; Owner: -
+-- Name: workflow_configs_created_by_id_9ce1a151; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX workflow_configs_created_by_id_9ce1a151 ON public.workflow_configs USING btree (created_by_id);
 
 
 --
--- Name: workflow_configs_updated_by_id_92af6584; Type: INDEX; Schema: public; Owner: -
+-- Name: workflow_configs_updated_by_id_92af6584; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX workflow_configs_updated_by_id_92af6584 ON public.workflow_configs USING btree (updated_by_id);
 
 
 --
--- Name: workflow_nodes_review_template_id_bf4b0c22; Type: INDEX; Schema: public; Owner: -
+-- Name: workflow_nodes_role_fk_id_505d424b; Type: INDEX; Schema: public; Owner: postgres
 --
 
-CREATE INDEX workflow_nodes_review_template_id_bf4b0c22 ON public.workflow_nodes USING btree (review_template_id);
+CREATE INDEX workflow_nodes_role_fk_id_505d424b ON public.workflow_nodes USING btree (role_fk_id);
 
 
 --
--- Name: workflow_nodes_workflow_id_411643ef; Type: INDEX; Schema: public; Owner: -
+-- Name: workflow_nodes_workflow_id_411643ef; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX workflow_nodes_workflow_id_411643ef ON public.workflow_nodes USING btree (workflow_id);
 
 
 --
--- Name: auth_group_permissions auth_group_permissio_permission_id_84c5c92e_fk_auth_perm; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: admin_assignments admin_assignments_admin_user_id_143852ba_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.admin_assignments
+    ADD CONSTRAINT admin_assignments_admin_user_id_143852ba_fk_users_id FOREIGN KEY (admin_user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: admin_assignments admin_assignments_batch_id_5b4be28f_fk_project_batches_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.admin_assignments
+    ADD CONSTRAINT admin_assignments_batch_id_5b4be28f_fk_project_batches_id FOREIGN KEY (batch_id) REFERENCES public.project_batches(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: admin_assignments admin_assignments_created_by_id_4c9607e3_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.admin_assignments
+    ADD CONSTRAINT admin_assignments_created_by_id_4c9607e3_fk_users_id FOREIGN KEY (created_by_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: admin_assignments admin_assignments_updated_by_id_a52954d4_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.admin_assignments
+    ADD CONSTRAINT admin_assignments_updated_by_id_a52954d4_fk_users_id FOREIGN KEY (updated_by_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: admin_assignments admin_assignments_workflow_node_id_8b3a8ed2_fk_workflow_; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.admin_assignments
+    ADD CONSTRAINT admin_assignments_workflow_node_id_8b3a8ed2_fk_workflow_ FOREIGN KEY (workflow_node_id) REFERENCES public.workflow_nodes(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: auth_group_permissions auth_group_permissio_permission_id_84c5c92e_fk_auth_perm; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_group_permissions
@@ -3347,7 +4118,7 @@ ALTER TABLE ONLY public.auth_group_permissions
 
 
 --
--- Name: auth_group_permissions auth_group_permissions_group_id_b120cbf9_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: auth_group_permissions auth_group_permissions_group_id_b120cbf9_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_group_permissions
@@ -3355,7 +4126,7 @@ ALTER TABLE ONLY public.auth_group_permissions
 
 
 --
--- Name: auth_permission auth_permission_content_type_id_2f476e4b_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: auth_permission auth_permission_content_type_id_2f476e4b_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_permission
@@ -3363,7 +4134,47 @@ ALTER TABLE ONLY public.auth_permission
 
 
 --
--- Name: certificate_settings certificate_settings_project_category_id_eb459b98_fk_dictionar; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: budget_change_requests budget_change_reques_level1_reviewed_by_i_8334240d_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.budget_change_requests
+    ADD CONSTRAINT budget_change_reques_level1_reviewed_by_i_8334240d_fk_users_id FOREIGN KEY (level1_reviewed_by_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: budget_change_requests budget_change_reques_level2_reviewed_by_i_34302869_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.budget_change_requests
+    ADD CONSTRAINT budget_change_reques_level2_reviewed_by_i_34302869_fk_users_id FOREIGN KEY (level2_reviewed_by_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: budget_change_requests budget_change_reques_teacher_reviewed_by__959e494e_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.budget_change_requests
+    ADD CONSTRAINT budget_change_reques_teacher_reviewed_by__959e494e_fk_users_id FOREIGN KEY (teacher_reviewed_by_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: budget_change_requests budget_change_requests_created_by_id_2ed7737a_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.budget_change_requests
+    ADD CONSTRAINT budget_change_requests_created_by_id_2ed7737a_fk_users_id FOREIGN KEY (created_by_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: budget_change_requests budget_change_requests_project_id_b110f56f_fk_projects_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.budget_change_requests
+    ADD CONSTRAINT budget_change_requests_project_id_b110f56f_fk_projects_id FOREIGN KEY (project_id) REFERENCES public.projects(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: certificate_settings certificate_settings_project_category_id_eb459b98_fk_dictionar; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.certificate_settings
@@ -3371,7 +4182,7 @@ ALTER TABLE ONLY public.certificate_settings
 
 
 --
--- Name: certificate_settings certificate_settings_project_level_id_0ca1dab1_fk_dictionar; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: certificate_settings certificate_settings_project_level_id_0ca1dab1_fk_dictionar; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.certificate_settings
@@ -3379,7 +4190,7 @@ ALTER TABLE ONLY public.certificate_settings
 
 
 --
--- Name: certificate_settings certificate_settings_updated_by_id_2d83e676_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: certificate_settings certificate_settings_updated_by_id_2d83e676_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.certificate_settings
@@ -3387,7 +4198,7 @@ ALTER TABLE ONLY public.certificate_settings
 
 
 --
--- Name: dictionary_items dictionary_items_dict_type_id_08d3c96f_fk_dictionary_types_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: dictionary_items dictionary_items_dict_type_id_08d3c96f_fk_dictionary_types_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.dictionary_items
@@ -3395,7 +4206,7 @@ ALTER TABLE ONLY public.dictionary_items
 
 
 --
--- Name: django_admin_log django_admin_log_content_type_id_c4bce8eb_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: django_admin_log django_admin_log_content_type_id_c4bce8eb_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_admin_log
@@ -3403,7 +4214,7 @@ ALTER TABLE ONLY public.django_admin_log
 
 
 --
--- Name: django_admin_log django_admin_log_user_id_c564eba6_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: django_admin_log django_admin_log_user_id_c564eba6_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_admin_log
@@ -3411,7 +4222,7 @@ ALTER TABLE ONLY public.django_admin_log
 
 
 --
--- Name: expert_groups expert_groups_created_by_id_ea191c03_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: expert_groups expert_groups_created_by_id_ea191c03_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.expert_groups
@@ -3419,7 +4230,7 @@ ALTER TABLE ONLY public.expert_groups
 
 
 --
--- Name: expert_groups_members expert_groups_member_expertgroup_id_c0b06855_fk_expert_gr; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: expert_groups_members expert_groups_member_expertgroup_id_c0b06855_fk_expert_gr; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.expert_groups_members
@@ -3427,7 +4238,7 @@ ALTER TABLE ONLY public.expert_groups_members
 
 
 --
--- Name: expert_groups_members expert_groups_members_user_id_94d717a7_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: expert_groups_members expert_groups_members_user_id_94d717a7_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.expert_groups_members
@@ -3435,7 +4246,7 @@ ALTER TABLE ONLY public.expert_groups_members
 
 
 --
--- Name: login_logs login_logs_user_id_d31d00a1_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: login_logs login_logs_user_id_d31d00a1_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.login_logs
@@ -3443,7 +4254,7 @@ ALTER TABLE ONLY public.login_logs
 
 
 --
--- Name: notifications notifications_recipient_id_e1133bac_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: notifications notifications_recipient_id_e1133bac_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.notifications
@@ -3451,7 +4262,7 @@ ALTER TABLE ONLY public.notifications
 
 
 --
--- Name: notifications notifications_related_project_id_937ebb75_fk_projects_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: notifications notifications_related_project_id_937ebb75_fk_projects_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.notifications
@@ -3459,7 +4270,7 @@ ALTER TABLE ONLY public.notifications
 
 
 --
--- Name: project_achievements project_achievements_achievement_type_id_1d76d968_fk_dictionar; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: project_achievements project_achievements_achievement_type_id_1d76d968_fk_dictionar; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_achievements
@@ -3467,7 +4278,7 @@ ALTER TABLE ONLY public.project_achievements
 
 
 --
--- Name: project_achievements project_achievements_project_id_99c3182e_fk_projects_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: project_achievements project_achievements_project_id_99c3182e_fk_projects_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_achievements
@@ -3475,7 +4286,7 @@ ALTER TABLE ONLY public.project_achievements
 
 
 --
--- Name: project_advisors project_advisors_project_id_d2ef5924_fk_projects_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: project_advisors project_advisors_project_id_d2ef5924_fk_projects_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_advisors
@@ -3483,7 +4294,7 @@ ALTER TABLE ONLY public.project_advisors
 
 
 --
--- Name: project_advisors project_advisors_user_id_e397bc74_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: project_advisors project_advisors_user_id_e397bc74_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_advisors
@@ -3491,7 +4302,7 @@ ALTER TABLE ONLY public.project_advisors
 
 
 --
--- Name: project_archives project_archives_project_id_9f133d5b_fk_projects_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: project_archives project_archives_project_id_9f133d5b_fk_projects_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_archives
@@ -3499,7 +4310,7 @@ ALTER TABLE ONLY public.project_archives
 
 
 --
--- Name: project_change_requests project_change_requests_created_by_id_58f7c62d_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: project_change_requests project_change_requests_created_by_id_58f7c62d_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_change_requests
@@ -3507,7 +4318,7 @@ ALTER TABLE ONLY public.project_change_requests
 
 
 --
--- Name: project_change_requests project_change_requests_project_id_3231f0af_fk_projects_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: project_change_requests project_change_requests_project_id_3231f0af_fk_projects_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_change_requests
@@ -3515,7 +4326,7 @@ ALTER TABLE ONLY public.project_change_requests
 
 
 --
--- Name: project_change_reviews project_change_revie_change_request_id_7de00e2e_fk_project_c; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: project_change_reviews project_change_revie_change_request_id_7de00e2e_fk_project_c; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_change_reviews
@@ -3523,7 +4334,7 @@ ALTER TABLE ONLY public.project_change_reviews
 
 
 --
--- Name: project_change_reviews project_change_reviews_reviewer_id_3abd4640_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: project_change_reviews project_change_reviews_reviewer_id_3abd4640_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_change_reviews
@@ -3531,15 +4342,7 @@ ALTER TABLE ONLY public.project_change_reviews
 
 
 --
--- Name: project_expenditures project_expenditures_category_id_b5d751a0_fk_dictionar; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.project_expenditures
-    ADD CONSTRAINT project_expenditures_category_id_b5d751a0_fk_dictionar FOREIGN KEY (category_id) REFERENCES public.dictionary_items(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: project_expenditures project_expenditures_created_by_id_283ff779_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: project_expenditures project_expenditures_created_by_id_283ff779_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_expenditures
@@ -3547,7 +4350,7 @@ ALTER TABLE ONLY public.project_expenditures
 
 
 --
--- Name: project_expenditures project_expenditures_project_id_6c79dd16_fk_projects_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: project_expenditures project_expenditures_project_id_6c79dd16_fk_projects_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_expenditures
@@ -3555,7 +4358,15 @@ ALTER TABLE ONLY public.project_expenditures
 
 
 --
--- Name: project_members project_members_project_id_bf2e42ec_fk_projects_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: project_expenditures project_expenditures_reviewed_by_id_4a719410_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.project_expenditures
+    ADD CONSTRAINT project_expenditures_reviewed_by_id_4a719410_fk_users_id FOREIGN KEY (reviewed_by_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: project_members project_members_project_id_bf2e42ec_fk_projects_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_members
@@ -3563,7 +4374,7 @@ ALTER TABLE ONLY public.project_members
 
 
 --
--- Name: project_members project_members_user_id_2e9d44b1_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: project_members project_members_user_id_2e9d44b1_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_members
@@ -3571,7 +4382,7 @@ ALTER TABLE ONLY public.project_members
 
 
 --
--- Name: project_phase_instances project_phase_instances_created_by_id_7783b14c_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: project_phase_instances project_phase_instances_created_by_id_7783b14c_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_phase_instances
@@ -3579,7 +4390,7 @@ ALTER TABLE ONLY public.project_phase_instances
 
 
 --
--- Name: project_phase_instances project_phase_instances_project_id_9f3b1467_fk_projects_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: project_phase_instances project_phase_instances_project_id_9f3b1467_fk_projects_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_phase_instances
@@ -3587,7 +4398,7 @@ ALTER TABLE ONLY public.project_phase_instances
 
 
 --
--- Name: project_progress project_progress_created_by_id_bfa96ce7_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: project_progress project_progress_created_by_id_bfa96ce7_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_progress
@@ -3595,7 +4406,7 @@ ALTER TABLE ONLY public.project_progress
 
 
 --
--- Name: project_progress project_progress_project_id_c9b0d403_fk_projects_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: project_progress project_progress_project_id_c9b0d403_fk_projects_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_progress
@@ -3603,7 +4414,7 @@ ALTER TABLE ONLY public.project_progress
 
 
 --
--- Name: project_push_records project_push_records_project_id_9dd8de15_fk_projects_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: project_push_records project_push_records_project_id_9dd8de15_fk_projects_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_push_records
@@ -3611,7 +4422,7 @@ ALTER TABLE ONLY public.project_push_records
 
 
 --
--- Name: project_recycle_bin project_recycle_bin_deleted_by_id_5d1409f9_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: project_recycle_bin project_recycle_bin_deleted_by_id_5d1409f9_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_recycle_bin
@@ -3619,7 +4430,7 @@ ALTER TABLE ONLY public.project_recycle_bin
 
 
 --
--- Name: project_recycle_bin project_recycle_bin_project_id_b9c359f1_fk_projects_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: project_recycle_bin project_recycle_bin_project_id_b9c359f1_fk_projects_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_recycle_bin
@@ -3627,7 +4438,7 @@ ALTER TABLE ONLY public.project_recycle_bin
 
 
 --
--- Name: project_recycle_bin project_recycle_bin_restored_by_id_2665a121_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: project_recycle_bin project_recycle_bin_restored_by_id_2665a121_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.project_recycle_bin
@@ -3635,7 +4446,7 @@ ALTER TABLE ONLY public.project_recycle_bin
 
 
 --
--- Name: projects projects_batch_id_67b3e4b1_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: projects projects_batch_id_67b3e4b1_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.projects
@@ -3643,7 +4454,7 @@ ALTER TABLE ONLY public.projects
 
 
 --
--- Name: projects projects_category_id_2110ba9e_fk_dictionary_items_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: projects projects_category_id_2110ba9e_fk_dictionary_items_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.projects
@@ -3651,15 +4462,7 @@ ALTER TABLE ONLY public.projects
 
 
 --
--- Name: projects projects_discipline_id_a86933e6_fk_dictionary_items_id; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.projects
-    ADD CONSTRAINT projects_discipline_id_a86933e6_fk_dictionary_items_id FOREIGN KEY (discipline_id) REFERENCES public.dictionary_items(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects projects_leader_id_aabb0912_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: projects projects_leader_id_aabb0912_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.projects
@@ -3667,7 +4470,7 @@ ALTER TABLE ONLY public.projects
 
 
 --
--- Name: projects projects_level_id_8a6f1c0b_fk_dictionary_items_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: projects projects_level_id_8a6f1c0b_fk_dictionary_items_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.projects
@@ -3675,7 +4478,7 @@ ALTER TABLE ONLY public.projects
 
 
 --
--- Name: projects projects_source_id_4682911e_fk_dictionary_items_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: projects projects_source_id_4682911e_fk_dictionary_items_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.projects
@@ -3683,39 +4486,7 @@ ALTER TABLE ONLY public.projects
 
 
 --
--- Name: review_template_items review_template_item_template_id_835bbf34_fk_review_te; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.review_template_items
-    ADD CONSTRAINT review_template_item_template_id_835bbf34_fk_review_te FOREIGN KEY (template_id) REFERENCES public.review_templates(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: review_templates review_templates_batch_id_4ca9aed4_fk_project_batches_id; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.review_templates
-    ADD CONSTRAINT review_templates_batch_id_4ca9aed4_fk_project_batches_id FOREIGN KEY (batch_id) REFERENCES public.project_batches(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: review_templates review_templates_created_by_id_4858a6a0_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.review_templates
-    ADD CONSTRAINT review_templates_created_by_id_4858a6a0_fk_users_id FOREIGN KEY (created_by_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: review_templates review_templates_updated_by_id_758db1b0_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.review_templates
-    ADD CONSTRAINT review_templates_updated_by_id_758db1b0_fk_users_id FOREIGN KEY (updated_by_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: reviews reviews_phase_instance_id_76b853a5_fk_project_p; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: reviews reviews_phase_instance_id_76b853a5_fk_project_p; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.reviews
@@ -3723,7 +4494,7 @@ ALTER TABLE ONLY public.reviews
 
 
 --
--- Name: reviews reviews_project_id_1ffdb6d1_fk_projects_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: reviews reviews_project_id_1ffdb6d1_fk_projects_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.reviews
@@ -3731,15 +4502,7 @@ ALTER TABLE ONLY public.reviews
 
 
 --
--- Name: reviews reviews_review_template_id_2422673c_fk_review_templates_id; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.reviews
-    ADD CONSTRAINT reviews_review_template_id_2422673c_fk_review_templates_id FOREIGN KEY (review_template_id) REFERENCES public.review_templates(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: reviews reviews_reviewer_id_dbb954a8_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: reviews reviews_reviewer_id_dbb954a8_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.reviews
@@ -3747,7 +4510,31 @@ ALTER TABLE ONLY public.reviews
 
 
 --
--- Name: system_settings system_settings_batch_id_09927f7b_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: reviews reviews_workflow_node_id_ac4266fc_fk_workflow_nodes_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_workflow_node_id_ac4266fc_fk_workflow_nodes_id FOREIGN KEY (workflow_node_id) REFERENCES public.workflow_nodes(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: roles_permissions roles_permissions_permission_id_1f74cd91_fk_permissions_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.roles_permissions
+    ADD CONSTRAINT roles_permissions_permission_id_1f74cd91_fk_permissions_id FOREIGN KEY (permission_id) REFERENCES public.permissions(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: roles_permissions roles_permissions_role_id_e913de52_fk_roles_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.roles_permissions
+    ADD CONSTRAINT roles_permissions_role_id_e913de52_fk_roles_id FOREIGN KEY (role_id) REFERENCES public.roles(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: system_settings system_settings_batch_id_09927f7b_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.system_settings
@@ -3755,7 +4542,7 @@ ALTER TABLE ONLY public.system_settings
 
 
 --
--- Name: system_settings system_settings_updated_by_id_cf1dfbba_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: system_settings system_settings_updated_by_id_cf1dfbba_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.system_settings
@@ -3763,7 +4550,15 @@ ALTER TABLE ONLY public.system_settings
 
 
 --
--- Name: users_groups users_groups_group_id_2f3517aa_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: users users_expert_assigned_by_id_174c6b8c_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_expert_assigned_by_id_174c6b8c_fk_users_id FOREIGN KEY (expert_assigned_by_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: users_groups users_groups_group_id_2f3517aa_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users_groups
@@ -3771,7 +4566,7 @@ ALTER TABLE ONLY public.users_groups
 
 
 --
--- Name: users_groups users_groups_user_id_f500bee5_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: users_groups users_groups_user_id_f500bee5_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users_groups
@@ -3779,7 +4574,23 @@ ALTER TABLE ONLY public.users_groups
 
 
 --
--- Name: users_user_permissions users_user_permissio_permission_id_6d08dcd2_fk_auth_perm; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: users users_managed_scope_value_id_b94b760f_fk_dictionary_items_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_managed_scope_value_id_b94b760f_fk_dictionary_items_id FOREIGN KEY (managed_scope_value_id) REFERENCES public.dictionary_items(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: users users_role_fk_id_59b0f6c3_fk_roles_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_role_fk_id_59b0f6c3_fk_roles_id FOREIGN KEY (role_fk_id) REFERENCES public.roles(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: users_user_permissions users_user_permissio_permission_id_6d08dcd2_fk_auth_perm; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users_user_permissions
@@ -3787,7 +4598,7 @@ ALTER TABLE ONLY public.users_user_permissions
 
 
 --
--- Name: users_user_permissions users_user_permissions_user_id_92473840_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: users_user_permissions users_user_permissions_user_id_92473840_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users_user_permissions
@@ -3795,7 +4606,7 @@ ALTER TABLE ONLY public.users_user_permissions
 
 
 --
--- Name: workflow_configs workflow_configs_batch_id_537df69a_fk_project_batches_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: workflow_configs workflow_configs_batch_id_537df69a_fk_project_batches_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.workflow_configs
@@ -3803,7 +4614,7 @@ ALTER TABLE ONLY public.workflow_configs
 
 
 --
--- Name: workflow_configs workflow_configs_created_by_id_9ce1a151_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: workflow_configs workflow_configs_created_by_id_9ce1a151_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.workflow_configs
@@ -3811,7 +4622,7 @@ ALTER TABLE ONLY public.workflow_configs
 
 
 --
--- Name: workflow_configs workflow_configs_updated_by_id_92af6584_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: workflow_configs workflow_configs_updated_by_id_92af6584_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.workflow_configs
@@ -3819,15 +4630,15 @@ ALTER TABLE ONLY public.workflow_configs
 
 
 --
--- Name: workflow_nodes workflow_nodes_review_template_id_bf4b0c22_fk_review_te; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: workflow_nodes workflow_nodes_role_fk_id_505d424b_fk_roles_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.workflow_nodes
-    ADD CONSTRAINT workflow_nodes_review_template_id_bf4b0c22_fk_review_te FOREIGN KEY (review_template_id) REFERENCES public.review_templates(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT workflow_nodes_role_fk_id_505d424b_fk_roles_id FOREIGN KEY (role_fk_id) REFERENCES public.roles(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
--- Name: workflow_nodes workflow_nodes_workflow_id_411643ef_fk_workflow_configs_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: workflow_nodes workflow_nodes_workflow_id_411643ef_fk_workflow_configs_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.workflow_nodes
@@ -3838,5 +4649,5 @@ ALTER TABLE ONLY public.workflow_nodes
 -- PostgreSQL database dump complete
 --
 
-\unrestrict vp9ptfVMwPFzmfZErZvFRD0BpUOIEpyh0Z3sa7BtvCrRfIifkRpKfMo8cybCSxS
+\unrestrict I2fXreme3zado2ZcaYJlrKSy33aAPsJa23yQaLhdAhiBqLOcE0Eek1D2igN7hLD
 
