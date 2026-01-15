@@ -274,14 +274,14 @@ import {
   Upload,
   Delete,
 } from "@element-plus/icons-vue";
-import { useSystemDictionaries } from "./hooks/useSystemDictionaries";
+import { useSystemDictionaries, type DictionaryType } from "./hooks/useSystemDictionaries";
 
 // 支持props传入，也支持从route.meta获取
 const props = withDefaults(
   defineProps<{
     category?: string;
     dictTypeCode?: string;
-    extraTypes?: any[];
+    extraTypes?: DictionaryType[];
   }>(),
   {
     category: undefined,

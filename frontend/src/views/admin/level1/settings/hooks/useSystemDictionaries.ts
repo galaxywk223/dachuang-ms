@@ -17,7 +17,7 @@ import {
   updateDictionaryItem,
 } from "@/api/dictionaries";
 
-interface DictionaryType {
+export interface DictionaryType {
   id: number;
   code: string;
   name: string;

@@ -35,6 +35,8 @@
 
 <script setup lang="ts">
 import { computed, inject, onMounted, ref } from "vue";
+import type { Node } from "@antv/x6";
+import type { WorkflowNode } from "@/api/system-settings/batch-workflow";
 import {
   Document,
   Files,
@@ -45,18 +47,29 @@ import {
   Management,
 } from "@element-plus/icons-vue";
 
-// Inject 'getNode' from x6-vue-shape
-const getNode = inject("getNode") as () => any;
+type NodeData = Partial<WorkflowNode>;
 
-const nodeData = ref<any>({});
+// Inject 'getNode' from x6-vue-shape
+const getNode = inject<() => Node>("getNode");
+
+const nodeData = ref<NodeData>({});
+
+const toNodeData = (data: unknown): NodeData => {
+  if (data && typeof data === "object") {
+    return data as NodeData;
+  }
+  return {};
+};
 
 onMounted(() => {
-  const node = getNode();
-  nodeData.value = node.getData();
+  const node = getNode?.();
+  if (!node) return;
+
+  nodeData.value = toNodeData(node.getData());
 
   // Listen for data changes if needed
-  node.on("change:data", ({ current }: any) => {
-    nodeData.value = current;
+  node.on("change:data", ({ current }: { current: unknown }) => {
+    nodeData.value = toNodeData(current);
   });
 });
 
@@ -96,7 +109,7 @@ const roleTagType = computed(() => {
   return "info";
 });
 
-const formatDateRange = (start?: string, end?: string) => {
+const formatDateRange = (start?: string | null, end?: string | null) => {
   if (!start && !end) return "";
   const s = start ? start.substring(5) : "?";
   const e = end ? end.substring(5) : "?";

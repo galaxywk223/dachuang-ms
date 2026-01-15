@@ -275,7 +275,7 @@ const fetchProjects = async () => {
   loading.value = true;
   try {
     if (activeTab.value === "pending") {
-      const { results, count } = await fetchPendingReviews();
+      const { results } = await fetchPendingReviews();
       const rows = (results || []).map((r) => {
         const fileUrl =
           r.review_type === "MID_TERM"
@@ -326,7 +326,7 @@ const fetchProjects = async () => {
 
       projects.value = [...rows, ...changeRows];
     } else {
-      const { results, count } = await fetchMyProjects();
+      const { results } = await fetchMyProjects();
       projects.value = results || [];
     }
   } catch (error) {

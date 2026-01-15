@@ -38,10 +38,7 @@
         >
           <!-- Dynamic Menu Generation -->
           <template v-for="item in currentMenus" :key="menuEntryKey(item)">
-            <el-menu-item-group
-              v-if="isMenuGroup(item)"
-              :title="item.groupTitle"
-            >
+            <template v-if="isMenuGroup(item)">
               <template v-for="groupItem in item.items" :key="groupItem.index">
                 <!-- Submenu -->
                 <el-sub-menu v-if="groupItem.children" :index="groupItem.index">
@@ -64,7 +61,7 @@
                   <template #title>{{ groupItem.title }}</template>
                 </el-menu-item>
               </template>
-            </el-menu-item-group>
+            </template>
 
             <template v-else>
               <!-- Submenu -->

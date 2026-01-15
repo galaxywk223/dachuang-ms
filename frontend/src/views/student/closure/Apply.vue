@@ -49,7 +49,7 @@
       </template>
 
       <el-form
-        ref="formRef"
+        :ref="formRef"
         :model="formData"
         :rules="rules"
         label-position="right"
