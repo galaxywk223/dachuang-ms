@@ -22,7 +22,7 @@ class DashboardService:
         """
         # 我的项目统计
         my_projects = Project.objects.filter(
-            Q(leader=user) | Q(members__user=user), is_deleted=False
+            Q(leader=user) | Q(members=user), is_deleted=False
         ).distinct()
 
         project_stats = {
@@ -347,7 +347,9 @@ class DashboardService:
                     role_fk__code=User.UserRole.STUDENT, is_active=True
                 ).count(),
                 "total_teachers": User.objects.filter(
-                    role_fk__code=User.UserRole.TEACHER, is_active=True
+                    Q(role_fk__code=User.UserRole.TEACHER)
+                    | Q(role_fk__code__endswith="_ADMIN"),
+                    is_active=True,
                 ).count(),
             },
             "status_stats": status_stats,

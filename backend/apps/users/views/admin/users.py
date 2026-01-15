@@ -72,7 +72,14 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         elif role:
             if role == User.UserRole.EXPERT:
                 queryset = queryset.filter(
-                    role_fk__code=User.UserRole.TEACHER, is_expert=True
+                    Q(role_fk__code=User.UserRole.TEACHER)
+                    | Q(role_fk__code__endswith="_ADMIN"),
+                    is_expert=True,
+                )
+            elif role == User.UserRole.TEACHER:
+                queryset = queryset.filter(
+                    Q(role_fk__code=User.UserRole.TEACHER)
+                    | Q(role_fk__code__endswith="_ADMIN")
                 )
             else:
                 queryset = queryset.filter(role_fk__code=role)
@@ -86,7 +93,10 @@ class AdminUserViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(is_expert=is_expert == "true")
 
         if current_user.is_admin and not current_user.is_level1_admin:
-            queryset = queryset.filter(role_fk__code=User.UserRole.TEACHER)
+            queryset = queryset.filter(
+                Q(role_fk__code=User.UserRole.TEACHER)
+                | Q(role_fk__code__endswith="_ADMIN")
+            )
             if current_user.college:
                 queryset = queryset.filter(college=current_user.college).filter(
                     Q(is_expert=False) | Q(expert_assigned_by=current_user)

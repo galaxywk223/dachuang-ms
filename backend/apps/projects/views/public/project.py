@@ -65,10 +65,19 @@ class ProjectViewSet(
 
         user = self.request.user
         queryset = super().get_queryset()
+        teacher_scope = self.request.query_params.get("teacher_scope")
 
         # 学生只能看到自己参与的项目
         if user.is_student:
             queryset = queryset.filter(Q(leader=user) | Q(members=user)).distinct()
+        elif (
+            teacher_scope
+            and str(teacher_scope).lower() in ("true", "1", "yes")
+            and user.is_teacher
+        ):
+            queryset = queryset.filter(
+                Q(advisors__user=user) | Q(reviews__reviewer=user)
+            ).distinct()
         # 非校级管理员只能看到自己学院的项目
         elif user.is_admin and not user.is_level1_admin:
             queryset = queryset.filter(leader__college=user.college)

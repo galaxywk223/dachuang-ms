@@ -26,7 +26,9 @@ class ProjectSelfMixin:
         page = int(request.query_params.get("page", 1))
         page_size = int(request.query_params.get("page_size", 10))
 
-        projects = Project.objects.filter(leader=user)
+        from django.db.models import Q
+
+        projects = Project.objects.filter(Q(leader=user) | Q(members=user)).distinct()
 
         if title:
             projects = projects.filter(title__icontains=title)
@@ -93,4 +95,3 @@ class ProjectSelfMixin:
             },
             status=status.HTTP_200_OK,
         )
-

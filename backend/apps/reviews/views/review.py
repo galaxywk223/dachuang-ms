@@ -43,10 +43,21 @@ class ReviewViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
         queryset = super().get_queryset()
+        teacher_scope = self.request.query_params.get("teacher_scope")
 
         # 学生只能看到自己项目的审核记录
         if user.is_student:
             queryset = queryset.filter(project__leader=user)
+        elif (
+            teacher_scope
+            and str(teacher_scope).lower() in ("true", "1", "yes")
+            and user.is_teacher
+        ):
+            teacher_reviews = queryset.filter(
+                project__advisors__user=user, review_level="TEACHER"
+            )
+            expert_reviews = queryset.filter(reviewer=user, is_expert_review=True)
+            queryset = (teacher_reviews | expert_reviews).distinct()
         elif user.is_admin:
             query = ReviewService._build_admin_review_filter(user)
             queryset = (

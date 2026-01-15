@@ -131,7 +131,14 @@ class UserRepository:
                 role = filters["role"]
                 if role == "EXPERT":
                     queryset = queryset.filter(
-                        role_fk__code=User.UserRole.TEACHER, is_expert=True
+                        Q(role_fk__code=User.UserRole.TEACHER)
+                        | Q(role_fk__code__endswith="_ADMIN"),
+                        is_expert=True,
+                    )
+                elif role == User.UserRole.TEACHER:
+                    queryset = queryset.filter(
+                        Q(role_fk__code=User.UserRole.TEACHER)
+                        | Q(role_fk__code__endswith="_ADMIN")
                     )
                 else:
                     queryset = queryset.filter(role_fk__code=role)

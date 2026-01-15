@@ -2,6 +2,7 @@
 专家组管理视图
 """
 
+from django.db.models import Q
 from rest_framework import viewsets
 from rest_framework.exceptions import PermissionDenied
 
@@ -24,7 +25,7 @@ class ExpertGroupViewSet(viewsets.ModelViewSet):
         queryset = super().get_queryset()
 
         if user.is_admin:
-            return queryset.filter(created_by=user)
+            return queryset.filter(Q(created_by=user) | Q(members=user)).distinct()
         elif user.is_teacher:
             # 教师（作为专家）只能看自己在的组
             return queryset.filter(members=user)

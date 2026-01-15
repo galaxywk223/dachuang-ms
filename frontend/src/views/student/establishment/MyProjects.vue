@@ -247,19 +247,29 @@
             <template #default="{ row }">
               <!-- Draft Action -->
               <template v-if="row.status === 'DRAFT'">
+                <template v-if="isLeader(row)">
+                  <el-button
+                    type="primary"
+                    link
+                    size="small"
+                    @click="handleEdit(row)"
+                    >编辑</el-button
+                  >
+                  <el-button
+                    type="danger"
+                    link
+                    size="small"
+                    @click="handleDelete(row)"
+                    >删除</el-button
+                  >
+                </template>
                 <el-button
+                  v-else
                   type="primary"
                   link
                   size="small"
                   @click="handleEdit(row)"
-                  >编辑</el-button
-                >
-                <el-button
-                  type="danger"
-                  link
-                  size="small"
-                  @click="handleDelete(row)"
-                  >删除</el-button
+                  >查看</el-button
                 >
               </template>
               <!-- View Action -->
@@ -272,36 +282,38 @@
                     @click="handleEdit(row)"
                     >查看</el-button
                   >
-                  <el-dropdown trigger="click">
-                    <el-button type="success" link size="small">
-                      管理
-                      <el-icon style="margin-left: 4px"><ArrowDown /></el-icon>
-                    </el-button>
-                    <template #dropdown>
-                      <el-dropdown-item @click="goToChangeRequests(row)"
-                        >项目异动</el-dropdown-item
-                      >
-                      <el-dropdown-item @click="goToFunds(row)"
-                        >经费管理</el-dropdown-item
-                      >
-                    </template>
-                  </el-dropdown>
-                  <el-button
-                    type="warning"
-                    link
-                    size="small"
-                    @click="handleWithdraw(row)"
-                    v-if="canWithdraw(row)"
-                    >撤回</el-button
-                  >
-                  <el-button
-                    type="danger"
-                    link
-                    size="small"
-                    @click="handleDeleteSubmission(row)"
-                    v-if="canDeleteSubmission(row)"
-                    >删除提交</el-button
-                  >
+                  <template v-if="isLeader(row)">
+                    <el-dropdown trigger="click">
+                      <el-button type="success" link size="small">
+                        管理
+                        <el-icon style="margin-left: 4px"><ArrowDown /></el-icon>
+                      </el-button>
+                      <template #dropdown>
+                        <el-dropdown-item @click="goToChangeRequests(row)"
+                          >项目异动</el-dropdown-item
+                        >
+                        <el-dropdown-item @click="goToFunds(row)"
+                          >经费管理</el-dropdown-item
+                        >
+                      </template>
+                    </el-dropdown>
+                    <el-button
+                      type="warning"
+                      link
+                      size="small"
+                      @click="handleWithdraw(row)"
+                      v-if="canWithdraw(row)"
+                      >撤回</el-button
+                    >
+                    <el-button
+                      type="danger"
+                      link
+                      size="small"
+                      @click="handleDeleteSubmission(row)"
+                      v-if="canDeleteSubmission(row)"
+                      >删除提交</el-button
+                    >
+                  </template>
                 </div>
               </template>
             </template>
@@ -345,6 +357,7 @@ import {
 import { useRouter } from "vue-router";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionaries";
+import { useUserStore } from "@/stores/user";
 
 defineOptions({
   name: "StudentEstablishmentMyProjectsView",
@@ -362,6 +375,7 @@ type ProjectRow = {
   level?: string;
   category?: string;
   college?: string;
+  leader?: number;
   leader_name?: string;
   leader_student_id?: string;
   leader_contact?: string;
@@ -389,6 +403,8 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 
 const router = useRouter();
 const { loadDictionaries, getOptions } = useDictionary();
+const userStore = useUserStore();
+const currentUserId = computed(() => userStore.user?.id);
 
 // Dict Options
 const levelOptions = computed(
@@ -508,6 +524,8 @@ const getStatusColor = (status: string) => {
 const handleEdit = (row: ProjectRow) => {
   router.push(`/establishment/apply?id=${row.id}`);
 };
+
+const isLeader = (row: ProjectRow) => row.leader === currentUserId.value;
 
 const canWithdraw = (row: ProjectRow) => {
   // Only allow withdraw if submitted and not fully approved/rejected yet (logic varies by requirement)

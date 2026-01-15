@@ -461,6 +461,11 @@ const currentMenus = computed<MenuEntry[]>(() => {
           icon: Folder,
         },
         {
+          index: "/teacher/dashboard",
+          title: "指导项目",
+          icon: DocumentAdd,
+        },
+        {
           index: "level2-review",
           title: "审核管理",
           icon: DocumentChecked,
@@ -503,6 +508,11 @@ const currentMenus = computed<MenuEntry[]>(() => {
           index: "/level1-admin/statistics",
           title: "统计概览",
           icon: Folder,
+        },
+        {
+          index: "/teacher/dashboard",
+          title: "指导项目",
+          icon: DocumentAdd,
         },
         {
           index: "level1-review",

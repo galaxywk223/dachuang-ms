@@ -102,6 +102,7 @@ const fetchRequests = async () => {
   try {
     const res = (await getChangeRequests({
       status: "TEACHER_REVIEWING",
+      teacher_scope: "true",
     })) as ListResponse<ChangeRequestRow>;
     const payload = isRecord(res) && isRecord(res.data) ? res.data : res;
     requests.value = resolveList<ChangeRequestRow>(payload);

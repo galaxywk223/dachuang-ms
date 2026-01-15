@@ -28,12 +28,12 @@ class ProjectRecycleBinViewSet(viewsets.ReadOnlyModelViewSet):
         qs = super().get_queryset()
         if user.is_student:
             return qs.filter(project__leader=user)
+        if user.is_admin:
+            if not user.is_level1_admin:
+                return qs.filter(project__leader__college=user.college)
+            return qs
         if user.is_teacher:
             return qs.filter(project__advisors__user=user).distinct()
-        if user.is_admin and not user.is_level1_admin:
-            return qs.filter(project__leader__college=user.college)
-        if user.is_level1_admin:
-            return qs
         return qs.none()
 
     @action(methods=["post"], detail=True, url_path="restore")

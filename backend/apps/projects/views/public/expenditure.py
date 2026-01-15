@@ -121,14 +121,16 @@ class ProjectExpenditureViewSet(viewsets.ModelViewSet):
             return ProjectExpenditure.objects.filter(
                 Q(project__leader=user) | Q(project__members=user)
             ).distinct()
+        if user.is_admin:
+            if not user.is_level1_admin:
+                return ProjectExpenditure.objects.filter(
+                    project__leader__college=user.college
+                )
+            return ProjectExpenditure.objects.all()
         if user.is_teacher:
             return ProjectExpenditure.objects.filter(
                 project__advisors__user=user
             ).distinct()
-        if user.is_admin and not user.is_level1_admin:
-            return ProjectExpenditure.objects.filter(
-                project__leader__college=user.college
-            )
         return ProjectExpenditure.objects.all()
 
     def destroy(self, request, *args, **kwargs):

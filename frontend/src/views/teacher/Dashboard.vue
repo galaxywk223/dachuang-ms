@@ -259,13 +259,15 @@ const parseListResponse = <T>(payload: unknown) => {
 
 const fetchPendingReviews = async () => {
   const res = await request.get("/reviews/", {
-    params: { status: "PENDING" },
+    params: { status: "PENDING", teacher_scope: "true" },
   });
   return parseListResponse<ReviewRecord>(res);
 };
 
 const fetchMyProjects = async () => {
-  const res = await request.get("/projects/");
+  const res = await request.get("/projects/", {
+    params: { teacher_scope: "true" },
+  });
   return parseListResponse<ProjectInfo>(res);
 };
 
@@ -301,6 +303,7 @@ const fetchProjects = async () => {
       // Fetch Change Requests
       const changeRes = await getChangeRequests({
         status: "TEACHER_REVIEWING",
+        teacher_scope: "true",
       });
       const changeData =
         isRecord(changeRes) && isRecord(changeRes.data)
