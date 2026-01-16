@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.db.models import Count, Q
 
 from apps.users.models import Role
-from apps.users.permissions import IsLevel1Admin
+
 
 
 class RoleSimpleSerializer:

@@ -20,3 +20,58 @@ export function getRoles(params?: Record<string, unknown>): Promise<unknown> {
     params,
   });
 }
+
+/**
+ * 获取角色详情
+ */
+export function getRoleDetail(id: number): Promise<unknown> {
+  return request({
+    url: `/auth/roles/${id}/`,
+    method: "get",
+  });
+}
+
+/**
+ * 创建角色
+ */
+export function createRole(data: Record<string, unknown>): Promise<unknown> {
+  return request({
+    url: "/auth/roles/",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * 更新角色
+ */
+export function updateRole(
+  id: number,
+  data: Record<string, unknown>
+): Promise<unknown> {
+  return request({
+    url: `/auth/roles/${id}/`,
+    method: "put",
+    data,
+  });
+}
+
+/**
+ * 删除角色
+ */
+export function deleteRole(id: number): Promise<unknown> {
+  return request({
+    url: `/auth/roles/${id}/`,
+    method: "delete",
+  });
+}
+
+/**
+ * 切换角色状态
+ */
+export function toggleRoleStatus(id: number): Promise<unknown> {
+  return request({
+    url: `/auth/roles/${id}/toggle-status/`,
+    method: "post",
+  });
+}
