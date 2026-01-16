@@ -70,7 +70,16 @@ class UserSerializer(RoleAssignMixin, serializers.ModelSerializer):
         if not hasattr(instance, "role_fk"):
             return {}
         data = super().to_representation(instance)
-        data["role"] = instance.role_fk.code if instance.role_fk else None
+        # 统一返回：有scope_dimension的都是level2_admin
+        if instance.role_fk:
+            if instance.role_fk.scope_dimension:
+                data["role"] = "level2_admin"
+            else:
+                # 将系统角色代码转为小写并加下划线
+                role_code = instance.role_fk.code.lower()
+                data["role"] = role_code
+        else:
+            data["role"] = None
         return data
 
     def get_role_info(self, obj):

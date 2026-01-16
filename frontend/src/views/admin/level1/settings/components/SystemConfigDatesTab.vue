@@ -144,7 +144,7 @@
           <div class="col-phase">阶段</div>
           <div class="col-role">指导教师审核</div>
           <div class="col-role">学院审核</div>
-          <div class="col-role">校级审核</div>
+          <div class="col-role">一级审核</div>
         </div>
         <div class="matrix-row">
           <div class="col-phase">申报审核</div>
@@ -232,7 +232,7 @@
             />
           </div>
           <div class="col-role bg-gray">
-            <span class="text-xs text-gray">无需校级审核</span>
+            <span class="text-xs text-gray">无需一级审核</span>
           </div>
         </div>
         <div class="matrix-row">

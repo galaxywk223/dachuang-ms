@@ -4,7 +4,7 @@
       <template #header>
         <div class="card-header">
           <div class="header-left">
-            <span class="header-title">校级结题审核列表</span>
+            <span class="header-title">结题审核列表</span>
             <el-tag type="info" size="small" effect="plain" round class="ml-2"
               >共 {{ total }} 项</el-tag
             >
@@ -260,10 +260,7 @@ import { Search, Download } from "@element-plus/icons-vue";
 import { batchDownloadAttachments } from "@/api/projects/admin";
 import ProjectStatusBadge from "@/components/business/project/StatusBadge.vue";
 import request from "@/utils/request";
-import {
-  getPendingReviews,
-  type PendingReview,
-} from "@/api/reviews";
+import { getPendingReviews, type PendingReview } from "@/api/reviews";
 
 defineOptions({ name: "Level1ClosureReviewView" });
 
@@ -594,7 +591,7 @@ const handleBatchDownload = async () => {
       res instanceof Blob
         ? res
         : new Blob([blobPart], { type: "application/zip" });
-    downloadFile(blob, "校级结题审核附件.zip");
+    downloadFile(blob, "结题审核附件.zip");
     ElMessage.success("下载成功");
   } catch {
     ElMessage.error("下载失败");

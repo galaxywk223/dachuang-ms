@@ -4,7 +4,7 @@
       <template #header>
         <div class="card-header">
           <div class="header-left">
-            <span class="header-title">校级立项审核</span>
+            <span class="header-title">立项审核</span>
             <el-tag type="info" size="small" effect="plain" round class="ml-2"
               >共 {{ total }} 项</el-tag
             >

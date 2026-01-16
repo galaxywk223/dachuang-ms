@@ -269,10 +269,7 @@ import { Search, RefreshLeft, Download } from "@element-plus/icons-vue";
 import { batchDownloadAttachments } from "@/api/projects/admin";
 import ProjectStatusBadge from "@/components/business/project/StatusBadge.vue";
 import request from "@/utils/request";
-import {
-  getPendingReviews,
-  type PendingReview,
-} from "@/api/reviews";
+import { getPendingReviews, type PendingReview } from "@/api/reviews";
 
 defineOptions({ name: "Level2ClosureReviewView" });
 
@@ -450,7 +447,7 @@ const confirmReview = async () => {
         {}
       );
       if (isRecord(res) && res.code === 200) {
-        ElMessage.success("已上报校级");
+        ElMessage.success("已上报一级审核");
       } else {
         ElMessage.error(
           (isRecord(res) && typeof res.message === "string" && res.message) ||

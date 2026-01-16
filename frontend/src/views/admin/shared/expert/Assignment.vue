@@ -70,7 +70,7 @@
           <el-option label="待提交" value="DRAFT" />
           <el-option label="已提交" value="SUBMITTED" />
           <el-option label="学院审核中" value="COLLEGE_AUDITING" />
-          <el-option label="校级审核中" value="LEVEL1_AUDITING" />
+          <el-option label="一级审核中" value="LEVEL1_AUDITING" />
           <el-option label="进行中" value="IN_PROGRESS" />
           <el-option label="中期审核中" value="MID_TERM_REVIEWING" />
           <el-option label="中期已提交" value="MID_TERM_SUBMITTED" />

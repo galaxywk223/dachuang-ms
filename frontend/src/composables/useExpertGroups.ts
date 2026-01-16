@@ -24,8 +24,8 @@ export interface Expert {
 
 /**
  * 使用专家组管理
- * @param scope 专家组范围：SCHOOL（校级）或 COLLEGE（院级）
- * @param reviewLevel 评审级别：LEVEL1（校级）或 LEVEL2（院级）
+ * @param scope 专家组范围：SCHOOL（一级）或 COLLEGE（二级）
+ * @param reviewLevel 评审级别：LEVEL1（一级）或 LEVEL2（二级）
  */
 export function useExpertGroups(scope: "SCHOOL" | "COLLEGE") {
   const groups = ref<ExpertGroup[]>([]);

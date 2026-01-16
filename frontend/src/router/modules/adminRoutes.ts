@@ -47,13 +47,13 @@ export const adminRoutes: RouteRecordRaw[] = [
         path: "expert/groups",
         name: "level1-expert-groups",
         component: () => import("@/views/admin/shared/expert/Groups.vue"),
-        meta: { title: "校级专家组管理" },
+        meta: { title: "专家组管理" },
       },
       {
         path: "expert/assignment",
         name: "level1-expert-assignment",
         component: () => import("@/views/admin/shared/expert/Assignment.vue"),
-        meta: { title: "校级评审分配" },
+        meta: { title: "评审分配" },
       },
       {
         path: "projects/all",

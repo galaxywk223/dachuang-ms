@@ -502,7 +502,7 @@ const currentMenus = computed<MenuEntry[]>(() => {
           title: "专家管理",
           icon: User,
           children: [
-            { index: "/level2-admin/users/experts", title: "院级专家库管理" },
+            { index: "/level2-admin/users/experts", title: "专家库管理" },
             { index: "/level2-admin/expert/groups", title: "院系专家组管理" },
             { index: "/level2-admin/expert/assignment", title: "院系评审分配" },
           ],
@@ -551,8 +551,8 @@ const currentMenus = computed<MenuEntry[]>(() => {
           icon: User,
           children: [
             { index: "/level1-admin/users/experts", title: "专家库管理" },
-            { index: "/level1-admin/expert/groups", title: "校级专家组管理" },
-            { index: "/level1-admin/expert/assignment", title: "校级评审分配" },
+            { index: "/level1-admin/expert/groups", title: "专家组管理" },
+            { index: "/level1-admin/expert/assignment", title: "评审分配" },
           ],
         },
         {

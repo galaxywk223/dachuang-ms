@@ -286,7 +286,9 @@
                     <el-dropdown trigger="click">
                       <el-button type="success" link size="small">
                         管理
-                        <el-icon style="margin-left: 4px"><ArrowDown /></el-icon>
+                        <el-icon style="margin-left: 4px"
+                          ><ArrowDown
+                        /></el-icon>
                       </el-button>
                       <template #dropdown>
                         <el-dropdown-item @click="goToChangeRequests(row)"
@@ -421,7 +423,7 @@ const statusMap: Record<string, string> = {
   TEACHER_APPROVED: "导师审核通过",
   TEACHER_REJECTED: "导师审核不通过",
   COLLEGE_AUDITING: "学院审核中",
-  LEVEL1_AUDITING: "校级审核中",
+  LEVEL1_AUDITING: "一级审核中",
   APPLICATION_RETURNED: "退回修改",
   IN_PROGRESS: "进行中",
 };

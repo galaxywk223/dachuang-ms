@@ -94,21 +94,47 @@ router.beforeEach(async (to, _from, next) => {
       "[路由守卫] roleInfo.default_route:",
       userStore.roleInfo?.default_route
     );
+    console.log(
+      "[路由守卫] roleInfo.scope_dimension:",
+      userStore.roleInfo?.scope_dimension
+    );
 
-    if (userRole === "student") {
+    // 等待一下，确保 roleInfo 已经加载
+    if (!userStore.user && userStore.isLoggedIn) {
+      try {
+        await userStore.fetchProfile();
+      } catch {
+        next({ name: "login" });
+        return;
+      }
+    }
+
+    // 优先使用 roleInfo.scope_dimension 判断是否为二级管理员
+    if (userStore.roleInfo?.scope_dimension) {
+      console.log("[路由守卫] 检测到scope_dimension，跳转到二级管理员页面");
+      next({ path: "/level2-admin/projects" });
+    } else if (userRole === "student") {
       console.log("[路由守卫] 跳转到学生页面");
       next({ path: "/my-projects" });
     } else if (userRole === "level1_admin") {
-      console.log("[路由守卫] 跳转到校级管理员页面");
+      console.log("[路由守卫] 跳转到一级管理员页面");
       next({ path: "/level1-admin/statistics" });
     } else if (userRole === "expert" || userRole === "teacher") {
       // 专家和教师使用相同的页面，因为专家就是被指定为评审的教师
       console.log("[路由守卫] 跳转到教师页面");
       next({ path: "/teacher/dashboard" });
+    } else if (userRole === "level2_admin") {
+      console.log("[路由守卫] 跳转到二级管理员页面");
+      next({ path: "/level2-admin/projects" });
+    } else if (userStore.roleInfo?.default_route) {
+      // 如果有默认路由，使用默认路由
+      console.log("[路由守卫] 使用默认路由:", userStore.roleInfo.default_route);
+      next({ path: userStore.roleInfo.default_route });
     } else {
-      // 所有其他管理员角色（学院管理员、三级管理员等）都跳转到二级管理页面
-      console.log("[路由守卫] 跳转到管理员页面");
-      next({ path: "/level2-admin/statistics" });
+      // 未知角色，清除登录状态并跳转登录页
+      console.log("[路由守卫] 未知角色，清除登录状态");
+      await userStore.logoutAction();
+      next({ name: "login" });
     }
   } else if (userStore.isLoggedIn) {
     // 如果已登录但没有用户信息，尝试获取用户信息
@@ -129,28 +155,16 @@ router.beforeEach(async (to, _from, next) => {
 
     // Strict role check
     if (routeRole && routeRole !== userRole) {
-      // 对于admin和level2_admin页面，允许所有管理员角色访问
+      // 对于level2_admin页面，允许所有有scope_dimension的角色访问
       if (routeRole === "level2_admin" || routeRole === "admin") {
-        // 检查用户是否是管理员：校级、院级或其他管理员角色
-        console.log(
-          "[路由守卫] roleInfo完整对象:",
-          JSON.stringify(userStore.roleInfo)
-        );
-        console.log(
-          "[路由守卫] scope_dimension值:",
-          userStore.roleInfo?.scope_dimension
-        );
-        const isAdmin =
-          userRole === "level1_admin" ||
-          userRole === "level2_admin" ||
-          userRole === "admin" ||
-          userStore.roleInfo?.scope_dimension; // 有scope_dimension就是管理员
-        console.log("[路由守卫] isAdmin检查结果:", isAdmin);
-        if (isAdmin) {
-          console.log("[路由守卫] 管理员角色，允许访问");
+        const isLevel2Admin =
+          userRole === "level2_admin" || userStore.roleInfo?.scope_dimension; // 有scope_dimension就是二级管理员
+        console.log("[路由守卫] 二级管理员检查:", isLevel2Admin);
+        if (isLevel2Admin) {
+          console.log("[路由守卫] 二级管理员，允许访问");
           next();
         } else {
-          console.log("[路由守卫] 非管理员，拒绝访问");
+          console.log("[路由守卫] 非二级管理员，拒绝访问");
           next({ name: "login" });
         }
       } else if (routeRole === "level1_admin" && userRole !== "level1_admin") {

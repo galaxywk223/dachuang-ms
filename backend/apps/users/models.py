@@ -75,8 +75,8 @@ class User(AbstractUser):
         LEVEL1_ADMIN = "LEVEL1_ADMIN", "校级管理员"
 
     class ExpertScope(models.TextChoices):
-        SCHOOL = "SCHOOL", "校级专家"
-        COLLEGE = "COLLEGE", "院级专家"
+        SCHOOL = "SCHOOL", "一级专家组"
+        COLLEGE = "COLLEGE", "二级专家组"
 
     # 基本信息 - 角色改为外键关联
     role_fk = models.ForeignKey(
@@ -172,10 +172,8 @@ class User(AbstractUser):
 
     @property
     def is_level2_admin(self):
-        """向后兼容的角色判断"""
-        return (
-            self.role_fk is not None and self.role_fk.code == self.UserRole.LEVEL2_ADMIN
-        )
+        """向后兼容的角色判断 - 所有有scope_dimension的角色都是二级管理员"""
+        return self.role_fk is not None and self.role_fk.scope_dimension is not None
 
     @property
     def is_level1_admin(self):
@@ -186,9 +184,16 @@ class User(AbstractUser):
 
     @property
     def is_admin(self):
-        """通用管理员判断（支持多级管理员）"""
-        role_code = self.get_role_code()
-        return bool(role_code and role_code.endswith("_ADMIN"))
+        """通用管理员判断 - 一级管理员或任何有scope_dimension的角色"""
+        if self.role_fk is None:
+            return False
+        # 一级管理员
+        if self.role_fk.code == self.UserRole.LEVEL1_ADMIN:
+            return True
+        # 二级管理员（有scope_dimension）
+        if self.role_fk.scope_dimension is not None:
+            return True
+        return False
 
     @property
     def is_teacher(self):

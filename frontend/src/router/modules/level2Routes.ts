@@ -28,7 +28,7 @@ export const level2Routes: RouteRecordRaw[] = [
         name: "level2-users-experts",
         component: () =>
           import("@/views/admin/level2/users/ExpertManagement.vue"),
-        meta: { title: "院级专家库管理" },
+        meta: { title: "专家库管理" },
       },
       {
         path: "expert",

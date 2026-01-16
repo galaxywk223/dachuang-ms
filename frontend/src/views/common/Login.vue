@@ -44,6 +44,7 @@ import { useRouter } from "vue-router";
 import { useUserStore } from "@/stores/user";
 import { ElMessage } from "element-plus";
 import LoginForm from "@/components/forms/LoginForm.vue";
+import { UserRole } from "@/types/user";
 
 defineOptions({
   name: "LoginView",
@@ -73,24 +74,31 @@ const handleLogin = async (formData: LoginFormData) => {
         duration: 2000,
       });
 
-      // 根据角色进行跳转，强制执行新的首页规则
-      const userRole = String(userStore.user?.role || "");
-      let targetPath = userStore.roleInfo?.default_route || "/";
+      // Determine redirect path based on role and roleInfo
+      const userRole = userStore.user?.role;
+      const roleInfo = userStore.roleInfo;
+      let redirectPath = "/";
 
-      if (userRole === "student") {
-        targetPath = "/my-projects";
-      } else if (userRole === "level1_admin") {
-        targetPath = "/level1-admin/statistics";
+      // 优先使用 roleInfo.scope_dimension 判断是否为二级管理员
+      if (roleInfo?.scope_dimension) {
+        redirectPath = "/level2-admin/projects";
+      } else if (userRole === UserRole.STUDENT) {
+        redirectPath = "/my-projects";
+      } else if (userRole === UserRole.LEVEL1_ADMIN) {
+        redirectPath = "/level1-admin/statistics";
       } else if (
-        userRole === "level2_admin" ||
-        userStore.roleInfo?.scope_dimension // 其他管理员
+        userRole === UserRole.TEACHER ||
+        (userRole as unknown as string) === "expert"
       ) {
-        targetPath = "/level2-admin/statistics";
-      } else if (userRole === "expert" || userRole === "teacher") {
-        targetPath = "/teacher/dashboard";
+        redirectPath = "/teacher/dashboard";
+      } else if (userRole === UserRole.LEVEL2_ADMIN) {
+        redirectPath = "/level2-admin/projects";
+      } else if (roleInfo?.default_route) {
+        redirectPath = roleInfo.default_route;
       }
 
-      router.push(targetPath);
+      console.log("[Login] Redirecting to:", redirectPath);
+      await router.push(redirectPath);
     }
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "登录服务暂不可用";
