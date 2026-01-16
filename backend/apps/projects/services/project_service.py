@@ -7,7 +7,6 @@ from django.db import transaction
 from ..models import (
     Project,
     ProjectMember,
-    ProjectProgress,
     ProjectExpenditure,
     ProjectChangeRequest,
     ProjectChangeReview,
@@ -114,19 +113,6 @@ class ProjectService:
         except ProjectMember.DoesNotExist:
             pass
         return False
-
-    @staticmethod
-    def add_progress(project, user, title, content, attachment=None):
-        """
-        添加项目进度
-        """
-        return ProjectProgress.objects.create(
-            project=project,
-            title=title,
-            content=content,
-            attachment=attachment,
-            created_by=user,
-        )
 
     @staticmethod
     def get_user_projects(user):

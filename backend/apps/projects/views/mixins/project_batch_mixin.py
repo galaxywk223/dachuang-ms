@@ -6,12 +6,9 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from ...models import Project, ProjectArchive, ProjectMember, ProjectPushRecord
-from ...serializers import (
-    ProjectArchiveSerializer,
-    ProjectPushRecordSerializer,
-)
-from ...services import ExternalPushService, archive_projects
+from ...models import Project, ProjectArchive, ProjectMember
+from ...serializers import ProjectArchiveSerializer
+from ...services import archive_projects
 
 
 class ProjectBatchMixin:
@@ -65,44 +62,6 @@ class ProjectBatchMixin:
         return Response(
             {"code": 200, "message": "归档完成", "data": {"created": len(created)}}
         )
-
-    @action(methods=["post"], detail=False, url_path="push-external")
-    def push_external(self, request):
-        """
-        推送项目数据到外部平台（模拟）
-        """
-        ids = request.data.get("project_ids", [])
-        target = request.data.get("target", "ANHUI_INNOVATION_PLATFORM")
-
-        if not isinstance(ids, list) or not ids:
-            return Response(
-                {"code": 400, "message": "请提供项目ID列表"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        success_count = 0
-        failed_count = 0
-
-        for project_id in ids:
-            success, _msg = ExternalPushService.push_project_data(project_id, target)
-            if success:
-                success_count += 1
-            else:
-                failed_count += 1
-
-        return Response(
-            {
-                "code": 200,
-                "message": f"推送完成：成功 {success_count}，失败 {failed_count}",
-                "data": {"success": success_count, "failed": failed_count},
-            }
-        )
-
-    @action(methods=["get"], detail=False, url_path="push-records")
-    def push_records(self, request):
-        queryset = ProjectPushRecord.objects.all().order_by("-created_at")
-        serializer = ProjectPushRecordSerializer(queryset, many=True)
-        return Response({"code": 200, "message": "获取成功", "data": serializer.data})
 
     @action(methods=["get"], detail=False, url_path="archives")
     def archives(self, request):

@@ -8,7 +8,6 @@ from apps.projects.models import (
     Project,
     ProjectAchievement,
     ProjectExpenditure,
-    ProjectProgress,
     ProjectRecycleBin,
 )
 
@@ -71,15 +70,6 @@ class ProjectRecycleService:
                 amount=payload.get("amount", 0),
                 expenditure_date=payload.get("expenditure_date"),
                 proof_file=payload.get("proof_file") or None,
-                created_by_id=payload.get("created_by"),
-            )
-
-        elif item.resource_type == ProjectRecycleBin.ResourceType.PROGRESS:
-            ProjectProgress.objects.create(
-                project=item.project,
-                title=payload.get("title", ""),
-                content=payload.get("content", ""),
-                attachment=payload.get("attachment") or None,
                 created_by_id=payload.get("created_by"),
             )
 

@@ -9,44 +9,10 @@ from django.db import models
 from django.core.validators import RegexValidator
 
 
-class Permission(models.Model):
-    """
-    权限定义表
-    定义系统中所有可用的权限点
-    """
-
-    code = models.CharField(
-        max_length=50,
-        unique=True,
-        verbose_name="权限代码",
-        help_text="如：manage_users, review_projects",
-    )
-    name = models.CharField(max_length=100, verbose_name="权限名称")
-    description = models.TextField(blank=True, verbose_name="权限描述")
-    category = models.CharField(
-        max_length=50,
-        blank=True,
-        verbose_name="权限分类",
-        help_text="如：用户管理、项目管理、审核管理",
-    )
-    is_active = models.BooleanField(default=True, verbose_name="是否启用")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
-
-    class Meta:
-        db_table = "permissions"
-        verbose_name = "权限"
-        verbose_name_plural = verbose_name
-        ordering = ["category", "code"]
-
-    def __str__(self):
-        return f"{self.name}({self.code})"
-
-
 class Role(models.Model):
     """
     角色定义表
-    校级管理员可以自定义角色及其权限
+    系统通过角色代码进行权限判断
     """
 
     code = models.CharField(
@@ -56,9 +22,6 @@ class Role(models.Model):
         help_text="如：STUDENT, TEACHER, LEVEL1_ADMIN",
     )
     name = models.CharField(max_length=100, verbose_name="角色名称")
-    permissions = models.ManyToManyField(
-        Permission, blank=True, related_name="roles", verbose_name="权限列表"
-    )
     scope_dimension = models.CharField(
         max_length=50,
         choices=[
@@ -95,12 +58,6 @@ class Role(models.Model):
 
     def __str__(self):
         return f"{self.name}({self.code})"
-
-    def get_permissions(self):
-        """获取角色的所有权限代码列表"""
-        return list(
-            self.permissions.filter(is_active=True).values_list("code", flat=True)
-        )
 
 
 class User(AbstractUser):
@@ -208,14 +165,6 @@ class User(AbstractUser):
         """获取角色代码，用于向后兼容"""
         return self.role_fk.code if self.role_fk else None
 
-    def get_permissions(self):
-        """获取用户的所有权限代码列表"""
-        return self.role_fk.get_permissions() if self.role_fk else []
-
-    def has_permission(self, permission_code):
-        """检查用户是否拥有某个权限"""
-        return permission_code in self.get_permissions()
-
     @property
     def is_student(self):
         """向后兼容的角色判断"""
@@ -250,24 +199,3 @@ class User(AbstractUser):
     def is_expert_role(self):
         """向后兼容：基于角色的专家判断"""
         return self.role_fk is not None and self.role_fk.code == self.UserRole.EXPERT
-
-
-class LoginLog(models.Model):
-    """
-    登录日志
-    """
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="用户")
-    login_time = models.DateTimeField(auto_now_add=True, verbose_name="登录时间")
-    ip_address = models.GenericIPAddressField(verbose_name="IP地址")
-    user_agent = models.CharField(max_length=200, blank=True, verbose_name="用户代理")
-    login_status = models.BooleanField(default=True, verbose_name="登录状态")
-
-    class Meta:
-        db_table = "login_logs"
-        verbose_name = "登录日志"
-        verbose_name_plural = verbose_name
-        ordering = ["-login_time"]
-
-    def __str__(self):
-        return f"{self.user.real_name} - {self.login_time}"

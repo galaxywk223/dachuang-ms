@@ -55,7 +55,6 @@ class UserRepository:
         """
         # 获取角色信息
         role_info = None
-        permissions = []
         default_route = "/"
 
         if user.role_fk:
@@ -65,7 +64,6 @@ class UserRepository:
                 "name": user.role_fk.name,
                 "default_route": user.role_fk.default_route,
             }
-            permissions = user.get_permissions()
             default_route = user.role_fk.default_route or "/"
 
         return {
@@ -74,7 +72,6 @@ class UserRepository:
             "real_name": user.real_name,
             "role": user.get_role_code(),  # 兼容旧的角色代码字段
             "role_info": role_info,
-            "permissions": permissions,
             "default_route": default_route,
             "is_expert": user.is_expert,
             "expert_scope": user.expert_scope if user.is_expert else None,

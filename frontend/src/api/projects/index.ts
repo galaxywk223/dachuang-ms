@@ -282,56 +282,11 @@ export function restoreRecycleBin(id: number): Promise<unknown> {
 }
 
 /**
- * 获取项目进度
- */
-export function getProjectProgress(id: number): Promise<unknown> {
-  return request({
-    url: `/projects/${id}/progress/`,
-    method: "get",
-  });
-}
-
-/**
- * 添加项目进度
- */
-export function addProjectProgress(id: number, data: Record<string, unknown> | FormData): Promise<unknown> {
-  return request({
-    url: `/projects/${id}/add-progress/`,
-    method: "post",
-    data,
-    headers: {
-      "Content-Type": data instanceof FormData ? "multipart/form-data" : "application/json",
-    },
-  });
-}
-
-/**
- * 删除项目进度（进入回收站）
- */
-export function removeProjectProgress(projectId: number, progressId: number): Promise<unknown> {
-  return request({
-    url: `/projects/${projectId}/remove-progress/${progressId}/`,
-    method: "delete",
-  });
-}
-
-/**
  * 删除经费记录（进入回收站）
  */
 export function removeProjectExpenditure(id: number): Promise<unknown> {
   return request({
     url: `/projects/expenditures/${id}/`,
     method: "delete",
-  });
-}
-
-/**
- * 推送项目数据到外部平台
- */
-export function pushProjectToExternal(data: { project_ids: number[]; target: string }): Promise<unknown> {
-  return request({
-    url: `/projects/push-external/`,
-    method: "post",
-    data,
   });
 }

@@ -7,7 +7,6 @@ import {
   batchUpdateProjectStatus,
   deleteProjectById,
 } from "@/api/projects/admin";
-import { pushProjectToExternal } from "@/api/projects";
 import { batchSendNotifications } from "@/api/notifications";
 import { useProjectExport } from "./useProjectExport";
 import { useProjectSearch } from "./useProjectSearch";
@@ -132,38 +131,6 @@ export function useAllProjects() {
     return true;
   };
 
-  const handlePushToExternal = async () => {
-    if (!ensureSelection()) return;
-    try {
-      await ElMessageBox.confirm(
-        "确定要将选中的项目推送至省平台吗？",
-        "提示",
-        {
-          confirmButtonText: "确定推送",
-          cancelButtonText: "取消",
-          type: "info",
-        }
-      );
-
-      loading.value = true;
-      const ids = selectedRows.value.map((row) => row.id);
-      const res = await pushProjectToExternal({
-        project_ids: ids,
-        target: "PROVINCIAL_PLATFORM",
-      });
-
-      if (isRecord(res) && res.code === 200) {
-        ElMessage.success((typeof res.message === "string" && res.message) || "推送完成");
-      } else {
-        ElMessage.warning((isRecord(res) && typeof res.message === "string" && res.message) || "推送部分失败");
-      }
-    } catch (error) {
-      if (error !== "cancel") ElMessage.error("推送失败");
-    } finally {
-      loading.value = false;
-    }
-  };
-
   const openBatchStatusDialog = () => {
     if (!ensureSelection()) return;
     batchStatusForm.status = "";
@@ -275,7 +242,6 @@ export function useAllProjects() {
     handleBatchExportDocs,
     handleBatchExportNotices,
     handleBatchExportCertificates,
-    handlePushToExternal,
     openBatchStatusDialog,
     submitBatchStatus,
     openBatchNotifyDialog,

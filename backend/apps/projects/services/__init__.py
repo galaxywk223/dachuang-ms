@@ -1,5 +1,4 @@
 from .document import DocumentService
-from .external import ExternalPushService
 from .archive_service import (
     archive_projects,
     build_archive_attachments,
@@ -14,7 +13,6 @@ from .recycle_service import ProjectRecycleService
 
 __all__ = [
     "DocumentService",
-    "ExternalPushService",
     "ProjectService",
     "ProjectChangeService",
     "ProjectApplicationService",

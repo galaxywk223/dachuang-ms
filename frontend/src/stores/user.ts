@@ -7,14 +7,10 @@ import type { User } from "@/types";
 export const useUserStore = defineStore("user", () => {
   const token = ref<string>(localStorage.getItem("token") || "");
 
-  // 从localStorage恢复权限和角色信息
-  const storedPermissions = localStorage.getItem("permissions");
+  // 从 localStorage 恢复角色信息
   const storedRoleInfo = localStorage.getItem("role_info");
 
   const user = ref<User | null>(null);
-  const permissions = ref<string[]>(
-    storedPermissions ? JSON.parse(storedPermissions) : []
-  );
   const roleInfo = ref<{
     id: number;
     code: string;
@@ -29,34 +25,14 @@ export const useUserStore = defineStore("user", () => {
     if (!data) return data;
     if (typeof data.role === "string") {
       const normalized = data.role.toLowerCase();
-      console.log("[角色标准化] 原始角色:", data.role, "标准化后:", normalized);
-      // 总是存储用户角色，不管是否在预定义枚举中
       localStorage.setItem("user_role", normalized);
-      console.log("[角色标准化] 存储到localStorage的user_role:", normalized);
       const roles = Object.values(UserRole);
       if (roles.includes(normalized as UserRole)) {
         return { ...data, role: normalized as UserRole };
       }
-      // 自定义角色也返回数据
-      console.log("[角色标准化] 自定义角色，直接返回");
       return data;
     }
     return data;
-  };
-
-  // 检查用户是否有某个权限
-  const hasPermission = (permission: string): boolean => {
-    return permissions.value.includes(permission);
-  };
-
-  // 检查用户是否有任意一个权限
-  const hasAnyPermission = (permissionList: string[]): boolean => {
-    return permissionList.some((p) => permissions.value.includes(p));
-  };
-
-  // 检查用户是否有所有权限
-  const hasAllPermissions = (permissionList: string[]): boolean => {
-    return permissionList.every((p) => permissions.value.includes(p));
   };
 
   async function loginAction(
@@ -77,7 +53,6 @@ export const useUserStore = defineStore("user", () => {
               default_route: string;
               scope_dimension?: string | null;
             };
-            permissions?: string[];
             default_route?: string;
           };
         };
@@ -96,21 +71,10 @@ export const useUserStore = defineStore("user", () => {
           console.log("[登录调试] 设置 roleInfo:", roleInfo.value);
         }
 
-        // 存储权限列表
-        if (userData?.permissions) {
-          permissions.value = userData.permissions;
-        }
-
         localStorage.setItem("token", response.data.access_token);
         localStorage.setItem("refresh_token", response.data.refresh_token);
         if (userData?.role_info) {
           localStorage.setItem("role_info", JSON.stringify(userData.role_info));
-        }
-        if (userData?.permissions) {
-          localStorage.setItem(
-            "permissions",
-            JSON.stringify(userData.permissions)
-          );
         }
         // 不需要再次存储user_role，normalizeUserRole已经处理了
         return true;
@@ -128,12 +92,10 @@ export const useUserStore = defineStore("user", () => {
     } finally {
       token.value = "";
       user.value = null;
-      permissions.value = [];
       roleInfo.value = null;
       localStorage.removeItem("token");
       localStorage.removeItem("refresh_token");
       localStorage.removeItem("role_info");
-      localStorage.removeItem("permissions");
       localStorage.removeItem("user_role");
     }
   }
@@ -149,7 +111,6 @@ export const useUserStore = defineStore("user", () => {
             name: string;
             default_route: string;
           };
-          permissions?: string[];
         };
       };
       if (response.code === 200) {
@@ -161,10 +122,6 @@ export const useUserStore = defineStore("user", () => {
           roleInfo.value = userData.role_info;
         }
 
-        // 更新权限列表
-        if (userData?.permissions) {
-          permissions.value = userData.permissions;
-        }
         if (user.value?.role) {
           localStorage.setItem("user_role", user.value.role);
         }
@@ -174,27 +131,21 @@ export const useUserStore = defineStore("user", () => {
       // 如果获取用户信息失败（如token过期），清理登录状态
       token.value = "";
       user.value = null;
-      permissions.value = [];
       roleInfo.value = null;
       localStorage.removeItem("token");
       localStorage.removeItem("refresh_token");
       localStorage.removeItem("role_info");
-      localStorage.removeItem("permissions");
       localStorage.removeItem("user_role");
-      throw error; // 重新抛出错误，让路由守卫可以处理
+      throw error;
     }
   }
 
   return {
     token,
     user,
-    permissions,
     roleInfo,
     isLoggedIn,
     role: computed(() => user.value?.role),
-    hasPermission,
-    hasAnyPermission,
-    hasAllPermissions,
     loginAction,
     logoutAction,
     fetchProfile,

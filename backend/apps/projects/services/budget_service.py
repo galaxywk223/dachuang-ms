@@ -5,7 +5,7 @@
 from django.db import transaction
 from django.db import models
 from django.utils import timezone
-from ..models import Project, ProjectExpenditure, BudgetChangeRequest
+from ..models import Project, ProjectExpenditure
 from apps.notifications.services import NotificationService
 
 
@@ -98,117 +98,6 @@ class BudgetService:
 
         return expenditure
 
-    @staticmethod
-    @transaction.atomic
-    def create_budget_change_request(project, user, data):
-        """
-        创建预算变更申请
-        """
-        # 检查项目状态
-        if project.status not in [
-            Project.ProjectStatus.IN_PROGRESS,
-            Project.ProjectStatus.MID_TERM_DRAFT,
-            Project.ProjectStatus.MID_TERM_SUBMITTED,
-            Project.ProjectStatus.MID_TERM_REVIEWING,
-            Project.ProjectStatus.MID_TERM_APPROVED,
-            Project.ProjectStatus.READY_FOR_CLOSURE,
-        ]:
-            raise ValueError("只有在研项目才能申请预算变更")
-
-        # 检查是否有待审核的变更申请
-        pending_request = BudgetChangeRequest.objects.filter(
-            project=project,
-            status__in=[
-                BudgetChangeRequest.RequestStatus.PENDING,
-                BudgetChangeRequest.RequestStatus.TEACHER_APPROVED,
-                BudgetChangeRequest.RequestStatus.LEVEL2_APPROVED,
-            ],
-            is_deleted=False,
-        ).exists()
-
-        if pending_request:
-            raise ValueError("已有待审核的预算变更申请，请等待审核完成后再提交新申请")
-
-        # 创建变更申请
-        request_obj = BudgetChangeRequest.objects.create(
-            project=project,
-            original_budget=project.approved_budget or project.budget_amount,
-            new_budget=data.get("new_budget"),
-            reason=data.get("reason"),
-            budget_breakdown=data.get("budget_breakdown", {}),
-            status=BudgetChangeRequest.RequestStatus.PENDING,
-            created_by=user,
-        )
-
-        # 发送通知给导师
-        NotificationService.notify_budget_change_submitted(project, request_obj, user)
-
-        return request_obj
-
-    @staticmethod
-    @transaction.atomic
-    def review_budget_change(request_obj, reviewer, level, approved, comment=""):
-        """
-        审核预算变更申请
-        :param request_obj: 预算变更申请
-        :param reviewer: 审核人
-        :param level: 审核级别 ('teacher', 'level2', 'level1')
-        :param approved: 是否通过
-        :param comment: 审核意见
-        """
-        # 检查审核级别和当前状态
-        if level == "teacher":
-            if request_obj.status != BudgetChangeRequest.RequestStatus.PENDING:
-                raise ValueError("当前状态不允许导师审核")
-
-            if approved:
-                request_obj.status = BudgetChangeRequest.RequestStatus.TEACHER_APPROVED
-            else:
-                request_obj.status = BudgetChangeRequest.RequestStatus.TEACHER_REJECTED
-
-            request_obj.teacher_comment = comment
-            request_obj.teacher_reviewed_by = reviewer
-            request_obj.teacher_reviewed_at = timezone.now()
-
-        elif level == "level2":
-            if request_obj.status != BudgetChangeRequest.RequestStatus.TEACHER_APPROVED:
-                raise ValueError("导师审核通过后才能进行学院审核")
-
-            if approved:
-                request_obj.status = BudgetChangeRequest.RequestStatus.LEVEL2_APPROVED
-            else:
-                request_obj.status = BudgetChangeRequest.RequestStatus.LEVEL2_REJECTED
-
-            request_obj.level2_comment = comment
-            request_obj.level2_reviewed_by = reviewer
-            request_obj.level2_reviewed_at = timezone.now()
-
-        elif level == "level1":
-            if request_obj.status != BudgetChangeRequest.RequestStatus.LEVEL2_APPROVED:
-                raise ValueError("学院审核通过后才能进行校级审核")
-
-            if approved:
-                request_obj.status = BudgetChangeRequest.RequestStatus.APPROVED
-                # 更新项目预算
-                request_obj.project.approved_budget = request_obj.new_budget
-                request_obj.project.save(
-                    update_fields=["approved_budget", "updated_at"]
-                )
-            else:
-                request_obj.status = BudgetChangeRequest.RequestStatus.REJECTED
-
-            request_obj.level1_comment = comment
-            request_obj.level1_reviewed_by = reviewer
-            request_obj.level1_reviewed_at = timezone.now()
-
-        request_obj.save()
-
-        # 发送通知
-        NotificationService.notify_budget_change_reviewed(
-            request_obj.project, request_obj, reviewer, level, approved, comment
-        )
-
-        return request_obj
 
     @staticmethod
     def calculate_budget_usage(project):

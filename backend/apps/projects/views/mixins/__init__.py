@@ -10,7 +10,6 @@ from .project_admin_export_documents_mixin import ProjectAdminExportDocumentsMix
 from .project_admin_export_certificates_mixin import ProjectAdminExportCertificatesMixin
 from .project_members_mixin import ProjectMembersMixin
 from .project_midterm_mixin import ProjectMidtermMixin
-from .project_progress_mixin import ProjectProgressMixin
 from .project_ranking_mixin import ProjectRankingMixin
 from .project_self_mixin import ProjectSelfMixin
 from .project_workflow_mixin import ProjectWorkflowMixin
@@ -26,7 +25,6 @@ __all__ = [
     "ProjectAdminExportCertificatesMixin",
     "ProjectMembersMixin",
     "ProjectMidtermMixin",
-    "ProjectProgressMixin",
     "ProjectRankingMixin",
     "ProjectSelfMixin",
     "ProjectWorkflowMixin",

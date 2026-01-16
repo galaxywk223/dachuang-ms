@@ -385,41 +385,6 @@ class ProjectPhaseInstance(models.Model):
         return f"{self.project.project_no} {self.phase}#{self.attempt_no} {self.step}({self.state})"
 
 
-class ProjectProgress(models.Model):
-    """
-    项目进度记录
-    """
-
-    project = models.ForeignKey(
-        Project,
-        on_delete=models.CASCADE,
-        related_name="progress_records",
-        verbose_name="项目",
-    )
-    title = models.CharField(max_length=200, verbose_name="进度标题")
-    content = models.TextField(verbose_name="进度内容")
-    attachment = models.FileField(
-        upload_to="progress/",
-        blank=True,
-        null=True,
-        verbose_name="附件",
-        max_length=255,
-    )
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, verbose_name="创建人"
-    )
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
-
-    class Meta:
-        db_table = "project_progress"
-        verbose_name = "项目进度"
-        verbose_name_plural = verbose_name
-        ordering = ["-created_at"]
-
-    def __str__(self):
-        return f"{self.project.title} - {self.title}"
-
-
 class ProjectAchievement(models.Model):
     """
     项目研究成果模型
@@ -711,44 +676,6 @@ class ProjectArchive(models.Model):
         return f"{self.project.project_no} - 归档"
 
 
-class ProjectPushRecord(models.Model):
-    """
-    项目外部推送记录
-    """
-
-    class PushStatus(models.TextChoices):
-        PENDING = "PENDING", "待推送"
-        SUCCESS = "SUCCESS", "推送成功"
-        FAILED = "FAILED", "推送失败"
-
-    project = models.ForeignKey(
-        Project,
-        on_delete=models.CASCADE,
-        related_name="push_records",
-        verbose_name="项目",
-    )
-    target = models.CharField(max_length=100, verbose_name="目标平台")
-    payload = models.JSONField(default=dict, verbose_name="推送数据")
-    response_message = models.TextField(blank=True, verbose_name="响应信息")
-    status = models.CharField(
-        max_length=20,
-        choices=PushStatus.choices,
-        default=PushStatus.PENDING,
-        verbose_name="推送状态",
-    )
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
-
-    class Meta:
-        db_table = "project_push_records"
-        verbose_name = "项目推送记录"
-        verbose_name_plural = verbose_name
-        ordering = ["-created_at"]
-
-    def __str__(self):
-        return f"{self.project.project_no} -> {self.target}"
-
-
 class ProjectRecycleBin(models.Model):
     """
     项目回收站记录
@@ -760,7 +687,6 @@ class ProjectRecycleBin(models.Model):
         CLOSURE = "CLOSURE", "结题提交"
         ACHIEVEMENT = "ACHIEVEMENT", "成果"
         EXPENDITURE = "EXPENDITURE", "经费支出"
-        PROGRESS = "PROGRESS", "进度记录"
 
     project = models.ForeignKey(
         Project,
@@ -802,107 +728,3 @@ class ProjectRecycleBin(models.Model):
 
     def __str__(self):
         return f"{self.project.project_no} - {self.get_resource_type_display()}"
-
-
-class BudgetChangeRequest(models.Model):
-    """
-    预算变更申请
-    """
-
-    class RequestStatus(models.TextChoices):
-        DRAFT = "DRAFT", "草稿"
-        PENDING = "PENDING", "待审核"
-        TEACHER_APPROVED = "TEACHER_APPROVED", "导师审核通过"
-        TEACHER_REJECTED = "TEACHER_REJECTED", "导师审核不通过"
-        LEVEL2_APPROVED = "LEVEL2_APPROVED", "学院审核通过"
-        LEVEL2_REJECTED = "LEVEL2_REJECTED", "学院审核不通过"
-        LEVEL1_APPROVED = "LEVEL1_APPROVED", "校级审核通过"
-        LEVEL1_REJECTED = "LEVEL1_REJECTED", "校级审核不通过"
-        APPROVED = "APPROVED", "审核通过"
-        REJECTED = "REJECTED", "审核不通过"
-
-    project = models.ForeignKey(
-        Project,
-        on_delete=models.CASCADE,
-        related_name="budget_change_requests",
-        verbose_name="项目",
-    )
-    original_budget = models.DecimalField(
-        max_digits=10, decimal_places=2, verbose_name="原预算金额"
-    )
-    new_budget = models.DecimalField(
-        max_digits=10, decimal_places=2, verbose_name="新预算金额"
-    )
-    reason = models.TextField(verbose_name="变更原因")
-    budget_breakdown = models.JSONField(
-        default=dict, verbose_name="预算明细", blank=True
-    )
-
-    status = models.CharField(
-        max_length=30,
-        choices=RequestStatus.choices,
-        default=RequestStatus.DRAFT,
-        verbose_name="状态",
-    )
-
-    # 审核记录
-    teacher_comment = models.TextField(blank=True, verbose_name="导师意见")
-    teacher_reviewed_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="budget_teacher_reviews",
-        verbose_name="导师审核人",
-    )
-    teacher_reviewed_at = models.DateTimeField(
-        null=True, blank=True, verbose_name="导师审核时间"
-    )
-
-    level2_comment = models.TextField(blank=True, verbose_name="学院意见")
-    level2_reviewed_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="budget_level2_reviews",
-        verbose_name="学院审核人",
-    )
-    level2_reviewed_at = models.DateTimeField(
-        null=True, blank=True, verbose_name="学院审核时间"
-    )
-
-    level1_comment = models.TextField(blank=True, verbose_name="校级意见")
-    level1_reviewed_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="budget_level1_reviews",
-        verbose_name="校级审核人",
-    )
-    level1_reviewed_at = models.DateTimeField(
-        null=True, blank=True, verbose_name="校级审核时间"
-    )
-
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,
-        related_name="created_budget_changes",
-        verbose_name="申请人",
-    )
-    is_deleted = models.BooleanField(default=False, verbose_name="是否删除")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
-
-    class Meta:
-        db_table = "budget_change_requests"
-        verbose_name = "预算变更申请"
-        verbose_name_plural = verbose_name
-        ordering = ["-created_at"]
-        indexes = [
-            models.Index(fields=["project", "status"]),
-        ]
-
-    def __str__(self):
-        return f"{self.project.project_no} 预算变更 {self.original_budget}->{self.new_budget}"

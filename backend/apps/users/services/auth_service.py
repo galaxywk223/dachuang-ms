@@ -5,7 +5,6 @@
 from rest_framework_simplejwt.tokens import RefreshToken
 import logging
 from ..repositories.user_repository import UserRepository
-from ..repositories.login_log_repository import LoginLogRepository
 
 
 class AuthService:
@@ -15,7 +14,6 @@ class AuthService:
 
     def __init__(self):
         self.user_repository = UserRepository()
-        self.login_log_repository = LoginLogRepository()
 
     def handle_login(self, user, ip_address, user_agent):
         """
@@ -29,11 +27,6 @@ class AuthService:
         Returns:
             dict: 包含token和用户信息的字典
         """
-        # 记录登录日志
-        self.login_log_repository.create_login_log(
-            user=user, ip_address=ip_address, user_agent=user_agent, login_status=True
-        )
-
         # 生成token
         refresh = RefreshToken.for_user(user)
 

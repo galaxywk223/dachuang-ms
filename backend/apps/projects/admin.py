@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Project, ProjectMember, ProjectAdvisor, ProjectProgress
+from .models import Project, ProjectMember, ProjectAdvisor
 
 
 @admin.register(Project)
@@ -33,9 +33,3 @@ class ProjectMemberAdmin(admin.ModelAdmin):
     search_fields = ["project__title", "user__real_name"]
 
 
-@admin.register(ProjectProgress)
-class ProjectProgressAdmin(admin.ModelAdmin):
-    list_display = ["project", "title", "created_by", "created_at"]
-    list_filter = ["created_at"]
-    search_fields = ["project__title", "title"]
-    ordering = ["-created_at"]

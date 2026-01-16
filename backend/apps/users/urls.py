@@ -4,15 +4,13 @@
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import AuthViewSet, UserViewSet, LoginLogViewSet, AdminUserViewSet
-from .views.role_views import RoleViewSet, PermissionViewSet
+from .views import AuthViewSet, UserViewSet, AdminUserViewSet
+from .views.role_views import RoleViewSet
 
 router = DefaultRouter()
 router.register(r"users", UserViewSet, basename="user")
-router.register(r"logs", LoginLogViewSet, basename="login-log")
 router.register(r"admin/users", AdminUserViewSet, basename="admin-users")
 router.register(r"roles", RoleViewSet, basename="role")
-router.register(r"permissions", PermissionViewSet, basename="permission")
 
 urlpatterns = [
     path("login/", AuthViewSet.as_view({"post": "login"}), name="login"),

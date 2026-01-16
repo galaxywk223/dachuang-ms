@@ -167,21 +167,6 @@ export function archiveClosedProjects(): Promise<unknown> {
   });
 }
 
-export function pushProjectsExternal(data: Record<string, unknown>): Promise<unknown> {
-  return request({
-    url: "/projects/admin/manage/push-external/",
-    method: "post",
-    data,
-  });
-}
-
-export function getPushRecords(): Promise<unknown> {
-  return request({
-    url: "/projects/admin/manage/push-records/",
-    method: "get",
-  });
-}
-
 export function getArchives(): Promise<unknown> {
   return request({
     url: "/projects/admin/manage/archives/",

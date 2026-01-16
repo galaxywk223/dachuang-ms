@@ -6,7 +6,6 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 from .views import (
     ProjectViewSet,
-    ProjectProgressViewSet,
     ProjectAchievementViewSet,
     ProjectExpenditureViewSet,
     ProjectManagementViewSet,
@@ -18,7 +17,6 @@ from .views import (
 )
 
 router = DefaultRouter()
-router.register(r"progress", ProjectProgressViewSet, basename="progress")
 router.register(r"admin/manage", ProjectManagementViewSet, basename="admin-manage")
 # router.register(r"admin/achievements", AchievementManagementViewSet, basename="admin-achievements")
 router.register(r"achievements", ProjectAchievementViewSet, basename="achievement")

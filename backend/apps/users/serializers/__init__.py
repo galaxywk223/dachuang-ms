@@ -3,7 +3,7 @@
 """
 
 from rest_framework import serializers
-from ..models import User, LoginLog, Role
+from ..models import User, Role
 
 
 class RoleAssignMixin:
@@ -28,7 +28,6 @@ class UserSerializer(RoleAssignMixin, serializers.ModelSerializer):
 
     role = serializers.CharField(required=False, allow_blank=True, write_only=True)
     role_info = serializers.SerializerMethodField()
-    permissions = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -40,7 +39,6 @@ class UserSerializer(RoleAssignMixin, serializers.ModelSerializer):
             "role",
             "role_fk",
             "role_info",
-            "permissions",
             "is_expert",
             "expert_scope",
             "phone",
@@ -86,12 +84,6 @@ class UserSerializer(RoleAssignMixin, serializers.ModelSerializer):
                 "scope_dimension": obj.role_fk.scope_dimension,
             }
         return None
-
-    def get_permissions(self, obj):
-        """获取用户权限列表"""
-        if hasattr(obj, "get_permissions"):
-            return obj.get_permissions()
-        return []
 
     def create(self, validated_data):
         validated_data = self._resolve_role_fk(validated_data)
@@ -202,33 +194,12 @@ class UserCreateSerializer(RoleAssignMixin, serializers.ModelSerializer):
             validated_data["role_fk"].code if validated_data.get("role_fk") else None
         )
         if role_code == User.UserRole.EXPERT:
-            raise serializers.ValidationError({"role": "不支持直接创建专家，请先创建教师"})
+            raise serializers.ValidationError(
+                {"role": "不支持直接创建专家，请先创建教师"}
+            )
         validated_data.pop("expert_scope", None)
         user = User.objects.create(**validated_data)
         user.username = user.employee_id  # 使用学号/工号作为用户名
         user.set_password(password)
         user.save()
         return user
-
-
-class LoginLogSerializer(serializers.ModelSerializer):
-    """
-    登录日志序列化器
-    """
-
-    user_name = serializers.CharField(source="user.real_name", read_only=True)
-    user_id = serializers.CharField(source="user.employee_id", read_only=True)
-
-    class Meta:
-        model = LoginLog
-        fields = [
-            "id",
-            "user",
-            "user_name",
-            "user_id",
-            "login_time",
-            "ip_address",
-            "user_agent",
-            "login_status",
-        ]
-        read_only_fields = ["id", "login_time"]

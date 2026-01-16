@@ -1,7 +1,6 @@
 """Projects view package exports."""
 
 from .public.project import ProjectViewSet
-from .public.progress import ProjectProgressViewSet
 from .public.achievement import ProjectAchievementViewSet
 from .public.expenditure import ProjectExpenditureViewSet
 from .public.changes import ProjectChangeRequestViewSet
@@ -13,7 +12,6 @@ from .admin.achievement import AchievementManagementViewSet
 
 __all__ = [
     "ProjectViewSet",
-    "ProjectProgressViewSet",
     "ProjectAchievementViewSet",
     "ProjectExpenditureViewSet",
     "ProjectChangeRequestViewSet",

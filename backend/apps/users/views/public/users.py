@@ -11,7 +11,6 @@ from django.db.models import Q
 from ...serializers import UserSerializer, UserCreateSerializer
 from ...models import User
 from ...services.user_service import UserService
-from ...repositories.login_log_repository import LoginLogRepository
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -24,7 +23,6 @@ class UserViewSet(viewsets.ModelViewSet):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.user_service = UserService()
-        self.login_log_repository = LoginLogRepository()
 
     def get_serializer_class(self):
         """根据操作类型返回相应的序列化器"""
@@ -102,28 +100,6 @@ class UserViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK,
         )
-
-    @action(methods=["get"], detail=True)
-    def login_logs(self, request, pk=None):
-        """
-        获取用户登录日志
-        """
-        user = self.get_object()
-        logs = self.login_log_repository.get_user_login_logs(user, limit=20)
-
-        log_data = []
-        for log in logs:
-            log_data.append(
-                {
-                    "id": log.id,
-                    "ip_address": log.ip_address,
-                    "user_agent": log.user_agent,
-                    "login_time": log.login_time,
-                    "login_status": log.login_status,
-                }
-            )
-
-        return Response(log_data, status=status.HTTP_200_OK)
 
     @action(methods=["post"], detail=False)
     def import_data(self, request):

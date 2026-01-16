@@ -4,7 +4,6 @@
 
 from .members import ProjectAdvisorSerializer, ProjectMemberSerializer
 from .project import ProjectSerializer, ProjectListSerializer, ProjectSubmitSerializer
-from .progress import ProjectProgressSerializer
 from .achievement import ProjectAchievementSerializer
 from .closure import ProjectClosureSerializer
 from .expenditure import ProjectExpenditureSerializer
@@ -15,7 +14,6 @@ from .changes import (
 )
 from .archive import (
     ProjectArchiveSerializer,
-    ProjectPushRecordSerializer,
     ProjectRecycleBinSerializer,
 )
 from .midterm import ProjectMidTermSerializer
@@ -26,7 +24,6 @@ __all__ = [
     "ProjectSerializer",
     "ProjectListSerializer",
     "ProjectSubmitSerializer",
-    "ProjectProgressSerializer",
     "ProjectAchievementSerializer",
     "ProjectClosureSerializer",
     "ProjectExpenditureSerializer",
@@ -34,7 +31,6 @@ __all__ = [
     "ProjectChangeRequestSerializer",
     "ProjectChangeReviewActionSerializer",
     "ProjectArchiveSerializer",
-    "ProjectPushRecordSerializer",
     "ProjectRecycleBinSerializer",
     "ProjectMidTermSerializer",
 ]

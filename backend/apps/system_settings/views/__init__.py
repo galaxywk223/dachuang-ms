@@ -16,7 +16,6 @@ from ..models import (
     ProjectBatch,
     WorkflowConfig,
     WorkflowNode,
-    AdminAssignment,
 )
 from ..serializers import (
     SystemSettingSerializer,
@@ -24,7 +23,6 @@ from ..serializers import (
     ProjectBatchSerializer,
     WorkflowConfigSerializer,
     WorkflowNodeSerializer,
-    AdminAssignmentSerializer,
 )
 from ..services import DEFAULT_SETTINGS, SystemSettingService
 from ..services.workflow_service import WorkflowService
@@ -490,28 +488,3 @@ class WorkflowNodeViewSet(viewsets.ModelViewSet):
                 )
         return Response({"code": 200, "message": "更新成功"})
 
-
-class AdminAssignmentViewSet(viewsets.ModelViewSet):
-    """
-    管理员分配配置
-    """
-
-    queryset = AdminAssignment.objects.all()
-    serializer_class = AdminAssignmentSerializer
-    permission_classes = [IsLevel1Admin]
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        batch_id = self.request.query_params.get("batch_id")
-        phase = self.request.query_params.get("phase")
-        if batch_id:
-            queryset = queryset.filter(batch_id=batch_id)
-        if phase:
-            queryset = queryset.filter(phase=phase)
-        return queryset
-
-    def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user, updated_by=self.request.user)
-
-    def perform_update(self, serializer):
-        serializer.save(updated_by=self.request.user)

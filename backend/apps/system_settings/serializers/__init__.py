@@ -10,7 +10,6 @@ from ..models import (
     ProjectBatch,
     WorkflowConfig,
     WorkflowNode,
-    AdminAssignment,
 )
 
 
@@ -185,88 +184,3 @@ class WorkflowConfigSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "created_at", "updated_at", "updated_by"]
 
-
-class AdminAssignmentSerializer(serializers.ModelSerializer):
-    admin_user_name = serializers.CharField(
-        source="admin_user.real_name", read_only=True
-    )
-    workflow_name = serializers.CharField(source="workflow_node.name", read_only=True)
-
-    class Meta:
-        model = AdminAssignment
-        fields = [
-            "id",
-            "batch",
-            "phase",
-            "workflow_node",
-            "workflow_name",
-            "scope_value",
-            "admin_user",
-            "admin_user_name",
-            "created_by",
-            "updated_by",
-            "created_at",
-            "updated_at",
-        ]
-        read_only_fields = [
-            "id",
-            "created_at",
-            "updated_at",
-            "created_by",
-            "updated_by",
-        ]
-
-    def validate(self, attrs):
-        instance = getattr(self, "instance", None)
-        batch = attrs.get("batch") or (instance.batch if instance else None)
-        phase = attrs.get("phase") or (instance.phase if instance else None)
-        workflow_node = attrs.get("workflow_node") or (
-            instance.workflow_node if instance else None
-        )
-        admin_user = attrs.get("admin_user") or (
-            instance.admin_user if instance else None
-        )
-        scope_value = attrs.get("scope_value") or (
-            instance.scope_value if instance else None
-        )
-
-        if not batch or not phase or not workflow_node or not admin_user:
-            return attrs
-
-        if workflow_node.workflow.batch_id != batch.id:
-            raise serializers.ValidationError("节点所属批次与分配批次不一致")
-        if workflow_node.workflow.phase != phase:
-            raise serializers.ValidationError("节点所属阶段与分配阶段不一致")
-        if workflow_node.node_type == "SUBMIT":
-            raise serializers.ValidationError("学生提交节点不能配置管理员分配")
-
-        role_code = admin_user.get_role_code()
-        if not role_code or not role_code.endswith("_ADMIN"):
-            raise serializers.ValidationError("管理员用户必须为管理员角色")
-
-        # 旧的 PhaseScopeConfig 校验已删除
-        # 现在通过角色的 scope_dimension 和用户的 managed_scope_value 自动解析
-
-        qs = AdminAssignment.objects.filter(
-            batch=batch,
-            phase=phase,
-            scope_value=scope_value,
-            admin_user=admin_user,
-        )
-        if instance:
-            qs = qs.exclude(pk=instance.pk)
-        if qs.exists():
-            raise serializers.ValidationError("同一维度值不能配置同一管理员多个节点")
-
-        qs = AdminAssignment.objects.filter(
-            batch=batch,
-            phase=phase,
-            workflow_node=workflow_node,
-            scope_value=scope_value,
-        )
-        if instance:
-            qs = qs.exclude(pk=instance.pk)
-        if qs.exists():
-            raise serializers.ValidationError("该节点下的维度值已配置管理员")
-
-        return attrs
