@@ -44,6 +44,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         user = self.request.user
         queryset = super().get_queryset()
         teacher_scope = self.request.query_params.get("teacher_scope")
+        review_scope = self.request.query_params.get("review_scope")
 
         # 学生只能看到自己项目的审核记录
         if user.is_student:
@@ -51,13 +52,14 @@ class ReviewViewSet(viewsets.ModelViewSet):
         elif (
             teacher_scope
             and str(teacher_scope).lower() in ("true", "1", "yes")
-            and user.is_teacher
+            and (user.is_teacher or user.is_admin)
         ):
-            teacher_reviews = queryset.filter(
-                project__advisors__user=user, review_level="TEACHER"
-            )
-            expert_reviews = queryset.filter(reviewer=user, is_expert_review=True)
-            queryset = (teacher_reviews | expert_reviews).distinct()
+            if review_scope == "expert":
+                queryset = queryset.filter(reviewer=user, is_expert_review=True)
+            else:
+                queryset = queryset.filter(
+                    project__advisors__user=user, review_level="TEACHER"
+                ).distinct()
         elif user.is_admin:
             query = ReviewService._build_admin_review_filter(user)
             queryset = (
@@ -438,7 +440,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
             # 导师审核：必须是该项目的导师
             # Check if user is in project advisors
             return (
-                user.is_teacher and review.project.advisors.filter(user=user).exists()
+                (user.is_teacher or user.is_admin)
+                and review.project.advisors.filter(user=user).exists()
             )
         if not review.workflow_node_id:
             raise ValueError("审核记录未绑定工作流节点，无法解析管理员权限")

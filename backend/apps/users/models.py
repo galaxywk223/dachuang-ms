@@ -244,11 +244,7 @@ class User(AbstractUser):
     @property
     def is_teacher(self):
         """向后兼容的角色判断"""
-        role_code = self.get_role_code()
-        return bool(
-            role_code
-            and (role_code == self.UserRole.TEACHER or role_code.endswith("_ADMIN"))
-        )
+        return self.role_fk is not None and self.role_fk.code == self.UserRole.TEACHER
 
     @property
     def is_expert_role(self):

@@ -361,7 +361,23 @@ const homePath = computed(() => {
   }
 });
 
-const activeMenu = computed(() => route.path);
+const activeMenu = computed(() => {
+  if (route.path === "/teacher/dashboard") {
+    const tab = Array.isArray(route.query.tab)
+      ? route.query.tab[0]
+      : route.query.tab;
+    const reviewScope = Array.isArray(route.query.review_scope)
+      ? route.query.review_scope[0]
+      : route.query.review_scope;
+    if (reviewScope === "expert") {
+      return "/teacher/dashboard?review_scope=expert&tab=pending";
+    }
+    return tab === "pending"
+      ? "/teacher/dashboard?tab=pending"
+      : "/teacher/dashboard?tab=my_projects";
+  }
+  return route.path;
+});
 const breadcrumbs = computed(() => {
   return route.matched.filter(
     (item) =>
@@ -461,8 +477,8 @@ const currentMenus = computed<MenuEntry[]>(() => {
           icon: Folder,
         },
         {
-          index: "/teacher/dashboard",
-          title: "指导项目",
+          index: "/teacher/dashboard?tab=pending",
+          title: "我的项目",
           icon: DocumentAdd,
         },
         {
@@ -510,8 +526,8 @@ const currentMenus = computed<MenuEntry[]>(() => {
           icon: Folder,
         },
         {
-          index: "/teacher/dashboard",
-          title: "指导项目",
+          index: "/teacher/dashboard?tab=pending",
+          title: "我的项目",
           icon: DocumentAdd,
         },
         {
@@ -568,11 +584,19 @@ const currentMenus = computed<MenuEntry[]>(() => {
     case "teacher":
       return [
         {
-          index: "/teacher/dashboard",
-          title: isExpertUser.value ? "评审任务" : "指导项目",
+          index: "/teacher/dashboard?tab=pending",
+          title: "我的项目",
           icon: DocumentAdd,
         },
-
+        ...(isExpertUser.value
+          ? [
+              {
+                index: "/teacher/dashboard?review_scope=expert&tab=pending",
+                title: "评审任务",
+                icon: DocumentChecked,
+              },
+            ]
+          : []),
         {
           index: "/notifications",
           title: "通知中心",

@@ -9,8 +9,14 @@
       </template>
 
       <el-tabs v-model="activeTab">
-        <el-tab-pane label="待审核" name="pending"></el-tab-pane>
-        <el-tab-pane label="我指导的项目" name="my_projects"></el-tab-pane>
+        <template v-if="isExpertContext">
+          <el-tab-pane label="待评审" name="pending"></el-tab-pane>
+          <el-tab-pane label="已评审" name="reviewed"></el-tab-pane>
+        </template>
+        <template v-else>
+          <el-tab-pane label="待审核" name="pending"></el-tab-pane>
+          <el-tab-pane label="我指导的项目" name="my_projects"></el-tab-pane>
+        </template>
       </el-tabs>
 
       <el-table
@@ -48,10 +54,7 @@
           <template #default="scope">
             <el-button size="small" @click="handleView(scope.row)">查看</el-button>
             <el-button
-              v-if="
-                activeTab === 'pending' ||
-                scope.row.status === 'TEACHER_AUDITING'
-              "
+              v-if="activeTab === 'pending'"
               size="small"
               type="primary"
               @click="handleReview(scope.row)"
@@ -221,13 +224,25 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 const loading = ref(false);
 const submitting = ref(false);
 const projects = ref<TeacherProjectRow[]>([]);
-const activeTab = ref(
-  route.query.tab === "my_projects" ? "my_projects" : "pending"
-);
-
 const userStore = useUserStore();
+const isExpertUser = computed(() => Boolean(userStore.user?.is_expert));
+const isExpertContext = computed(() => {
+  const scope = Array.isArray(route.query.review_scope)
+    ? route.query.review_scope[0]
+    : route.query.review_scope;
+  return scope === "expert" && isExpertUser.value;
+});
+const resolveTab = (tab: unknown) => {
+  if (isExpertContext.value) {
+    return tab === "reviewed" ? "reviewed" : "pending";
+  }
+  return tab === "my_projects" ? "my_projects" : "pending";
+};
+
+const activeTab = ref(resolveTab(route.query.tab));
+
 const dashboardTitle = computed(() =>
-  userStore.user?.is_expert ? "评审与指导项目" : "指导项目管理"
+  isExpertContext.value ? "评审任务" : "我的项目"
 );
 const welcomeUser = computed(() => userStore.user ?? undefined);
 
@@ -259,7 +274,22 @@ const parseListResponse = <T>(payload: unknown) => {
 
 const fetchPendingReviews = async () => {
   const res = await request.get("/reviews/", {
-    params: { status: "PENDING", teacher_scope: "true" },
+    params: {
+      status: "PENDING",
+      teacher_scope: "true",
+      review_scope: isExpertContext.value ? "expert" : "teacher",
+    },
+  });
+  return parseListResponse<ReviewRecord>(res);
+};
+
+const fetchReviewedReviews = async () => {
+  const res = await request.get("/reviews/", {
+    params: {
+      status_in: "APPROVED,REJECTED",
+      teacher_scope: "true",
+      review_scope: "expert",
+    },
   });
   return parseListResponse<ReviewRecord>(res);
 };
@@ -300,32 +330,61 @@ const fetchProjects = async () => {
         } as TeacherProjectRow;
       });
 
-      // Fetch Change Requests
-      const changeRes = await getChangeRequests({
-        status: "TEACHER_REVIEWING",
-        teacher_scope: "true",
+      if (!isExpertContext.value) {
+        // Fetch Change Requests
+        const changeRes = await getChangeRequests({
+          status: "TEACHER_REVIEWING",
+          teacher_scope: "true",
+        });
+        const changeData =
+          isRecord(changeRes) && isRecord(changeRes.data)
+            ? changeRes.data
+            : changeRes;
+        const changeList = resolveList<Record<string, unknown>>(changeData);
+        const changeRows: TeacherProjectRow[] = changeList.map((c) => ({
+          project_no: (c.project_no as string) || "",
+          title: (c.project_title as string) || "",
+          leader_name: (c.leader_name as string) || "",
+          level_display: (c.level as string) || "",
+          status: (c.status as string) || "",
+          status_display: (c.status_display as string) || "",
+          review_type_display: (c.request_type_display as string) || "项目异动",
+          created_at: (c.created_at as string) || "",
+          file_url: (c.attachment_url as string) || "",
+          file_label: "下载附件",
+          is_change_request: true,
+          change_request_id: (c.id as number) || 0,
+        }));
+        projects.value = [...rows, ...changeRows];
+      } else {
+        projects.value = rows;
+      }
+    } else if (activeTab.value === "reviewed") {
+      const { results } = await fetchReviewedReviews();
+      const rows = (results || []).map((r) => {
+        const fileUrl =
+          r.review_type === "MID_TERM"
+            ? r.project_info?.mid_term_report_url
+            : r.review_type === "CLOSURE"
+            ? r.project_info?.final_report_url
+            : r.project_info?.proposal_file_url;
+        const fileLabel =
+          r.review_type === "MID_TERM"
+            ? "下载中期报告"
+            : r.review_type === "CLOSURE"
+            ? "下载结题报告"
+            : "下载申报书";
+        return {
+          ...r.project_info,
+          review_id: r.id,
+          review_type: r.review_type,
+          review_type_display: r.review_type_display,
+          file_url: fileUrl,
+          file_label: fileLabel,
+          created_at: r.created_at,
+        } as TeacherProjectRow;
       });
-      const changeData =
-        isRecord(changeRes) && isRecord(changeRes.data)
-          ? changeRes.data
-          : changeRes;
-      const changeList = resolveList<Record<string, unknown>>(changeData);
-      const changeRows: TeacherProjectRow[] = changeList.map((c) => ({
-        project_no: (c.project_no as string) || "",
-        title: (c.project_title as string) || "",
-        leader_name: (c.leader_name as string) || "",
-        level_display: (c.level as string) || "",
-        status: (c.status as string) || "",
-        status_display: (c.status_display as string) || "",
-        review_type_display: (c.request_type_display as string) || "项目异动",
-        created_at: (c.created_at as string) || "",
-        file_url: (c.attachment_url as string) || "",
-        file_label: "下载附件",
-        is_change_request: true,
-        change_request_id: (c.id as number) || 0,
-      }));
-
-      projects.value = [...rows, ...changeRows];
+      projects.value = rows;
     } else {
       const { results } = await fetchMyProjects();
       projects.value = results || [];
@@ -408,7 +467,7 @@ const handleSubmit = async () => {
     }
     ElMessage.success("审核提交成功");
     dialogVisible.value = false;
-    activeTab.value = "my_projects";
+    activeTab.value = "pending";
     fetchProjects();
   } catch (error: unknown) {
     console.error(error);
@@ -436,9 +495,14 @@ watch(
 watch(
   () => route.query.tab,
   (tab) => {
-    if (tab === "pending" || tab === "my_projects") {
-      activeTab.value = tab as "pending" | "my_projects";
-    }
+    activeTab.value = resolveTab(tab);
+  }
+);
+
+watch(
+  () => [isExpertUser.value, route.query.review_scope],
+  () => {
+    activeTab.value = resolveTab(route.query.tab);
   }
 );
 </script>

@@ -36,7 +36,7 @@ class ProjectChangeRequestViewSet(viewsets.ModelViewSet):
         if (
             teacher_scope
             and str(teacher_scope).lower() in ("true", "1", "yes")
-            and user.is_teacher
+            and (user.is_teacher or user.is_admin)
         ):
             return queryset.filter(project__advisors__user=user).distinct()
         if user.is_admin and not user.is_level1_admin:
@@ -160,7 +160,10 @@ class ProjectChangeRequestViewSet(viewsets.ModelViewSet):
         return Response({"code": 200, "message": "已驳回"})
 
     def _get_pending_review(self, change_request, user):
-        if user.is_teacher and change_request.project.advisors.filter(user=user).exists():
+        if (
+            (user.is_teacher or user.is_admin)
+            and change_request.project.advisors.filter(user=user).exists()
+        ):
             review = ProjectChangeReview.objects.filter(
                 change_request=change_request,
                 review_level=ProjectChangeReview.ReviewLevel.TEACHER,
