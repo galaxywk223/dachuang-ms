@@ -34,8 +34,9 @@ class ProjectClosureSerializer(serializers.Serializer):
         验证结题报告文件
         """
         # 检查文件格式
-        if not value.name.lower().endswith(".pdf"):
-            raise serializers.ValidationError("结题报告必须是PDF格式")
+        name = value.name.lower()
+        if not (name.endswith(".pdf") or name.endswith(".doc") or name.endswith(".docx")):
+            raise serializers.ValidationError("结题报告必须是PDF或Word格式")
 
         # 检查文件大小（不超过2MB）
         if value.size > 2 * 1024 * 1024:

@@ -138,13 +138,13 @@
                   :on-change="handleReportChange"
                   :file-list="reportFileList"
                   :limit="1"
-                  accept=".pdf"
+                  accept=".pdf,.doc,.docx"
                   class="upload-demo w-full"
                   drag
                 >
                   <el-icon class="el-icon--upload"><upload-filled /></el-icon>
                   <div class="el-upload__text">
-                    拖拽上传结题报告 (PDF) <em>点击上传</em>
+                    拖拽上传结题报告 (PDF/Word) <em>点击上传</em>
                   </div>
                 </el-upload>
               </el-form-item>
@@ -157,13 +157,13 @@
                   :on-change="handleAchievementFileChange"
                   :file-list="achievementFileList"
                   :limit="1"
-                  accept=".zip,.rar,.pdf"
+                  accept=".zip,.rar,.pdf,.doc,.docx"
                   class="upload-demo w-full"
                   drag
                 >
                   <el-icon class="el-icon--upload"><upload-filled /></el-icon>
                   <div class="el-upload__text">
-                    拖拽上传其他附件 (ZIP/PDF) <em>点击上传</em>
+                    拖拽上传其他附件 (ZIP/PDF/Word) <em>点击上传</em>
                   </div>
                 </el-upload>
               </el-form-item>
@@ -463,7 +463,7 @@
             >
               <el-button type="primary" link>点击上传附件</el-button>
               <template #tip>
-                <div class="el-upload__tip">PDF/图片/压缩包</div>
+                <div class="el-upload__tip">PDF/Word/图片/压缩包</div>
               </template>
             </el-upload>
           </el-form-item>

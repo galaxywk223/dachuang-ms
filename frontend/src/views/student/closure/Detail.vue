@@ -153,7 +153,7 @@
             <el-descriptions-item label="结题报告">
               <div v-if="projectInfo.final_report_url" class="file-item">
                 <span class="file-name">{{
-                  projectInfo.final_report_name || "结题报告.pdf"
+                  projectInfo.final_report_name || "结题报告"
                 }}</span>
                 <el-button
                   type="primary"

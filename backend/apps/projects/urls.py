@@ -13,7 +13,6 @@ from .views import (
     ProjectChangeRequestViewSet,
     ProjectApplicationViewSet,
     ProjectClosureViewSet,
-    ProjectRecycleBinViewSet,
 )
 
 router = DefaultRouter()
@@ -21,10 +20,13 @@ router.register(r"admin/manage", ProjectManagementViewSet, basename="admin-manag
 # router.register(r"admin/achievements", AchievementManagementViewSet, basename="admin-achievements")
 router.register(r"achievements", ProjectAchievementViewSet, basename="achievement")
 router.register(r"expenditures", ProjectExpenditureViewSet, basename="expenditure")
-router.register(r"change-requests", ProjectChangeRequestViewSet, basename="change-request")
-router.register(r"application", ProjectApplicationViewSet, basename="project-application")
+router.register(
+    r"change-requests", ProjectChangeRequestViewSet, basename="change-request"
+)
+router.register(
+    r"application", ProjectApplicationViewSet, basename="project-application"
+)
 router.register(r"closure", ProjectClosureViewSet, basename="project-closure")
-router.register(r"recycle-bin", ProjectRecycleBinViewSet, basename="project-recycle-bin")
 router.register(r"", ProjectViewSet, basename="project")
 
 urlpatterns = [

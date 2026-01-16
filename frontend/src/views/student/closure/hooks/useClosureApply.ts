@@ -410,7 +410,7 @@ export function useClosureApply() {
     if (data.final_report_url) {
       reportFileList.value = [
         {
-          name: data.final_report_name || "结题报告.pdf",
+          name: data.final_report_name || "结题报告",
           url: data.final_report_url,
           status: "success",
           uid: Date.now(),

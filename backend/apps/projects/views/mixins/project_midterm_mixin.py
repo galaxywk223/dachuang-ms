@@ -13,8 +13,7 @@ from apps.reviews.services import ReviewService
 from apps.notifications.services import NotificationService
 
 from ...serializers.midterm import ProjectMidTermSerializer
-from ...services import ProjectService, ProjectRecycleService
-from ...models import ProjectRecycleBin
+from ...services import ProjectService
 
 
 class ProjectMidtermMixin:
@@ -158,16 +157,6 @@ class ProjectMidtermMixin:
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        payload = ProjectRecycleService.snapshot_midterm(project)
-        ProjectRecycleService.add_item(
-            project=project,
-            resource_type=ProjectRecycleBin.ResourceType.MID_TERM,
-            payload=payload,
-            attachments=[payload.get("mid_term_report")]
-            if payload.get("mid_term_report")
-            else [],
-            deleted_by=request.user,
-        )
         project.mid_term_report = None
         project.mid_term_submitted_at = None
         project.status = Project.ProjectStatus.IN_PROGRESS

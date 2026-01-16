@@ -523,11 +523,19 @@ export function useProjectApplication() {
 
   const handleFileChange = (file: UploadFile) => {
     if (!file.raw) return;
-    const isPDF = file.raw.type === "application/pdf";
+    const fileName = file.raw.name.toLowerCase();
+    const allowedExtensions = [".pdf", ".doc", ".docx"];
+    const isAllowedType =
+      allowedExtensions.some((ext) => fileName.endsWith(ext)) ||
+      [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ].includes(file.raw.type);
     const isLt2M = file.raw.size / 1024 / 1024 < 2;
 
-    if (!isPDF) {
-      ElMessage.error("只能上传 PDF 文件!");
+    if (!isAllowedType) {
+      ElMessage.error("只能上传 PDF/Word 文件!");
       fileList.value = [];
       formData.attachment_file = null;
       return;
@@ -736,7 +744,7 @@ export function useProjectApplication() {
         const proposalUrl =
           data.proposal_file_url || data.attachment_file_url || "";
         const proposalName =
-          data.proposal_file_name || data.attachment_file_name || "申请书.pdf";
+          data.proposal_file_name || data.attachment_file_name || "申请书";
         fileList.value = proposalUrl
           ? [
               {

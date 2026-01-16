@@ -103,10 +103,6 @@ class ProjectSerializer(serializers.ModelSerializer):
     attachment_file_url = serializers.SerializerMethodField()
     proposal_file_name = serializers.SerializerMethodField()
     attachment_file_name = serializers.SerializerMethodField()
-    contract_file_url = serializers.SerializerMethodField()
-    contract_file_name = serializers.SerializerMethodField()
-    task_book_file_url = serializers.SerializerMethodField()
-    task_book_file_name = serializers.SerializerMethodField()
     mid_term_report_url = serializers.SerializerMethodField()
     mid_term_report_name = serializers.SerializerMethodField()
     final_report_url = serializers.SerializerMethodField()
@@ -117,12 +113,6 @@ class ProjectSerializer(serializers.ModelSerializer):
         required=False, allow_null=True, allow_empty_file=True
     )
     attachment_file = serializers.FileField(
-        required=False, allow_null=True, allow_empty_file=True
-    )
-    contract_file = serializers.FileField(
-        required=False, allow_null=True, allow_empty_file=True
-    )
-    task_book_file = serializers.FileField(
         required=False, allow_null=True, allow_empty_file=True
     )
     mid_term_report = serializers.FileField(
@@ -176,22 +166,16 @@ class ProjectSerializer(serializers.ModelSerializer):
             "innovation_points",
             "proposal_file",
             "attachment_file",
-            "contract_file",
-            "task_book_file",
             "final_report",
             "achievement_file",
             "mid_term_report",
             "proposal_file_url",
             "attachment_file_url",
-            "contract_file_url",
-            "task_book_file_url",
             "mid_term_report_url",
             "final_report_url",
             "achievement_file_url",
             "proposal_file_name",
             "attachment_file_name",
-            "contract_file_name",
-            "task_book_file_name",
             "mid_term_report_name",
             "final_report_name",
             "achievement_file_name",
@@ -236,23 +220,11 @@ class ProjectSerializer(serializers.ModelSerializer):
     def get_attachment_file_url(self, obj):
         return self._build_file_url(obj.attachment_file)
 
-    def get_contract_file_url(self, obj):
-        return self._build_file_url(obj.contract_file)
-
-    def get_task_book_file_url(self, obj):
-        return self._build_file_url(obj.task_book_file)
-
     def get_proposal_file_name(self, obj):
         return obj.proposal_file.name if obj.proposal_file else ""
 
     def get_attachment_file_name(self, obj):
         return obj.attachment_file.name if obj.attachment_file else ""
-
-    def get_contract_file_name(self, obj):
-        return obj.contract_file.name if obj.contract_file else ""
-
-    def get_task_book_file_name(self, obj):
-        return obj.task_book_file.name if obj.task_book_file else ""
 
     def get_mid_term_report_url(self, obj):
         return self._build_file_url(obj.mid_term_report)
@@ -509,8 +481,6 @@ class ProjectListSerializer(serializers.ModelSerializer):
     level_display = serializers.SerializerMethodField()
     category_display = serializers.SerializerMethodField()
     proposal_file_url = serializers.SerializerMethodField()
-    contract_file_url = serializers.SerializerMethodField()
-    task_book_file_url = serializers.SerializerMethodField()
     mid_term_report_url = serializers.SerializerMethodField()
     final_report_url = serializers.SerializerMethodField()
     batch_name = serializers.SerializerMethodField()
@@ -542,8 +512,6 @@ class ProjectListSerializer(serializers.ModelSerializer):
             "is_key_field",
             "key_domain_code",
             "proposal_file_url",
-            "contract_file_url",
-            "task_book_file_url",
             "mid_term_report_url",
             "final_report_url",
             "created_at",
@@ -588,12 +556,6 @@ class ProjectListSerializer(serializers.ModelSerializer):
 
     def get_proposal_file_url(self, obj):
         return self._build_file_url(obj.proposal_file)
-
-    def get_contract_file_url(self, obj):
-        return self._build_file_url(obj.contract_file)
-
-    def get_task_book_file_url(self, obj):
-        return self._build_file_url(obj.task_book_file)
 
     def get_mid_term_report_url(self, obj):
         return self._build_file_url(obj.mid_term_report)

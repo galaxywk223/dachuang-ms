@@ -27,12 +27,6 @@ class Project(models.Model):
         # Let's keep IN_PROGRESS for "Established".
 
         IN_PROGRESS = "IN_PROGRESS", "进行中"  # 立项成功
-        TASK_BOOK_DRAFT = "TASK_BOOK_DRAFT", "任务书草稿"
-        TASK_BOOK_SUBMITTED = "TASK_BOOK_SUBMITTED", "任务书已提交"
-        TASK_BOOK_REVIEWING = "TASK_BOOK_REVIEWING", "任务书审核中"
-        TASK_BOOK_APPROVED = "TASK_BOOK_APPROVED", "任务书审核通过"
-        TASK_BOOK_REJECTED = "TASK_BOOK_REJECTED", "任务书审核不通过"
-        TASK_BOOK_RETURNED = "TASK_BOOK_RETURNED", "任务书退回修改"
         MID_TERM_DRAFT = "MID_TERM_DRAFT", "中期草稿"
         MID_TERM_SUBMITTED = "MID_TERM_SUBMITTED", "中期已提交"
         MID_TERM_REVIEWING = "MID_TERM_REVIEWING", "中期审核中"
@@ -165,21 +159,6 @@ class Project(models.Model):
         verbose_name="上传文件",
         max_length=255,
     )
-    contract_file = models.FileField(
-        upload_to="contracts/",
-        blank=True,
-        null=True,
-        verbose_name="项目合同",
-        max_length=255,
-    )
-    task_book_file = models.FileField(
-        upload_to="task_books/",
-        blank=True,
-        null=True,
-        verbose_name="项目任务书",
-        max_length=255,
-    )
-
     # 中期检查材料
     mid_term_report = models.FileField(
         upload_to="mid_term_reports/",
@@ -313,7 +292,6 @@ class ProjectPhaseInstance(models.Model):
 
     class Phase(models.TextChoices):
         APPLICATION = "APPLICATION", "立项"
-        TASK_BOOK = "TASK_BOOK", "任务书"
         MID_TERM = "MID_TERM", "中期"
         CLOSURE = "CLOSURE", "结题"
 
@@ -674,57 +652,3 @@ class ProjectArchive(models.Model):
 
     def __str__(self):
         return f"{self.project.project_no} - 归档"
-
-
-class ProjectRecycleBin(models.Model):
-    """
-    项目回收站记录
-    """
-
-    class ResourceType(models.TextChoices):
-        APPLICATION = "APPLICATION", "立项申报"
-        MID_TERM = "MID_TERM", "中期提交"
-        CLOSURE = "CLOSURE", "结题提交"
-        ACHIEVEMENT = "ACHIEVEMENT", "成果"
-        EXPENDITURE = "EXPENDITURE", "经费支出"
-
-    project = models.ForeignKey(
-        Project,
-        on_delete=models.CASCADE,
-        related_name="recycle_items",
-        verbose_name="项目",
-    )
-    resource_type = models.CharField(
-        max_length=20, choices=ResourceType.choices, verbose_name="资源类型"
-    )
-    resource_id = models.IntegerField(null=True, blank=True, verbose_name="原始记录ID")
-    payload = models.JSONField(default=dict, verbose_name="数据快照")
-    attachments = models.JSONField(default=list, verbose_name="附件清单")
-    deleted_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="deleted_recycle_items",
-        verbose_name="删除人",
-    )
-    deleted_at = models.DateTimeField(auto_now_add=True, verbose_name="删除时间")
-    restored_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="restored_recycle_items",
-        verbose_name="恢复人",
-    )
-    restored_at = models.DateTimeField(null=True, blank=True, verbose_name="恢复时间")
-    is_restored = models.BooleanField(default=False, verbose_name="是否已恢复")
-
-    class Meta:
-        db_table = "project_recycle_bin"
-        verbose_name = "项目回收站"
-        verbose_name_plural = verbose_name
-        ordering = ["-deleted_at"]
-
-    def __str__(self):
-        return f"{self.project.project_no} - {self.get_resource_type_display()}"

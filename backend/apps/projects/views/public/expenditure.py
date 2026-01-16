@@ -7,9 +7,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 
-from ...models import Project, ProjectExpenditure, ProjectRecycleBin
+from ...models import Project, ProjectExpenditure
 from ...serializers import ProjectExpenditureSerializer
-from ...services import ProjectService, ProjectRecycleService
+from ...services import ProjectService
 
 
 class ProjectExpenditureViewSet(viewsets.ModelViewSet):
@@ -143,15 +143,5 @@ class ProjectExpenditureViewSet(viewsets.ModelViewSet):
             "proof_file": instance.proof_file.name if instance.proof_file else "",
             "created_by": instance.created_by_id,
         }
-        ProjectRecycleService.add_item(
-            project=project,
-            resource_type=ProjectRecycleBin.ResourceType.EXPENDITURE,
-            resource_id=instance.id,
-            payload=payload,
-            attachments=[payload.get("proof_file")]
-            if payload.get("proof_file")
-            else [],
-            deleted_by=request.user,
-        )
         self.perform_destroy(instance)
-        return Response({"code": 200, "message": "已移入回收站"})
+        return Response({"code": 200, "message": "删除成功"})

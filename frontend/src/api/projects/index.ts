@@ -5,7 +5,9 @@ import request from "@/utils/request";
 /**
  * 创建项目申请
  */
-export function createProjectApplication(data: Record<string, unknown> | FormData): Promise<unknown> {
+export function createProjectApplication(
+  data: Record<string, unknown> | FormData
+): Promise<unknown> {
   return request({
     url: "/projects/application/create/",
     method: "post",
@@ -16,7 +18,9 @@ export function createProjectApplication(data: Record<string, unknown> | FormDat
 /**
  * 获取项目列表
  */
-export function getProjects(params?: Record<string, unknown>): Promise<unknown> {
+export function getProjects(
+  params?: Record<string, unknown>
+): Promise<unknown> {
   return request({
     url: "/projects/",
     method: "get",
@@ -27,7 +31,10 @@ export function getProjects(params?: Record<string, unknown>): Promise<unknown> 
 /**
  * 更新项目申请
  */
-export function updateProjectApplication(id: number, data: Record<string, unknown> | FormData): Promise<unknown> {
+export function updateProjectApplication(
+  id: number,
+  data: Record<string, unknown> | FormData
+): Promise<unknown> {
   return request({
     url: `/projects/application/${id}/update/`,
     method: "put",
@@ -58,7 +65,9 @@ export function deleteProjectApplication(id: number): Promise<unknown> {
 /**
  * 获取我的项目列表
  */
-export function getMyProjects(params?: Record<string, unknown>): Promise<unknown> {
+export function getMyProjects(
+  params?: Record<string, unknown>
+): Promise<unknown> {
   return request({
     url: "/projects/my-projects/",
     method: "get",
@@ -69,7 +78,9 @@ export function getMyProjects(params?: Record<string, unknown>): Promise<unknown
 /**
  * 获取我的草稿箱
  */
-export function getMyDrafts(params?: Record<string, unknown>): Promise<unknown> {
+export function getMyDrafts(
+  params?: Record<string, unknown>
+): Promise<unknown> {
   return request({
     url: "/projects/my-drafts/",
     method: "get",
@@ -100,13 +111,17 @@ export function getProjectAchievementList(id: number): Promise<unknown> {
 /**
  * 添加项目成果
  */
-export function addProjectAchievement(id: number, data: Record<string, unknown> | FormData): Promise<unknown> {
+export function addProjectAchievement(
+  id: number,
+  data: Record<string, unknown> | FormData
+): Promise<unknown> {
   return request({
     url: `/projects/${id}/add-achievement/`,
     method: "post",
     data,
     headers: {
-      "Content-Type": data instanceof FormData ? "multipart/form-data" : "application/json",
+      "Content-Type":
+        data instanceof FormData ? "multipart/form-data" : "application/json",
     },
   });
 }
@@ -114,7 +129,10 @@ export function addProjectAchievement(id: number, data: Record<string, unknown> 
 /**
  * 删除项目成果
  */
-export function removeProjectAchievement(projectId: number, achievementId: number): Promise<unknown> {
+export function removeProjectAchievement(
+  projectId: number,
+  achievementId: number
+): Promise<unknown> {
   return request({
     url: `/projects/${projectId}/remove-achievement/${achievementId}/`,
     method: "delete",
@@ -136,7 +154,9 @@ export function deleteProject(id: number): Promise<unknown> {
 /**
  * 获取待结题项目列表
  */
-export function getPendingClosureProjects(params?: Record<string, unknown>): Promise<unknown> {
+export function getPendingClosureProjects(
+  params?: Record<string, unknown>
+): Promise<unknown> {
   return request({
     url: "/projects/closure/pending/",
     method: "get",
@@ -147,7 +167,9 @@ export function getPendingClosureProjects(params?: Record<string, unknown>): Pro
 /**
  * 获取已申请结题项目列表
  */
-export function getAppliedClosureProjects(params?: Record<string, unknown>): Promise<unknown> {
+export function getAppliedClosureProjects(
+  params?: Record<string, unknown>
+): Promise<unknown> {
   return request({
     url: "/projects/closure/applied/",
     method: "get",
@@ -158,7 +180,9 @@ export function getAppliedClosureProjects(params?: Record<string, unknown>): Pro
 /**
  * 获取结题草稿箱
  */
-export function getClosureDrafts(params?: Record<string, unknown>): Promise<unknown> {
+export function getClosureDrafts(
+  params?: Record<string, unknown>
+): Promise<unknown> {
   return request({
     url: "/projects/closure/drafts/",
     method: "get",
@@ -169,7 +193,10 @@ export function getClosureDrafts(params?: Record<string, unknown>): Promise<unkn
 /**
  * 创建结题申请
  */
-export function createClosureApplication(id: number, data: Record<string, unknown> | FormData): Promise<unknown> {
+export function createClosureApplication(
+  id: number,
+  data: Record<string, unknown> | FormData
+): Promise<unknown> {
   return request({
     url: `/projects/closure/${id}/create/`,
     method: "post",
@@ -180,7 +207,10 @@ export function createClosureApplication(id: number, data: Record<string, unknow
 /**
  * 更新结题申请
  */
-export function updateClosureApplication(id: number, data: Record<string, unknown> | FormData): Promise<unknown> {
+export function updateClosureApplication(
+  id: number,
+  data: Record<string, unknown> | FormData
+): Promise<unknown> {
   return request({
     url: `/projects/closure/${id}/update/`,
     method: "put",
@@ -261,28 +291,7 @@ export function exportProjectDoc(id: number): Promise<unknown> {
 }
 
 /**
- * 获取回收站记录
- */
-export function getRecycleBin(params?: Record<string, unknown>): Promise<unknown> {
-  return request({
-    url: "/projects/recycle-bin/",
-    method: "get",
-    params,
-  });
-}
-
-/**
- * 恢复回收站记录
- */
-export function restoreRecycleBin(id: number): Promise<unknown> {
-  return request({
-    url: `/projects/recycle-bin/${id}/restore/`,
-    method: "post",
-  });
-}
-
-/**
- * 删除经费记录（进入回收站）
+ * 删除经费记录
  */
 export function removeProjectExpenditure(id: number): Promise<unknown> {
   return request({

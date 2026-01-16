@@ -44,19 +44,6 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
-  {
-    path: "/recycle-bin",
-    component: () => import("@/layouts/AppLayout.vue"),
-    meta: { requiresAuth: true },
-    children: [
-      {
-        path: "",
-        name: "recycle-bin",
-        component: () => import("@/views/common/RecycleBin.vue"),
-        meta: { title: "回收站" },
-      },
-    ],
-  },
   ...adminRoutes,
   ...level2Routes,
   ...studentRoutes,

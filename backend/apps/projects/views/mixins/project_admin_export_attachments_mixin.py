@@ -50,8 +50,13 @@ class ProjectAdminExportAttachmentsMixin:
             # 中期报告
             if p.mid_term_report:
                 try:
+                    name = p.mid_term_report.name
+                    ext = name.rsplit(".", 1)[-1] if "." in name else "file"
                     files_to_zip.append(
-                        (p.mid_term_report.path, f"{p.project_no}_{p.title}/中期报告.pdf")
+                        (
+                            p.mid_term_report.path,
+                            f"{p.project_no}_{p.title}/中期报告.{ext}",
+                        )
                     )
                 except Exception as exc:
                     self.logger.warning("Skip mid-term report for project %s: %s", p.id, exc)
@@ -59,13 +64,18 @@ class ProjectAdminExportAttachmentsMixin:
             # 结题报告
             if p.final_report:
                 try:
+                    name = p.final_report.name
+                    ext = name.rsplit(".", 1)[-1] if "." in name else "file"
                     files_to_zip.append(
-                        (p.final_report.path, f"{p.project_no}_{p.title}/结题报告.pdf")
+                        (
+                            p.final_report.path,
+                            f"{p.project_no}_{p.title}/结题报告.{ext}",
+                        )
                     )
                 except Exception as exc:
                     self.logger.warning("Skip final report for project %s: %s", p.id, exc)
 
-            # 成果附件 (zip/rar/pdf)
+            # 成果附件 (zip/rar/pdf/doc/docx)
             if p.achievement_file:
                 try:
                     ext = p.achievement_file.name.split(".")[-1]

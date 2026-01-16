@@ -326,7 +326,7 @@
               拖拽文件到此处或 <em>点击上传</em>
             </div>
             <template #tip>
-              <div class="el-upload__tip">支持PDF/图片/压缩包</div>
+              <div class="el-upload__tip">支持PDF/Word/图片/压缩包</div>
             </template>
           </el-upload>
         </el-form-item>

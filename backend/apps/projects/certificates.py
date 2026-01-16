@@ -5,12 +5,73 @@ Certificate rendering helpers.
 from apps.system_settings.models import CertificateSetting
 
 
-def get_active_certificate_setting():
-    return CertificateSetting.objects.filter(is_active=True).order_by("-updated_at").first()
+from django.db.models import Q
+
+
+def get_best_match_setting(project=None):
+    """
+    根据项目获取最匹配的证书配置
+    优先级：
+    1. 级别 + 类别 完全匹配
+    2. 级别匹配 (类别为空)
+    3. 类别匹配 (级别为空)
+    4. 通用匹配 (级别、类别均为空)
+    5. 最新启用的任意配置 (兜底)
+    """
+    base_qs = CertificateSetting.objects.filter(is_active=True)
+
+    if not project:
+        return base_qs.order_by("-updated_at").first()
+
+    # 准备查询条件
+    level_id = project.level_id if project.level else None
+    category_id = project.category_id if project.category else None
+
+    # 1. 级别 + 类别 完全匹配
+    if level_id and category_id:
+        match = (
+            base_qs.filter(project_level_id=level_id, project_category_id=category_id)
+            .order_by("-updated_at")
+            .first()
+        )
+        if match:
+            return match
+
+    # 2. 级别匹配 (类别无限制)
+    if level_id:
+        match = (
+            base_qs.filter(project_level_id=level_id, project_category__isnull=True)
+            .order_by("-updated_at")
+            .first()
+        )
+        if match:
+            return match
+
+    # 3. 类别匹配 (级别无限制)
+    if category_id:
+        match = (
+            base_qs.filter(project_level__isnull=True, project_category_id=category_id)
+            .order_by("-updated_at")
+            .first()
+        )
+        if match:
+            return match
+
+    # 4. 通用匹配 (无限制)
+    match = (
+        base_qs.filter(project_level__isnull=True, project_category__isnull=True)
+        .order_by("-updated_at")
+        .first()
+    )
+    if match:
+        return match
+
+    # 5. 兜底 (最新)
+    return base_qs.order_by("-updated_at").first()
 
 
 def render_certificate_html(project, setting=None, request=None):
-    setting = setting or get_active_certificate_setting()
+    setting = setting or get_best_match_setting(project)
     school_name = setting.school_name if setting else ""
     issuer = setting.issuer_name if setting else ""
     template_code = setting.template_code if setting else "DEFAULT"

@@ -31,8 +31,6 @@ class DashboardService:
             "in_progress": my_projects.filter(
                 status__in=[
                     Project.ProjectStatus.IN_PROGRESS,
-                    Project.ProjectStatus.TASK_BOOK_DRAFT,
-                    Project.ProjectStatus.TASK_BOOK_SUBMITTED,
                     Project.ProjectStatus.MID_TERM_DRAFT,
                     Project.ProjectStatus.MID_TERM_SUBMITTED,
                 ]
@@ -64,7 +62,6 @@ class DashboardService:
         returned_projects = my_projects.filter(
             status__in=[
                 Project.ProjectStatus.APPLICATION_RETURNED,
-                Project.ProjectStatus.TASK_BOOK_RETURNED,
                 Project.ProjectStatus.MID_TERM_RETURNED,
                 Project.ProjectStatus.CLOSURE_RETURNED,
             ]
@@ -79,28 +76,10 @@ class DashboardService:
                 }
             )
 
-        # 待提交任务书
-        task_book_pending = my_projects.filter(
-            status__in=[
-                Project.ProjectStatus.IN_PROGRESS,
-                Project.ProjectStatus.TASK_BOOK_DRAFT,
-            ],
-            task_book_file="",
-        )
-        if task_book_pending.exists():
-            pending_tasks.append(
-                {
-                    "type": "submit_task_book",
-                    "title": "待提交任务书",
-                    "count": task_book_pending.count(),
-                    "priority": "high",
-                }
-            )
-
         # 待提交中期报告
         midterm_pending = my_projects.filter(
             status__in=[
-                Project.ProjectStatus.TASK_BOOK_APPROVED,
+                Project.ProjectStatus.IN_PROGRESS,
                 Project.ProjectStatus.MID_TERM_DRAFT,
             ]
         )
@@ -172,8 +151,6 @@ class DashboardService:
             "in_progress": guided_projects.filter(
                 status__in=[
                     Project.ProjectStatus.IN_PROGRESS,
-                    Project.ProjectStatus.TASK_BOOK_DRAFT,
-                    Project.ProjectStatus.TASK_BOOK_SUBMITTED,
                     Project.ProjectStatus.MID_TERM_DRAFT,
                     Project.ProjectStatus.MID_TERM_SUBMITTED,
                 ]
@@ -232,7 +209,6 @@ class DashboardService:
             "reviewing": college_projects.filter(
                 status__in=[
                     Project.ProjectStatus.COLLEGE_AUDITING,
-                    Project.ProjectStatus.TASK_BOOK_SUBMITTED,
                     Project.ProjectStatus.MID_TERM_REVIEWING,
                     Project.ProjectStatus.CLOSURE_LEVEL2_REVIEWING,
                 ]

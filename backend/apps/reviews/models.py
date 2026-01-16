@@ -14,7 +14,6 @@ class Review(models.Model):
 
     class ReviewType(models.TextChoices):
         APPLICATION = "APPLICATION", "申报审核"
-        TASK_BOOK = "TASK_BOOK", "任务书审核"
         MID_TERM = "MID_TERM", "中期审核"
         CLOSURE = "CLOSURE", "结题审核"
 

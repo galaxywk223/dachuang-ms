@@ -4,7 +4,6 @@ import {
   ElMessage,
   type FormInstance,
   type FormRules,
-  type UploadFile,
 } from "element-plus";
 import { useDictionary } from "@/composables/useDictionary";
 import { DICT_CODES } from "@/api/dictionaries";
@@ -59,12 +58,6 @@ type ProjectForm = {
   proposal_file_name: string;
   attachment_file_url: string;
   attachment_file_name: string;
-  contract_file_url: string;
-  contract_file_name: string;
-  task_book_file_url: string;
-  task_book_file_name: string;
-  contract_file: File | null;
-  task_book_file: File | null;
   advisors: AdvisorInfo[];
   members: MemberInfo[];
 };
@@ -123,12 +116,6 @@ export function useProjectDetail() {
     proposal_file_name: "",
     attachment_file_url: "",
     attachment_file_name: "",
-    contract_file_url: "",
-    contract_file_name: "",
-    task_book_file_url: "",
-    task_book_file_name: "",
-    contract_file: null as File | null,
-    task_book_file: null as File | null,
     advisors: [] as AdvisorInfo[],
     members: [] as MemberInfo[],
   });
@@ -277,12 +264,6 @@ export function useProjectDetail() {
       form.proposal_file_name = String(data.proposal_file_name || "");
       form.attachment_file_url = String(data.attachment_file_url || "");
       form.attachment_file_name = String(data.attachment_file_name || "");
-      form.contract_file_url = String(data.contract_file_url || "");
-      form.contract_file_name = String(data.contract_file_name || "");
-      form.task_book_file_url = String(data.task_book_file_url || "");
-      form.task_book_file_name = String(data.task_book_file_name || "");
-      form.contract_file = null;
-      form.task_book_file = null;
 
       if (Array.isArray(data.advisors_info)) {
         form.advisors = (data.advisors_info as Record<string, unknown>[]).map(
@@ -348,31 +329,13 @@ export function useProjectDetail() {
       expected_results: form.expected_results,
       description: form.description,
     };
-    const hasFiles = !!(form.contract_file || form.task_book_file);
     if (!form.id) {
       ElMessage.error("项目ID无效");
       saving.value = false;
       return;
     }
     try {
-      if (hasFiles) {
-        const formData = new FormData();
-        Object.entries(basePayload).forEach(([key, value]) => {
-          if (value === null || value === undefined || value === "") {
-            return;
-          }
-          formData.append(key, String(value));
-        });
-        if (form.contract_file) {
-          formData.append("contract_file", form.contract_file);
-        }
-        if (form.task_book_file) {
-          formData.append("task_book_file", form.task_book_file);
-        }
-        await updateProjectInfo(form.id, formData);
-      } else {
-        await updateProjectInfo(form.id, basePayload);
-      }
+      await updateProjectInfo(form.id, basePayload);
       ElMessage.success("保存成功");
       router.replace({
         name: "level1-project-detail",
@@ -383,7 +346,7 @@ export function useProjectDetail() {
       const resp = isRecord(error) ? error.response : undefined;
       const respData = isRecord(resp) ? resp.data : undefined;
       console.error("Update project failed", {
-        payload: hasFiles ? "formData" : basePayload,
+        payload: basePayload,
         status: isRecord(resp) ? resp.status : undefined,
         response: respData || error,
       });
@@ -404,14 +367,6 @@ export function useProjectDetail() {
     } finally {
       saving.value = false;
     }
-  };
-
-  const handleContractFileChange = (file: UploadFile) => {
-    form.contract_file = file.raw ?? null;
-  };
-
-  const handleTaskBookFileChange = (file: UploadFile) => {
-    form.task_book_file = file.raw ?? null;
   };
 
   const switchToEdit = () => {
@@ -488,7 +443,5 @@ export function useProjectDetail() {
     handleSubmit,
     switchToEdit,
     handleExportDoc,
-    handleContractFileChange,
-    handleTaskBookFileChange,
   };
 }

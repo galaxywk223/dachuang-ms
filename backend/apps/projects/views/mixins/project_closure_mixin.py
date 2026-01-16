@@ -13,8 +13,7 @@ from apps.reviews.services import ReviewService
 from apps.notifications.services import NotificationService
 
 from ...serializers import ProjectClosureSerializer
-from ...services import ProjectService, ProjectRecycleService
-from ...models import ProjectRecycleBin
+from ...services import ProjectService
 
 
 class ProjectClosureMixin:
@@ -178,18 +177,6 @@ class ProjectClosureMixin:
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        payload = ProjectRecycleService.snapshot_closure(project)
-        ProjectRecycleService.add_item(
-            project=project,
-            resource_type=ProjectRecycleBin.ResourceType.CLOSURE,
-            payload=payload,
-            attachments=[
-                f
-                for f in [payload.get("final_report"), payload.get("achievement_file")]
-                if f
-            ],
-            deleted_by=request.user,
-        )
         project.final_report = None
         project.achievement_file = None
         project.closure_applied_at = None

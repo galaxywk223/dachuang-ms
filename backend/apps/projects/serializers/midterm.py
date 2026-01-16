@@ -33,8 +33,9 @@ class ProjectMidTermSerializer(serializers.Serializer):
              return value
              
         # 检查文件格式
-        if not value.name.lower().endswith(".pdf"):
-            raise serializers.ValidationError("中期报告必须是PDF格式")
+        name = value.name.lower()
+        if not (name.endswith(".pdf") or name.endswith(".doc") or name.endswith(".docx")):
+            raise serializers.ValidationError("中期报告必须是PDF或Word格式")
 
         # 检查文件大小（不超过5MB）
         if value.size > 5 * 1024 * 1024:

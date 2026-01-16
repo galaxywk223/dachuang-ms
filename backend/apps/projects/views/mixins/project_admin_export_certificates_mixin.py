@@ -24,14 +24,8 @@ class ProjectAdminExportCertificatesMixin:
         结题证书预览（HTML）
         """
         project = self.get_object()
-        from apps.system_settings.models import CertificateSetting
-
-        setting = (
-            CertificateSetting.objects.filter(is_active=True)
-            .order_by("-updated_at")
-            .first()
-        )
-        html = self._render_certificate_html(project, setting, request=request)
+        # 自动匹配最佳证书配置
+        html = self._render_certificate_html(project, setting=None, request=request)
         return HttpResponse(html, content_type="text/html")
 
     @action(methods=["get"], detail=False, url_path="batch-certificates")
@@ -55,18 +49,14 @@ class ProjectAdminExportCertificatesMixin:
         queryset = self.get_queryset().filter(
             id__in=id_list, status=Project.ProjectStatus.CLOSED
         )
-        from apps.system_settings.models import CertificateSetting
-
-        setting = (
-            CertificateSetting.objects.filter(is_active=True)
-            .order_by("-updated_at")
-            .first()
-        )
 
         buffer = io.BytesIO()
         with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
             for project in queryset:
-                html = self._render_certificate_html(project, setting, request=request)
+                # 假如不传递 setting，render_certificate_html 会内部自动匹配最佳模板
+                html = self._render_certificate_html(
+                    project, setting=None, request=request
+                )
                 filename = f"{project.project_no}_结题证书.html"
                 zf.writestr(filename, html)
         buffer.seek(0)

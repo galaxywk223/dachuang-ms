@@ -15,8 +15,7 @@ from apps.notifications.services import NotificationService
 
 from ...certificates import render_certificate_html
 from ...models import Project
-from ...services import ProjectService, ProjectRecycleService
-from ...models import ProjectRecycleBin
+from ...services import ProjectService
 
 
 class ProjectCoreActionsMixin:
@@ -43,16 +42,14 @@ class ProjectCoreActionsMixin:
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if not (
-            user.is_admin
-            or (user.is_student and project.leader_id == user.id)
-        ):
+        if not (user.is_admin or (user.is_student and project.leader_id == user.id)):
             return Response(
                 {"code": 403, "message": "无权限访问"},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        html = render_certificate_html(project, request=request)
+        # 自动匹配最佳证书配置
+        html = render_certificate_html(project, setting=None, request=request)
         return HttpResponse(html, content_type="text/html")
 
     @action(methods=["post"], detail=True)
@@ -120,16 +117,6 @@ class ProjectCoreActionsMixin:
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        payload = ProjectRecycleService.snapshot_application(project)
-        ProjectRecycleService.add_item(
-            project=project,
-            resource_type=ProjectRecycleBin.ResourceType.APPLICATION,
-            payload=payload,
-            attachments=[
-                f for f in [payload.get("proposal_file"), payload.get("attachment_file")] if f
-            ],
-            deleted_by=request.user,
-        )
         project.proposal_file = None
         project.attachment_file = None
         project.submitted_at = None

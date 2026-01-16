@@ -16,8 +16,6 @@ from ..serializers import ProjectSerializer
 ARCHIVE_ATTACHMENT_FIELDS = (
     "proposal_file",
     "attachment_file",
-    "contract_file",
-    "task_book_file",
     "mid_term_report",
     "final_report",
     "achievement_file",

@@ -457,11 +457,6 @@ const currentMenus = computed<MenuEntry[]>(() => {
               icon: Bell,
             },
             {
-              index: "/recycle-bin",
-              title: "回收站",
-              icon: Folder,
-            },
-            {
               index: "/help",
               title: "使用帮助",
               icon: QuestionFilled,
@@ -511,11 +506,6 @@ const currentMenus = computed<MenuEntry[]>(() => {
           index: "/notifications",
           title: "通知中心",
           icon: Bell,
-        },
-        {
-          index: "/recycle-bin",
-          title: "回收站",
-          icon: Folder,
         },
       ];
     case "level1_admin":
@@ -575,11 +565,6 @@ const currentMenus = computed<MenuEntry[]>(() => {
           title: "通知中心",
           icon: Bell,
         },
-        {
-          index: "/recycle-bin",
-          title: "回收站",
-          icon: Folder,
-        },
       ];
     case "teacher":
       return [
@@ -602,11 +587,6 @@ const currentMenus = computed<MenuEntry[]>(() => {
           title: "通知中心",
           icon: Bell,
         },
-        {
-          index: "/recycle-bin",
-          title: "回收站",
-          icon: Folder,
-        },
       ];
     case "expert":
       return [
@@ -619,11 +599,6 @@ const currentMenus = computed<MenuEntry[]>(() => {
           index: "/notifications",
           title: "通知中心",
           icon: Bell,
-        },
-        {
-          index: "/recycle-bin",
-          title: "回收站",
-          icon: Folder,
         },
       ];
     default:

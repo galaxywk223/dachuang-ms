@@ -6,9 +6,9 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from ...models import ProjectAchievement, ProjectRecycleBin
+from ...models import ProjectAchievement
 from ...serializers import ProjectAchievementSerializer
-from ...services import ProjectRecycleService
+
 
 class ProjectAchievementViewSet(viewsets.ModelViewSet):
     """
@@ -63,13 +63,5 @@ class ProjectAchievementViewSet(viewsets.ModelViewSet):
             "extra_data": instance.extra_data,
             "attachment": instance.attachment.name if instance.attachment else "",
         }
-        ProjectRecycleService.add_item(
-            project=project,
-            resource_type=ProjectRecycleBin.ResourceType.ACHIEVEMENT,
-            resource_id=instance.id,
-            payload=payload,
-            attachments=[payload.get("attachment")] if payload.get("attachment") else [],
-            deleted_by=request.user,
-        )
         self.perform_destroy(instance)
-        return Response({"code": 200, "message": "已移入回收站"})
+        return Response({"code": 200, "message": "删除成功"})

@@ -6,9 +6,8 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from ...models import Project, ProjectAchievement, ProjectRecycleBin
+from ...models import Project, ProjectAchievement
 from ...serializers import ProjectAchievementSerializer
-from ...services import ProjectRecycleService
 
 
 class ProjectAchievementsMixin:
@@ -50,9 +49,15 @@ class ProjectAchievementsMixin:
         serializer.is_valid(raise_exception=True)
         serializer.save(project=project)
 
-        return Response({"code": 200, "message": "成果添加成功", "data": serializer.data})
+        return Response(
+            {"code": 200, "message": "成果添加成功", "data": serializer.data}
+        )
 
-    @action(methods=["delete"], detail=True, url_path="remove-achievement/(?P<achievement_id>[^/.]+)")
+    @action(
+        methods=["delete"],
+        detail=True,
+        url_path="remove-achievement/(?P<achievement_id>[^/.]+)",
+    )
     def remove_achievement(self, request, pk=None, achievement_id=None):
         """
         删除项目成果
@@ -94,13 +99,5 @@ class ProjectAchievementsMixin:
             "extra_data": achievement.extra_data,
             "attachment": achievement.attachment.name if achievement.attachment else "",
         }
-        ProjectRecycleService.add_item(
-            project=project,
-            resource_type=ProjectRecycleBin.ResourceType.ACHIEVEMENT,
-            resource_id=achievement.id,
-            payload=payload,
-            attachments=[payload.get("attachment")] if payload.get("attachment") else [],
-            deleted_by=request.user,
-        )
         achievement.delete()
-        return Response({"code": 200, "message": "已移入回收站"})
+        return Response({"code": 200, "message": "删除成功"})

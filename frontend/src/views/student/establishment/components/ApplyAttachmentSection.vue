@@ -14,11 +14,11 @@
               :on-remove="handleFileRemove"
               :limit="1"
               v-model:file-list="localFileList"
-              accept=".pdf"
+              accept=".pdf,.doc,.docx"
               class="upload-demo"
             >
               <el-button type="primary" plain>
-                <el-icon class="mr-1"><Upload /></el-icon> 上传申请书 (PDF)
+                <el-icon class="mr-1"><Upload /></el-icon> 上传申请书 (PDF/Word)
               </el-button>
             </el-upload>
 
@@ -32,7 +32,7 @@
             </div>
           </div>
 
-          <div class="form-tip">只能上传pdf文件，且不超过2MB</div>
+          <div class="form-tip">只能上传PDF/Word文件，且不超过2MB</div>
         </div>
       </el-form-item>
     </div>

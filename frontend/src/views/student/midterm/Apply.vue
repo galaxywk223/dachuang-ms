@@ -44,23 +44,12 @@
               {{ advisor.name }}
             </span>
           </el-descriptions-item>
-          <el-descriptions-item label="项目任务书">
-            <el-link
-              v-if="project.task_book_file_url"
-              type="primary"
-              :href="project.task_book_file_url"
-              target="_blank"
-            >
-              {{ project.task_book_file_name || "下载任务书" }}
-            </el-link>
-            <span v-else>暂无</span>
-          </el-descriptions-item>
         </el-descriptions>
 
         <div class="form-section">
           <h3>上传中期检查报告</h3>
           <el-alert
-            title="请下载模板填写后上传PDF格式文件，大小不超过5MB"
+            title="请下载模板填写后上传PDF或Word格式文件，大小不超过5MB"
             type="info"
             show-icon
             :closable="false"
@@ -82,7 +71,7 @@
                 :on-change="handleFileChange"
                 :on-remove="handleFileRemove"
                 :limit="1"
-                accept=".pdf"
+                accept=".pdf,.doc,.docx"
                 :file-list="fileList"
                 :disabled="!canSubmit"
               >
@@ -92,7 +81,7 @@
                 </div>
                 <template #tip>
                   <div class="el-upload__tip">
-                    只能上传 pdf 文件，且不超过 5MB
+                    只能上传 PDF/Word 文件，且不超过 5MB
                   </div>
                 </template>
               </el-upload>
@@ -173,8 +162,6 @@ interface Project {
   status: string;
   mid_term_report_url: string;
   mid_term_report_name: string;
-  task_book_file_url: string;
-  task_book_file_name: string;
 }
 
 const loading = ref(true);

@@ -28,7 +28,7 @@ class BatchOperationService:
         批量审核通过项目
         :param project_ids: 项目ID列表
         :param reviewer: 审核人
-        :param review_type: 审核类型 (APPLICATION, TASK_BOOK, MID_TERM, CLOSURE)
+        :param review_type: 审核类型 (APPLICATION, MID_TERM, CLOSURE)
         :param review_level: 审核级别 (TEACHER, LEVEL2, LEVEL1)
         :param comment: 审核意见
         :return: 成功和失败的统计
@@ -228,7 +228,7 @@ class BatchOperationService:
         """
         批量导出文档
         :param project_ids: 项目ID列表
-        :param document_type: 文档类型 (application, contract, task_book, midterm, closure)
+        :param document_type: 文档类型 (application, midterm, closure)
         :return: 文件路径列表或压缩包路径
         """
         import os
@@ -251,12 +251,6 @@ class BatchOperationService:
                     # 根据文档类型生成相应文档
                     if document_type == "application":
                         doc_path = ProjectDocumentService.generate_application_doc(
-                            project
-                        )
-                    elif document_type == "contract":
-                        doc_path = ProjectDocumentService.generate_contract_doc(project)
-                    elif document_type == "task_book":
-                        doc_path = ProjectDocumentService.generate_task_book_doc(
                             project
                         )
                     elif document_type == "midterm":
@@ -291,12 +285,6 @@ def _update_project_status_on_approve(project, review_type, review_level):
         elif review_level == REVIEW_LEVEL_LEVEL1:
             project.status = Project.ProjectStatus.IN_PROGRESS
 
-    elif review_type == Review.ReviewType.TASK_BOOK:
-        if review_level == REVIEW_LEVEL_TEACHER:
-            project.status = Project.ProjectStatus.TASK_BOOK_APPROVED
-        elif review_level == REVIEW_LEVEL_LEVEL2:
-            project.status = Project.ProjectStatus.IN_PROGRESS
-
     elif review_type == Review.ReviewType.MID_TERM:
         if review_level == REVIEW_LEVEL_TEACHER:
             project.status = Project.ProjectStatus.MID_TERM_APPROVED
@@ -320,8 +308,6 @@ def _update_project_status_on_reject(project, review_type, review_level):
     """
     if review_type == Review.ReviewType.APPLICATION:
         project.status = Project.ProjectStatus.APPLICATION_RETURNED
-    elif review_type == Review.ReviewType.TASK_BOOK:
-        project.status = Project.ProjectStatus.TASK_BOOK_RETURNED
     elif review_type == Review.ReviewType.MID_TERM:
         project.status = Project.ProjectStatus.MID_TERM_RETURNED
     elif review_type == Review.ReviewType.CLOSURE:

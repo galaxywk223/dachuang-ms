@@ -6,6 +6,7 @@ import { DICT_CODES } from "@/api/dictionaries";
 import {
   batchUpdateProjectStatus,
   deleteProjectById,
+  getCertificatePreview,
 } from "@/api/projects/admin";
 import { batchSendNotifications } from "@/api/notifications";
 import { useProjectExport } from "./useProjectExport";
@@ -29,7 +30,11 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (!isRecord(error)) return fallback;
   const response = error.response;
-  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === "string") {
+  if (
+    isRecord(response) &&
+    isRecord(response.data) &&
+    typeof response.data.message === "string"
+  ) {
     return response.data.message;
   }
   if (typeof error.message === "string") return error.message;
@@ -85,7 +90,9 @@ export function useAllProjects() {
   });
 
   const levelOptions = computed(() => getOptions(DICT_CODES.PROJECT_LEVEL));
-  const categoryOptions = computed(() => getOptions(DICT_CODES.PROJECT_CATEGORY));
+  const categoryOptions = computed(() =>
+    getOptions(DICT_CODES.PROJECT_CATEGORY)
+  );
   const statusOptions = computed(() => getOptions(DICT_CODES.PROJECT_STATUS));
 
   const handleView = (row: ProjectRow) => {
@@ -120,6 +127,33 @@ export function useAllProjects() {
       fetchProjects();
     } catch (error) {
       if (error !== "cancel") ElMessage.error("删除失败");
+    }
+  };
+
+  const handlePreviewCertificate = async (row: ProjectRow) => {
+    try {
+      const res = await getCertificatePreview(row.id);
+      // res assumes to be HTML string because responseType is 'text' or handled by interceptor
+      // However, interceptor might wrap it in ApiResponse if JSON.
+      // But we set responseType='text', so axios returns string.
+      // Interceptor logic:
+      // request.interceptors.response.use((response) => response.data, ...)
+      // So res will be the HTML string.
+
+      if (typeof res === "string") {
+        const win = window.open("", "_blank");
+        if (win) {
+          win.document.open();
+          win.document.write(res);
+          win.document.close();
+        } else {
+          ElMessage.warning("请允许弹出窗口以预览证书");
+        }
+      } else {
+        ElMessage.error("预览失败：无效的响应格式");
+      }
+    } catch (error) {
+      ElMessage.error(getErrorMessage(error, "获取证书失败"));
     }
   };
 
@@ -236,6 +270,7 @@ export function useAllProjects() {
     handleView,
     handleEdit,
     handleDelete,
+    handlePreviewCertificate,
     handleSelectionChange,
     handleBatchExport,
     handleBatchDownload,
