@@ -266,15 +266,12 @@ class BatchWorkflowViewSet(viewsets.ViewSet):
                 {"detail": "工作流已锁定，无法修改"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 学生提交节点只允许修改日期字段
+        # 学生提交节点不允许修改
         if node.node_type == "SUBMIT":
-            allowed_fields = {"start_date", "end_date"}
-            request_fields = set(request.data.keys())
-            if not request_fields.issubset(allowed_fields):
-                return Response(
-                    {"detail": "学生提交节点只能修改日期字段"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+            return Response(
+                {"detail": "学生提交节点不允许修改"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         serializer = WorkflowNodeCreateUpdateSerializer(
             node, data=request.data, partial=True

@@ -3,6 +3,7 @@ Workflow configuration helper.
 """
 
 from dataclasses import dataclass
+from datetime import date
 from typing import List, Optional, Dict, Any, cast
 
 from apps.system_settings.models import WorkflowConfig, WorkflowNode, ProjectBatch
@@ -382,20 +383,49 @@ class WorkflowService:
             return {"valid": False, "errors": [f"验证失败: {str(e)}"]}
 
     @staticmethod
-    def check_node_time_window(node, check_date):
+    def _parse_window_date(value):
+        if not value:
+            return None
+        if isinstance(value, date):
+            return value
+        try:
+            return date.fromisoformat(str(value))
+        except ValueError:
+            return None
+
+    @staticmethod
+    def _check_window_config(window: Dict[str, Any], check_date: date):
         """
-        检查节点的时间窗口
+        检查配置的时间窗口
         返回: (ok: bool, message: str)
         """
-        if not node.start_date and not node.end_date:
-            # 如果节点没有配置时间限制，则始终允许
+        if not window or not window.get("enabled"):
             return True, ""
 
-        if node.start_date and check_date < node.start_date:
-            return False, f"当前未到开放时间（开始时间：{node.start_date}）"
+        start_value = window.get("start")
+        end_value = window.get("end")
 
-        if node.end_date and check_date > node.end_date:
-            return False, f"当前已超过截止时间（截止时间：{node.end_date}）"
+        start_date = (
+            start_value if isinstance(start_value, date) else None
+        ) or WorkflowService._parse_window_date(start_value)
+        end_date = (
+            end_value if isinstance(end_value, date) else None
+        ) or WorkflowService._parse_window_date(end_value)
+
+        if isinstance(start_value, str) and start_value and not start_date:
+            return False, "时间窗口配置不正确，请联系管理员"
+        if isinstance(end_value, str) and end_value and not end_date:
+            return False, "时间窗口配置不正确，请联系管理员"
+
+        if not start_date and not end_date:
+            # 未配置日期限制，则始终允许
+            return True, ""
+
+        if start_date and check_date < start_date:
+            return False, f"当前未到开放时间（开始时间：{start_date}）"
+
+        if end_date and check_date > end_date:
+            return False, f"当前已超过截止时间（截止时间：{end_date}）"
 
         return True, ""
 
@@ -421,40 +451,22 @@ class WorkflowService:
     @staticmethod
     def check_phase_window(phase, batch, check_date):
         """
-        检查阶段的时间窗口（用于学生提交）
+        检查阶段的时间窗口（用于阶段内所有操作）
         返回: (ok: bool, message: str)
         """
         try:
-            workflow = WorkflowConfig.objects.filter(
-                batch=batch, phase=phase, is_active=True
-            ).first()
+            from apps.system_settings.services import SystemSettingService
 
-            if not workflow:
-                return True, ""  # 没有配置则允许
+            window_key_map = {
+                "APPLICATION": "APPLICATION_WINDOW",
+                "MID_TERM": "MIDTERM_WINDOW",
+                "CLOSURE": "CLOSURE_WINDOW",
+            }
+            setting_code = window_key_map.get(phase)
+            if not setting_code:
+                return True, ""
 
-            # 获取学生提交节点（第一个SUBMIT类型节点）
-            submit_node = WorkflowNode.objects.filter(
-                workflow=workflow, node_type="SUBMIT", is_active=True
-            ).first()
-
-            if not submit_node:
-                return True, ""  # 没有提交节点则允许
-
-            return WorkflowService.check_node_time_window(submit_node, check_date)
-        except Exception:
-            return False, "时间窗口校验失败，请联系管理员"
-
-    @staticmethod
-    def check_review_node_window(project, phase, check_date):
-        """
-        检查项目当前审核节点的时间窗口
-        返回: (ok: bool, message: str)
-        """
-        try:
-            current_node = WorkflowService.get_current_node_for_project(project, phase)
-            if not current_node:
-                return True, ""  # 没有当前节点则允许
-
-            return WorkflowService.check_node_time_window(current_node, check_date)
+            window = SystemSettingService.get_setting(setting_code, batch=batch) or {}
+            return WorkflowService._check_window_config(window, check_date)
         except Exception:
             return False, "时间窗口校验失败，请联系管理员"

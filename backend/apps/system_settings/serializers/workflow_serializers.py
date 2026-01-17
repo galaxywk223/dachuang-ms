@@ -33,8 +33,6 @@ class WorkflowNodeSerializer(serializers.ModelSerializer):
             "return_policy",
             "allowed_reject_to",
             "notice",
-            "start_date",
-            "end_date",
             "sort_order",
             "is_active",
             "can_edit",
@@ -63,8 +61,6 @@ class WorkflowNodeCreateUpdateSerializer(serializers.ModelSerializer):
             "return_policy",
             "allowed_reject_to",
             "notice",
-            "start_date",
-            "end_date",
             "sort_order",
             "is_active",
         ]

@@ -43,6 +43,25 @@
         </el-alert>
 
         <el-tabs v-model="activeTab">
+          <el-tab-pane label="时间窗口" name="dates">
+            <SystemConfigDatesTab
+              v-model:global-date-range="globalDateRange"
+              :apply-batch-dates="applyBatchDates"
+              :is-read-only="isReadOnly"
+              :application-window="applicationWindow"
+              :midterm-window="midtermWindow"
+              :closure-window="closureWindow"
+              @update:application-window="
+                (value) => Object.assign(applicationWindow, value)
+              "
+              @update:midterm-window="
+                (value) => Object.assign(midtermWindow, value)
+              "
+              @update:closure-window="
+                (value) => Object.assign(closureWindow, value)
+              "
+            />
+          </el-tab-pane>
           <el-tab-pane label="限制与校验" name="limits">
             <SystemConfigLimitsTab
               :limit-rules="limitRules"
@@ -78,6 +97,7 @@ import {
   updateSettingByCode,
 } from "@/api/system-settings";
 import { getProjectBatch } from "@/api/system-settings/batches";
+import SystemConfigDatesTab from "./components/SystemConfigDatesTab.vue";
 import SystemConfigLimitsTab from "./components/SystemConfigLimitsTab.vue";
 import BatchWorkflowConfig from "@/components/business/BatchWorkflowConfig.vue";
 
@@ -115,6 +135,7 @@ const router = useRouter();
 const activeTab = ref("dates");
 const savingAll = ref(false);
 const batchInfo = ref<BatchInfo | null>(null);
+const globalDateRange = ref([] as string[]);
 
 const batchId = computed(() => {
   const raw = route.params.id || route.query.batch_id;
@@ -169,24 +190,6 @@ const isProcessLocked = computed(() => isReadOnly.value || isActive.value);
 const applicationWindow = reactive({ enabled: false, range: [] as string[] });
 const midtermWindow = reactive({ enabled: false, range: [] as string[] });
 const closureWindow = reactive({ enabled: false, range: [] as string[] });
-const expertReviewWindow = reactive({ enabled: false, range: [] as string[] });
-
-const reviewWindow = reactive({
-  application: {
-    teacher: { enabled: false, range: [] as string[] },
-    level2: { enabled: false, range: [] as string[] },
-    level1: { enabled: false, range: [] as string[] },
-  },
-  midterm: {
-    teacher: { enabled: false, range: [] as string[] },
-    level2: { enabled: false, range: [] as string[] },
-  },
-  closure: {
-    teacher: { enabled: false, range: [] as string[] },
-    level2: { enabled: false, range: [] as string[] },
-    level1: { enabled: false, range: [] as string[] },
-  },
-});
 
 const limitRules = reactive({
   max_advisors: 2,
@@ -234,12 +237,19 @@ const fillRange = (
   target.range = data.start && data.end ? [data.start, data.end] : [];
 };
 
-const getWindowSegment = (source: Record<string, unknown>, key: string) => {
-  const segment = source[key];
-  return isRecord(segment)
-    ? (segment as { enabled?: boolean; start?: string; end?: string })
-    : {};
+const applyBatchDates = () => {
+  if (isReadOnly.value) return;
+  if (!globalDateRange.value || globalDateRange.value.length !== 2) return;
+  const range = [...globalDateRange.value];
+  const applyRange = (target: { enabled: boolean; range: string[] }) => {
+    target.enabled = true;
+    target.range = [...range];
+  };
+  applyRange(applicationWindow);
+  applyRange(midtermWindow);
+  applyRange(closureWindow);
 };
+
 
 const loadBatch = async () => {
   if (!batchId.value) {
@@ -277,42 +287,6 @@ const loadSettings = async () => {
     closureWindow.enabled = !!clo.enabled;
     fillRange(closureWindow, clo as { start?: string; end?: string });
 
-    const expert = (data.EXPERT_REVIEW_WINDOW as Record<string, unknown>) || {};
-    expertReviewWindow.enabled = !!expert.enabled;
-    fillRange(expertReviewWindow, expert as { start?: string; end?: string });
-
-    const review = (data.REVIEW_WINDOW as Record<string, unknown>) || {};
-    const appReview = (review.application as Record<string, unknown>) || {};
-    const midReview = (review.midterm as Record<string, unknown>) || {};
-    const cloReview = (review.closure as Record<string, unknown>) || {};
-
-    const appTeacher = getWindowSegment(appReview, "teacher");
-    const appLevel2 = getWindowSegment(appReview, "level2");
-    const appLevel1 = getWindowSegment(appReview, "level1");
-    reviewWindow.application.teacher.enabled = !!appTeacher.enabled;
-    fillRange(reviewWindow.application.teacher, appTeacher);
-    reviewWindow.application.level2.enabled = !!appLevel2.enabled;
-    fillRange(reviewWindow.application.level2, appLevel2);
-    reviewWindow.application.level1.enabled = !!appLevel1.enabled;
-    fillRange(reviewWindow.application.level1, appLevel1);
-
-    const midTeacher = getWindowSegment(midReview, "teacher");
-    const midLevel2 = getWindowSegment(midReview, "level2");
-    reviewWindow.midterm.teacher.enabled = !!midTeacher.enabled;
-    fillRange(reviewWindow.midterm.teacher, midTeacher);
-    reviewWindow.midterm.level2.enabled = !!midLevel2.enabled;
-    fillRange(reviewWindow.midterm.level2, midLevel2);
-
-    const cloTeacher = getWindowSegment(cloReview, "teacher");
-    const cloLevel2 = getWindowSegment(cloReview, "level2");
-    const cloLevel1 = getWindowSegment(cloReview, "level1");
-    reviewWindow.closure.teacher.enabled = !!cloTeacher.enabled;
-    fillRange(reviewWindow.closure.teacher, cloTeacher);
-    reviewWindow.closure.level2.enabled = !!cloLevel2.enabled;
-    fillRange(reviewWindow.closure.level2, cloLevel2);
-    reviewWindow.closure.level1.enabled = !!cloLevel1.enabled;
-    fillRange(reviewWindow.closure.level1, cloLevel1);
-
     Object.assign(limitRules, data.LIMIT_RULES || {});
     collegeQuotaText.value = JSON.stringify(
       limitRules.college_quota || {},
@@ -347,25 +321,6 @@ const toWindowPayload = (source: { enabled: boolean; range: string[] }) => {
   };
 };
 
-const buildReviewWindowPayload = () => {
-  return {
-    application: {
-      teacher: toWindowPayload(reviewWindow.application.teacher),
-      level2: toWindowPayload(reviewWindow.application.level2),
-      level1: toWindowPayload(reviewWindow.application.level1),
-    },
-    midterm: {
-      teacher: toWindowPayload(reviewWindow.midterm.teacher),
-      level2: toWindowPayload(reviewWindow.midterm.level2),
-    },
-    closure: {
-      teacher: toWindowPayload(reviewWindow.closure.teacher),
-      level2: toWindowPayload(reviewWindow.closure.level2),
-      level1: toWindowPayload(reviewWindow.closure.level1),
-    },
-  };
-};
-
 const saveAll = async () => {
   if (!batchId.value) return;
   savingAll.value = true;
@@ -395,7 +350,7 @@ const saveAll = async () => {
       updateSettingByCode(
         "APPLICATION_WINDOW",
         {
-          name: "项目申报时间设置",
+          name: "立项流程时间设置",
           data: toWindowPayload(applicationWindow),
         },
         batchId.value
@@ -403,7 +358,7 @@ const saveAll = async () => {
       updateSettingByCode(
         "MIDTERM_WINDOW",
         {
-          name: "中期提交时间设置",
+          name: "中期流程时间设置",
           data: toWindowPayload(midtermWindow),
         },
         batchId.value
@@ -411,24 +366,8 @@ const saveAll = async () => {
       updateSettingByCode(
         "CLOSURE_WINDOW",
         {
-          name: "结题提交时间设置",
+          name: "结题流程时间设置",
           data: toWindowPayload(closureWindow),
-        },
-        batchId.value
-      ),
-      updateSettingByCode(
-        "EXPERT_REVIEW_WINDOW",
-        {
-          name: "专家评审时间设置",
-          data: toWindowPayload(expertReviewWindow),
-        },
-        batchId.value
-      ),
-      updateSettingByCode(
-        "REVIEW_WINDOW",
-        {
-          name: "审核时间设置",
-          data: buildReviewWindowPayload(),
         },
         batchId.value
       ),

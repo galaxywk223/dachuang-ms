@@ -143,9 +143,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         )  # 新增：退回目标节点ID
         approved_budget = serializer.validated_data.get("approved_budget")
 
-        # 专家评审不再需要 EXPERT_REVIEW_WINDOW 检查，使用工作流节点的时间窗口
-
-        # 检查审核时间窗口 - 优先使用工作流节点配置
+        # 检查审核时间窗口 - 按阶段窗口配置
         ok, msg = self._check_review_time_window(review)
         if not ok:
             return Response(
@@ -308,9 +306,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # 专家评审不再需要 EXPERT_REVIEW_WINDOW 检查
-
-        # 检查审核时间窗口 - 使用工作流节点配置
+        # 检查审核时间窗口 - 按阶段窗口配置
         ok, msg = self._check_review_time_window(review)
         if not ok:
             return Response(
@@ -492,7 +488,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 failed.append({"id": review.id, "reason": "无权限"})
                 continue
 
-            # 检查审核时间窗口 - 使用工作流节点配置
+            # 检查审核时间窗口 - 按阶段窗口配置
             ok, msg = self._check_review_time_window(review)
             if not ok:
                 failed.append({"id": review.id, "reason": msg or "不在审核时间范围内"})
@@ -573,23 +569,14 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def _check_review_time_window(self, review):
         """
-        检查审核时间窗口 - 使用工作流节点配置
+        检查审核时间窗口 - 按阶段窗口配置
         """
         from apps.system_settings.services.workflow_service import WorkflowService
 
-        # 从工作流节点获取时间配置
-        node_id = review.workflow_node_id or (
-            review.phase_instance.current_node_id if review.phase_instance else None
+        phase = ReviewService._get_phase_from_review_type(review.review_type)
+        if not phase:
+            return True, ""
+
+        return WorkflowService.check_phase_window(
+            phase, review.project.batch, timezone.now().date()
         )
-        if node_id:
-            from apps.system_settings.models import WorkflowNode
-
-            current_node = WorkflowNode.objects.filter(id=node_id).first()
-
-            if current_node:
-                return WorkflowService.check_node_time_window(
-                    current_node, timezone.now().date()
-                )
-
-        # 没有节点配置则允许
-        return True, ""

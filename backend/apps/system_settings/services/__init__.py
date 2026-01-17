@@ -23,22 +23,6 @@ DEFAULT_SETTINGS = {
         "start": "",
         "end": "",
     },
-    "REVIEW_WINDOW": {
-        "application": {
-            "teacher": {"enabled": False, "start": "", "end": ""},
-            "level2": {"enabled": False, "start": "", "end": ""},
-            "level1": {"enabled": False, "start": "", "end": ""},
-        },
-        "midterm": {
-            "teacher": {"enabled": False, "start": "", "end": ""},
-            "level2": {"enabled": False, "start": "", "end": ""},
-        },
-        "closure": {
-            "teacher": {"enabled": False, "start": "", "end": ""},
-            "level2": {"enabled": False, "start": "", "end": ""},
-            "level1": {"enabled": False, "start": "", "end": ""},
-        },
-    },
     "LIMIT_RULES": {
         "max_advisors": 2,
         "max_members": 5,
@@ -121,9 +105,8 @@ class SystemSettingService:
             return merged
         return base
 
-    # 时间窗口检查方法已移除
-    # 现在完全使用工作流节点配置
-    # 请使用 WorkflowService.check_node_time_window() 代替
+    # 时间窗口检查统一使用阶段窗口配置
+    # 请使用 WorkflowService.check_phase_window
 
 
 __all__ = [

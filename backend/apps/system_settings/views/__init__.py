@@ -140,8 +140,6 @@ class SystemSettingViewSet(viewsets.ModelViewSet):
             "APPLICATION_WINDOW",
             "MIDTERM_WINDOW",
             "CLOSURE_WINDOW",
-            "REVIEW_WINDOW",
-            "EXPERT_REVIEW_WINDOW",
         }
         if code not in allowed_codes:
             return Response(
@@ -487,4 +485,3 @@ class WorkflowNodeViewSet(viewsets.ModelViewSet):
                     {"detail": validation.get("errors", [])}
                 )
         return Response({"code": 200, "message": "更新成功"})
-

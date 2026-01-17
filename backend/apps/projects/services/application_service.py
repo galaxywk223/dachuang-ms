@@ -73,7 +73,7 @@ def _get_current_batch():
 
 def _check_application_window(batch=None):
     """
-    检查申报时间窗口 - 使用工作流节点配置
+    检查申报时间窗口 - 使用阶段窗口配置
     """
     from apps.system_settings.services.workflow_service import WorkflowService
 

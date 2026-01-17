@@ -278,19 +278,6 @@ class WorkflowNode(models.Model):
         verbose_name="允许退回的节点ID",
         help_text="存储可以退回到的节点ID",
     )
-    # 节点的日期窗口配置
-    start_date = models.DateField(
-        null=True,
-        blank=True,
-        verbose_name="开始日期",
-        help_text="该节点可以开始执行的日期",
-    )
-    end_date = models.DateField(
-        null=True,
-        blank=True,
-        verbose_name="结束日期",
-        help_text="该节点必须完成的日期",
-    )
     notice = models.TextField(blank=True, default="", verbose_name="评审注意事项")
     sort_order = models.IntegerField(default=0, verbose_name="排序")
     is_active = models.BooleanField(default=True, verbose_name="是否启用")
@@ -312,4 +299,3 @@ class WorkflowNode(models.Model):
         if self.role_fk:
             return self.role_fk.code
         return self.role if self.role else None
-

@@ -26,9 +26,6 @@
           专家评审
         </el-tag>
       </div>
-      <div v-if="nodeData.start_date || nodeData.end_date" class="node-date">
-        {{ formatDateRange(nodeData.start_date, nodeData.end_date) }}
-      </div>
     </div>
   </div>
 </template>
@@ -109,12 +106,6 @@ const roleTagType = computed(() => {
   return "info";
 });
 
-const formatDateRange = (start?: string | null, end?: string | null) => {
-  if (!start && !end) return "";
-  const s = start ? start.substring(5) : "?";
-  const e = end ? end.substring(5) : "?";
-  return `${s} ~ ${e}`;
-};
 </script>
 
 <style scoped lang="scss">
@@ -205,14 +196,6 @@ const formatDateRange = (start?: string | null, end?: string | null) => {
       gap: 6px;
     }
 
-    .node-date {
-      font-size: 12px;
-      color: #94a3b8;
-      background: #f8fafc;
-      padding: 2px 6px;
-      border-radius: 4px;
-      text-align: center;
-    }
   }
 }
 </style>

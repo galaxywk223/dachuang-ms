@@ -18,8 +18,6 @@ export interface WorkflowNode {
   return_policy: string;
   allowed_reject_to: number | null;
   notice: string;
-  start_date: string | null;
-  end_date: string | null;
   sort_order: number;
   is_active: boolean;
   can_edit: boolean;
@@ -67,8 +65,6 @@ export interface WorkflowNodeInput {
   return_policy?: string;
   allowed_reject_to?: number | null;
   notice?: string;
-  start_date?: string;
-  end_date?: string;
   sort_order: number;
   is_active?: boolean;
 }

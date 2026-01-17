@@ -669,7 +669,8 @@ class ReviewService:
                 )
                 review.phase_instance = phase_instance
                 review.save(update_fields=["phase_instance"])
-            elif review.review_level == "LEVEL2":
+            else:
+                # 兼容动态角色：只要不是导师节点，视为中期完成
                 project.status = Project.ProjectStatus.READY_FOR_CLOSURE
                 if review.phase_instance:
                     ProjectPhaseService.mark_completed(

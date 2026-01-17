@@ -149,8 +149,6 @@ class WorkflowNodeSerializer(serializers.ModelSerializer):
             "return_policy",
             "allowed_reject_to",
             "notice",
-            "start_date",
-            "end_date",
             "sort_order",
             "is_active",
             "created_at",
@@ -183,4 +181,3 @@ class WorkflowConfigSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "created_at", "updated_at", "updated_by"]
-

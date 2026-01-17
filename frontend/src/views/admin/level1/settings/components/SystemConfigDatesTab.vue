@@ -28,12 +28,12 @@
     </div>
 
     <div class="section-block">
-      <div class="block-title">提交窗口设置</div>
+      <div class="block-title">流程时间窗口</div>
       <el-row :gutter="24">
-        <el-col :span="12">
+        <el-col :span="8">
           <el-card shadow="never" class="sub-card">
             <template #header
-              ><span class="sub-title">项目申报提交</span></template
+              ><span class="sub-title">立项流程</span></template
             >
             <div class="card-body">
               <div class="flex-row">
@@ -56,36 +56,10 @@
             </div>
           </el-card>
         </el-col>
-        <el-col :span="12">
+        <el-col :span="8">
           <el-card shadow="never" class="sub-card">
             <template #header
-              ><span class="sub-title">专家评审时间</span></template
-            >
-            <div class="card-body">
-              <div class="flex-row">
-                <el-switch
-                  v-model="localExpertReviewWindow.enabled"
-                  active-text="开启"
-                  :disabled="isReadOnly"
-                />
-              </div>
-              <el-date-picker
-                v-model="localExpertReviewWindow.range"
-                type="daterange"
-                range-separator="至"
-                start-placeholder="开始"
-                end-placeholder="截止"
-                value-format="YYYY-MM-DD"
-                :disabled="isReadOnly"
-                style="width: 100%; margin-top: 12px"
-              />
-            </div>
-          </el-card>
-        </el-col>
-        <el-col :span="12" class="mt-4">
-          <el-card shadow="never" class="sub-card">
-            <template #header
-              ><span class="sub-title">中期检查提交</span></template
+              ><span class="sub-title">中期流程</span></template
             >
             <div class="card-body">
               <div class="flex-row">
@@ -108,10 +82,10 @@
             </div>
           </el-card>
         </el-col>
-        <el-col :span="12" class="mt-4">
+        <el-col :span="8">
           <el-card shadow="never" class="sub-card">
             <template #header
-              ><span class="sub-title">结题报告提交</span></template
+              ><span class="sub-title">结题流程</span></template
             >
             <div class="card-body">
               <div class="flex-row">
@@ -137,157 +111,6 @@
       </el-row>
     </div>
 
-    <div class="section-block mt-6">
-      <div class="block-title">各级审核时间配置</div>
-      <div class="review-matrix">
-        <div class="matrix-header">
-          <div class="col-phase">阶段</div>
-          <div class="col-role">指导教师审核</div>
-          <div class="col-role">学院审核</div>
-          <div class="col-role">一级审核</div>
-        </div>
-        <div class="matrix-row">
-          <div class="col-phase">申报审核</div>
-          <div class="col-role">
-            <el-switch
-              v-model="localReviewWindow.application.teacher.enabled"
-              size="small"
-              :disabled="isReadOnly"
-            />
-            <el-date-picker
-              v-model="localReviewWindow.application.teacher.range"
-              type="daterange"
-              size="small"
-              style="width: 200px; margin-top: 4px"
-              value-format="YYYY-MM-DD"
-              range-separator="-"
-              :disabled="isReadOnly"
-            />
-          </div>
-          <div class="col-role">
-            <el-switch
-              v-model="localReviewWindow.application.level2.enabled"
-              size="small"
-              :disabled="isReadOnly"
-            />
-            <el-date-picker
-              v-model="localReviewWindow.application.level2.range"
-              type="daterange"
-              size="small"
-              style="width: 200px; margin-top: 4px"
-              value-format="YYYY-MM-DD"
-              range-separator="-"
-              :disabled="isReadOnly"
-            />
-          </div>
-          <div class="col-role">
-            <el-switch
-              v-model="localReviewWindow.application.level1.enabled"
-              size="small"
-              :disabled="isReadOnly"
-            />
-            <el-date-picker
-              v-model="localReviewWindow.application.level1.range"
-              type="daterange"
-              size="small"
-              style="width: 200px; margin-top: 4px"
-              value-format="YYYY-MM-DD"
-              range-separator="-"
-              :disabled="isReadOnly"
-            />
-          </div>
-        </div>
-        <div class="matrix-row">
-          <div class="col-phase">中期审核</div>
-          <div class="col-role">
-            <el-switch
-              v-model="localReviewWindow.midterm.teacher.enabled"
-              size="small"
-              :disabled="isReadOnly"
-            />
-            <el-date-picker
-              v-model="localReviewWindow.midterm.teacher.range"
-              type="daterange"
-              size="small"
-              style="width: 200px; margin-top: 4px"
-              value-format="YYYY-MM-DD"
-              range-separator="-"
-              :disabled="isReadOnly"
-            />
-          </div>
-          <div class="col-role">
-            <el-switch
-              v-model="localReviewWindow.midterm.level2.enabled"
-              size="small"
-              :disabled="isReadOnly"
-            />
-            <el-date-picker
-              v-model="localReviewWindow.midterm.level2.range"
-              type="daterange"
-              size="small"
-              style="width: 200px; margin-top: 4px"
-              value-format="YYYY-MM-DD"
-              range-separator="-"
-              :disabled="isReadOnly"
-            />
-          </div>
-          <div class="col-role bg-gray">
-            <span class="text-xs text-gray">无需一级审核</span>
-          </div>
-        </div>
-        <div class="matrix-row">
-          <div class="col-phase">结题审核</div>
-          <div class="col-role">
-            <el-switch
-              v-model="localReviewWindow.closure.teacher.enabled"
-              size="small"
-              :disabled="isReadOnly"
-            />
-            <el-date-picker
-              v-model="localReviewWindow.closure.teacher.range"
-              type="daterange"
-              size="small"
-              style="width: 200px; margin-top: 4px"
-              value-format="YYYY-MM-DD"
-              range-separator="-"
-              :disabled="isReadOnly"
-            />
-          </div>
-          <div class="col-role">
-            <el-switch
-              v-model="localReviewWindow.closure.level2.enabled"
-              size="small"
-              :disabled="isReadOnly"
-            />
-            <el-date-picker
-              v-model="localReviewWindow.closure.level2.range"
-              type="daterange"
-              size="small"
-              style="width: 200px; margin-top: 4px"
-              value-format="YYYY-MM-DD"
-              range-separator="-"
-              :disabled="isReadOnly"
-            />
-          </div>
-          <div class="col-role">
-            <el-switch
-              v-model="localReviewWindow.closure.level1.enabled"
-              size="small"
-              :disabled="isReadOnly"
-            />
-            <el-date-picker
-              v-model="localReviewWindow.closure.level1.range"
-              type="daterange"
-              size="small"
-              style="width: 200px; margin-top: 4px"
-              value-format="YYYY-MM-DD"
-              range-separator="-"
-              :disabled="isReadOnly"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
   </el-form>
 </template>
 
@@ -301,50 +124,15 @@ const props = defineProps<{
   applicationWindow: { enabled: boolean; range: string[] };
   midtermWindow: { enabled: boolean; range: string[] };
   closureWindow: { enabled: boolean; range: string[] };
-  expertReviewWindow: { enabled: boolean; range: string[] };
-  reviewWindow: {
-    application: {
-      teacher: { enabled: boolean; range: string[] };
-      level2: { enabled: boolean; range: string[] };
-      level1: { enabled: boolean; range: string[] };
-    };
-    midterm: {
-      teacher: { enabled: boolean; range: string[] };
-      level2: { enabled: boolean; range: string[] };
-    };
-    closure: {
-      teacher: { enabled: boolean; range: string[] };
-      level2: { enabled: boolean; range: string[] };
-      level1: { enabled: boolean; range: string[] };
-    };
-  };
 }>();
 
 type WindowConfig = { enabled: boolean; range: string[] };
-type ReviewWindowConfig = {
-  application: {
-    teacher: WindowConfig;
-    level2: WindowConfig;
-    level1: WindowConfig;
-  };
-  midterm: {
-    teacher: WindowConfig;
-    level2: WindowConfig;
-  };
-  closure: {
-    teacher: WindowConfig;
-    level2: WindowConfig;
-    level1: WindowConfig;
-  };
-};
 
 const emit = defineEmits<{
   (event: "update:globalDateRange", value: string[]): void;
   (event: "update:applicationWindow", value: WindowConfig): void;
   (event: "update:midtermWindow", value: WindowConfig): void;
   (event: "update:closureWindow", value: WindowConfig): void;
-  (event: "update:expertReviewWindow", value: WindowConfig): void;
-  (event: "update:reviewWindow", value: ReviewWindowConfig): void;
 }>();
 
 const localGlobalDateRange = computed({
@@ -357,14 +145,9 @@ const cloneWindow = (source: WindowConfig): WindowConfig => ({
   range: [...source.range],
 });
 
-const cloneReviewWindow = (source: ReviewWindowConfig): ReviewWindowConfig =>
-  JSON.parse(JSON.stringify(source)) as ReviewWindowConfig;
-
 const localApplicationWindow = reactive(cloneWindow(props.applicationWindow));
 const localMidtermWindow = reactive(cloneWindow(props.midtermWindow));
 const localClosureWindow = reactive(cloneWindow(props.closureWindow));
-const localExpertReviewWindow = reactive(cloneWindow(props.expertReviewWindow));
-const localReviewWindow = reactive(cloneReviewWindow(props.reviewWindow));
 
 watch(
   () => props.applicationWindow,
@@ -379,16 +162,6 @@ watch(
 watch(
   () => props.closureWindow,
   (value) => Object.assign(localClosureWindow, cloneWindow(value)),
-  { deep: true }
-);
-watch(
-  () => props.expertReviewWindow,
-  (value) => Object.assign(localExpertReviewWindow, cloneWindow(value)),
-  { deep: true }
-);
-watch(
-  () => props.reviewWindow,
-  (value) => Object.assign(localReviewWindow, cloneReviewWindow(value)),
   { deep: true }
 );
 
@@ -417,20 +190,6 @@ watch(
       enabled: value.enabled,
       range: value.range,
     }),
-  { deep: true }
-);
-watch(
-  localExpertReviewWindow,
-  (value) =>
-    emit("update:expertReviewWindow", {
-      enabled: value.enabled,
-      range: value.range,
-    }),
-  { deep: true }
-);
-watch(
-  localReviewWindow,
-  (value) => emit("update:reviewWindow", cloneReviewWindow(value)),
   { deep: true }
 );
 </script>
@@ -512,87 +271,12 @@ watch(
   }
 }
 
-.review-matrix {
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  overflow: hidden;
-  background-color: #fff;
-
-  .matrix-header {
-    display: grid;
-    grid-template-columns: 120px 1fr 1fr 1fr;
-    background-color: #f8fafc;
-    border-bottom: 1px solid #e2e8f0;
-
-    div {
-      padding: 12px 16px;
-      font-weight: 600;
-      color: #475569;
-      font-size: 14px;
-      text-align: center;
-      border-right: 1px solid #e2e8f0;
-
-      &:last-child {
-        border-right: none;
-      }
-    }
-  }
-
-  .matrix-row {
-    display: grid;
-    grid-template-columns: 120px 1fr 1fr 1fr;
-    border-bottom: 1px solid #e2e8f0;
-
-    &:last-child {
-      border-bottom: none;
-    }
-
-    .col-phase {
-      background-color: #f1f5f9;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-      color: #475569;
-      font-size: 14px;
-      border-right: 1px solid #e2e8f0;
-      padding: 12px;
-    }
-
-    .col-role {
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      border-right: 1px solid #e2e8f0;
-
-      &:last-child {
-        border-right: none;
-      }
-
-      &.bg-gray {
-        background-color: #f8fafc;
-      }
-    }
-  }
-}
-
 .text-gray {
   color: #94a3b8;
 }
 
 .text-xs {
   font-size: 12px;
-}
-
-.mt-4 {
-  margin-top: 16px;
-}
-
-.mt-6 {
-  margin-top: 24px;
 }
 
 .mr-2 {

@@ -77,22 +77,6 @@
                     }}
                   </template>
                 </el-table-column>
-                <el-table-column label="日期范围" width="180" align="center">
-                  <template #default="{ row }">
-                    <div
-                      v-if="row.start_date || row.end_date"
-                      class="date-range"
-                    >
-                      <div v-if="row.start_date" class="date-item">
-                        开始: {{ row.start_date }}
-                      </div>
-                      <div v-if="row.end_date" class="date-item">
-                        结束: {{ row.end_date }}
-                      </div>
-                    </div>
-                    <span v-else class="text-gray">未设置</span>
-                  </template>
-                </el-table-column>
                 <el-table-column
                   prop="require_expert_review"
                   label="专家评审"
@@ -142,15 +126,6 @@
                       编辑
                     </el-button>
                     <el-button
-                      v-if="!row.can_edit && !workflow.is_locked"
-                      link
-                      type="primary"
-                      size="small"
-                      @click="handleEditNodeDates(row)"
-                    >
-                      配置日期
-                    </el-button>
-                    <el-button
                       v-if="row.can_edit && !workflow.is_locked"
                       link
                       type="danger"
@@ -160,7 +135,7 @@
                       删除
                     </el-button>
                     <span
-                      v-if="!row.can_edit && workflow.is_locked"
+                      v-if="!row.can_edit || workflow.is_locked"
                       class="text-gray"
                       >不可编辑</span
                     >
@@ -275,26 +250,6 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="开始日期">
-          <el-date-picker
-            v-model="nodeForm.start_date"
-            type="date"
-            placeholder="请选择开始日期"
-            format="YYYY-MM-DD"
-            value-format="YYYY-MM-DD"
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item label="结束日期">
-          <el-date-picker
-            v-model="nodeForm.end_date"
-            type="date"
-            placeholder="请选择结束日期"
-            format="YYYY-MM-DD"
-            value-format="YYYY-MM-DD"
-            style="width: 100%"
-          />
-        </el-form-item>
         <el-form-item label="审核注意事项">
           <el-input
             v-model="nodeForm.notice"
@@ -308,41 +263,6 @@
       <template #footer>
         <el-button @click="nodeDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleSaveNode">确定</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 日期配置对话框 -->
-    <el-dialog
-      v-model="dateDialogVisible"
-      :title="`配置日期 - ${editingNode?.name || ''}`"
-      width="500px"
-    >
-      <el-form :model="dateForm" label-width="100px">
-        <el-form-item label="开始日期">
-          <el-date-picker
-            v-model="dateForm.start_date"
-            type="date"
-            placeholder="请选择开始日期"
-            format="YYYY-MM-DD"
-            value-format="YYYY-MM-DD"
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item label="结束日期">
-          <el-date-picker
-            v-model="dateForm.end_date"
-            type="date"
-            placeholder="请选择结束日期"
-            format="YYYY-MM-DD"
-            value-format="YYYY-MM-DD"
-            style="width: 100%"
-          />
-        </el-form-item>
-      </el-form>
-
-      <template #footer>
-        <el-button @click="dateDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSaveDates">确定</el-button>
       </template>
     </el-dialog>
 
@@ -418,8 +338,6 @@ const nodeForm = ref<WorkflowNodeInput>({
   require_expert_review: false,
   allowed_reject_to: null,
   notice: "",
-  start_date: undefined,
-  end_date: undefined,
   sort_order: 0,
 });
 
@@ -427,16 +345,6 @@ const nodeRules: FormRules = {
   name: [{ required: true, message: "请输入节点名称", trigger: "blur" }],
   role_fk: [{ required: true, message: "请选择执行角色", trigger: "change" }],
 };
-
-// 日期配置对话框
-const dateDialogVisible = ref(false);
-const dateForm = ref<{
-  start_date?: string;
-  end_date?: string;
-}>({
-  start_date: undefined,
-  end_date: undefined,
-});
 
 // 全屏图表
 const graphFullscreenVisible = ref(false);
@@ -580,8 +488,6 @@ function handleAddNode() {
     require_expert_review: false,
     allowed_reject_to: null,
     notice: "",
-    start_date: undefined,
-    end_date: undefined,
     sort_order: nodes.value.length,
   };
   nodeDialogVisible.value = true;
@@ -597,41 +503,9 @@ function handleEditNode(node: WorkflowNode) {
     require_expert_review: node.require_expert_review || false,
     allowed_reject_to: node.allowed_reject_to || null,
     notice: node.notice || "",
-    start_date: node.start_date || undefined,
-    end_date: node.end_date || undefined,
     sort_order: node.sort_order,
   };
   nodeDialogVisible.value = true;
-}
-
-function handleEditNodeDates(node: WorkflowNode) {
-  editingNode.value = node;
-  dateForm.value = {
-    start_date: node.start_date || undefined,
-    end_date: node.end_date || undefined,
-  };
-  dateDialogVisible.value = true;
-}
-
-async function handleSaveDates() {
-  if (!editingNode.value) return;
-
-  try {
-    await updateWorkflowNode(
-      props.batchId,
-      activePhase.value,
-      editingNode.value.id,
-      {
-        start_date: dateForm.value.start_date,
-        end_date: dateForm.value.end_date,
-      }
-    );
-    ElMessage.success("日期配置成功");
-    dateDialogVisible.value = false;
-    await loadWorkflow();
-  } catch {
-    ElMessage.error("配置失败");
-  }
 }
 
 async function handleSaveNode() {
@@ -798,15 +672,6 @@ watch(
     color: #94a3b8;
     line-height: 1.4;
     margin-top: 6px;
-  }
-
-  .date-range {
-    font-size: 12px;
-    line-height: 1.5;
-
-    .date-item {
-      color: #475569;
-    }
   }
 
   .fullscreen-graph-container {
