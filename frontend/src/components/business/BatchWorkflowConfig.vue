@@ -4,6 +4,8 @@
       <el-tab-pane label="立项流程" name="APPLICATION" />
       <el-tab-pane label="中期流程" name="MID_TERM" />
       <el-tab-pane label="结题流程" name="CLOSURE" />
+      <el-tab-pane label="经费流程" name="BUDGET" />
+      <el-tab-pane label="异动流程" name="CHANGE" />
     </el-tabs>
 
     <div v-if="loading" class="loading-container">
@@ -317,7 +319,9 @@ type Role = {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
-const activePhase = ref<"APPLICATION" | "MID_TERM" | "CLOSURE">("APPLICATION");
+const activePhase = ref<
+  "APPLICATION" | "MID_TERM" | "CLOSURE" | "BUDGET" | "CHANGE"
+>("APPLICATION");
 const loading = ref(false);
 const workflow = ref<WorkflowConfig | null>(null);
 const nodes = ref<WorkflowNode[]>([]);

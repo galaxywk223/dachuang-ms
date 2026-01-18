@@ -493,6 +493,7 @@ const currentMenus = computed<MenuEntry[]>(() => {
             { index: "/level2-admin/review/establishment", title: "立项审核" },
             { index: "/level2-admin/review/midterm", title: "中期审核" },
             { index: "/level2-admin/review/closure", title: "结题审核" },
+            { index: "/level2-admin/review/funds", title: "经费审核" },
             { index: "/level2-admin/change/review", title: "异动审核" },
           ],
         },
@@ -536,6 +537,7 @@ const currentMenus = computed<MenuEntry[]>(() => {
           children: [
             { index: "/level1-admin/review/establishment", title: "立项审核" },
             { index: "/level1-admin/review/closure", title: "结题审核" },
+            { index: "/level1-admin/review/funds", title: "经费审核" },
             { index: "/level1-admin/review/change", title: "异动审核" },
           ],
         },

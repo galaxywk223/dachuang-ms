@@ -94,6 +94,12 @@ export const adminRoutes: RouteRecordRaw[] = [
             meta: { title: "结题审核" },
           },
           {
+            path: "funds",
+            name: "level1-review-funds",
+            component: () => import("@/views/admin/shared/FundsReview.vue"),
+            meta: { title: "经费审核" },
+          },
+          {
             path: "change",
             name: "level1-review-change",
             component: () => import("@/views/admin/level1/change/Reviews.vue"),

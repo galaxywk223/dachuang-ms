@@ -47,7 +47,7 @@ class ProjectChangeService:
 
     @staticmethod
     def _get_review_nodes(change_request: ProjectChangeRequest):
-        phase = ProjectChangeService._resolve_phase(change_request)
+        phase = "CHANGE"
         nodes = WorkflowService.get_nodes(phase, change_request.project.batch)
         review_nodes = [
             node

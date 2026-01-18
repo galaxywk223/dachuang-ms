@@ -49,11 +49,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from "vue";
+import { ref, reactive, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { getProjects } from "@/api/projects";
-import { useUserStore } from "@/stores/user";
 
 defineOptions({
   name: "StudentFundsProjectsView",
@@ -97,8 +96,6 @@ const ACTIVE_PROJECT_STATUSES = [
 ];
 
 const router = useRouter();
-const userStore = useUserStore();
-const leaderId = computed(() => userStore.user?.id);
 const tableData = ref<ProjectRow[]>([]);
 const loading = ref(false);
 
@@ -116,9 +113,6 @@ const fetchProjects = async () => {
       page_size: pagination.pageSize,
       status_in: ACTIVE_PROJECT_STATUSES.join(","),
     };
-    if (leaderId.value) {
-      params.leader = leaderId.value;
-    }
     const response = (await getProjects(params)) as ProjectsResponse;
     if (response.code === 200) {
       tableData.value = response.data?.results || [];

@@ -35,6 +35,8 @@ class BatchWorkflowViewSet(viewsets.ViewSet):
             ("APPLICATION", "立项"),
             ("MID_TERM", "中期"),
             ("CLOSURE", "结题"),
+            ("BUDGET", "经费"),
+            ("CHANGE", "异动"),
         ]
 
         result = []
@@ -131,6 +133,8 @@ class BatchWorkflowViewSet(viewsets.ViewSet):
             "APPLICATION": "立项",
             "MID_TERM": "中期",
             "CLOSURE": "结题",
+            "BUDGET": "经费",
+            "CHANGE": "异动",
         }
 
         # 创建工作流配置

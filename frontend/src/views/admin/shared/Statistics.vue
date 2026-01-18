@@ -60,7 +60,11 @@
             <el-card shadow="never" class="inner-card">
               <template #header><span class="title">按状态</span></template>
               <el-table :data="reportData.by_status" border stripe size="small">
-                <el-table-column prop="status" label="状态" />
+                <el-table-column prop="status" label="状态">
+                  <template #default="{ row }">
+                    {{ getStatusLabel(row.status) }}
+                  </template>
+                </el-table-column>
                 <el-table-column
                   prop="count"
                   label="数量"
@@ -184,6 +188,48 @@ const reportData = reactive<ReportData>({
   by_level: [],
   by_category: [],
 });
+
+const statusLabels: Record<string, string> = {
+  DRAFT: "草稿",
+  SUBMITTED: "已提交",
+  TEACHER_AUDITING: "导师审核中",
+  TEACHER_APPROVED: "导师审核通过",
+  TEACHER_REJECTED: "导师审核不通过",
+  COLLEGE_AUDITING: "学院审核中",
+  LEVEL1_AUDITING: "校级审核中",
+  APPLICATION_RETURNED: "退回修改",
+  IN_PROGRESS: "进行中",
+  TASK_BOOK_DRAFT: "任务书草稿",
+  TASK_BOOK_SUBMITTED: "任务书已提交",
+  TASK_BOOK_REVIEWING: "任务书审核中",
+  TASK_BOOK_APPROVED: "任务书审核通过",
+  TASK_BOOK_REJECTED: "任务书审核不通过",
+  TASK_BOOK_RETURNED: "任务书退回修改",
+  MID_TERM_DRAFT: "中期草稿",
+  MID_TERM_SUBMITTED: "中期已提交",
+  MID_TERM_REVIEWING: "中期审核中",
+  MID_TERM_APPROVED: "中期审核通过",
+  MID_TERM_REJECTED: "中期审核不通过",
+  MID_TERM_RETURNED: "中期退回修改",
+  READY_FOR_CLOSURE: "待结题",
+  CLOSURE_DRAFT: "结题草稿",
+  CLOSURE_SUBMITTED: "结题已提交",
+  CLOSURE_LEVEL2_REVIEWING: "结题二级审核中",
+  CLOSURE_LEVEL2_APPROVED: "结题二级审核通过",
+  CLOSURE_LEVEL2_REJECTED: "结题二级审核不通过",
+  CLOSURE_LEVEL1_REVIEWING: "结题一级审核中",
+  CLOSURE_LEVEL1_APPROVED: "结题一级审核通过",
+  CLOSURE_LEVEL1_REJECTED: "结题一级审核不通过",
+  CLOSURE_RETURNED: "结题退回修改",
+  COMPLETED: "已完成",
+  CLOSED: "已结题",
+  TERMINATED: "已终止",
+};
+
+const getStatusLabel = (status?: string) => {
+  if (!status) return "-";
+  return statusLabels[status] || status;
+};
 
 const fetchReport = async () => {
   try {

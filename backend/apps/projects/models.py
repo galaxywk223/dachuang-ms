@@ -447,6 +447,12 @@ class ProjectExpenditure(models.Model):
         APPROVED = "APPROVED", "审核通过"
         REJECTED = "REJECTED", "审核不通过"
 
+    class LeaderReviewStatus(models.TextChoices):
+        PENDING = "PENDING", "待负责人审核"
+        APPROVED = "APPROVED", "负责人通过"
+        REJECTED = "REJECTED", "负责人驳回"
+        SKIPPED = "SKIPPED", "无需负责人审核"
+
     project = models.ForeignKey(
         Project,
         on_delete=models.CASCADE,
@@ -470,6 +476,34 @@ class ProjectExpenditure(models.Model):
         choices=ExpenditureStatus.choices,
         default=ExpenditureStatus.RECORDED,
         verbose_name="状态",
+    )
+
+    # 负责人预审
+    leader_review_status = models.CharField(
+        max_length=20,
+        choices=LeaderReviewStatus.choices,
+        default=LeaderReviewStatus.SKIPPED,
+        verbose_name="负责人审核状态",
+    )
+    leader_reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="leader_reviewed_expenditures",
+        verbose_name="负责人审核人",
+    )
+    leader_reviewed_at = models.DateTimeField(
+        null=True, blank=True, verbose_name="负责人审核时间"
+    )
+    leader_review_comment = models.TextField(blank=True, verbose_name="负责人审核意见")
+
+    # 工作流节点
+    current_node_id = models.IntegerField(
+        null=True,
+        blank=True,
+        verbose_name="当前流程节点ID",
+        help_text="关联到 WorkflowNode.id，用于经费流程",
     )
 
     # 审核相关字段
@@ -506,6 +540,60 @@ class ProjectExpenditure(models.Model):
 
     def __str__(self):
         return f"{self.project.project_no} - {self.title} - {self.amount}"
+
+
+class ProjectExpenditureReview(models.Model):
+    """
+    项目经费审核记录
+    """
+
+    class ReviewStatus(models.TextChoices):
+        PENDING = "PENDING", "待审核"
+        APPROVED = "APPROVED", "审核通过"
+        REJECTED = "REJECTED", "审核不通过"
+
+    expenditure = models.ForeignKey(
+        ProjectExpenditure,
+        on_delete=models.CASCADE,
+        related_name="reviews",
+        verbose_name="经费支出",
+    )
+    workflow_node = models.ForeignKey(
+        "system_settings.WorkflowNode",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="expenditure_reviews",
+        verbose_name="关联工作流节点",
+    )
+    reviewer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        verbose_name="审核人",
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=ReviewStatus.choices,
+        default=ReviewStatus.PENDING,
+        verbose_name="审核状态",
+    )
+    comments = models.TextField(blank=True, verbose_name="审核意见")
+    reviewed_at = models.DateTimeField(null=True, blank=True, verbose_name="审核时间")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+
+    class Meta:
+        db_table = "project_expenditure_reviews"
+        verbose_name = "经费审核"
+        verbose_name_plural = verbose_name
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        role_code = (
+            self.workflow_node.get_role_code() if self.workflow_node else "UNKNOWN"
+        )
+        return f"{self.expenditure.project.project_no} - {role_code}"
 
 
 class ProjectChangeRequest(models.Model):

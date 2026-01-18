@@ -24,6 +24,12 @@ export const level2Routes: RouteRecordRaw[] = [
         meta: { title: "结题审核" },
       },
       {
+        path: "review/funds",
+        name: "admin-review-funds",
+        component: () => import("@/views/admin/shared/FundsReview.vue"),
+        meta: { title: "经费审核" },
+      },
+      {
         path: "users/experts",
         name: "level2-users-experts",
         component: () =>

@@ -6,7 +6,10 @@ from .members import ProjectAdvisorSerializer, ProjectMemberSerializer
 from .project import ProjectSerializer, ProjectListSerializer, ProjectSubmitSerializer
 from .achievement import ProjectAchievementSerializer
 from .closure import ProjectClosureSerializer
-from .expenditure import ProjectExpenditureSerializer
+from .expenditure import (
+    ProjectExpenditureSerializer,
+    ProjectExpenditureReviewActionSerializer,
+)
 from .changes import (
     ProjectChangeReviewSerializer,
     ProjectChangeRequestSerializer,
@@ -26,6 +29,7 @@ __all__ = [
     "ProjectAchievementSerializer",
     "ProjectClosureSerializer",
     "ProjectExpenditureSerializer",
+    "ProjectExpenditureReviewActionSerializer",
     "ProjectChangeReviewSerializer",
     "ProjectChangeRequestSerializer",
     "ProjectChangeReviewActionSerializer",

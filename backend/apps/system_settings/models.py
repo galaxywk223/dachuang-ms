@@ -161,6 +161,8 @@ class WorkflowConfig(models.Model):
         APPLICATION = "APPLICATION", "立项"
         MID_TERM = "MID_TERM", "中期"
         CLOSURE = "CLOSURE", "结题"
+        BUDGET = "BUDGET", "经费"
+        CHANGE = "CHANGE", "异动"
 
     name = models.CharField(max_length=100, verbose_name="流程名称")
     phase = models.CharField(

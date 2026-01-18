@@ -102,14 +102,104 @@
         </el-form-item>
         <el-form-item
           v-if="form.request_type === 'CHANGE'"
-          label="变更内容(JSON)"
+          label="变更内容"
+          required
         >
-          <el-input
-            v-model="changeDataText"
-            type="textarea"
-            :rows="4"
-            placeholder='{"title":"新名称"}'
-          />
+          <div class="change-items">
+            <div v-if="changeItems.length === 0" class="empty-tip">
+              请添加需要变更的项目字段
+            </div>
+            <div
+              v-for="(item, index) in changeItems"
+              :key="index"
+              class="change-item"
+            >
+              <div class="item-row">
+                <el-select
+                  v-model="item.field"
+                  class="field-select"
+                  placeholder="选择字段"
+                  @change="() => handleFieldChange(item)"
+                >
+                  <el-option
+                    v-for="option in getFieldOptions(index)"
+                    :key="option.value"
+                    :label="option.label"
+                    :value="option.value"
+                    :disabled="option.disabled"
+                  />
+                </el-select>
+                <div class="value-input">
+                  <el-input
+                    v-if="getFieldConfig(item.field)?.type === 'text'"
+                    v-model="item.value"
+                    placeholder="填写新的值"
+                  />
+                  <el-input
+                    v-else-if="getFieldConfig(item.field)?.type === 'textarea'"
+                    v-model="item.value"
+                    type="textarea"
+                    :rows="2"
+                    placeholder="填写新的值"
+                  />
+                  <el-input-number
+                    v-else-if="getFieldConfig(item.field)?.type === 'number'"
+                    v-model="item.value"
+                    class="number-input"
+                    :min="0"
+                    :precision="2"
+                    controls-position="right"
+                  />
+                  <el-date-picker
+                    v-else-if="getFieldConfig(item.field)?.type === 'date'"
+                    v-model="item.value"
+                    type="date"
+                    value-format="YYYY-MM-DD"
+                    style="width: 100%"
+                  />
+                  <el-select
+                    v-else-if="getFieldConfig(item.field)?.type === 'select'"
+                    v-model="item.value"
+                    placeholder="请选择"
+                    style="width: 100%"
+                  >
+                    <el-option
+                      v-for="option in getSelectOptions(item.field)"
+                      :key="option.value"
+                      :label="option.label"
+                      :value="option.value"
+                    />
+                  </el-select>
+                  <el-select
+                    v-else-if="getFieldConfig(item.field)?.type === 'boolean'"
+                    v-model="item.value"
+                    placeholder="请选择"
+                    style="width: 100%"
+                  >
+                    <el-option label="是" :value="true" />
+                    <el-option label="否" :value="false" />
+                  </el-select>
+                  <el-input
+                    v-else
+                    v-model="item.value"
+                    placeholder="填写新的值"
+                  />
+                </div>
+                <el-button
+                  text
+                  type="danger"
+                  @click="removeChangeItem(index)"
+                  >删除</el-button
+                >
+              </div>
+              <div v-if="item.field" class="current-value">
+                当前值：{{ formatCurrentValue(item.field) || "-" }}
+              </div>
+            </div>
+            <el-button type="primary" plain @click="addChangeItem"
+              >添加变更项</el-button
+            >
+          </div>
         </el-form-item>
         <el-form-item label="附件">
           <el-upload
@@ -140,7 +230,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage, type UploadFile, type UploadUserFile } from "element-plus";
 import {
@@ -149,6 +239,8 @@ import {
   submitChangeRequest,
 } from "@/api/projects/change-requests";
 import request from "@/utils/request";
+import { useDictionary } from "@/composables/useDictionary";
+import { DICT_CODES } from "@/api/dictionaries";
 
 defineOptions({
   name: "StudentChangeRequestsView",
@@ -183,6 +275,42 @@ type RequestForm = {
   request_type: string;
   reason: string;
   requested_end_date: string;
+};
+
+type ChangeItem = {
+  field: string;
+  value: string | number | boolean | null;
+};
+
+type ProjectDetail = {
+  id: number;
+  title?: string;
+  description?: string;
+  level?: string;
+  level_display?: string;
+  category?: string;
+  category_display?: string;
+  source?: string;
+  source_display?: string;
+  start_date?: string;
+  end_date?: string;
+  budget?: number | string;
+  research_content?: string;
+  research_plan?: string;
+  expected_results?: string;
+  innovation_points?: string;
+  is_key_field?: boolean;
+  key_domain_code?: string;
+  category_description?: string;
+  self_funding?: number | string;
+};
+
+type ChangeFieldConfig = {
+  key: string;
+  label: string;
+  type: "text" | "textarea" | "select" | "date" | "number" | "boolean";
+  dictCode?: string;
+  valueSource?: "id" | "value";
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -223,6 +351,10 @@ const requests = ref<ChangeRequest[]>([]);
 const projectOptions = ref<ProjectOption[]>([]);
 const fileList = ref<UploadUserFile[]>([]);
 const attachmentFile = ref<File | null>(null);
+const changeItems = ref<ChangeItem[]>([]);
+const selectedProject = ref<ProjectDetail | null>(null);
+
+const { getOptions, getLabel, loadDictionaries } = useDictionary();
 
 const form = reactive<RequestForm>({
   id: null,
@@ -231,7 +363,223 @@ const form = reactive<RequestForm>({
   reason: "",
   requested_end_date: "",
 });
-const changeDataText = ref("{}");
+
+const changeFieldConfigs: ChangeFieldConfig[] = [
+  { key: "title", label: "项目名称", type: "text" },
+  { key: "description", label: "项目简介", type: "textarea" },
+  {
+    key: "level_id",
+    label: "项目级别",
+    type: "select",
+    dictCode: DICT_CODES.PROJECT_LEVEL,
+    valueSource: "id",
+  },
+  {
+    key: "category_id",
+    label: "项目类别",
+    type: "select",
+    dictCode: DICT_CODES.PROJECT_CATEGORY,
+    valueSource: "id",
+  },
+  {
+    key: "source_id",
+    label: "项目来源",
+    type: "select",
+    dictCode: DICT_CODES.PROJECT_SOURCE,
+    valueSource: "id",
+  },
+  { key: "start_date", label: "开始日期", type: "date" },
+  { key: "end_date", label: "结束日期", type: "date" },
+  { key: "budget", label: "项目经费(元)", type: "number" },
+  { key: "self_funding", label: "项目自筹(元)", type: "number" },
+  { key: "research_content", label: "研究内容", type: "textarea" },
+  { key: "research_plan", label: "研究方案", type: "textarea" },
+  { key: "expected_results", label: "预期成果", type: "textarea" },
+  { key: "innovation_points", label: "创新点", type: "textarea" },
+  { key: "is_key_field", label: "重点领域项目", type: "boolean" },
+  {
+    key: "key_domain_code",
+    label: "重点领域代码",
+    type: "select",
+    dictCode: DICT_CODES.KEY_FIELD_CODE,
+    valueSource: "value",
+  },
+  { key: "category_description", label: "立项类别描述", type: "textarea" },
+];
+
+const getFieldConfig = (fieldKey: string) =>
+  changeFieldConfigs.find((field) => field.key === fieldKey);
+
+const getDictIdByValue = (code: string, value?: string | null) => {
+  if (!value) return null;
+  const options = getOptions(code);
+  const match = options.find((item) => item.value === value);
+  return match?.id ?? null;
+};
+
+const normalizeChangeValue = (fieldKey: string, value: unknown) => {
+  const fieldConfig = getFieldConfig(fieldKey);
+  if (!fieldConfig) return null;
+  if (fieldConfig.type === "boolean") {
+    if (typeof value === "boolean") return value;
+    if (typeof value === "string") return value.toLowerCase() === "true";
+    if (typeof value === "number") return value === 1;
+    return null;
+  }
+  if (fieldConfig.type === "number") {
+    if (typeof value === "number") return value;
+    if (typeof value === "string" && value.trim() !== "") {
+      const num = Number(value);
+      return Number.isNaN(num) ? null : num;
+    }
+    return null;
+  }
+  if (fieldConfig.type === "select" && fieldConfig.valueSource === "id") {
+    if (typeof value === "number") return value;
+    if (typeof value === "string") {
+      return getDictIdByValue(fieldConfig.dictCode || "", value);
+    }
+  }
+  if (typeof value === "string") return value;
+  return value as string | number | boolean | null;
+};
+
+const getSelectOptions = (fieldKey: string) => {
+  const fieldConfig = getFieldConfig(fieldKey);
+  if (!fieldConfig || fieldConfig.type !== "select") return [];
+  const dictCode = fieldConfig.dictCode;
+  if (!dictCode) return [];
+  const options = getOptions(dictCode);
+  return options.map((item) => ({
+    value:
+      fieldConfig.valueSource === "id" ? item.id ?? item.value : item.value,
+    label: item.label,
+  }));
+};
+
+const getFieldOptions = (currentIndex: number) => {
+  const usedFields = new Set(
+    changeItems.value
+      .map((item, index) => (index === currentIndex ? "" : item.field))
+      .filter(Boolean)
+  );
+  return changeFieldConfigs.map((field) => ({
+    label: field.label,
+    value: field.key,
+    disabled: usedFields.has(field.key),
+  }));
+};
+
+const getCurrentValue = (fieldKey: string) => {
+  const project = selectedProject.value;
+  if (!project) return null;
+  switch (fieldKey) {
+    case "level_id":
+      return getDictIdByValue(DICT_CODES.PROJECT_LEVEL, project.level);
+    case "category_id":
+      return getDictIdByValue(DICT_CODES.PROJECT_CATEGORY, project.category);
+    case "source_id":
+      return getDictIdByValue(DICT_CODES.PROJECT_SOURCE, project.source);
+    case "key_domain_code":
+      return project.key_domain_code || "";
+    case "is_key_field":
+      return !!project.is_key_field;
+    case "budget":
+      return project.budget ?? null;
+    case "self_funding":
+      return project.self_funding ?? null;
+    case "start_date":
+      return project.start_date || "";
+    case "end_date":
+      return project.end_date || "";
+    case "title":
+      return project.title || "";
+    case "description":
+      return project.description || "";
+    case "research_content":
+      return project.research_content || "";
+    case "research_plan":
+      return project.research_plan || "";
+    case "expected_results":
+      return project.expected_results || "";
+    case "innovation_points":
+      return project.innovation_points || "";
+    case "category_description":
+      return project.category_description || "";
+    default:
+      return null;
+  }
+};
+
+const formatCurrentValue = (fieldKey: string) => {
+  const project = selectedProject.value;
+  if (!project) return "";
+  switch (fieldKey) {
+    case "level_id":
+      return (
+        project.level_display ||
+        (project.level ? getLabel(DICT_CODES.PROJECT_LEVEL, project.level) : "")
+      );
+    case "category_id":
+      return (
+        project.category_display ||
+        (project.category
+          ? getLabel(DICT_CODES.PROJECT_CATEGORY, project.category)
+          : "")
+      );
+    case "source_id":
+      return (
+        project.source_display ||
+        (project.source ? getLabel(DICT_CODES.PROJECT_SOURCE, project.source) : "")
+      );
+    case "key_domain_code":
+      return project.key_domain_code
+        ? getLabel(DICT_CODES.KEY_FIELD_CODE, project.key_domain_code)
+        : "";
+    case "is_key_field":
+      return project.is_key_field ? "是" : "否";
+    case "budget":
+      return project.budget?.toString() || "";
+    case "self_funding":
+      return project.self_funding?.toString() || "";
+    case "start_date":
+      return project.start_date || "";
+    case "end_date":
+      return project.end_date || "";
+    case "title":
+      return project.title || "";
+    case "description":
+      return project.description || "";
+    case "research_content":
+      return project.research_content || "";
+    case "research_plan":
+      return project.research_plan || "";
+    case "expected_results":
+      return project.expected_results || "";
+    case "innovation_points":
+      return project.innovation_points || "";
+    case "category_description":
+      return project.category_description || "";
+    default:
+      return "";
+  }
+};
+
+const addChangeItem = () => {
+  changeItems.value.push({ field: "", value: null });
+};
+
+const removeChangeItem = (index: number) => {
+  changeItems.value.splice(index, 1);
+};
+
+const handleFieldChange = (item: ChangeItem) => {
+  if (!item.field) {
+    item.value = null;
+    return;
+  }
+  item.value = getCurrentValue(item.field);
+};
 
 const fetchRequests = async () => {
   loading.value = true;
@@ -274,6 +622,7 @@ const fetchProjects = async () => {
             title: project.title as string,
           },
         ];
+        selectedProject.value = project as ProjectDetail;
       }
     } else {
       // 否则获取所有可申请异动的项目
@@ -291,6 +640,18 @@ const fetchProjects = async () => {
   }
 };
 
+const fetchProjectDetail = async (projectId: number) => {
+  try {
+    const res = await request.get(`/projects/${projectId}/`);
+    const project = isRecord(res) && isRecord(res.data) ? res.data : res;
+    if (project && isRecord(project)) {
+      selectedProject.value = project as ProjectDetail;
+    }
+  } catch (error) {
+    console.error("Failed to fetch project detail", error);
+  }
+};
+
 const openDialog = () => {
   form.id = null;
   const projectIdParam = route.params.projectId;
@@ -298,7 +659,8 @@ const openDialog = () => {
   form.request_type = "CHANGE";
   form.reason = "";
   form.requested_end_date = "";
-  changeDataText.value = "{}";
+  changeItems.value = [];
+  addChangeItem();
   attachmentFile.value = null;
   fileList.value = [];
   dialogVisible.value = true;
@@ -310,7 +672,20 @@ const editRequest = (row: ChangeRequest) => {
   form.request_type = row.request_type ?? "";
   form.reason = row.reason || "";
   form.requested_end_date = row.requested_end_date || "";
-  changeDataText.value = JSON.stringify(row.change_data || {}, null, 2);
+  if (row.request_type === "CHANGE" && isRecord(row.change_data)) {
+    const entries = Object.entries(row.change_data).filter(([key]) =>
+      changeFieldConfigs.some((field) => field.key === key)
+    );
+    changeItems.value = entries.map(([field, value]) => ({
+      field,
+      value: normalizeChangeValue(field, value),
+    }));
+  } else {
+    changeItems.value = [];
+  }
+  if (row.project) {
+    fetchProjectDetail(row.project);
+  }
   dialogVisible.value = true;
 };
 
@@ -322,13 +697,48 @@ const handleFileChange = (file: UploadFile) => {
 const saveDraft = async () => {
   saving.value = true;
   try {
-    let changeData = {};
-    try {
-      changeData = JSON.parse(changeDataText.value || "{}");
-    } catch {
-      ElMessage.error("变更内容不是有效的JSON");
+    if (!form.project) {
+      ElMessage.error("请选择项目");
       saving.value = false;
       return;
+    }
+    if (form.request_type === "EXTENSION" && !form.requested_end_date) {
+      ElMessage.error("请选择延期日期");
+      saving.value = false;
+      return;
+    }
+
+    let changeData: Record<string, unknown> = {};
+    if (form.request_type === "CHANGE") {
+      if (changeItems.value.length === 0) {
+        ElMessage.error("请添加变更项");
+        saving.value = false;
+        return;
+      }
+      for (const item of changeItems.value) {
+        if (!item.field) {
+          ElMessage.error("请选择变更字段");
+          saving.value = false;
+          return;
+        }
+        const config = getFieldConfig(item.field);
+        if (!config) {
+          ElMessage.error("存在无效的变更字段");
+          saving.value = false;
+          return;
+        }
+        const value = item.value;
+        if (
+          value === null ||
+          value === "" ||
+          (typeof value === "number" && Number.isNaN(value))
+        ) {
+          ElMessage.error(`请填写 ${config.label}`);
+          saving.value = false;
+          return;
+        }
+        changeData[item.field] = value;
+      }
     }
 
     const payload = new FormData();
@@ -374,9 +784,40 @@ const openAttachment = (url: string) => {
   window.open(url, "_blank");
 };
 
+watch(
+  () => form.project,
+  (value) => {
+    if (!value) {
+      selectedProject.value = null;
+      return;
+    }
+    fetchProjectDetail(value);
+  }
+);
+
+watch(
+  () => form.request_type,
+  (value) => {
+    if (value !== "EXTENSION") {
+      form.requested_end_date = "";
+    }
+    if (value !== "CHANGE") {
+      changeItems.value = [];
+    } else if (changeItems.value.length === 0) {
+      addChangeItem();
+    }
+  }
+);
+
 onMounted(() => {
   fetchRequests();
   fetchProjects();
+  loadDictionaries([
+    DICT_CODES.PROJECT_LEVEL,
+    DICT_CODES.PROJECT_CATEGORY,
+    DICT_CODES.PROJECT_SOURCE,
+    DICT_CODES.KEY_FIELD_CODE,
+  ]);
 });
 </script>
 
@@ -415,5 +856,48 @@ onMounted(() => {
 .header-actions {
   display: flex;
   gap: 12px;
+}
+
+.change-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.change-item {
+  padding: 12px;
+  border: 1px solid $color-border-light;
+  border-radius: 8px;
+  background: $slate-50;
+}
+
+.item-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.field-select {
+  width: 160px;
+}
+
+.value-input {
+  flex: 1;
+}
+
+.number-input {
+  width: 100%;
+}
+
+.current-value {
+  margin-top: 6px;
+  color: $slate-500;
+  font-size: 12px;
+}
+
+.empty-tip {
+  color: $slate-500;
+  font-size: 12px;
 }
 </style>

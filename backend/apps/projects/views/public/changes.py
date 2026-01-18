@@ -195,7 +195,7 @@ class ProjectChangeRequestViewSet(viewsets.ModelViewSet):
         if not pending_reviews.exists():
             return None
 
-        phase = ProjectChangeService._resolve_phase(change_request)
+        phase = "CHANGE"
         project = change_request.project
 
         for review in pending_reviews:

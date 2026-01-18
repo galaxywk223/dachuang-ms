@@ -53,7 +53,8 @@
                 <div class="statistic-title">使用率</div>
                 <el-progress
                   :percentage="stats.usage_rate"
-                  :status="getUsageStatus(stats.usage_rate)"
+                  :color="getUsageColor(stats.usage_rate)"
+                  :format="formatUsageText"
                 />
               </div>
             </el-col>
@@ -96,7 +97,7 @@
               <el-link
                 v-if="scope.row.proof_file_url"
                 type="primary"
-                :href="scope.row.proof_file_url"
+                :href="resolveFileUrl(scope.row.proof_file_url)"
                 target="_blank"
                 :underline="false"
               >
@@ -111,19 +112,54 @@
             width="100"
             align="center"
           >
-            <template #default>
-              <el-tag type="info">已录入</el-tag>
+            <template #default="scope">
+              <el-tag :type="getReviewStatusType(scope.row)">
+                {{ getReviewStatusLabel(scope.row) }}
+              </el-tag>
             </template>
           </el-table-column>
           <el-table-column prop="created_by_name" label="录入人" width="120" />
           <el-table-column
             label="操作"
-            width="120"
+            width="200"
             align="center"
             fixed="right"
           >
             <template #default="scope">
+              <template v-if="canLeaderReview(scope.row)">
+                <el-button
+                  link
+                  type="success"
+                  size="small"
+                  @click="handleLeaderReview(scope.row, true)"
+                  >通过</el-button
+                >
+                <el-button
+                  link
+                  type="danger"
+                  size="small"
+                  @click="handleLeaderReview(scope.row, false)"
+                  >驳回</el-button
+                >
+              </template>
+              <template v-else-if="scope.row.can_review">
+                <el-button
+                  link
+                  type="success"
+                  size="small"
+                  @click="handleWorkflowReview(scope.row, true)"
+                  >通过</el-button
+                >
+                <el-button
+                  link
+                  type="danger"
+                  size="small"
+                  @click="handleWorkflowReview(scope.row, false)"
+                  >驳回</el-button
+                >
+              </template>
               <el-button
+                v-if="isLeader"
                 link
                 type="danger"
                 size="small"
@@ -145,24 +181,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive } from "vue";
+import { ref, onMounted, reactive, computed } from "vue";
 import { useRoute } from "vue-router";
 import { Document } from "@element-plus/icons-vue";
 import AddExpenseDialog from "./components/AddExpenseDialog.vue";
 import request from "@/utils/request";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { removeProjectExpenditure } from "@/api/projects";
+import { useUserStore } from "@/stores/user";
+import { CONFIG } from "@/config";
 
 defineOptions({
   name: "StudentFundsView",
 });
 
 const route = useRoute();
+const userStore = useUserStore();
 
 type ProjectItem = {
   id: number;
   project_no?: string;
   title?: string;
+  leader?: number;
 };
 
 type ExpenditureItem = {
@@ -172,6 +212,13 @@ type ExpenditureItem = {
   amount?: number | string;
   proof_file_url?: string;
   created_by_name?: string;
+  status?: string;
+  status_display?: string;
+  leader_review_status?: string;
+  leader_review_status_display?: string;
+  current_node_name?: string;
+  current_node_role_name?: string;
+  can_review?: boolean;
 };
 
 type StatsPayload = {
@@ -207,6 +254,9 @@ const loading = ref(false);
 const dialogVisible = ref(false);
 const project = ref<ProjectItem | null>(null);
 const expenditures = ref<ExpenditureItem[]>([]);
+const isLeader = computed(
+  () => project.value?.leader === userStore.user?.id
+);
 
 const stats = reactive({
   total_budget: 0,
@@ -304,11 +354,84 @@ const handleDelete = async (row: ExpenditureItem) => {
   }
 };
 
+const canLeaderReview = (row: ExpenditureItem) => {
+  return row.leader_review_status === "PENDING" && Boolean(isLeader.value);
+};
+
+const getReviewStatusLabel = (row: ExpenditureItem) => {
+  if (row.status === "APPROVED" || row.status === "REJECTED") {
+    return row.status_display || "已审核";
+  }
+  if (row.leader_review_status === "PENDING") {
+    return "待负责人审核";
+  }
+  if (row.current_node_name) {
+    return row.current_node_name;
+  }
+  return row.status_display || "待审核";
+};
+
+const getReviewStatusType = (row: ExpenditureItem) => {
+  if (row.status === "APPROVED") return "success";
+  if (row.status === "REJECTED") return "danger";
+  if (row.leader_review_status === "PENDING") return "warning";
+  if (row.current_node_name) return "warning";
+  return "info";
+};
+
+const handleLeaderReview = async (row: ExpenditureItem, approved: boolean) => {
+  try {
+    await ElMessageBox.confirm(
+      approved ? "确认通过该经费申请吗？" : "确认驳回该经费申请吗？",
+      "提示",
+      { type: approved ? "success" : "warning" }
+    );
+    await request.post(`/projects/expenditures/${row.id}/leader-review/`, {
+      action: approved ? "approve" : "reject",
+    });
+    ElMessage.success("审核已提交");
+    fetchData();
+  } catch {
+    // cancel
+  }
+};
+
+const handleWorkflowReview = async (row: ExpenditureItem, approved: boolean) => {
+  try {
+    await ElMessageBox.confirm(
+      approved ? "确认通过该经费申请吗？" : "确认驳回该经费申请吗？",
+      "提示",
+      { type: approved ? "success" : "warning" }
+    );
+    await request.post(`/projects/expenditures/${row.id}/review/`, {
+      action: approved ? "approve" : "reject",
+    });
+    ElMessage.success("审核已提交");
+    fetchData();
+  } catch {
+    // cancel
+  }
+};
+
+const resolveFileUrl = (url?: string) => {
+  if (!url) return "";
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${CONFIG.api.BASE_URL}${url}`;
+};
+
 const getUsageStatus = (rate: number) => {
   if (rate >= 100) return "exception";
   if (rate >= 80) return "warning";
   return "success";
 };
+
+const getUsageColor = (rate: number) => {
+  if (rate >= 100) return "#ef4444";
+  if (rate >= 80) return "#f59e0b";
+  return "#10b981";
+};
+
+const formatUsageText = (percentage: number) => `${percentage}%`;
 
 onMounted(() => {
   fetchData();

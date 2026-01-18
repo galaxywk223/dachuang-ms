@@ -26,7 +26,7 @@ export interface WorkflowNode {
 export interface WorkflowConfig {
   id: number;
   name: string;
-  phase: "APPLICATION" | "MID_TERM" | "CLOSURE";
+  phase: "APPLICATION" | "MID_TERM" | "CLOSURE" | "BUDGET" | "CHANGE";
   batch: number | null;
   batch_name: string | null;
   version: number;
