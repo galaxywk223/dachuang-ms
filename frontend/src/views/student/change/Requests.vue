@@ -4,7 +4,7 @@
       <template #header>
         <div class="card-header">
           <div class="header-left">
-            <span class="header-title">项目异动申请</span>
+            <span class="header-title">异动管理</span>
           </div>
           <div class="header-actions">
             <el-button type="primary" @click="openDialog">新建申请</el-button>
@@ -54,7 +54,7 @@
 
     <el-dialog
       v-model="dialogVisible"
-      title="项目异动申请"
+      title="异动申请"
       width="620px"
       destroy-on-close
     >

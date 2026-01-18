@@ -287,22 +287,6 @@
                     >查看</el-button
                   >
                   <template v-if="isLeader(row)">
-                    <el-dropdown trigger="click">
-                      <el-button type="success" link size="small">
-                        管理
-                        <el-icon style="margin-left: 4px"
-                          ><ArrowDown
-                        /></el-icon>
-                      </el-button>
-                      <template #dropdown>
-                        <el-dropdown-item @click="goToChangeRequests(row)"
-                          >项目异动</el-dropdown-item
-                        >
-                        <el-dropdown-item @click="goToFunds(row)"
-                          >经费管理</el-dropdown-item
-                        >
-                      </template>
-                    </el-dropdown>
                     <el-button
                       type="warning"
                       link
@@ -352,7 +336,6 @@ import {
   Search as SearchIcon,
   RefreshLeft,
   Plus,
-  ArrowDown,
 } from "@element-plus/icons-vue";
 import {
   getMyProjects,
@@ -609,13 +592,6 @@ const handleDeleteSubmission = async (row: ProjectRow) => {
   }
 };
 
-const goToChangeRequests = (row: ProjectRow) => {
-  router.push(`/project/${row.id}/change-requests`);
-};
-
-const goToFunds = (row: ProjectRow) => {
-  router.push(`/project/${row.id}/funds`);
-};
 </script>
 
 <style scoped lang="scss">

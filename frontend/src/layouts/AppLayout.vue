@@ -232,7 +232,6 @@ import {
 import {
   DocumentAdd,
   DocumentChecked,
-  QuestionFilled,
   Bell,
   ArrowDown,
   SwitchButton,
@@ -449,17 +448,27 @@ const currentMenus = computed<MenuEntry[]>(() => {
           ],
         },
         {
+          groupTitle: "经费与异动",
+          items: [
+            {
+              index: "/funds",
+              title: "经费管理",
+              icon: Folder,
+            },
+            {
+              index: "/change-requests",
+              title: "异动管理",
+              icon: DocumentChecked,
+            },
+          ],
+        },
+        {
           groupTitle: "消息与支持",
           items: [
             {
               index: "/notifications",
               title: "通知中心",
               icon: Bell,
-            },
-            {
-              index: "/help",
-              title: "使用帮助",
-              icon: QuestionFilled,
             },
           ],
         },

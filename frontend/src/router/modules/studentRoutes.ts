@@ -17,6 +17,18 @@ export const studentRoutes: RouteRecordRaw[] = [
         meta: { title: "我的项目" },
       },
       {
+        path: "funds",
+        name: "student-funds-projects",
+        component: () => import("@/views/student/funds/Projects.vue"),
+        meta: { title: "经费管理" },
+      },
+      {
+        path: "change-requests",
+        name: "student-change-projects",
+        component: () => import("@/views/student/change/Projects.vue"),
+        meta: { title: "异动管理" },
+      },
+      {
         path: "history-projects",
         name: "student-history-projects",
         component: () => import("@/views/common/HistoryProjects.vue"),
@@ -101,16 +113,10 @@ export const studentRoutes: RouteRecordRaw[] = [
         ],
       },
       {
-        path: "help",
-        name: "help",
-        component: () => import("@/views/common/Help.vue"),
-        meta: { title: "使用帮助" },
-      },
-      {
         path: "project/:projectId/change-requests",
         name: "student-project-change-requests",
         component: () => import("@/views/student/change/Requests.vue"),
-        meta: { title: "项目异动" },
+        meta: { title: "异动管理" },
       },
       {
         path: "project/:projectId/funds",
