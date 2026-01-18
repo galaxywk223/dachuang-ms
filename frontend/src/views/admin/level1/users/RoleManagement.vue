@@ -92,13 +92,10 @@
             :disabled="formData.is_system"
           >
             <el-option label="学院" value="COLLEGE" />
-            <el-option label="项目类别" value="PROJECT_CATEGORY" />
-            <el-option label="项目级别" value="PROJECT_LEVEL" />
-            <el-option label="项目来源" value="PROJECT_SOURCE" />
-            <el-option label="重点领域代码" value="KEY_FIELD" />
+            <el-option label="非学院" value="SCHOOL" />
           </el-select>
           <div class="form-hint">
-            管理员角色需要选择数据范围维度。非管理员角色留空。
+            管理员角色需要选择数据范围维度：学院=本学院，非学院=全校。
           </div>
         </el-form-item>
       </el-form>

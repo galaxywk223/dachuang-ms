@@ -38,13 +38,13 @@
             <div class="card-body">
               <div class="flex-row">
                 <el-switch
-                  v-model="localApplicationWindow.enabled"
+                  v-model="applicationEnabled"
                   active-text="开启"
                   :disabled="isReadOnly"
                 />
               </div>
               <el-date-picker
-                v-model="localApplicationWindow.range"
+                v-model="applicationRange"
                 type="daterange"
                 range-separator="至"
                 start-placeholder="开始"
@@ -64,13 +64,13 @@
             <div class="card-body">
               <div class="flex-row">
                 <el-switch
-                  v-model="localMidtermWindow.enabled"
+                  v-model="midtermEnabled"
                   active-text="开启"
                   :disabled="isReadOnly"
                 />
               </div>
               <el-date-picker
-                v-model="localMidtermWindow.range"
+                v-model="midtermRange"
                 type="daterange"
                 range-separator="至"
                 start-placeholder="开始"
@@ -90,13 +90,13 @@
             <div class="card-body">
               <div class="flex-row">
                 <el-switch
-                  v-model="localClosureWindow.enabled"
+                  v-model="closureEnabled"
                   active-text="开启"
                   :disabled="isReadOnly"
                 />
               </div>
               <el-date-picker
-                v-model="localClosureWindow.range"
+                v-model="closureRange"
                 type="daterange"
                 range-separator="至"
                 start-placeholder="开始"
@@ -115,7 +115,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, watch } from "vue";
+import { computed } from "vue";
 
 const props = defineProps<{
   globalDateRange: string[];
@@ -140,58 +140,59 @@ const localGlobalDateRange = computed({
   set: (value: string[]) => emit("update:globalDateRange", value),
 });
 
-const cloneWindow = (source: WindowConfig): WindowConfig => ({
-  enabled: source.enabled,
-  range: [...source.range],
+const applicationEnabled = computed({
+  get: () => props.applicationWindow.enabled,
+  set: (value: boolean) =>
+    emit("update:applicationWindow", {
+      ...props.applicationWindow,
+      enabled: value,
+    }),
 });
 
-const localApplicationWindow = reactive(cloneWindow(props.applicationWindow));
-const localMidtermWindow = reactive(cloneWindow(props.midtermWindow));
-const localClosureWindow = reactive(cloneWindow(props.closureWindow));
-
-watch(
-  () => props.applicationWindow,
-  (value) => Object.assign(localApplicationWindow, cloneWindow(value)),
-  { deep: true }
-);
-watch(
-  () => props.midtermWindow,
-  (value) => Object.assign(localMidtermWindow, cloneWindow(value)),
-  { deep: true }
-);
-watch(
-  () => props.closureWindow,
-  (value) => Object.assign(localClosureWindow, cloneWindow(value)),
-  { deep: true }
-);
-
-watch(
-  localApplicationWindow,
-  (value) =>
+const applicationRange = computed({
+  get: () => props.applicationWindow.range,
+  set: (value: string[] | null) =>
     emit("update:applicationWindow", {
-      enabled: value.enabled,
-      range: value.range,
+      ...props.applicationWindow,
+      range: value ?? [],
     }),
-  { deep: true }
-);
-watch(
-  localMidtermWindow,
-  (value) =>
+});
+
+const midtermEnabled = computed({
+  get: () => props.midtermWindow.enabled,
+  set: (value: boolean) =>
     emit("update:midtermWindow", {
-      enabled: value.enabled,
-      range: value.range,
+      ...props.midtermWindow,
+      enabled: value,
     }),
-  { deep: true }
-);
-watch(
-  localClosureWindow,
-  (value) =>
+});
+
+const midtermRange = computed({
+  get: () => props.midtermWindow.range,
+  set: (value: string[] | null) =>
+    emit("update:midtermWindow", {
+      ...props.midtermWindow,
+      range: value ?? [],
+    }),
+});
+
+const closureEnabled = computed({
+  get: () => props.closureWindow.enabled,
+  set: (value: boolean) =>
     emit("update:closureWindow", {
-      enabled: value.enabled,
-      range: value.range,
+      ...props.closureWindow,
+      enabled: value,
     }),
-  { deep: true }
-);
+});
+
+const closureRange = computed({
+  get: () => props.closureWindow.range,
+  set: (value: string[] | null) =>
+    emit("update:closureWindow", {
+      ...props.closureWindow,
+      range: value ?? [],
+    }),
+});
 </script>
 <style scoped lang="scss">
 .config-form {

@@ -86,11 +86,12 @@ export function useProjectsPage() {
     level: "",
     category: "",
     status: "",
+    include_archived: false,
   });
 
   const levelOptions = computed(() => getOptions(DICT_CODES.PROJECT_LEVEL));
   const categoryOptions = computed(() =>
-    getOptions(DICT_CODES.PROJECT_CATEGORY)
+    getOptions(DICT_CODES.PROJECT_CATEGORY),
   );
   const statusOptions = computed(() => getOptions(DICT_CODES.PROJECT_STATUS));
 
@@ -104,6 +105,7 @@ export function useProjectsPage() {
         level: filters.level,
         category: filters.category,
         status: filters.status,
+        include_archived: filters.include_archived ? 1 : 0,
       };
 
       const res = (await getProjects(params)) as
@@ -172,7 +174,7 @@ export function useProjectsPage() {
           confirmButtonText: "确定删除",
           cancelButtonText: "取消",
           type: "warning",
-        }
+        },
       );
       await deleteProject(row.id);
       ElMessage.success("删除成功");
@@ -211,7 +213,7 @@ export function useProjectsPage() {
       const res = await exportProjects(params);
       const blob = toBlob(
         res,
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       );
       downloadFile(blob, "项目数据.xlsx");
       ElMessage.success("导出成功");
@@ -339,8 +341,8 @@ export function useProjectsPage() {
         new Set(
           selectedRows.value
             .map((row) => row.leader)
-            .filter((value): value is number => typeof value === "number")
-        )
+            .filter((value): value is number => typeof value === "number"),
+        ),
       );
       const res = await batchSendNotifications({
         title: batchNotifyForm.title,

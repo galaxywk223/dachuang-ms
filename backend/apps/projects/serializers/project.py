@@ -365,66 +365,6 @@ class ProjectSerializer(serializers.ModelSerializer):
             max_len = int(validation_rules.get("title_max_length", 200) or 200)
             if title and (len(title) < min_len or len(title) > max_len):
                 raise serializers.ValidationError("项目名称长度不符合要求")
-            title_regex = validation_rules.get("title_regex") or ""
-            if title_regex:
-                import re
-
-                if title and not re.match(title_regex, title):
-                    raise serializers.ValidationError("项目名称格式不符合要求")
-
-        if not is_draft:
-            leader = attrs.get("leader") or (request.user if request else None)
-            year = attrs.get("year") or (self.instance.year if self.instance else None)
-            college_code = leader.college if leader else ""
-            college_quota = limits.get("college_quota") or {}
-            if college_code and year and college_code in college_quota:
-                try:
-                    quota = int(college_quota.get(college_code) or 0)
-                except (TypeError, ValueError):
-                    quota = 0
-                if quota:
-                    qs = Project.objects.filter(
-                        year=year, leader__college=college_code
-                    ).exclude(status=Project.ProjectStatus.DRAFT)
-                    if batch:
-                        qs = qs.filter(batch=batch)
-                    if self.instance:
-                        qs = qs.exclude(id=self.instance.id)
-                    if qs.count() >= quota:
-                        raise serializers.ValidationError("该学院本年度名额已满")
-
-        if not is_draft:
-            leader = attrs.get("leader") or (request.user if request else None)
-            college_code = leader.college if leader else ""
-            allowed_types = validation_rules.get("allowed_project_types") or []
-            allowed_by_college = (
-                validation_rules.get("allowed_project_types_by_college") or {}
-            )
-            allowed_levels_by_college = (
-                validation_rules.get("allowed_levels_by_college") or {}
-            )
-            if (
-                allowed_types
-                and attrs.get("category")
-                and attrs.get("category").value not in allowed_types
-            ):
-                raise serializers.ValidationError("项目类别不符合申报要求")
-            if college_code and allowed_by_college:
-                college_allowed = allowed_by_college.get(college_code) or []
-                if (
-                    college_allowed
-                    and attrs.get("category")
-                    and attrs.get("category").value not in college_allowed
-                ):
-                    raise serializers.ValidationError("当前学院不允许申报该类别")
-            if college_code and allowed_levels_by_college:
-                level_allowed = allowed_levels_by_college.get(college_code) or []
-                if (
-                    level_allowed
-                    and attrs.get("level")
-                    and attrs.get("level").value not in level_allowed
-                ):
-                    raise serializers.ValidationError("当前学院不允许申报该级别")
 
         instance = getattr(self, "instance", None)
         next_is_key_field = attrs.get(

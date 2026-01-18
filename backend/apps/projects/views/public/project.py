@@ -67,7 +67,9 @@ class ProjectViewSet(
         queryset = super().get_queryset()
         teacher_scope = self.request.query_params.get("teacher_scope")
 
+        include_archived = self.request.query_params.get("include_archived")
         history_batch_id = self.request.query_params.get("history_batch_id")
+
         if history_batch_id:
             batch = ProjectBatch.objects.filter(
                 id=history_batch_id,
@@ -77,6 +79,9 @@ class ProjectViewSet(
             if not batch:
                 return queryset.none()
             queryset = queryset.filter(batch=batch)
+        elif include_archived and str(include_archived).lower() in ("true", "1", "yes"):
+            # If include_archived is True, do not filter by batch (show all)
+            pass
         else:
             current_batch = SystemSettingService.get_current_batch()
             if not current_batch:
@@ -135,7 +140,9 @@ class ProjectViewSet(
                 assigned_reviews = assigned_reviews.filter(
                     workflow_node__role_fk__code=exclude_role
                 )
-            queryset = queryset.annotate(_has_assigned=Exists(assigned_reviews)).filter(_has_assigned=False)
+            queryset = queryset.annotate(_has_assigned=Exists(assigned_reviews)).filter(
+                _has_assigned=False
+            )
 
         phase = self.request.query_params.get("phase")
         phase_step = self.request.query_params.get("phase_step")

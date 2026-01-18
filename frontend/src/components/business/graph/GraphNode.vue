@@ -110,68 +110,107 @@ const roleTagType = computed(() => {
 
 <style scoped lang="scss">
 .graph-node {
+  --node-accent: #2563eb;
+  --node-accent-soft: rgba(37, 99, 235, 0.18);
+  --node-ink: #0f172a;
+
+  position: relative;
   width: 100%;
   height: 100%;
-  background: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  border: 1px solid #e2e8f0;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 65%, #f1f5f9 100%);
+  border-radius: 14px;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08),
+    0 4px 10px rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(148, 163, 184, 0.4);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: all 0.2s ease;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
   user-select: none;
+  font-family: "IBM Plex Sans", "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-      0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    border-color: rgba(59, 130, 246, 0.35);
+    box-shadow: 0 20px 38px rgba(15, 23, 42, 0.12),
+      0 8px 18px rgba(15, 23, 42, 0.08);
+  }
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    background: linear-gradient(180deg, var(--node-accent), transparent);
+    opacity: 0.9;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    left: 6px;
+    right: 0;
+    top: 0;
+    height: 3px;
+    background: linear-gradient(
+      90deg,
+      rgba(15, 23, 42, 0.08),
+      transparent 60%
+    );
   }
 
   // Type-specific colors styling
   &.type-submit {
-    border-left: 4px solid #10b981;
+    --node-accent: #16a34a;
+    --node-accent-soft: rgba(22, 163, 74, 0.18);
     .node-icon {
-      color: #10b981;
-      background: #ecfdf5;
+      color: #16a34a;
     }
   }
   &.type-review {
-    border-left: 4px solid #3b82f6;
+    --node-accent: #2563eb;
+    --node-accent-soft: rgba(37, 99, 235, 0.2);
     .node-icon {
-      color: #3b82f6;
-      background: #eff6ff;
+      color: #2563eb;
     }
   }
   &.type-approval {
-    border-left: 4px solid #f59e0b;
+    --node-accent: #f59e0b;
+    --node-accent-soft: rgba(245, 158, 11, 0.2);
     .node-icon {
       color: #f59e0b;
-      background: #fffbeb;
     }
   }
 
   .node-header {
     display: flex;
     align-items: center;
-    padding: 16px 12px 12px;
-    gap: 12px;
+    padding: 18px 16px 12px 18px;
+    gap: 14px;
 
     .node-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 20px;
       flex-shrink: 0;
+      background: linear-gradient(
+        140deg,
+        var(--node-accent-soft),
+        rgba(255, 255, 255, 0.95)
+      );
+      box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.3),
+        0 10px 20px rgba(15, 23, 42, 0.08);
     }
 
     .node-title {
       font-weight: 600;
-      color: #334155;
+      color: #1f2937;
       font-size: 15px;
       line-height: 1.4;
       display: -webkit-box;
@@ -183,7 +222,7 @@ const roleTagType = computed(() => {
   }
 
   .node-body {
-    padding: 0 12px 12px;
+    padding: 0 16px 14px 18px;
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -197,5 +236,18 @@ const roleTagType = computed(() => {
     }
 
   }
+
+  .role-tag {
+    border-radius: 999px;
+    padding: 1px 10px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+
+  .expert-tag {
+    border-radius: 999px;
+    padding: 1px 10px;
+  }
 }
+
 </style>

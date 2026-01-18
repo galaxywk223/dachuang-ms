@@ -174,7 +174,7 @@ export function useProjectApplication() {
   const userStore = useUserStore();
   const router = useRouter();
   const route = useRoute();
-  const { loadDictionaries, getOptions } = useDictionary();
+  const { loadDictionaries, refreshDictionary, getOptions } = useDictionary();
 
   const formRef = ref<FormInstance>();
   const loading = ref(false);
@@ -235,7 +235,6 @@ export function useProjectApplication() {
     title: "",
     contact: "",
     email: "",
-    order: 1,
   });
   const newMember = reactive({ student_id: "", name: "" });
 
@@ -367,27 +366,6 @@ export function useProjectApplication() {
     },
   });
 
-  const expectedForm = reactive({
-    achievement_type: "",
-    expected_count: 1,
-  });
-
-  const addExpectedResult = () => {
-    if (!expectedForm.achievement_type) {
-      ElMessage.warning("请选择成果类型");
-      return;
-    }
-    formData.expected_results_data.push({
-      achievement_type: expectedForm.achievement_type,
-      expected_count: expectedForm.expected_count || 1,
-    });
-    expectedForm.achievement_type = "";
-    expectedForm.expected_count = 1;
-  };
-
-  const removeExpectedResult = (index: number) => {
-    formData.expected_results_data.splice(index, 1);
-  };
 
   const getLabel = (options: DictOption[], value: string) => {
     const found = options.find((opt) => opt.value === value);
@@ -432,13 +410,6 @@ export function useProjectApplication() {
   };
 
   const handleAddNewAdvisor = () => {
-    if (newAdvisor.order === 2) {
-      const hasFirst = formData.advisors.some((a) => a.order === 1);
-      if (!hasFirst) {
-        ElMessage.warning("请先添加第一指导教师");
-        return;
-      }
-    }
     // Check if user is selected
     if (!newAdvisor.user_id) {
       ElMessage.warning("请先查询并确认教师信息");
@@ -451,15 +422,7 @@ export function useProjectApplication() {
       return;
     }
 
-    // Check if order already exists (optional, but good for UX)
-    if (formData.advisors.some((a) => a.order === newAdvisor.order)) {
-      ElMessage.warning(
-        newAdvisor.order === 1 ? "第一指导教师已存在" : "第二指导教师已存在"
-      );
-      return;
-    }
-
-    formData.advisors.push({ ...newAdvisor });
+    formData.advisors.push({ ...newAdvisor, order: formData.advisors.length + 1 });
     // Reset
     newAdvisor.user_id = null;
     newAdvisor.job_number = "";
@@ -565,12 +528,6 @@ export function useProjectApplication() {
         ElMessage.warning("请至少添加一名指导老师");
         return;
       }
-      // Ensure First Advisor exists
-      const hasFirst = formData.advisors.some((a) => a.order === 1);
-      if (!hasFirst) {
-        ElMessage.warning("请添加第一指导老师");
-        return;
-      }
     }
 
     if (!isDraft) {
@@ -580,7 +537,7 @@ export function useProjectApplication() {
         );
       }
       if (formData.expected_results_data.length === 0) {
-        ElMessage.warning("请补充预期成果清单");
+        ElMessage.warning("请选择预期成果");
         return;
       }
       try {
@@ -802,6 +759,7 @@ export function useProjectApplication() {
       DICT_CODES.KEY_FIELD_CODE,
       DICT_CODES.ACHIEVEMENT_TYPE,
     ]);
+    await refreshDictionary(DICT_CODES.ACHIEVEMENT_TYPE);
     const id = route.query.id;
     if (id) {
       loadData(Number(id));
@@ -842,7 +800,6 @@ export function useProjectApplication() {
     currentUser,
     newAdvisor,
     newMember,
-    expectedForm,
     achievementTypeOptions,
     advisorTitleOptions,
     fileList,
@@ -856,8 +813,6 @@ export function useProjectApplication() {
     handleSearchNewMember,
     handleAddNewMember,
     removeMember,
-    addExpectedResult,
-    removeExpectedResult,
     getLabel,
     loading,
     submitForm,

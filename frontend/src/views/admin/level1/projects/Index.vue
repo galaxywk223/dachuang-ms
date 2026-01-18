@@ -120,6 +120,10 @@
             </el-select>
           </el-form-item>
 
+          <el-form-item label="显示历史">
+            <el-switch v-model="filters.include_archived" />
+          </el-form-item>
+
           <el-form-item>
             <el-button type="primary" @click="handleSearch" :icon="Search"
               >查询</el-button

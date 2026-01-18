@@ -29,10 +29,7 @@ DEFAULT_SETTINGS = {
         "max_teacher_active": 5,
         "max_student_active": 1,
         "max_student_member": 1,
-        "teacher_excellent_bonus": 0,
-        "college_quota": {},
         "dedupe_title": True,
-        "advisor_title_required": False,
     },
     "PROCESS_RULES": {
         "allow_active_reapply": False,
@@ -42,12 +39,8 @@ DEFAULT_SETTINGS = {
         "teacher_application_comment_min": 0,
     },
     "VALIDATION_RULES": {
-        "title_regex": "",
         "title_min_length": 0,
         "title_max_length": 200,
-        "allowed_project_types": [],
-        "allowed_project_types_by_college": {},
-        "allowed_levels_by_college": {},
     },
 }
 

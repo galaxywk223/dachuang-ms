@@ -50,6 +50,7 @@ export function useAllProjects() {
     level: "",
     category: "",
     status: "",
+    include_archived: false,
   });
 
   const {
@@ -68,7 +69,7 @@ export function useAllProjects() {
   const { handleSearch, handleReset } = useProjectSearch(
     filters,
     fetchProjects,
-    currentPage
+    currentPage,
   );
 
   const {
@@ -91,7 +92,7 @@ export function useAllProjects() {
 
   const levelOptions = computed(() => getOptions(DICT_CODES.PROJECT_LEVEL));
   const categoryOptions = computed(() =>
-    getOptions(DICT_CODES.PROJECT_CATEGORY)
+    getOptions(DICT_CODES.PROJECT_CATEGORY),
   );
   const statusOptions = computed(() => getOptions(DICT_CODES.PROJECT_STATUS));
 
@@ -120,7 +121,7 @@ export function useAllProjects() {
           confirmButtonText: "确定删除",
           cancelButtonText: "取消",
           type: "warning",
-        }
+        },
       );
       await deleteProjectById(row.id);
       ElMessage.success("删除成功");
@@ -213,8 +214,8 @@ export function useAllProjects() {
         new Set(
           selectedRows.value
             .map((row) => row.leader)
-            .filter((id): id is number => typeof id === "number")
-        )
+            .filter((id): id is number => typeof id === "number"),
+        ),
       );
       const res = await batchSendNotifications({
         title: batchNotifyForm.title,

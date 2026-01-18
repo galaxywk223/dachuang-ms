@@ -27,7 +27,9 @@ export function useProjectTable(filters: {
   search: string;
   level: string;
   category: string;
+  category: string;
   status: string;
+  include_archived?: boolean;
 }) {
   const loading = ref(false);
   const projects = ref<ProjectRow[]>([]);
@@ -46,13 +48,20 @@ export function useProjectTable(filters: {
         level: filters.level,
         category: filters.category,
         status: filters.status,
+        include_archived: filters.include_archived ? 1 : 0,
       };
 
-      const res = (await getAllProjects(params)) as ProjectListResponse | ProjectRow[];
+      const res = (await getAllProjects(params)) as
+        | ProjectListResponse
+        | ProjectRow[];
       if (isRecord(res) && Array.isArray(res.results)) {
         projects.value = res.results ?? [];
         total.value = res.count ?? projects.value.length;
-      } else if (isRecord(res) && isRecord(res.data) && Array.isArray(res.data?.results)) {
+      } else if (
+        isRecord(res) &&
+        isRecord(res.data) &&
+        Array.isArray(res.data?.results)
+      ) {
         projects.value = res.data?.results ?? [];
         total.value = res.data?.count ?? projects.value.length;
       } else {

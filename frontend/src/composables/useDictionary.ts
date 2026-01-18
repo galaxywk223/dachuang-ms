@@ -105,6 +105,22 @@ export function useDictionary() {
     };
 
     /**
+     * 强制刷新单个字典类型
+     * @param code 字典类型编码
+     */
+    const refreshDictionary = async (code: string) => {
+        try {
+            const data = await getDictionaryByCode(code);
+            dictionaryCache.value[code] = {
+                name: data.name,
+                items: data.items,
+            };
+        } catch (error) {
+            console.error(`Failed to refresh dictionary ${code}:`, error);
+        }
+    };
+
+    /**
      * 刷新所有字典缓存
      */
     const refreshDictionaries = async () => {
@@ -122,6 +138,7 @@ export function useDictionary() {
         initDictionaries,
         loadDictionaries,
         loadDictionary,
+        refreshDictionary,
         refreshDictionaries,
         getOptions,
         getLabel,

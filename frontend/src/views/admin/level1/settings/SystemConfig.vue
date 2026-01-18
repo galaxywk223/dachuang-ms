@@ -66,11 +66,6 @@
             <SystemConfigLimitsTab
               :limit-rules="limitRules"
               :validation-rules="validationRules"
-              v-model:college-quota-text="collegeQuotaText"
-              v-model:allowed-types-by-college-text="allowedTypesByCollegeText"
-              v-model:allowed-levels-by-college-text="
-                allowedLevelsByCollegeText
-              "
               :is-process-locked="isProcessLocked"
               @update:limit-rules="(value) => Object.assign(limitRules, value)"
               @update:validation-rules="
@@ -197,10 +192,7 @@ const limitRules = reactive({
   max_teacher_active: 5,
   max_student_active: 1,
   max_student_member: 1,
-  teacher_excellent_bonus: 0,
   dedupe_title: true,
-  advisor_title_required: false,
-  college_quota: {} as Record<string, number>,
 });
 
 const processRules = reactive({
@@ -212,17 +204,9 @@ const reviewRules = reactive({
   teacher_application_comment_min: 0,
 });
 
-const collegeQuotaText = ref("{}");
-const allowedTypesByCollegeText = ref("{}");
-const allowedLevelsByCollegeText = ref("{}");
-
 const validationRules = reactive({
-  title_regex: "",
   title_min_length: 0,
   title_max_length: 200,
-  allowed_project_types: [] as string[],
-  allowed_project_types_by_college: {} as Record<string, string[]>,
-  allowed_levels_by_college: {} as Record<string, string[]>,
 });
 
 const goBack = () => {
@@ -287,12 +271,6 @@ const loadSettings = async () => {
     fillRange(closureWindow, clo as { start?: string; end?: string });
 
     Object.assign(limitRules, data.LIMIT_RULES || {});
-    collegeQuotaText.value = JSON.stringify(
-      limitRules.college_quota || {},
-      null,
-      2
-    );
-
     processRules.allow_active_reapply = Boolean(
       data.PROCESS_RULES?.allow_active_reapply
     );
@@ -301,16 +279,6 @@ const loadSettings = async () => {
     );
     Object.assign(reviewRules, data.REVIEW_RULES || {});
     Object.assign(validationRules, data.VALIDATION_RULES || {});
-    allowedTypesByCollegeText.value = JSON.stringify(
-      validationRules.allowed_project_types_by_college || {},
-      null,
-      2
-    );
-    allowedLevelsByCollegeText.value = JSON.stringify(
-      validationRules.allowed_levels_by_college || {},
-      null,
-      2
-    );
   } catch (error) {
     console.error(error);
     ElMessage.error(getErrorMessage(error, "加载配置失败"));
@@ -329,27 +297,6 @@ const saveAll = async () => {
   if (!batchId.value) return;
   savingAll.value = true;
   try {
-    let quota = {};
-    try {
-      quota = JSON.parse(collegeQuotaText.value || "{}");
-    } catch {
-      ElMessage.error("学院名额配置不是有效的JSON");
-      return;
-    }
-    let allowedTypesByCollege = {};
-    let allowedLevelsByCollege = {};
-    try {
-      allowedTypesByCollege = JSON.parse(
-        allowedTypesByCollegeText.value || "{}"
-      );
-      allowedLevelsByCollege = JSON.parse(
-        allowedLevelsByCollegeText.value || "{}"
-      );
-    } catch {
-      ElMessage.error("项目类型/级别限制配置不是有效的JSON");
-      return;
-    }
-
     const payloads = [
       updateSettingByCode(
         "APPLICATION_WINDOW",
@@ -383,7 +330,7 @@ const saveAll = async () => {
           "LIMIT_RULES",
           {
             name: "限制与校验规则",
-            data: { ...limitRules, college_quota: quota },
+            data: { ...limitRules },
           },
           batchId.value
         ),
@@ -409,8 +356,6 @@ const saveAll = async () => {
             name: "校验规则配置",
             data: {
               ...validationRules,
-              allowed_project_types_by_college: allowedTypesByCollege,
-              allowed_levels_by_college: allowedLevelsByCollege,
             },
           },
           batchId.value

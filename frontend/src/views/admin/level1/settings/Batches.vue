@@ -3,15 +3,14 @@
     <el-card class="main-card" shadow="never">
       <template #header>
         <div class="card-header">
-           <div class="header-left">
-             <span class="header-title">批次管理</span>
-           </div>
-           <div class="header-actions">
-           <el-select
+          <div class="header-left">
+            <span class="header-title">批次管理</span>
+          </div>
+          <div class="header-actions">
+            <el-select
               v-model="statusFilter"
               placeholder="状态筛选"
               size="default"
-
               @change="handleFilterChange"
             >
               <el-option label="全部状态" value="" />
@@ -30,15 +29,15 @@
             <el-button type="primary" @click="openBatchDialog">
               <el-icon class="mr-1"><Plus /></el-icon>新建批次
             </el-button>
-           </div>
+          </div>
         </div>
       </template>
 
-      <el-table 
-        :data="filteredBatches" 
-        v-loading="batchLoading" 
-        border 
-        stripe 
+      <el-table
+        :data="filteredBatches"
+        v-loading="batchLoading"
+        border
+        stripe
         style="width: 100%"
       >
         <el-table-column prop="name" label="批次名称" min-width="160" />
@@ -66,7 +65,9 @@
         </el-table-column>
         <el-table-column label="操作" width="280" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button type="primary" link @click="openSettings(row)">配置</el-button>
+            <el-button type="primary" link @click="openSettings(row)"
+              >配置</el-button
+            >
             <el-button
               v-if="row.status === 'draft'"
               type="success"
@@ -90,6 +91,9 @@
               @click="archiveBatch(row)"
             >
               归档
+            </el-button>
+            <el-button type="primary" link @click="viewBatchProjects(row)">
+              查看项目
             </el-button>
             <el-button
               v-if="row.status === 'archived'"
@@ -120,9 +124,6 @@
         <el-form-item label="年度">
           <el-input-number v-model="batchForm.year" :min="2000" :max="2100" />
         </el-form-item>
-        <el-form-item label="批次编码">
-          <el-input v-model="batchForm.code" placeholder="如：2025-A" />
-        </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
@@ -133,7 +134,6 @@
         </span>
       </template>
     </el-dialog>
-
   </div>
 </template>
 
@@ -172,7 +172,11 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (!isRecord(error)) return fallback;
   const response = error.response;
-  if (isRecord(response) && isRecord(response.data) && typeof response.data.message === "string") {
+  if (
+    isRecord(response) &&
+    isRecord(response.data) &&
+    typeof response.data.message === "string"
+  ) {
     return response.data.message;
   }
   if (typeof error.message === "string") return error.message;
@@ -268,17 +272,32 @@ const openBatchDialog = () => {
 };
 
 const submitBatch = async () => {
-  if (!batchForm.name || !batchForm.code) {
-    ElMessage.warning("请填写批次名称和编码");
+  const name = batchForm.name.trim();
+  if (!name) {
+    ElMessage.warning("请填写批次名称");
     return;
   }
   batchSaving.value = true;
   try {
-    const res = await createProjectBatch({ ...batchForm });
-    if (isRecord(res) && (res.code === 200 || res.code === 201)) {
+    const res = await createProjectBatch({
+      ...batchForm,
+      name,
+      code: name,
+    });
+    const success =
+      isRecord(res) &&
+      ((res.code === 200 || res.code === 201) ||
+        typeof res.id === "number" ||
+        (isRecord(res.data) && typeof res.data.id === "number"));
+    if (success) {
       ElMessage.success("批次创建成功");
       batchDialogVisible.value = false;
       await loadBatches();
+    } else {
+      ElMessage.error(
+        (isRecord(res) && typeof res.message === "string" && res.message) ||
+          "批次创建失败",
+      );
     }
   } catch (error) {
     console.error(error);
@@ -294,11 +313,15 @@ const openSettings = (row: BatchRow) => {
 
 const startBatch = async (row: BatchRow) => {
   try {
-    await ElMessageBox.confirm("开始该批次将替换当前批次，是否继续？", "确认操作", {
-      type: "warning",
-      confirmButtonText: "继续",
-      cancelButtonText: "取消",
-    });
+    await ElMessageBox.confirm(
+      "开始该批次将替换当前批次，是否继续？",
+      "确认操作",
+      {
+        type: "warning",
+        confirmButtonText: "继续",
+        cancelButtonText: "取消",
+      },
+    );
   } catch {
     return;
   }
@@ -314,11 +337,15 @@ const startBatch = async (row: BatchRow) => {
 
 const finishBatch = async (row: BatchRow) => {
   try {
-    await ElMessageBox.confirm("结束后该批次将进入只读状态，是否继续？", "确认操作", {
-      type: "warning",
-      confirmButtonText: "继续",
-      cancelButtonText: "取消",
-    });
+    await ElMessageBox.confirm(
+      "结束后该批次将进入只读状态，是否继续？",
+      "确认操作",
+      {
+        type: "warning",
+        confirmButtonText: "继续",
+        cancelButtonText: "取消",
+      },
+    );
   } catch {
     return;
   }
@@ -334,11 +361,15 @@ const finishBatch = async (row: BatchRow) => {
 
 const archiveBatch = async (row: BatchRow) => {
   try {
-    await ElMessageBox.confirm("归档后该批次将进入只读状态，是否继续？", "确认操作", {
-      type: "warning",
-      confirmButtonText: "继续",
-      cancelButtonText: "取消",
-    });
+    await ElMessageBox.confirm(
+      "归档后该批次将进入只读状态，是否继续？",
+      "确认操作",
+      {
+        type: "warning",
+        confirmButtonText: "继续",
+        cancelButtonText: "取消",
+      },
+    );
   } catch {
     return;
   }
@@ -350,6 +381,13 @@ const archiveBatch = async (row: BatchRow) => {
     console.error(error);
     ElMessage.error(getErrorMessage(error, "归档失败"));
   }
+};
+
+const viewBatchProjects = (row: BatchRow) => {
+  router.push({
+    name: "level1-projects-all",
+    query: { batch_id: row.id },
+  });
 };
 
 const restoreBatch = async (row: BatchRow) => {
@@ -389,10 +427,15 @@ const handleDelete = async (row: BatchRow) => {
   try {
     const res = await deleteProjectBatch(row.id);
     if (isRecord(res) && (res.code === 200 || res.code === 204)) {
-      ElMessage.success((typeof res.message === "string" && res.message) || "删除成功");
+      ElMessage.success(
+        (typeof res.message === "string" && res.message) || "删除成功",
+      );
       await loadBatches();
     } else {
-      ElMessage.error((isRecord(res) && typeof res.message === "string" && res.message) || "删除失败");
+      ElMessage.error(
+        (isRecord(res) && typeof res.message === "string" && res.message) ||
+          "删除失败",
+      );
     }
   } catch (error) {
     console.error(error);

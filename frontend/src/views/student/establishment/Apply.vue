@@ -77,13 +77,9 @@
 
         <ApplyContentSection
           :form-data="formData"
-          :expected-form="expectedForm"
           :achievement-type-options="achievementTypeOptions"
           :get-label="getLabel"
-          :add-expected-result="addExpectedResult"
-          :remove-expected-result="removeExpectedResult"
           @update:form-data="(value) => Object.assign(formData, value)"
-          @update:expected-form="(value) => Object.assign(expectedForm, value)"
         />
 
         <ApplyAttachmentSection
@@ -125,7 +121,6 @@ const {
   currentUser,
   newAdvisor,
   newMember,
-  expectedForm,
   achievementTypeOptions,
   advisorTitleOptions,
   fileList,
@@ -139,8 +134,6 @@ const {
   handleSearchNewMember,
   handleAddNewMember,
   removeMember,
-  addExpectedResult,
-  removeExpectedResult,
   getLabel,
   loading,
   submitForm,

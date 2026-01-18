@@ -91,8 +91,6 @@ def _validate_limits(user, advisors_data, members_data, project=None, batch=None
     max_members = int(limits.get("max_members", 5) or 0)
     max_teacher_active = int(limits.get("max_teacher_active", 0) or 0)
     max_student_member = int(limits.get("max_student_member", 1) or 0)
-    advisor_title_required = bool(limits.get("advisor_title_required", False))
-    teacher_excellent_bonus = int(limits.get("teacher_excellent_bonus", 0) or 0)
 
     if max_advisors and len(advisors_data) > max_advisors:
         return False, f"指导教师人数不能超过{max_advisors}人"
@@ -105,18 +103,6 @@ def _validate_limits(user, advisors_data, members_data, project=None, batch=None
     if project:
         active_projects = active_projects.exclude(id=project.id)
         active_projects_all = active_projects_all.exclude(id=project.id)
-
-        if max_teacher_active:
-            excellent_project_ids = []
-            if teacher_excellent_bonus:
-                excellent_project_ids = list(
-                    Review.objects.filter(
-                        review_type=Review.ReviewType.CLOSURE,
-                        workflow_node__role_fk__code="LEVEL1_ADMIN",
-                        status=Review.ReviewStatus.APPROVED,
-                        closure_rating=Review.ClosureRating.EXCELLENT,
-                    ).values_list("project_id", flat=True)
-                )
 
         for advisor in advisors_data:
             advisor_id = (
@@ -134,24 +120,8 @@ def _validate_limits(user, advisors_data, members_data, project=None, batch=None
             )
             if historical_unfinished:
                 return False, "指导教师存在未结题项目，无法继续指导新项目"
-            bonus = 0
-            if teacher_excellent_bonus and excellent_project_ids:
-                bonus = (
-                    ProjectAdvisor.objects.filter(
-                        user_id=advisor_id, project_id__in=excellent_project_ids
-                    )
-                    .distinct()
-                    .count()
-                    * teacher_excellent_bonus
-                )
-            if count >= (max_teacher_active + bonus):
+            if count >= max_teacher_active:
                 return False, "指导教师在研项目数量已达上限"
-
-    if advisor_title_required:
-        for advisor in advisors_data:
-            title = advisor.get("title")
-            if not title:
-                return False, "指导教师职称信息不能为空"
 
     if max_student_member:
         for member in members_data:

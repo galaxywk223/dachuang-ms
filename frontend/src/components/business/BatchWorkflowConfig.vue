@@ -636,24 +636,40 @@ watch(
     }
 
     .graph-card {
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+
+      :deep(.el-card__body) {
+        padding: 16px;
+      }
+
       .legend {
         display: flex;
-        gap: 16px;
-        margin-top: 16px;
-        padding-top: 16px;
-        border-top: 1px solid #e2e8f0;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
+        padding: 10px 12px;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.8);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 
         .legend-item {
           display: flex;
           align-items: center;
           gap: 6px;
-          font-size: 13px;
-          color: #475569;
+          font-size: 12px;
+          color: #334155;
+          padding: 4px 8px;
+          background: #ffffff;
+          border: 1px solid rgba(148, 163, 184, 0.3);
+          border-radius: 999px;
 
           .legend-color {
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border-radius: 3px;
+            box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
           }
         }
       }

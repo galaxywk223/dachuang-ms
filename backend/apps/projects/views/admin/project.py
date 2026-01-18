@@ -44,10 +44,14 @@ class ProjectManagementViewSet(
         """
         获取项目列表，支持筛选
         """
-        current_batch = SystemSettingService.get_current_batch()
-        if not current_batch:
-            return Project.objects.none()
-        queryset = Project.objects.filter(batch=current_batch).order_by("-created_at")
+        queryset = Project.objects.all().order_by("-created_at")
+
+        include_archived = self.request.query_params.get("include_archived")
+        if not (include_archived and str(include_archived).lower() in ("true", "1", "yes")):
+            current_batch = SystemSettingService.get_current_batch()
+            if not current_batch:
+                return Project.objects.none()
+            queryset = queryset.filter(batch=current_batch)
 
         # 权限控制：非校级管理员只能看到本学院的项目
         user = self.request.user

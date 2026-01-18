@@ -322,7 +322,7 @@
           </template>
 
           <!-- 管理员额外字段 - 管理范围 -->
-          <el-col :span="12" v-if="isAdminRole && selectedRoleScopeDimension">
+          <el-col :span="12" v-if="requiresManagedScope">
             <el-form-item label="管理范围" prop="managed_scope_value">
               <el-select
                 v-model="formData.managed_scope_value"
@@ -583,6 +583,9 @@ const selectedRoleScopeDimension = computed(() => {
 const isAdminRole = computed(() => {
   return !!selectedRoleScopeDimension.value;
 });
+const requiresManagedScope = computed(
+  () => selectedRoleScopeDimension.value === "COLLEGE"
+);
 const isExpertRole = computed(() => formData.role === "EXPERT");
 
 const filters = reactive<{
@@ -642,21 +645,8 @@ watch(
 
       const scopeDimension = roleDetail.scope_dimension;
 
-      // 根据 scope_dimension 加载对应的字典项
-      let dictCode = "";
       if (scopeDimension === "COLLEGE") {
-        dictCode = DICT_CODES.COLLEGE;
-      } else if (scopeDimension === "PROJECT_CATEGORY") {
-        dictCode = DICT_CODES.PROJECT_CATEGORY;
-      } else if (scopeDimension === "PROJECT_LEVEL") {
-        dictCode = DICT_CODES.PROJECT_LEVEL;
-      } else if (scopeDimension === "KEY_FIELD") {
-        dictCode = DICT_CODES.KEY_FIELD_CODE;
-      } else if (scopeDimension === "PROJECT_SOURCE") {
-        dictCode = DICT_CODES.PROJECT_SOURCE;
-      }
-
-      if (dictCode) {
+        const dictCode = DICT_CODES.COLLEGE;
         // 先加载字典数据
         await loadDictionaries([dictCode]);
         const options = getOptions(dictCode) as DictionaryItem[];
@@ -680,6 +670,9 @@ watch(
               value: string;
             } => Boolean(opt)
           );
+      } else {
+        scopeValueOptions.value = [];
+        formData.managed_scope_value = null;
       }
     } catch (error) {
       console.error("加载管理范围选项失败:", error);

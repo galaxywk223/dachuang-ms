@@ -7,77 +7,19 @@
       <el-row :gutter="24">
         <el-col :span="24">
           <el-form-item label="预期成果" prop="expected_results">
-            <el-input
-              v-model="localFormData.expected_results"
-              type="textarea"
-              :rows="3"
-              maxlength="200"
-              show-word-limit
-              placeholder="请列出具体成果形式，如：发表论文1篇、软件著作权1项等"
-            />
-          </el-form-item>
-        </el-col>
-        <el-col :span="24">
-          <el-form-item label="预期成果清单">
-            <div class="expected-grid-container">
-              <div class="expected-grid">
-                <el-select
-                  v-model="localExpectedForm.achievement_type"
-                  placeholder="成果类型"
-                  class="expected-select"
-                >
-                  <el-option
-                    v-for="item in achievementTypeOptions"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
-                  />
-                </el-select>
-                <el-input-number
-                  v-model="localExpectedForm.expected_count"
-                  :min="1"
-                  controls-position="right"
-                  class="expected-count"
-                />
-                <el-button
-                  type="primary"
-                  class="add-btn"
-                  @click="addExpectedResult"
-                >
-                  <el-icon class="mr-1"><Plus /></el-icon> 添加
-                </el-button>
-              </div>
-            </div>
-            <el-table
-              v-if="localFormData.expected_results_data.length"
-              :data="localFormData.expected_results_data"
-              border
-              style="width: 100%; margin-top: 16px"
-              :header-cell-style="{
-                background: '#f1f5f9',
-                color: '#475569',
-                fontWeight: '600',
-              }"
-              class="content-table"
+            <el-select
+              v-model="selectedAchievement"
+              placeholder="请选择预期成果"
+              class="expected-select"
+              clearable
             >
-              <el-table-column label="成果类型">
-                <template #default="{ row }">
-                  {{ getLabel(achievementTypeOptions, row.achievement_type) }}
-                </template>
-              </el-table-column>
-              <el-table-column prop="expected_count" label="数量" width="120" />
-              <el-table-column label="操作" width="100" align="center">
-                <template #default="{ $index }">
-                  <el-button
-                    link
-                    type="danger"
-                    size="small"
-                    @click="removeExpectedResult($index)"
-                    >删除</el-button
-                  >
-                </template>
-              </el-table-column>
-            </el-table>
+              <el-option
+                v-for="item in achievementTypeOptions"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
           </el-form-item>
         </el-col>
         <el-col :span="24">
@@ -98,8 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { Plus } from "@element-plus/icons-vue";
-import { reactive, watch } from "vue";
+import { computed, reactive, watch } from "vue";
 
 type ExpectedRow = {
   achievement_type?: string;
@@ -112,11 +53,6 @@ type ContentFormData = {
   description?: string;
 };
 
-type ExpectedForm = {
-  achievement_type?: string;
-  expected_count?: number;
-};
-
 type OptionItem = {
   value: string;
   label: string;
@@ -124,16 +60,12 @@ type OptionItem = {
 
 const props = defineProps<{
   formData: ContentFormData;
-  expectedForm: ExpectedForm;
   achievementTypeOptions: OptionItem[];
   getLabel: (options: OptionItem[], value: string) => string;
-  addExpectedResult: () => void;
-  removeExpectedResult: (index: number) => void;
 }>();
 
 const emit = defineEmits<{
   (event: "update:formData", value: ContentFormData): void;
-  (event: "update:expectedForm", value: ExpectedForm): void;
 }>();
 
 const localFormData = reactive<ContentFormData>({
@@ -142,23 +74,28 @@ const localFormData = reactive<ContentFormData>({
   description: "",
 });
 
-const localExpectedForm = reactive<ExpectedForm>({
-  achievement_type: "",
-  expected_count: 1,
+const getAchievementLabel = (value: string) =>
+  props.getLabel(props.achievementTypeOptions, value);
+
+const selectedAchievement = computed({
+  get: () => localFormData.expected_results_data?.[0]?.achievement_type || "",
+  set: (value: string) => {
+    if (!value) {
+      localFormData.expected_results_data = [];
+      localFormData.expected_results = "";
+      return;
+    }
+    localFormData.expected_results_data = [
+      { achievement_type: value, expected_count: 1 },
+    ];
+    localFormData.expected_results = getAchievementLabel(value);
+  },
 });
 
 watch(
   () => props.formData,
   (value) => {
     Object.assign(localFormData, value);
-  },
-  { immediate: true, deep: true }
-);
-
-watch(
-  () => props.expectedForm,
-  (value) => {
-    Object.assign(localExpectedForm, value);
   },
   { immediate: true, deep: true }
 );
@@ -172,9 +109,13 @@ watch(
 );
 
 watch(
-  localExpectedForm,
-  (value) => {
-    emit("update:expectedForm", { ...value });
+  () => localFormData.expected_results_data,
+  (list) => {
+    if (localFormData.expected_results || list.length === 0) return;
+    const first = list[0]?.achievement_type || "";
+    if (first) {
+      localFormData.expected_results = getAchievementLabel(first);
+    }
   },
   { deep: true }
 );
@@ -194,31 +135,8 @@ watch(
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
-.expected-grid-container {
-  background-color: #ffffff;
-  padding: 16px;
-  border-radius: 8px;
-  border: 1px dashed #e2e8f0;
-  margin-bottom: 8px;
-  width: 100%;
-}
-
-.expected-grid {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
 .expected-select {
-  flex: 1;
-}
-
-.expected-count {
-  width: 120px;
-}
-
-.add-btn {
-  /* height: 32px; match default input height */
+  width: 100%;
 }
 
 :deep(.el-input__wrapper),

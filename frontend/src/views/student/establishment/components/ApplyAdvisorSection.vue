@@ -5,17 +5,7 @@
     </div>
     <div class="advisor-selection-container">
       <el-row :gutter="20" class="mb-4">
-        <el-col :span="4">
-          <el-select
-            v-model="localNewAdvisor.order"
-            placeholder="指导次序"
-            style="width: 100%"
-          >
-            <el-option label="第一指导老师" :value="1" />
-            <el-option label="第二指导老师" :value="2" />
-          </el-select>
-        </el-col>
-        <el-col :span="8">
+        <el-col :span="10">
           <el-input
             v-model="localNewAdvisor.job_number"
             placeholder="工号 (回车查询)"
@@ -27,14 +17,14 @@
             </template>
           </el-input>
         </el-col>
-        <el-col :span="6">
+        <el-col :span="7">
           <el-input
             v-model="localNewAdvisor.name"
             placeholder="姓名"
             disabled
           />
         </el-col>
-        <el-col :span="6">
+        <el-col :span="7">
           <el-input
             v-model="localNewAdvisor.title"
             placeholder="职称"
@@ -75,17 +65,6 @@
       }"
       class="advisor-table"
     >
-      <el-table-column label="次序" width="120">
-        <template #default="scope">
-          <el-tag
-            :type="scope.row.order === 1 ? 'primary' : 'success'"
-            effect="light"
-            round
-          >
-            {{ scope.row.order === 1 ? "第一指导老师" : "第二指导老师" }}
-          </el-tag>
-        </template>
-      </el-table-column>
       <el-table-column prop="job_number" label="工号" width="120" />
       <el-table-column prop="name" label="姓名" width="100" />
       <el-table-column prop="title" label="职称" width="100">

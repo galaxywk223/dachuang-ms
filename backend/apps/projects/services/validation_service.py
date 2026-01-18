@@ -10,7 +10,7 @@ from apps.users.models import User
 class ProjectValidationService:
     """
     项目申报智能校验服务
-    包括：标题查重、超项拦截、学院配额校验等
+    包括：标题查重、超项拦截等
     """
 
     @staticmethod
@@ -52,30 +52,14 @@ class ProjectValidationService:
         if title_format_error:
             errors.append(title_format_error)
 
-        # 3. 项目级别学院限制校验
-        if project.level and project.leader:
-            level_error = ProjectValidationService._validate_level_by_college(
-                project.level.id, project.leader.college, validation_rules
-            )
-            if level_error:
-                errors.append(level_error)
-
-        # 4. 学院配额校验
-        if project.leader:
-            quota_error = ProjectValidationService._validate_college_quota(
-                project, limit_rules, is_update
-            )
-            if quota_error:
-                errors.append(quota_error)
-
-        # 5. 指导教师校验
+        # 3. 指导教师校验
         if hasattr(project, "_advisors_list"):
             advisor_errors = ProjectValidationService._validate_advisors(
                 project, limit_rules, is_update
             )
             errors.extend(advisor_errors)
 
-        # 6. 项目成员校验
+        # 4. 项目成员校验
         if hasattr(project, "_members_list"):
             member_errors = ProjectValidationService._validate_members(
                 project, limit_rules, is_update
@@ -106,8 +90,6 @@ class ProjectValidationService:
         """
         标题格式校验
         """
-        import re
-
         # 标题长度校验
         min_length = validation_rules.get("title_min_length", 0)
         max_length = validation_rules.get("title_max_length", 200)
@@ -117,66 +99,6 @@ class ProjectValidationService:
 
         if len(title) > max_length:
             return f"项目标题长度不能超过{max_length}个字符"
-
-        # 标题正则校验
-        title_regex = validation_rules.get("title_regex", "")
-        if title_regex:
-            if not re.match(title_regex, title):
-                return "项目标题格式不符合要求"
-
-        return None
-
-    @staticmethod
-    def _validate_level_by_college(level_id, college, validation_rules):
-        """
-        按学院限制项目级别
-        """
-        allowed_levels = validation_rules.get("allowed_levels_by_college", {})
-        if not allowed_levels:
-            return None
-
-        college_name = college or "未知学院"
-        if college_name in allowed_levels:
-            if level_id not in allowed_levels[college_name]:
-                return f"{college_name}不允许申报该项目级别"
-
-        return None
-
-    @staticmethod
-    def _validate_college_quota(project, limit_rules, is_update):
-        """
-        学院配额校验
-        """
-        college_quota = limit_rules.get("college_quota", {})
-        if not college_quota:
-            return None
-
-        college = project.leader.college if project.leader else None
-        if not college or college not in college_quota:
-            return None
-
-        # 获取配额限制
-        quota_limit = college_quota[college]
-
-        # 统计当前学院在同一批次的项目数
-        query = Project.objects.filter(
-            batch=project.batch, leader__college=college, is_deleted=False
-        ).exclude(
-            status__in=[
-                Project.ProjectStatus.DRAFT,
-                Project.ProjectStatus.TERMINATED,
-                Project.ProjectStatus.APPLICATION_RETURNED,
-            ]
-        )
-
-        # 如果是更新操作，排除自身
-        if is_update and project.id:
-            query = query.exclude(id=project.id)
-
-        current_count = query.count()
-
-        if current_count >= quota_limit:
-            return f"{college}的项目配额已满（限额{quota_limit}项，已申报{current_count}项）"
 
         return None
 
@@ -193,17 +115,8 @@ class ProjectValidationService:
         if len(advisors) > max_advisors:
             errors.append(f"指导教师数量不能超过{max_advisors}人")
 
-        # 职称要求校验
-        if limit_rules.get("advisor_title_required", False):
-            for advisor in advisors:
-                if not advisor.get("title"):
-                    errors.append(
-                        f"指导教师 {advisor.get('name', '未知')} 必须填写职称"
-                    )
-
         # 指导教师在研项目数限制
         max_teacher_active = limit_rules.get("max_teacher_active", 5)
-        teacher_excellent_bonus = limit_rules.get("teacher_excellent_bonus", 0)
 
         for advisor in advisors:
             advisor_user_id = advisor.get("user_id")
@@ -223,23 +136,9 @@ class ProjectValidationService:
                 ],
             ).count()
 
-            # 计算优秀项目奖励名额
-            if teacher_excellent_bonus > 0:
-                excellent_count = Project.objects.filter(
-                    advisor_id=advisor_user_id,
-                    is_deleted=False,
-                    status=Project.ProjectStatus.CLOSED,
-                    closure_rating="EXCELLENT",
-                ).count()
-                max_allowed = max_teacher_active + (
-                    excellent_count * teacher_excellent_bonus
-                )
-            else:
-                max_allowed = max_teacher_active
-
-            if active_count >= max_allowed:
+            if active_count >= max_teacher_active:
                 errors.append(
-                    f"指导教师 {advisor.get('name', '未知')} 在研项目数已达上限（{active_count}/{max_allowed}）"
+                    f"指导教师 {advisor.get('name', '未知')} 在研项目数已达上限（{active_count}/{max_teacher_active}）"
                 )
 
         return errors

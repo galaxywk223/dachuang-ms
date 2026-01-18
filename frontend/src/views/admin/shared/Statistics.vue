@@ -32,6 +32,9 @@
                   clearable
                 />
               </el-form-item>
+              <el-form-item label="显示历史" class="mb-0">
+                <el-switch v-model="reportFilters.include_archived" />
+              </el-form-item>
               <el-form-item class="mb-0">
                 <el-button type="primary" @click="fetchReport">查询</el-button>
                 <el-button @click="resetReport">重置</el-button>
@@ -171,6 +174,7 @@ const reportFilters = reactive({
   year: "",
   college: "",
   status_in: "",
+  include_archived: false,
 });
 
 const reportData = reactive<ReportData>({
@@ -187,8 +191,9 @@ const fetchReport = async () => {
     if (reportFilters.year) params.year = reportFilters.year;
     if (reportFilters.college) params.college = reportFilters.college;
     if (reportFilters.status_in) params.status_in = reportFilters.status_in;
+    if (reportFilters.include_archived) params.include_archived = "1";
     const res = (await getProjectStatisticsReport(
-      params
+      params,
     )) as ApiResponse<ReportData>;
     const data = res?.data;
     reportData.total = data?.total ?? 0;
@@ -205,6 +210,7 @@ const resetReport = () => {
   reportFilters.year = "";
   reportFilters.college = "";
   reportFilters.status_in = "";
+  reportFilters.include_archived = false;
   fetchReport();
 };
 

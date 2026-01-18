@@ -29,16 +29,18 @@ class ProjectSelfMixin:
 
         from django.db.models import Q
 
-        current_batch = SystemSettingService.get_current_batch()
-        if not current_batch:
-            return Response(
-                {"code": 200, "message": "获取成功", "data": [], "total": 0},
-                status=status.HTTP_200_OK,
-            )
+        include_archived = request.query_params.get("include_archived")
+        include_archived = str(include_archived).lower() in ("true", "1", "yes")
 
-        projects = Project.objects.filter(
-            Q(leader=user) | Q(members=user), batch=current_batch
-        ).distinct()
+        projects = Project.objects.filter(Q(leader=user) | Q(members=user)).distinct()
+        if not include_archived:
+            current_batch = SystemSettingService.get_current_batch()
+            if not current_batch:
+                return Response(
+                    {"code": 200, "message": "获取成功", "data": [], "total": 0},
+                    status=status.HTTP_200_OK,
+                )
+            projects = projects.filter(batch=current_batch)
 
         if title:
             projects = projects.filter(title__icontains=title)

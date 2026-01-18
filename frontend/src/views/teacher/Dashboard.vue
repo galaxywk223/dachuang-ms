@@ -5,6 +5,13 @@
       <template #header>
         <div class="card-header">
           <span class="title">{{ dashboardTitle }}</span>
+          <div v-if="activeTab === 'my_projects'" class="header-actions">
+            <el-switch
+              v-model="showHistory"
+              active-text="显示历史项目"
+              @change="fetchProjects"
+            />
+          </div>
         </div>
       </template>
 
@@ -52,7 +59,9 @@
         </el-table-column>
         <el-table-column label="操作" width="200" align="center" fixed="right">
           <template #default="scope">
-            <el-button size="small" @click="handleView(scope.row)">查看</el-button>
+            <el-button size="small" @click="handleView(scope.row)"
+              >查看</el-button
+            >
             <el-button
               v-if="activeTab === 'pending'"
               size="small"
@@ -132,10 +141,7 @@ import type { FormInstance, FormRules } from "element-plus";
 import request from "@/utils/request";
 import dayjs from "dayjs";
 import { useUserStore } from "@/stores/user";
-import {
-  reviewAction,
-  type ReviewActionParams,
-} from "@/api/reviews";
+import { reviewAction, type ReviewActionParams } from "@/api/reviews";
 import {
   getChangeRequests,
   reviewChangeRequest,
@@ -184,7 +190,7 @@ type TeacherProjectRow = ProjectInfo & {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
-const resolveList = <T>(payload: unknown): T[] => {
+const resolveList = <T,>(payload: unknown): T[] => {
   if (Array.isArray(payload)) return payload as T[];
   if (isRecord(payload) && Array.isArray(payload.results)) {
     return payload.results as T[];
@@ -242,10 +248,10 @@ const resolveTab = (tab: unknown) => {
 const activeTab = ref(resolveTab(route.query.tab));
 
 const dashboardTitle = computed(() =>
-  isExpertContext.value ? "评审任务" : "我的项目"
+  isExpertContext.value ? "评审任务" : "我的项目",
 );
 const welcomeUser = computed(() => userStore.user ?? undefined);
-
+const showHistory = ref(false);
 
 const dialogVisible = ref(false);
 const currentProject = ref<TeacherProjectRow | null>(null);
@@ -264,7 +270,7 @@ const rules = reactive<FormRules>({
   comments: [{ required: true, message: "请输入审核意见", trigger: "blur" }],
 });
 
-const parseListResponse = <T>(payload: unknown) => {
+const parseListResponse = <T,>(payload: unknown) => {
   const data =
     isRecord(payload) && isRecord(payload.data) ? payload.data : payload;
   const results = resolveList<T>(data);
@@ -296,7 +302,10 @@ const fetchReviewedReviews = async () => {
 
 const fetchMyProjects = async () => {
   const res = await request.get("/projects/", {
-    params: { teacher_scope: "true" },
+    params: {
+      teacher_scope: "true",
+      include_archived: showHistory.value ? "1" : "0",
+    },
   });
   return parseListResponse<ProjectInfo>(res);
 };
@@ -311,14 +320,14 @@ const fetchProjects = async () => {
           r.review_type === "MID_TERM"
             ? r.project_info?.mid_term_report_url
             : r.review_type === "CLOSURE"
-            ? r.project_info?.final_report_url
-            : r.project_info?.proposal_file_url;
+              ? r.project_info?.final_report_url
+              : r.project_info?.proposal_file_url;
         const fileLabel =
           r.review_type === "MID_TERM"
             ? "下载中期报告"
             : r.review_type === "CLOSURE"
-            ? "下载结题报告"
-            : "下载申报书";
+              ? "下载结题报告"
+              : "下载申报书";
         return {
           ...r.project_info,
           review_id: r.id,
@@ -366,14 +375,14 @@ const fetchProjects = async () => {
           r.review_type === "MID_TERM"
             ? r.project_info?.mid_term_report_url
             : r.review_type === "CLOSURE"
-            ? r.project_info?.final_report_url
-            : r.project_info?.proposal_file_url;
+              ? r.project_info?.final_report_url
+              : r.project_info?.proposal_file_url;
         const fileLabel =
           r.review_type === "MID_TERM"
             ? "下载中期报告"
             : r.review_type === "CLOSURE"
-            ? "下载结题报告"
-            : "下载申报书";
+              ? "下载结题报告"
+              : "下载申报书";
         return {
           ...r.project_info,
           review_id: r.id,
@@ -489,21 +498,21 @@ watch(
   () => activeTab.value,
   () => {
     fetchProjects();
-  }
+  },
 );
 
 watch(
   () => route.query.tab,
   (tab) => {
     activeTab.value = resolveTab(tab);
-  }
+  },
 );
 
 watch(
   () => [isExpertUser.value, route.query.review_scope],
   () => {
     activeTab.value = resolveTab(route.query.tab);
-  }
+  },
 );
 </script>
 
@@ -513,6 +522,11 @@ watch(
   .title {
     font-size: 18px;
     font-weight: bold;
+  }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 }
 </style>

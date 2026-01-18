@@ -61,6 +61,10 @@
             </el-select>
           </el-form-item>
 
+          <el-form-item label="显示历史">
+            <el-switch v-model="filterForm.include_archived" />
+          </el-form-item>
+
           <el-form-item>
             <el-button type="primary" @click="handleSearch" :icon="SearchIcon"
               >查询</el-button
@@ -410,10 +414,10 @@ const currentUserId = computed(() => userStore.user?.id);
 
 // Dict Options
 const levelOptions = computed(
-  () => getOptions(DICT_CODES.PROJECT_LEVEL) as DictOption[]
+  () => getOptions(DICT_CODES.PROJECT_LEVEL) as DictOption[],
 );
 const categoryOptions = computed(
-  () => getOptions(DICT_CODES.PROJECT_CATEGORY) as DictOption[]
+  () => getOptions(DICT_CODES.PROJECT_CATEGORY) as DictOption[],
 );
 // Add status mapping if needed, or hardcode common statuses
 const statusMap: Record<string, string> = {
@@ -432,6 +436,7 @@ const filterForm = reactive({
   title: "",
   level: "",
   category: "",
+  include_archived: false,
 });
 
 const tableData = ref<ProjectRow[]>([]);
@@ -459,6 +464,7 @@ const fetchProjects = async () => {
       page: pagination.page,
       page_size: pagination.pageSize,
       ...filterForm,
+      include_archived: filterForm.include_archived ? 1 : 0,
     };
     if (!params.title) delete params.title;
     if (!params.level) delete params.level;
@@ -496,6 +502,7 @@ const handleReset = () => {
   filterForm.title = "";
   filterForm.level = "";
   filterForm.category = "";
+  filterForm.include_archived = false;
   pagination.page = 1;
   fetchProjects();
 };
@@ -552,10 +559,10 @@ const handleWithdraw = async (row: ProjectRow) => {
         type: "warning",
         confirmButtonText: "确认撤回",
         cancelButtonText: "取消",
-      }
+      },
     );
     const response = (await withdrawProjectApplication(
-      row.id
+      row.id,
     )) as ProjectsResponse;
     if (response.code === 200) {
       ElMessage.success("撤回成功，已转入草稿箱");
@@ -586,10 +593,10 @@ const handleDeleteSubmission = async (row: ProjectRow) => {
       "提示",
       {
         type: "warning",
-      }
+      },
     );
     const response = (await deleteProjectApplication(
-      row.id
+      row.id,
     )) as ProjectsResponse;
     if (response.code === 200) {
       ElMessage.success("已移入回收站");

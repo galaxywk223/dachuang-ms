@@ -86,11 +86,7 @@ export function useSystemDictionaries(
   const selectedFile = ref<File | null>(null);
   const fileList = ref<UploadUserFile[]>([]);
 
-  const CODE_BASED_TYPES = [
-    "major_category",
-    "key_field_code",
-    "project_level",
-  ];
+  const CODE_BASED_TYPES = ["major_category", "key_field_code", "college"];
 
   const showCode = computed(() => {
     if (!currentType.value) return false;
