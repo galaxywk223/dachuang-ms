@@ -19,9 +19,6 @@ class ReviewSerializer(serializers.ModelSerializer):
     review_type_display = serializers.CharField(
         source="get_review_type_display", read_only=True
     )
-    review_level_display = serializers.CharField(
-        source="get_review_level_display", read_only=True
-    )
     status_display = serializers.CharField(source="get_status_display", read_only=True)
     closure_rating_display = serializers.CharField(
         source="get_closure_rating_display", read_only=True
@@ -35,8 +32,6 @@ class ReviewSerializer(serializers.ModelSerializer):
             "project_info",
             "review_type",
             "review_type_display",
-            "review_level",
-            "review_level_display",
             "workflow_node",
             "is_expert_review",
             "reviewer",

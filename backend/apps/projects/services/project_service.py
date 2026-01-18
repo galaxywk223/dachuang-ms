@@ -8,8 +8,6 @@ from ..models import (
     Project,
     ProjectMember,
     ProjectExpenditure,
-    ProjectChangeRequest,
-    ProjectChangeReview,
 )
 
 
@@ -325,29 +323,3 @@ class ProjectService:
             proof_file=proof_file,
             created_by=created_by,
         )
-
-    @staticmethod
-    def approve_change_request(change_request, reviewer, is_approved=True, comments=None):
-        """
-        审批项目变更申请
-        """
-        if change_request.status not in [
-            ProjectChangeRequest.ChangeStatus.TEACHER_REVIEWING,
-            ProjectChangeRequest.ChangeStatus.LEVEL2_REVIEWING,
-            ProjectChangeRequest.ChangeStatus.LEVEL1_REVIEWING,
-        ]:
-            raise ValueError("变更申请不是待审核状态")
-
-        change_request.reviewed_at = timezone.now()
-        change_request.status = (
-            ProjectChangeRequest.ChangeStatus.APPROVED
-            if is_approved
-            else ProjectChangeRequest.ChangeStatus.REJECTED
-        )
-        change_request.save()
-
-        # Apply the change to the project if approved
-        if is_approved:
-            ProjectChangeReview.apply_change(change_request)
-
-        return True

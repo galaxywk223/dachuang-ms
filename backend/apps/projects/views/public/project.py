@@ -95,8 +95,10 @@ class ProjectViewSet(
             status_list = [s.strip() for s in status_in.split(",") if s.strip()]
             queryset = queryset.filter(status__in=status_list)
 
-        exclude_review_type = self.request.query_params.get("exclude_assigned_review_type")
-        exclude_review_level = self.request.query_params.get("exclude_assigned_review_level")
+        exclude_review_type = self.request.query_params.get(
+            "exclude_assigned_review_type"
+        )
+        exclude_role = self.request.query_params.get("exclude_assigned_role")
         if exclude_review_type:
             current_phase_qs = ProjectPhaseInstance.objects.filter(
                 project_id=OuterRef("pk"),
@@ -111,9 +113,9 @@ class ProjectViewSet(
                 reviewer__isnull=False,
                 phase_instance_id=OuterRef("_current_phase_instance_id"),
             )
-            if exclude_review_level:
+            if exclude_role:
                 assigned_reviews = assigned_reviews.filter(
-                    workflow_node__role_fk__code=exclude_review_level
+                    workflow_node__role_fk__code=exclude_role
                 )
             queryset = queryset.annotate(_has_assigned=Exists(assigned_reviews)).filter(_has_assigned=False)
 

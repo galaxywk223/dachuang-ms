@@ -140,7 +140,6 @@ export const DICT_CODES = {
   MEMBER_ROLE: "member_role",
   ACHIEVEMENT_TYPE: "achievement_type",
   REVIEW_TYPE: "review_type",
-  REVIEW_LEVEL: "review_level",
   REVIEW_STATUS: "review_status",
   CLOSURE_RATING: "closure_rating",
   NOTIFICATION_TYPE: "notification_type",

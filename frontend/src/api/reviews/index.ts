@@ -45,8 +45,6 @@ export interface PendingReview {
   project_info?: Record<string, unknown>;
   review_type?: string;
   review_type_display?: string;
-  review_level?: string;
-  review_level_display?: string;
   workflow_node?: number | null;
 }
 

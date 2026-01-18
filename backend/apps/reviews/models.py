@@ -58,14 +58,6 @@ class Review(models.Model):
     review_type = models.CharField(
         max_length=20, choices=ReviewType.choices, verbose_name="审核类型"
     )
-    # review_level 改为纯CharField，允许任意角色值
-    # 值从工作流节点绑定的角色读取
-    review_level = models.CharField(
-        max_length=50,
-        verbose_name="审核级别/角色",
-        help_text="动态值，由工作流节点配置决定",
-    )
-
     # 审核人和状态
     reviewer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -108,16 +100,18 @@ class Review(models.Model):
         verbose_name_plural = verbose_name
         ordering = ["-created_at"]
         indexes = [
-            models.Index(fields=["project", "review_level"]),
-            models.Index(fields=["status"]),
+            models.Index(
+                fields=["project", "workflow_node"],
+                name="reviews_proj_wfnode_idx",
+            ),
+            models.Index(fields=["status"], name="reviews_status_12ddaa_idx"),
         ]
 
     def __str__(self):
-        return f"{self.project.project_no} - {self.get_review_type_display()} - {self.get_review_level_display()}"
-
-    def get_review_level_display(self):
-        """兼容旧接口：review_level 已改为动态值"""
-        return self.review_level or ""
+        role_code = (
+            self.workflow_node.get_role_code() if self.workflow_node else "UNKNOWN"
+        )
+        return f"{self.project.project_no} - {self.get_review_type_display()} - {role_code}"
 
 
 class ExpertGroup(models.Model):

@@ -8,8 +8,6 @@ from ..models import (
     SystemSetting,
     CertificateSetting,
     ProjectBatch,
-    WorkflowConfig,
-    WorkflowNode,
 )
 
 
@@ -123,61 +121,3 @@ class CertificateSettingSerializer(serializers.ModelSerializer):
     def get_seal_image_url(self, obj):
         return self._build_file_url(obj.seal_image)
 
-
-class WorkflowNodeSerializer(serializers.ModelSerializer):
-    role_name = serializers.CharField(
-        source="role_fk.name", read_only=True, allow_null=True
-    )
-    role_code = serializers.CharField(
-        source="role_fk.code", read_only=True, allow_null=True
-    )
-
-    class Meta:
-        model = WorkflowNode
-        fields = [
-            "id",
-            "workflow",
-            "code",
-            "name",
-            "node_type",
-            "role",
-            "role_fk",
-            "role_name",
-            "role_code",
-            "review_level",
-            "require_expert_review",
-            "return_policy",
-            "allowed_reject_to",
-            "notice",
-            "sort_order",
-            "is_active",
-            "created_at",
-            "updated_at",
-        ]
-        read_only_fields = ["id", "created_at", "updated_at"]
-
-
-class WorkflowConfigSerializer(serializers.ModelSerializer):
-    updated_by_name = serializers.CharField(
-        source="updated_by.real_name", read_only=True
-    )
-    nodes = WorkflowNodeSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = WorkflowConfig
-        fields = [
-            "id",
-            "name",
-            "phase",
-            "batch",
-            "version",
-            "description",
-            "is_active",
-            "is_locked",
-            "updated_by",
-            "updated_by_name",
-            "nodes",
-            "created_at",
-            "updated_at",
-        ]
-        read_only_fields = ["id", "created_at", "updated_at", "updated_by"]

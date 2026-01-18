@@ -24,11 +24,9 @@ class WorkflowNodeSerializer(serializers.ModelSerializer):
             "code",
             "name",
             "node_type",
-            "role",
             "role_fk",
             "role_name",
             "role_code",
-            "review_level",
             "require_expert_review",
             "return_policy",
             "allowed_reject_to",
@@ -56,7 +54,6 @@ class WorkflowNodeCreateUpdateSerializer(serializers.ModelSerializer):
             "name",
             "node_type",
             "role_fk",
-            "review_level",
             "require_expert_review",
             "return_policy",
             "allowed_reject_to",
@@ -68,7 +65,11 @@ class WorkflowNodeCreateUpdateSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         """验证节点配置"""
         node_type = attrs.get("node_type")
-        role_fk = attrs.get("role_fk")
+        if node_type is None and self.instance:
+            node_type = self.instance.node_type
+        role_fk = attrs.get("role_fk") if "role_fk" in attrs else None
+        if role_fk is None and self.instance:
+            role_fk = self.instance.role_fk
 
         # 学生节点只能在第一个位置
         if node_type == "SUBMIT":
@@ -81,8 +82,10 @@ class WorkflowNodeCreateUpdateSerializer(serializers.ModelSerializer):
             if attrs.get("require_expert_review"):
                 raise serializers.ValidationError("学生提交节点不能启用专家评审")
 
-        # 非学生节点不能使用学生角色
-        if node_type != "SUBMIT" and role_fk:
+        # 非学生节点必须绑定角色，且不能使用学生角色
+        if node_type != "SUBMIT":
+            if not role_fk:
+                raise serializers.ValidationError("审核节点必须绑定执行角色")
             if role_fk.code == "STUDENT":
                 raise serializers.ValidationError("审核节点不能使用学生角色")
 

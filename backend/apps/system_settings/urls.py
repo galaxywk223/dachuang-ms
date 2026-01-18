@@ -9,8 +9,6 @@ from .views import (
     SystemSettingViewSet,
     CertificateSettingViewSet,
     ProjectBatchViewSet,
-    WorkflowConfigViewSet,
-    WorkflowNodeViewSet,
 )
 from .views.batch_workflow import BatchWorkflowViewSet
 
@@ -20,8 +18,6 @@ router.register(
     r"certificates", CertificateSettingViewSet, basename="certificate-settings"
 )
 router.register(r"batches", ProjectBatchViewSet, basename="project-batches")
-router.register(r"workflows", WorkflowConfigViewSet, basename="workflow-configs")
-router.register(r"workflow-nodes", WorkflowNodeViewSet, basename="workflow-nodes")
 router.register(r"batch-workflows", BatchWorkflowViewSet, basename="batch-workflows")
 
 urlpatterns = [

@@ -29,7 +29,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
     filterset_fields = [
         "status",
         "review_type",
-        "review_level",
         "project",
         "project__status",
     ]
@@ -87,14 +86,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
         if reviewer_isnull in ("true", "false"):
             queryset = queryset.filter(reviewer__isnull=(reviewer_isnull == "true"))
 
-        # Explicitly handle status and review_level to ensure strict filtering
+        # Explicitly handle status to ensure strict filtering
         status_param = self.request.query_params.get("status")
         if status_param:
             queryset = queryset.filter(status=status_param)
-
-        review_level_param = self.request.query_params.get("review_level")
-        if review_level_param:
-            queryset = queryset.filter(review_level=review_level_param)
 
         return queryset
 

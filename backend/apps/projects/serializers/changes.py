@@ -9,8 +9,11 @@ from ..models import ProjectChangeRequest, ProjectChangeReview
 
 class ProjectChangeReviewSerializer(serializers.ModelSerializer):
     reviewer_name = serializers.CharField(source="reviewer.real_name", read_only=True)
-    review_level_display = serializers.CharField(
-        source="get_review_level_display", read_only=True
+    role_code = serializers.CharField(
+        source="workflow_node.role_fk.code", read_only=True, allow_null=True
+    )
+    role_name = serializers.CharField(
+        source="workflow_node.role_fk.name", read_only=True, allow_null=True
     )
     status_display = serializers.CharField(source="get_status_display", read_only=True)
 
@@ -19,8 +22,9 @@ class ProjectChangeReviewSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "change_request",
-            "review_level",
-            "review_level_display",
+            "workflow_node",
+            "role_code",
+            "role_name",
             "reviewer",
             "reviewer_name",
             "status",

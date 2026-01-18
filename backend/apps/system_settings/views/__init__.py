@@ -2,30 +2,23 @@
 系统设置视图
 """
 
-from rest_framework import viewsets, status, serializers
+from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.db import transaction
-
 from apps.users.permissions import IsLevel1Admin
 from apps.projects.models import Project
 from ..models import (
     SystemSetting,
     CertificateSetting,
     ProjectBatch,
-    WorkflowConfig,
-    WorkflowNode,
 )
 from ..serializers import (
     SystemSettingSerializer,
     CertificateSettingSerializer,
     ProjectBatchSerializer,
-    WorkflowConfigSerializer,
-    WorkflowNodeSerializer,
 )
 from ..services import DEFAULT_SETTINGS, SystemSettingService
-from ..services.workflow_service import WorkflowService
 
 
 class SystemSettingViewSet(viewsets.ModelViewSet):
@@ -341,147 +334,3 @@ class CertificateSettingViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save(updated_by=request.user)
         return Response({"code": 200, "message": "更新成功", "data": serializer.data})
-
-
-class WorkflowConfigViewSet(viewsets.ModelViewSet):
-    """
-    流程配置管理
-    """
-
-    queryset = WorkflowConfig.objects.all()
-    serializer_class = WorkflowConfigSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_permissions(self):
-        if self.action in ["list", "retrieve"]:
-            return [IsAuthenticated()]
-        return [IsLevel1Admin()]
-
-    def _check_editable(self, instance):
-        if instance.is_locked:
-            return Response(
-                {"code": 400, "message": "该流程已锁定，无法修改"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if instance.batch and instance.batch.status != ProjectBatch.STATUS_DRAFT:
-            return Response(
-                {"code": 403, "message": "流程配置仅允许在批次草稿状态下修改"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-        return None
-
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        blocked = self._check_editable(instance)
-        if blocked is not None:
-            return blocked
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(updated_by=request.user)
-        return Response({"code": 200, "message": "更新成功", "data": serializer.data})
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(created_by=request.user, updated_by=request.user)
-        return Response(
-            {"code": 200, "message": "创建成功", "data": serializer.data},
-            status=status.HTTP_201_CREATED,
-        )
-
-
-class WorkflowNodeViewSet(viewsets.ModelViewSet):
-    """
-    流程节点管理
-    """
-
-    queryset = WorkflowNode.objects.all()
-    serializer_class = WorkflowNodeSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_permissions(self):
-        if self.action in ["list", "retrieve"]:
-            return [IsAuthenticated()]
-        return [IsLevel1Admin()]
-
-    def _check_editable(self, instance):
-        workflow = instance.workflow
-        if workflow.is_locked:
-            return Response(
-                {"code": 400, "message": "流程已锁定，无法修改节点"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if workflow.batch and workflow.batch.status != ProjectBatch.STATUS_DRAFT:
-            return Response(
-                {"code": 403, "message": "流程配置仅允许在批次草稿状态下修改"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-        return None
-
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        blocked = self._check_editable(instance)
-        if blocked is not None:
-            return blocked
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        node = serializer.save()
-        validation = WorkflowService.validate_workflow_nodes(node.workflow_id)
-        if not validation.get("valid"):
-            raise serializers.ValidationError({"detail": validation.get("errors", [])})
-        return Response({"code": 200, "message": "更新成功", "data": serializer.data})
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        node = serializer.save()
-        validation = WorkflowService.validate_workflow_nodes(node.workflow_id)
-        if not validation.get("valid"):
-            raise serializers.ValidationError({"detail": validation.get("errors", [])})
-        return Response(
-            {"code": 200, "message": "创建成功", "data": serializer.data},
-            status=status.HTTP_201_CREATED,
-        )
-
-    @transaction.atomic
-    @action(detail=False, methods=["post"], url_path="reorder")
-    def reorder(self, request):
-        """
-        批量调整节点排序
-        body: { items: [{ id, sort_order }] }
-        """
-        items = request.data.get("items", [])
-        if not isinstance(items, list):
-            return Response(
-                {"code": 400, "message": "items必须为数组"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        ids = [item.get("id") for item in items if item.get("id")]
-        nodes = WorkflowNode.objects.filter(id__in=ids).select_related("workflow")
-        if nodes.exists():
-            workflow = nodes.first().workflow
-            if workflow.is_locked or (
-                workflow.batch and workflow.batch.status != ProjectBatch.STATUS_DRAFT
-            ):
-                return Response(
-                    {"code": 403, "message": "流程配置仅允许在批次草稿状态下修改"},
-                    status=status.HTTP_403_FORBIDDEN,
-                )
-        update_map = {
-            int(item["id"]): int(item.get("sort_order", 0) or 0)
-            for item in items
-            if item.get("id")
-        }
-        for node in nodes:
-            if node.id in update_map:
-                node.sort_order = update_map[node.id]
-                node.save(update_fields=["sort_order", "updated_at"])
-        if nodes.exists():
-            validation = WorkflowService.validate_workflow_nodes(
-                nodes.first().workflow_id
-            )
-            if not validation.get("valid"):
-                raise serializers.ValidationError(
-                    {"detail": validation.get("errors", [])}
-                )
-        return Response({"code": 200, "message": "更新成功"})

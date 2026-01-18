@@ -107,7 +107,6 @@ class ReviewService:
             name=target_node_obj.name,
             node_type=target_node_obj.node_type,
             role=role_code,
-            review_level=target_node_obj.review_level,
             require_expert_review=target_node_obj.require_expert_review,
             return_policy=target_node_obj.return_policy,
             allowed_reject_to=target_node_obj.allowed_reject_to,
@@ -193,8 +192,7 @@ class ReviewService:
             )
             return
 
-        # review_level 统一使用角色代码，保证权限逻辑一致
-        review_level = node.role or "UNKNOWN"
+        role_code = node.role or "UNKNOWN"
 
         # 检查是否已存在该节点的待审核记录
         workflow_node_id = ReviewService._resolve_workflow_node_id(node)
@@ -203,13 +201,11 @@ class ReviewService:
         existing_qs = Review.objects.filter(
             project=project,
             review_type=review_type,
-            review_level=review_level,
             status=Review.ReviewStatus.PENDING,
             phase_instance=phase_instance,
             is_expert_review=False,
+            workflow_node_id=workflow_node_id,
         )
-        if workflow_node_id:
-            existing_qs = existing_qs.filter(workflow_node_id=workflow_node_id)
         existing = existing_qs.exists()
 
         if existing:
@@ -222,14 +218,13 @@ class ReviewService:
         ReviewService.create_review(
             project=project,
             review_type=review_type,
-            review_level=review_level,
             phase_instance=phase_instance,
             workflow_node=workflow_node_id,
             is_expert_review=False,
         )
 
         ReviewService.logger.info(
-            f"Created review for project {project.id} at node {node.id} ({node.name}) with level {review_level}"
+            f"Created review for project {project.id} at node {node.id} ({node.name}) with role {role_code}"
         )
 
     @staticmethod
@@ -416,7 +411,6 @@ class ReviewService:
     def create_review(
         project,
         review_type,
-        review_level,
         *,
         phase_instance: ProjectPhaseInstance | None = None,
         workflow_node=None,
@@ -432,7 +426,6 @@ class ReviewService:
             "project": project,
             "phase_instance": phase_instance,
             "review_type": review_type,
-            "review_level": review_level,
             "status": Review.ReviewStatus.PENDING,
             "is_expert_review": is_expert_review,
             "reviewer": reviewer,
@@ -818,8 +811,8 @@ class ReviewService:
                 )
                 if creator and assigned_user.id != creator.id:
                     raise ValueError("无权限分配该节点的专家评审任务")
-                review_level_value = node_obj.get_role_code()
-                if not review_level_value:
+                role_code = node_obj.get_role_code()
+                if not role_code:
                     raise ValueError("审核节点未配置角色")
 
                 for expert in experts:
@@ -828,7 +821,6 @@ class ReviewService:
                         project=project,
                         reviewer=expert,
                         review_type=review_type,
-                        review_level=review_level_value,
                         phase_instance=phase_instance,
                         workflow_node_id=node_id,
                         is_expert_review=True,
@@ -837,7 +829,6 @@ class ReviewService:
                             project=project,
                             phase_instance=phase_instance,
                             review_type=review_type,
-                            review_level=review_level_value,
                             reviewer=expert,
                             workflow_node=node_id,
                             is_expert_review=True,

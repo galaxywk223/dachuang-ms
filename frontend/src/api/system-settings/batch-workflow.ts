@@ -9,11 +9,9 @@ export interface WorkflowNode {
   code: string;
   name: string;
   node_type: "SUBMIT" | "REVIEW" | "APPROVAL";
-  role: string;
   role_fk: number | null;
   role_name: string | null;
   role_code: string | null;
-  review_level: string;
   require_expert_review: boolean;
   return_policy: string;
   allowed_reject_to: number | null;
@@ -60,7 +58,6 @@ export interface WorkflowNodeInput {
   name: string;
   node_type: "SUBMIT" | "REVIEW" | "APPROVAL";
   role_fk?: number;
-  review_level?: string;
   require_expert_review?: boolean;
   return_policy?: string;
   allowed_reject_to?: number | null;

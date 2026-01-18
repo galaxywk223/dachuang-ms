@@ -218,13 +218,6 @@ class WorkflowNode(models.Model):
         REVIEW = "REVIEW", "审核"
         APPROVAL = "APPROVAL", "管理员确认"
 
-    class Role(models.TextChoices):
-        """保留用于向后兼容"""
-
-        TEACHER = "TEACHER", "导师"
-        LEVEL2_ADMIN = "LEVEL2_ADMIN", "二级管理员"
-        LEVEL1_ADMIN = "LEVEL1_ADMIN", "一级管理员"
-
     class ReturnPolicy(models.TextChoices):
         NONE = "NONE", "不允许退回"
         STUDENT = "STUDENT", "退回学生"
@@ -253,13 +246,6 @@ class WorkflowNode(models.Model):
         verbose_name="执行角色",
     )
 
-    # 保留旧的角色字段用于迁移
-    role = models.CharField(
-        max_length=20, choices=Role.choices, blank=True, verbose_name="角色（旧）"
-    )
-    review_level = models.CharField(
-        max_length=20, blank=True, default="", verbose_name="审核级别"
-    )
     require_expert_review = models.BooleanField(
         default=False,
         verbose_name="是否需要专家评审",
@@ -295,7 +281,5 @@ class WorkflowNode(models.Model):
         return f"{self.workflow.name} - {self.name}"
 
     def get_role_code(self):
-        """获取角色代码（向后兼容）"""
-        if self.role_fk:
-            return self.role_fk.code
-        return self.role if self.role else None
+        """获取角色代码"""
+        return self.role_fk.code if self.role_fk else None

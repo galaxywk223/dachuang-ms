@@ -14,6 +14,7 @@ from ...serializers import (
 )
 from ...services import ProjectChangeService
 from apps.notifications.services import NotificationService
+from apps.system_settings.services import AdminAssignmentService
 
 
 class ProjectChangeRequestViewSet(viewsets.ModelViewSet):
@@ -128,7 +129,13 @@ class ProjectChangeRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        ProjectChangeService.submit_request(change_request)
+        try:
+            ProjectChangeService.submit_request(change_request)
+        except ValueError as exc:
+            return Response(
+                {"code": 400, "message": str(exc)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         return Response({"code": 200, "message": "提交成功"})
 
     @action(methods=["post"], detail=True)
@@ -148,41 +155,55 @@ class ProjectChangeRequestViewSet(viewsets.ModelViewSet):
         action_type = serializer.validated_data["action"]
         comments = serializer.validated_data.get("comments", "")
 
-        if action_type == "approve":
-            ProjectChangeService.approve_review(review, user, comments)
-            NotificationService.notify_review_result(
-                change_request.project, True, comments
-            )
-            return Response({"code": 200, "message": "审核通过"})
+        try:
+            if action_type == "approve":
+                ProjectChangeService.approve_review(review, user, comments)
+                NotificationService.notify_review_result(
+                    change_request.project, True, comments
+                )
+                return Response({"code": 200, "message": "审核通过"})
 
-        ProjectChangeService.reject_review(review, user, comments)
+            ProjectChangeService.reject_review(review, user, comments)
+        except ValueError as exc:
+            return Response(
+                {"code": 400, "message": str(exc)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         NotificationService.notify_review_result(change_request.project, False, comments)
         return Response({"code": 200, "message": "已驳回"})
 
     def _get_pending_review(self, change_request, user):
-        if (
-            (user.is_teacher or user.is_admin)
-            and change_request.project.advisors.filter(user=user).exists()
-        ):
-            review = ProjectChangeReview.objects.filter(
+        pending_reviews = (
+            ProjectChangeReview.objects.filter(
                 change_request=change_request,
-                review_level=ProjectChangeReview.ReviewLevel.TEACHER,
                 status=ProjectChangeReview.ReviewStatus.PENDING,
-            ).first()
-            if review:
+            )
+            .select_related("workflow_node", "workflow_node__role_fk")
+            .order_by("id")
+        )
+        if not pending_reviews.exists():
+            return None
+
+        phase = ProjectChangeService._resolve_phase(change_request)
+        project = change_request.project
+
+        for review in pending_reviews:
+            node = review.workflow_node
+            if not node:
+                continue
+            role_code = node.get_role_code()
+            if role_code == "TEACHER":
+                if (user.is_teacher or user.is_admin) and project.advisors.filter(
+                    user=user
+                ).exists():
+                    return review
+                continue
+            try:
+                admin_user = AdminAssignmentService.resolve_admin_user(
+                    project, phase, node
+                )
+            except ValueError:
+                continue
+            if admin_user.id == user.id:
                 return review
-        if user.is_admin and not user.is_level1_admin:
-            if change_request.project.leader.college != user.college:
-                return None
-            return ProjectChangeReview.objects.filter(
-                change_request=change_request,
-                review_level=ProjectChangeReview.ReviewLevel.LEVEL2,
-                status=ProjectChangeReview.ReviewStatus.PENDING,
-            ).first()
-        if user.is_level1_admin:
-            return ProjectChangeReview.objects.filter(
-                change_request=change_request,
-                review_level=ProjectChangeReview.ReviewLevel.LEVEL1,
-                status=ProjectChangeReview.ReviewStatus.PENDING,
-            ).first()
         return None

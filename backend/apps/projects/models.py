@@ -578,11 +578,6 @@ class ProjectChangeReview(models.Model):
     项目变更审核记录
     """
 
-    class ReviewLevel(models.TextChoices):
-        TEACHER = "TEACHER", "导师审核"
-        LEVEL2 = "LEVEL2", "二级审核"
-        LEVEL1 = "LEVEL1", "一级审核"
-
     class ReviewStatus(models.TextChoices):
         PENDING = "PENDING", "待审核"
         APPROVED = "APPROVED", "审核通过"
@@ -594,8 +589,13 @@ class ProjectChangeReview(models.Model):
         related_name="reviews",
         verbose_name="变更申请",
     )
-    review_level = models.CharField(
-        max_length=20, choices=ReviewLevel.choices, verbose_name="审核级别"
+    workflow_node = models.ForeignKey(
+        "system_settings.WorkflowNode",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="change_reviews",
+        verbose_name="关联工作流节点",
     )
     reviewer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -621,7 +621,10 @@ class ProjectChangeReview(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"{self.change_request.project.project_no} - {self.get_review_level_display()}"
+        role_code = (
+            self.workflow_node.get_role_code() if self.workflow_node else "UNKNOWN"
+        )
+        return f"{self.change_request.project.project_no} - {role_code}"
 
 
 class ProjectArchive(models.Model):

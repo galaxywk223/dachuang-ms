@@ -5,7 +5,13 @@
 from django.utils import timezone
 from django.db import transaction
 
-from ..models import Project, ProjectChangeRequest, ProjectChangeReview
+from ..models import (
+    Project,
+    ProjectChangeRequest,
+    ProjectChangeReview,
+    ProjectPhaseInstance,
+)
+from apps.system_settings.services import WorkflowService
 
 
 class ProjectChangeService:
@@ -18,12 +24,61 @@ class ProjectChangeService:
         return change_request.project.advisors.exists()
 
     @staticmethod
+    def _resolve_phase(change_request: ProjectChangeRequest) -> str:
+        project = change_request.project
+        phase_instance = (
+            ProjectPhaseInstance.objects.filter(
+                project=project, state=ProjectPhaseInstance.State.IN_PROGRESS
+            )
+            .order_by("-created_at", "-id")
+            .first()
+        )
+        if not phase_instance:
+            phase_instance = (
+                ProjectPhaseInstance.objects.filter(project=project)
+                .order_by("-created_at", "-id")
+                .first()
+            )
+        return (
+            phase_instance.phase
+            if phase_instance
+            else ProjectPhaseInstance.Phase.APPLICATION
+        )
+
+    @staticmethod
+    def _get_review_nodes(change_request: ProjectChangeRequest):
+        phase = ProjectChangeService._resolve_phase(change_request)
+        nodes = WorkflowService.get_nodes(phase, change_request.project.batch)
+        review_nodes = [
+            node
+            for node in nodes
+            if node.node_type != "SUBMIT" and WorkflowService.get_node_by_id(node.id)
+        ]
+        if not review_nodes:
+            raise ValueError("流程未落库，请先配置并启用工作流")
+        return phase, review_nodes
+
+    @staticmethod
+    def _set_status_for_node(
+        change_request: ProjectChangeRequest, node_role: str
+    ) -> None:
+        status_map = {
+            "TEACHER": ProjectChangeRequest.ChangeStatus.TEACHER_REVIEWING,
+            "LEVEL2_ADMIN": ProjectChangeRequest.ChangeStatus.LEVEL2_REVIEWING,
+            "LEVEL1_ADMIN": ProjectChangeRequest.ChangeStatus.LEVEL1_REVIEWING,
+        }
+        status = status_map.get(node_role)
+        if not status:
+            raise ValueError(f"不支持的审核角色: {node_role}")
+        change_request.status = status
+
+    @staticmethod
     def _create_review(
-        change_request: ProjectChangeRequest, review_level: str
+        change_request: ProjectChangeRequest, workflow_node_id: int
     ) -> ProjectChangeReview:
         return ProjectChangeReview.objects.create(
             change_request=change_request,
-            review_level=review_level,
+            workflow_node_id=workflow_node_id,
             status=ProjectChangeReview.ReviewStatus.PENDING,
         )
 
@@ -35,19 +90,22 @@ class ProjectChangeService:
         """
         change_request.submitted_at = timezone.now()
 
-        if ProjectChangeService._has_teacher_review(change_request):
-            change_request.status = ProjectChangeRequest.ChangeStatus.TEACHER_REVIEWING
-            change_request.save(update_fields=["submitted_at", "status"])
-            ProjectChangeService._create_review(
-                change_request, ProjectChangeReview.ReviewLevel.TEACHER
-            )
-            return
+        _, review_nodes = ProjectChangeService._get_review_nodes(change_request)
+        target_node = None
+        for node in review_nodes:
+            if node.role == "TEACHER" and not ProjectChangeService._has_teacher_review(
+                change_request
+            ):
+                continue
+            target_node = node
+            break
 
-        change_request.status = ProjectChangeRequest.ChangeStatus.LEVEL2_REVIEWING
+        if not target_node:
+            raise ValueError("流程未配置可用审核节点")
+
+        ProjectChangeService._set_status_for_node(change_request, target_node.role)
         change_request.save(update_fields=["submitted_at", "status"])
-        ProjectChangeService._create_review(
-            change_request, ProjectChangeReview.ReviewLevel.LEVEL2
-        )
+        ProjectChangeService._create_review(change_request, target_node.id)
 
     @staticmethod
     @transaction.atomic
@@ -64,28 +122,40 @@ class ProjectChangeService:
         review.save(update_fields=["status", "reviewer", "comments", "reviewed_at"])
 
         change_request = review.change_request
+        _, review_nodes = ProjectChangeService._get_review_nodes(change_request)
+        if not review.workflow_node_id:
+            raise ValueError("审核记录缺少工作流节点")
 
-        if review.review_level == ProjectChangeReview.ReviewLevel.TEACHER:
-            change_request.status = ProjectChangeRequest.ChangeStatus.LEVEL2_REVIEWING
+        current_index = next(
+            (
+                index
+                for index, node in enumerate(review_nodes)
+                if node.id == review.workflow_node_id
+            ),
+            None,
+        )
+        if current_index is None:
+            raise ValueError("当前审核节点不在流程配置中")
+
+        next_node = None
+        for node in review_nodes[current_index + 1 :]:
+            if node.role == "TEACHER" and not ProjectChangeService._has_teacher_review(
+                change_request
+            ):
+                continue
+            next_node = node
+            break
+
+        if next_node:
+            ProjectChangeService._set_status_for_node(change_request, next_node.role)
             change_request.save(update_fields=["status"])
-            ProjectChangeService._create_review(
-                change_request, ProjectChangeReview.ReviewLevel.LEVEL2
-            )
+            ProjectChangeService._create_review(change_request, next_node.id)
             return
 
-        if review.review_level == ProjectChangeReview.ReviewLevel.LEVEL2:
-            change_request.status = ProjectChangeRequest.ChangeStatus.LEVEL1_REVIEWING
-            change_request.save(update_fields=["status"])
-            ProjectChangeService._create_review(
-                change_request, ProjectChangeReview.ReviewLevel.LEVEL1
-            )
-            return
-
-        if review.review_level == ProjectChangeReview.ReviewLevel.LEVEL1:
-            change_request.status = ProjectChangeRequest.ChangeStatus.APPROVED
-            change_request.reviewed_at = timezone.now()
-            change_request.save(update_fields=["status", "reviewed_at"])
-            ProjectChangeService.apply_change(change_request)
+        change_request.status = ProjectChangeRequest.ChangeStatus.APPROVED
+        change_request.reviewed_at = timezone.now()
+        change_request.save(update_fields=["status", "reviewed_at"])
+        ProjectChangeService.apply_change(change_request)
 
     @staticmethod
     @transaction.atomic

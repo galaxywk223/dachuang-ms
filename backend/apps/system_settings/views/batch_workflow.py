@@ -2,7 +2,7 @@
 批次工作流配置视图
 """
 
-from rest_framework import status, viewsets, serializers
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -166,7 +166,6 @@ class BatchWorkflowViewSet(viewsets.ViewSet):
                 name=node_def.name,
                 node_type=node_def.node_type,
                 role_fk=role_obj,
-                review_level=node_def.review_level,
                 require_expert_review=node_def.require_expert_review,
                 return_policy=node_def.return_policy,
                 allowed_reject_to=None,
@@ -239,9 +238,6 @@ class BatchWorkflowViewSet(viewsets.ViewSet):
         serializer.is_valid(raise_exception=True)
 
         node = serializer.save(workflow=workflow)
-        validation = WorkflowService.validate_workflow_nodes(workflow.id)
-        if not validation.get("valid"):
-            raise serializers.ValidationError({"detail": validation.get("errors", [])})
 
         result_serializer = WorkflowNodeSerializer(node)
         return Response(result_serializer.data, status=status.HTTP_201_CREATED)
@@ -286,9 +282,6 @@ class BatchWorkflowViewSet(viewsets.ViewSet):
         )
         serializer.is_valid(raise_exception=True)
         node = serializer.save()
-        validation = WorkflowService.validate_workflow_nodes(node.workflow_id)
-        if not validation.get("valid"):
-            raise serializers.ValidationError({"detail": validation.get("errors", [])})
 
         result_serializer = WorkflowNodeSerializer(node)
         return Response(result_serializer.data)
