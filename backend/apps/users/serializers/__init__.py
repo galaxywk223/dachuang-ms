@@ -94,6 +94,24 @@ class UserSerializer(RoleAssignMixin, serializers.ModelSerializer):
             }
         return None
 
+    def validate(self, attrs):
+        attrs = self._resolve_role_fk(attrs)
+        role = attrs.get("role_fk") or (self.instance.role_fk if self.instance else None)
+        managed_scope_value = attrs.get(
+            "managed_scope_value",
+            self.instance.managed_scope_value if self.instance else None,
+        )
+
+        if role and role.scope_dimension == "COLLEGE":
+            if not managed_scope_value:
+                raise serializers.ValidationError(
+                    {"managed_scope_value": "学院管理员必须选择管理范围"}
+                )
+        else:
+            attrs["managed_scope_value"] = None
+
+        return attrs
+
     def create(self, validated_data):
         validated_data = self._resolve_role_fk(validated_data)
         return super().create(validated_data)
@@ -188,11 +206,26 @@ class UserCreateSerializer(RoleAssignMixin, serializers.ModelSerializer):
             "college",
             "department",
             "title",
+            "managed_scope_value",
         ]
+
+    def validate(self, attrs):
+        attrs = self._resolve_role_fk(attrs)
+        role = attrs.get("role_fk")
+        managed_scope_value = attrs.get("managed_scope_value")
+
+        if role and role.scope_dimension == "COLLEGE":
+            if not managed_scope_value:
+                raise serializers.ValidationError(
+                    {"managed_scope_value": "学院管理员必须选择管理范围"}
+                )
+        else:
+            attrs["managed_scope_value"] = None
+
+        return attrs
 
     def create(self, validated_data):
         password = validated_data.pop("password", "123456")
-        validated_data = self._resolve_role_fk(validated_data)
         if not validated_data.get("role_fk"):
             default_role = Role.objects.filter(code=User.UserRole.STUDENT).first()
             if not default_role:

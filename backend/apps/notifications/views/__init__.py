@@ -95,7 +95,7 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(role=role)
         if college:
             queryset = queryset.filter(college=college)
-        if user.is_admin and not user.is_level1_admin:
+        if user.is_college_admin:
             queryset = queryset.filter(college=user.college)
 
         created = 0

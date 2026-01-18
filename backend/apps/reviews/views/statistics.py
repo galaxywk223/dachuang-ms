@@ -58,7 +58,7 @@ class ReviewStatisticsViewSet(viewsets.ViewSet):
             change_status = "LEVEL2_REVIEWING"
 
         change_queryset = ProjectChangeRequest.objects.filter(status=change_status)
-        if user.is_admin and not user.is_level1_admin and user.college:
+        if user.is_college_admin and user.college:
             change_queryset = change_queryset.filter(
                 project__leader__college=user.college
             )

@@ -270,7 +270,7 @@ class ProjectClosureService:
             Project.ProjectStatus.CLOSED,
         ]
 
-        if user.is_admin and not user.is_level1_admin:
+        if user.is_college_admin:
             projects = Project.objects.filter(
                 leader__college=user.college,
                 status__in=closure_statuses,

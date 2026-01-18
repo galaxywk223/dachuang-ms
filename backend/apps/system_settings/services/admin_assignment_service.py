@@ -4,7 +4,7 @@
 """
 
 from apps.users.models import User
-from apps.dictionaries.models import DictionaryItem, DictionaryType
+from apps.dictionaries.models import DictionaryItem
 
 
 class AdminAssignmentService:
@@ -30,7 +30,7 @@ class AdminAssignmentService:
             raise ValueError("节点未配置执行角色")
 
         scope_dimension = role.scope_dimension
-        if not scope_dimension:
+        if not scope_dimension or scope_dimension == "SCHOOL":
             # 校级管理员（无数据范围限制）
             # 返回该角色的任意用户（假设只有一个校级管理员）
             user = User.objects.filter(role_fk=role, is_active=True).first()
@@ -64,7 +64,7 @@ class AdminAssignmentService:
 
         Args:
             project: 项目实例
-            scope_dimension: 数据范围维度（COLLEGE/PROJECT_CATEGORY/PROJECT_LEVEL/PROJECT_SOURCE/KEY_FIELD）
+            scope_dimension: 数据范围维度（COLLEGE/SCHOOL）
 
         Returns:
             int: 对应的 DictionaryItem.id
@@ -81,43 +81,6 @@ class AdminAssignmentService:
             ).first()
             if not item:
                 raise ValueError(f"未找到学院字典项：{college_value}")
-            return item.id
-
-        elif scope_dimension == "PROJECT_CATEGORY":
-            if not project.category_id:
-                raise ValueError("项目缺少项目类别")
-            return project.category_id
-
-        elif scope_dimension == "PROJECT_LEVEL":
-            if not project.level_id:
-                raise ValueError("项目缺少项目级别")
-            return project.level_id
-
-        elif scope_dimension == "PROJECT_SOURCE":
-            if not project.source_id:
-                raise ValueError("项目缺少项目来源")
-            return project.source_id
-
-        elif scope_dimension == "KEY_FIELD":
-            # 重点领域的处理
-            try:
-                key_field_type = DictionaryType.objects.get(code="key_field")
-            except DictionaryType.DoesNotExist:
-                raise ValueError("未找到重点领域字典类型，请联系管理员配置")
-
-            if project.is_key_field and project.key_domain_code:
-                # 重点项目，使用具体的重点领域代码
-                item = DictionaryItem.objects.filter(
-                    dict_type=key_field_type, value=project.key_domain_code
-                ).first()
-            else:
-                # 一般项目
-                item = DictionaryItem.objects.filter(
-                    dict_type=key_field_type, value="GENERAL"
-                ).first()
-
-            if not item:
-                raise ValueError("未找到重点领域字典项")
             return item.id
 
         else:

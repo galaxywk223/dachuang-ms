@@ -36,6 +36,7 @@ class RoleViewSet(viewsets.ViewSet):
     """
 
     permission_classes = [IsAuthenticated]
+    allowed_scope_dimensions = {"COLLEGE", "SCHOOL"}
 
     def _check_level1_admin(self, user):
         """检查是否为校级管理员"""
@@ -140,6 +141,11 @@ class RoleViewSet(viewsets.ViewSet):
                 {"detail": "必须指定管理范围维度（scope_dimension）"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        if scope_dimension not in self.allowed_scope_dimensions:
+            return Response(
+                {"detail": "管理范围维度只支持学院或全校"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # 自动生成角色代码
         code = self._generate_role_code(name)
@@ -195,6 +201,11 @@ class RoleViewSet(viewsets.ViewSet):
             if not request.data["scope_dimension"]:
                 return Response(
                     {"detail": "管理范围维度不能为空"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if request.data["scope_dimension"] not in self.allowed_scope_dimensions:
+                return Response(
+                    {"detail": "管理范围维度只支持学院或全校"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             role.scope_dimension = request.data["scope_dimension"]

@@ -26,10 +26,7 @@ class Role(models.Model):
         max_length=50,
         choices=[
             ("COLLEGE", "学院"),
-            ("PROJECT_CATEGORY", "项目类别"),
-            ("PROJECT_LEVEL", "项目级别"),
-            ("PROJECT_SOURCE", "项目来源"),
-            ("KEY_FIELD", "重点领域代码"),
+            ("SCHOOL", "全校"),
         ],
         null=True,
         blank=True,
@@ -194,6 +191,16 @@ class User(AbstractUser):
         if self.role_fk.scope_dimension is not None:
             return True
         return False
+
+    @property
+    def is_college_admin(self):
+        """学院级管理员（按学院范围）"""
+        return self.role_fk is not None and self.role_fk.scope_dimension == "COLLEGE"
+
+    @property
+    def is_school_admin(self):
+        """非学院管理员（全校范围）"""
+        return self.role_fk is not None and self.role_fk.scope_dimension == "SCHOOL"
 
     @property
     def is_teacher(self):
