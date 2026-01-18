@@ -13,6 +13,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from ...models import Project
+from apps.system_settings.services import SystemSettingService
 
 
 class ProjectLevel2ExportMixin:
@@ -29,7 +30,16 @@ class ProjectLevel2ExportMixin:
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        projects = Project.objects.filter(leader__college=user.college)
+        current_batch = SystemSettingService.get_current_batch()
+        if not current_batch:
+            return Response(
+                {"code": 200, "message": "当前无可用批次"},
+                status=status.HTTP_200_OK,
+            )
+
+        projects = Project.objects.filter(
+            leader__college=user.college, batch=current_batch
+        )
 
         status_filter = request.query_params.get("status")
         if status_filter:
@@ -113,7 +123,16 @@ class ProjectLevel2ExportMixin:
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        projects = Project.objects.filter(leader__college=user.college)
+        current_batch = SystemSettingService.get_current_batch()
+        if not current_batch:
+            return Response(
+                {"code": 200, "message": "当前无可用批次"},
+                status=status.HTTP_200_OK,
+            )
+
+        projects = Project.objects.filter(
+            leader__college=user.college, batch=current_batch
+        )
 
         status_filter = request.query_params.get("status")
         if status_filter:

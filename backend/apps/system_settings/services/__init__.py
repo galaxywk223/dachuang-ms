@@ -59,18 +59,10 @@ class SystemSettingService:
 
     @staticmethod
     def get_current_batch():
-        base_qs = ProjectBatch.objects.filter(is_deleted=False)
-        current = base_qs.filter(
-            status=ProjectBatch.STATUS_ACTIVE, is_active=True
-        ).first()
-        if current:
-            return current
-        current = base_qs.filter(is_current=True, is_active=True).first()
-        if current:
-            return current
         return (
-            base_qs.filter(is_active=True)
-            .exclude(status=ProjectBatch.STATUS_ARCHIVED)
+            ProjectBatch.objects.filter(
+                status=ProjectBatch.STATUS_ACTIVE, is_active=True, is_deleted=False
+            )
             .order_by("-year", "-id")
             .first()
         )

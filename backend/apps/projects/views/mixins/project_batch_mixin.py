@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from ...models import Project, ProjectArchive, ProjectMember
+from apps.system_settings.services import SystemSettingService
 from ...serializers import ProjectArchiveSerializer
 from ...services import archive_projects
 
@@ -43,7 +44,13 @@ class ProjectBatchMixin:
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        queryset = Project.objects.filter(id__in=project_ids)
+        current_batch = SystemSettingService.get_current_batch()
+        if not current_batch:
+            return Response(
+                {"code": 200, "message": "当前无可用批次", "data": {"updated": 0}}
+            )
+
+        queryset = Project.objects.filter(id__in=project_ids, batch=current_batch)
         if user.is_admin and not user.is_level1_admin:
             queryset = queryset.filter(leader__college=user.college)
 

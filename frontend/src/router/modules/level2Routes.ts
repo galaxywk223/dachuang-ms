@@ -75,6 +75,12 @@ export const level2Routes: RouteRecordRaw[] = [
         component: () => import("@/views/admin/level2/projects/Index.vue"),
         meta: { title: "项目管理" },
       },
+      {
+        path: "history-projects",
+        name: "level2-history-projects",
+        component: () => import("@/views/common/HistoryProjects.vue"),
+        meta: { title: "历史项目" },
+      },
 
       {
         path: "statistics",

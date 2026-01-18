@@ -10,6 +10,7 @@ from rest_framework import status
 
 from apps.dictionaries.models import DictionaryItem
 from apps.system_settings.services.workflow_service import WorkflowService
+from apps.system_settings.services import SystemSettingService
 
 from ..models import Project, ProjectAchievement, ProjectPhaseInstance
 from ..serializers import ProjectAchievementSerializer, ProjectSerializer
@@ -175,6 +176,10 @@ def _validate_expected_results(project, achievements_data):
 
 class ProjectClosureService:
     @staticmethod
+    def _get_current_batch():
+        return SystemSettingService.get_current_batch()
+
+    @staticmethod
     def pending(request):
         user = request.user
         title = request.query_params.get("title")
@@ -182,8 +187,23 @@ class ProjectClosureService:
         page = int(request.query_params.get("page", 1))
         page_size = int(request.query_params.get("page_size", 10))
 
+        current_batch = ProjectClosureService._get_current_batch()
+        if not current_batch:
+            return (
+                {
+                    "code": 200,
+                    "message": "获取成功",
+                    "data": [],
+                    "total": 0,
+                    "page": page,
+                    "page_size": page_size,
+                },
+                status.HTTP_200_OK,
+            )
+
         projects = Project.objects.filter(
             leader=user,
+            batch=current_batch,
             status__in=[
                 Project.ProjectStatus.READY_FOR_CLOSURE,
                 Project.ProjectStatus.CLOSURE_RETURNED,
@@ -224,6 +244,20 @@ class ProjectClosureService:
         page = int(request.query_params.get("page", 1))
         page_size = int(request.query_params.get("page_size", 10))
 
+        current_batch = ProjectClosureService._get_current_batch()
+        if not current_batch:
+            return (
+                {
+                    "code": 200,
+                    "message": "获取成功",
+                    "data": [],
+                    "total": 0,
+                    "page": page,
+                    "page_size": page_size,
+                },
+                status.HTTP_200_OK,
+            )
+
         closure_statuses = [
             Project.ProjectStatus.CLOSURE_SUBMITTED,
             Project.ProjectStatus.CLOSURE_LEVEL2_REVIEWING,
@@ -238,12 +272,18 @@ class ProjectClosureService:
 
         if user.is_admin and not user.is_level1_admin:
             projects = Project.objects.filter(
-                leader__college=user.college, status__in=closure_statuses
+                leader__college=user.college,
+                status__in=closure_statuses,
+                batch=current_batch,
             )
         elif user.is_level1_admin:
-            projects = Project.objects.filter(status__in=closure_statuses)
+            projects = Project.objects.filter(
+                status__in=closure_statuses, batch=current_batch
+            )
         else:
-            projects = Project.objects.filter(leader=user, status__in=closure_statuses)
+            projects = Project.objects.filter(
+                leader=user, status__in=closure_statuses, batch=current_batch
+            )
 
         if title:
             projects = projects.filter(title__icontains=title)
@@ -276,8 +316,24 @@ class ProjectClosureService:
         page = int(request.query_params.get("page", 1))
         page_size = int(request.query_params.get("page_size", 10))
 
+        current_batch = ProjectClosureService._get_current_batch()
+        if not current_batch:
+            return (
+                {
+                    "code": 200,
+                    "message": "获取成功",
+                    "data": [],
+                    "total": 0,
+                    "page": page,
+                    "page_size": page_size,
+                },
+                status.HTTP_200_OK,
+            )
+
         projects = Project.objects.filter(
-            leader=user, status=Project.ProjectStatus.CLOSURE_DRAFT
+            leader=user,
+            status=Project.ProjectStatus.CLOSURE_DRAFT,
+            batch=current_batch,
         )
 
         if title:
@@ -305,9 +361,15 @@ class ProjectClosureService:
     @staticmethod
     def create_application(request, pk):
         user = request.user
+        current_batch = ProjectClosureService._get_current_batch()
+        if not current_batch:
+            return (
+                {"code": 400, "message": "当前没有可用批次"},
+                status.HTTP_400_BAD_REQUEST,
+            )
 
         try:
-            project = Project.objects.get(pk=pk, leader=user)
+            project = Project.objects.get(pk=pk, leader=user, batch=current_batch)
         except Project.DoesNotExist:
             return (
                 {"code": 404, "message": "项目不存在或无权限访问"},
@@ -413,9 +475,15 @@ class ProjectClosureService:
     @staticmethod
     def update_application(request, pk):
         user = request.user
+        current_batch = ProjectClosureService._get_current_batch()
+        if not current_batch:
+            return (
+                {"code": 400, "message": "当前没有可用批次"},
+                status.HTTP_400_BAD_REQUEST,
+            )
 
         try:
-            project = Project.objects.get(pk=pk, leader=user)
+            project = Project.objects.get(pk=pk, leader=user, batch=current_batch)
         except Project.DoesNotExist:
             return (
                 {"code": 404, "message": "项目不存在或无权限访问"},
@@ -514,9 +582,15 @@ class ProjectClosureService:
     @staticmethod
     def delete(request, pk):
         user = request.user
+        current_batch = ProjectClosureService._get_current_batch()
+        if not current_batch:
+            return (
+                {"code": 400, "message": "当前没有可用批次"},
+                status.HTTP_400_BAD_REQUEST,
+            )
 
         try:
-            project = Project.objects.get(pk=pk, leader=user)
+            project = Project.objects.get(pk=pk, leader=user, batch=current_batch)
         except Project.DoesNotExist:
             return (
                 {"code": 404, "message": "项目不存在或无权限访问"},
@@ -542,9 +616,15 @@ class ProjectClosureService:
     @staticmethod
     def achievements(request, pk):
         user = request.user
+        current_batch = ProjectClosureService._get_current_batch()
+        if not current_batch:
+            return (
+                {"code": 400, "message": "当前没有可用批次"},
+                status.HTTP_400_BAD_REQUEST,
+            )
 
         try:
-            project = Project.objects.get(pk=pk, leader=user)
+            project = Project.objects.get(pk=pk, leader=user, batch=current_batch)
         except Project.DoesNotExist:
             return (
                 {"code": 404, "message": "项目不存在或无权限访问"},

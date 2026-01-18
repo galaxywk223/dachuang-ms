@@ -17,6 +17,12 @@ export const studentRoutes: RouteRecordRaw[] = [
         meta: { title: "我的项目" },
       },
       {
+        path: "history-projects",
+        name: "student-history-projects",
+        component: () => import("@/views/common/HistoryProjects.vue"),
+        meta: { title: "历史项目" },
+      },
+      {
         path: "establishment",
         name: "establishment",
         redirect: "/establishment/apply",

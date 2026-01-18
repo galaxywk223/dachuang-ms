@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from ...models import Project
+from apps.system_settings.services import SystemSettingService
 from ...serializers import ProjectSerializer
 from ..mixins.project_batch_mixin import ProjectBatchMixin
 from ..mixins.project_admin_export_data_mixin import ProjectAdminExportDataMixin
@@ -43,7 +44,10 @@ class ProjectManagementViewSet(
         """
         获取项目列表，支持筛选
         """
-        queryset = Project.objects.all().order_by("-created_at")
+        current_batch = SystemSettingService.get_current_batch()
+        if not current_batch:
+            return Project.objects.none()
+        queryset = Project.objects.filter(batch=current_batch).order_by("-created_at")
 
         # 权限控制：非校级管理员只能看到本学院的项目
         user = self.request.user
@@ -78,8 +82,8 @@ class ProjectManagementViewSet(
             queryset = queryset.filter(status=project_status)
 
         batch_id = self.request.query_params.get("batch_id", "")
-        if batch_id:
-            queryset = queryset.filter(batch_id=batch_id)
+        if batch_id and str(batch_id) != str(current_batch.id):
+            return Project.objects.none()
 
         year = self.request.query_params.get("year", "")
         if year:

@@ -6,6 +6,7 @@ from django.db.models import Q, Count, Sum, Avg
 from django.utils import timezone
 from datetime import timedelta
 from ..models import Project, ProjectAchievement
+from apps.system_settings.services import SystemSettingService
 from apps.reviews.models import Review
 from apps.users.models import User
 
@@ -21,8 +22,26 @@ class DashboardService:
         获取学生端仪表板数据
         """
         # 我的项目统计
+        current_batch = SystemSettingService.get_current_batch()
+        if not current_batch:
+            return {
+                "project_stats": {
+                    "total": 0,
+                    "draft": 0,
+                    "in_progress": 0,
+                    "completed": 0,
+                },
+                "pending_tasks": [],
+                "achievement_stats": {
+                    "total_achievements": 0,
+                    "recent_achievements": [],
+                },
+            }
+
         my_projects = Project.objects.filter(
-            Q(leader=user) | Q(members=user), is_deleted=False
+            Q(leader=user) | Q(members=user),
+            is_deleted=False,
+            batch=current_batch,
         ).distinct()
 
         project_stats = {
@@ -142,8 +161,21 @@ class DashboardService:
         获取教师端仪表板数据
         """
         # 指导项目统计
+        current_batch = SystemSettingService.get_current_batch()
+        if not current_batch:
+            return {
+                "project_stats": {
+                    "total": 0,
+                    "in_progress": 0,
+                    "mid_term": 0,
+                    "closure": 0,
+                    "completed": 0,
+                },
+                "pending_reviews": [],
+            }
+
         guided_projects = Project.objects.filter(
-            advisors__user=user, is_deleted=False
+            advisors__user=user, is_deleted=False, batch=current_batch
         ).distinct()
 
         project_stats = {
@@ -197,8 +229,24 @@ class DashboardService:
         获取学院管理员端仪表板数据
         """
         # 学院项目统计
+        current_batch = SystemSettingService.get_current_batch()
+        if not current_batch:
+            return {
+                "project_stats": {
+                    "total": 0,
+                    "draft": 0,
+                    "in_progress": 0,
+                    "mid_term": 0,
+                    "closure": 0,
+                    "completed": 0,
+                },
+                "pending_reviews": [],
+                "statistics": [],
+                "statistics_report": [],
+            }
+
         college_projects = Project.objects.filter(
-            leader__college=user.college, is_deleted=False
+            leader__college=user.college, is_deleted=False, batch=current_batch
         )
 
         project_stats = {
@@ -262,7 +310,27 @@ class DashboardService:
         获取校级管理员端仪表板数据
         """
         # 全校项目统计
-        all_projects = Project.objects.filter(is_deleted=False)
+        current_batch = SystemSettingService.get_current_batch()
+        if not current_batch:
+            return {
+                "project_stats": {
+                    "total": 0,
+                    "draft": 0,
+                    "in_progress": 0,
+                    "mid_term": 0,
+                    "closure": 0,
+                    "completed": 0,
+                },
+                "pending_reviews": [],
+                "statistics": [],
+                "statistics_report": [],
+                "excellent_projects": [],
+                "timeline": [],
+            }
+
+        all_projects = Project.objects.filter(
+            is_deleted=False, batch=current_batch
+        )
 
         # 按状态统计
         status_stats = {}

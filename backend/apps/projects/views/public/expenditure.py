@@ -10,6 +10,7 @@ from rest_framework.exceptions import PermissionDenied
 from ...models import Project, ProjectExpenditure
 from ...serializers import ProjectExpenditureSerializer
 from ...services import ProjectService
+from apps.system_settings.services import SystemSettingService
 
 
 class ProjectExpenditureViewSet(viewsets.ModelViewSet):
@@ -59,6 +60,9 @@ class ProjectExpenditureViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         project = serializer.validated_data["project"]
         amount = serializer.validated_data["amount"]
+        current_batch = SystemSettingService.get_current_batch()
+        if not current_batch or project.batch_id != current_batch.id:
+            raise serializers.ValidationError("当前批次不允许操作该项目经费")
 
         if not self._can_manage_expenditure(self.request.user, project):
             raise PermissionDenied("无权限录入该项目经费")
@@ -114,23 +118,27 @@ class ProjectExpenditureViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        current_batch = SystemSettingService.get_current_batch()
+        if not current_batch:
+            return ProjectExpenditure.objects.none()
         if hasattr(user, "is_student") and user.is_student:
             from django.db.models import Q
 
             return ProjectExpenditure.objects.filter(
-                Q(project__leader=user) | Q(project__members=user)
+                Q(project__leader=user) | Q(project__members=user),
+                project__batch=current_batch,
             ).distinct()
         if user.is_admin:
             if not user.is_level1_admin:
                 return ProjectExpenditure.objects.filter(
-                    project__leader__college=user.college
+                    project__leader__college=user.college, project__batch=current_batch
                 )
-            return ProjectExpenditure.objects.all()
+            return ProjectExpenditure.objects.filter(project__batch=current_batch)
         if user.is_teacher:
             return ProjectExpenditure.objects.filter(
-                project__advisors__user=user
+                project__advisors__user=user, project__batch=current_batch
             ).distinct()
-        return ProjectExpenditure.objects.all()
+        return ProjectExpenditure.objects.filter(project__batch=current_batch)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()

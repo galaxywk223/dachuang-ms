@@ -240,6 +240,18 @@ class ProjectBatchViewSet(viewsets.ModelViewSet):
                 {"code": 400, "message": "当前批次状态不允许设为进行中"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        active_exists = (
+            ProjectBatch.objects.filter(
+                status=ProjectBatch.STATUS_ACTIVE, is_active=True, is_deleted=False
+            )
+            .exclude(id=batch.id)
+            .exists()
+        )
+        if active_exists:
+            return Response(
+                {"code": 400, "message": "请先结束当前进行中的批次"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         ProjectBatch.objects.exclude(id=batch.id).update(is_current=False)
         batch.is_current = True
         batch.is_active = True
@@ -269,30 +281,31 @@ class ProjectBatchViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.status in [
-            ProjectBatch.STATUS_ACTIVE,
-            ProjectBatch.STATUS_FINISHED,
-            ProjectBatch.STATUS_ARCHIVED,
-        ]:
+        if instance.status == ProjectBatch.STATUS_ACTIVE:
             return Response(
-                {
-                    "code": 400,
-                    "message": "当前批次处于进行中/已结束/已归档状态，禁止删除",
-                },
+                {"code": 400, "message": "进行中的批次不允许删除，请先结束"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        project_exists = Project.objects.filter(batch_id=instance.id).exists()
-        if project_exists:
-            instance.is_deleted = True
-            instance.status = ProjectBatch.STATUS_ARCHIVED
-            instance.is_current = False
-            instance.is_active = False
-            instance.save(
-                update_fields=["is_deleted", "status", "is_current", "is_active"]
+        if instance.status == ProjectBatch.STATUS_FINISHED:
+            return Response(
+                {"code": 400, "message": "请先归档该批次后再删除"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-            return Response({"code": 200, "message": "批次已移入归档"})
-        instance.delete()
-        return Response({"code": 200, "message": "批次已删除"})
+        if instance.status == ProjectBatch.STATUS_DRAFT:
+            if Project.objects.filter(batch_id=instance.id).exists():
+                return Response(
+                    {"code": 400, "message": "草稿批次不应包含项目"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            instance.delete()
+            return Response({"code": 200, "message": "批次已删除"})
+        if instance.status == ProjectBatch.STATUS_ARCHIVED:
+            instance.delete()
+            return Response({"code": 200, "message": "批次已删除"})
+        return Response(
+            {"code": 400, "message": "当前批次状态不允许删除"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
 
 class CertificateSettingViewSet(viewsets.ModelViewSet):

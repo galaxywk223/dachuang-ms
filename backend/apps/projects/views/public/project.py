@@ -13,6 +13,8 @@ from ...serializers import (
 )
 from apps.projects.models import ProjectPhaseInstance
 from apps.reviews.models import Review
+from apps.system_settings.models import ProjectBatch
+from apps.system_settings.services import SystemSettingService
 
 from ..mixins import (
     ProjectAchievementsMixin,
@@ -46,7 +48,7 @@ class ProjectViewSet(
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = [IsAuthenticated]
-    filterset_fields = ["status", "level", "leader__college", "leader", "batch", "year"]
+    filterset_fields = ["status", "level", "leader__college", "leader", "year"]
     search_fields = ["project_no", "title", "advisors__user__real_name"]
     ordering_fields = ["created_at", "updated_at", "submitted_at"]
 
@@ -64,6 +66,22 @@ class ProjectViewSet(
         user = self.request.user
         queryset = super().get_queryset()
         teacher_scope = self.request.query_params.get("teacher_scope")
+
+        history_batch_id = self.request.query_params.get("history_batch_id")
+        if history_batch_id:
+            batch = ProjectBatch.objects.filter(
+                id=history_batch_id,
+                status=ProjectBatch.STATUS_ARCHIVED,
+                is_deleted=False,
+            ).first()
+            if not batch:
+                return queryset.none()
+            queryset = queryset.filter(batch=batch)
+        else:
+            current_batch = SystemSettingService.get_current_batch()
+            if not current_batch:
+                return queryset.none()
+            queryset = queryset.filter(batch=current_batch)
 
         # 学生只能看到自己参与的项目
         if user.is_student:

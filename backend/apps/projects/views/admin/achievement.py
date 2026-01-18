@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
 
 from ...models import Project, ProjectAchievement
+from apps.system_settings.services import SystemSettingService
 from ...serializers import ProjectAchievementSerializer
 
 class AchievementManagementViewSet(viewsets.ModelViewSet):
@@ -20,7 +21,13 @@ class AchievementManagementViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        queryset = ProjectAchievement.objects.all().order_by("-created_at")
+        current_batch = SystemSettingService.get_current_batch()
+        if not current_batch:
+            return ProjectAchievement.objects.none()
+        queryset = (
+            ProjectAchievement.objects.filter(project__batch=current_batch)
+            .order_by("-created_at")
+        )
         
         # 权限控制：非校级管理员只能看到本学院项目的成果
         user = self.request.user
@@ -64,7 +71,15 @@ class AchievementManagementViewSet(viewsets.ModelViewSet):
             Project.ProjectStatus.CLOSED,
         ]
 
-        projects_qs = Project.objects.filter(status__in=closure_statuses)
+        current_batch = SystemSettingService.get_current_batch()
+        if not current_batch:
+            return Response(
+                {"count": 0, "next": None, "previous": None, "results": []}
+            )
+
+        projects_qs = Project.objects.filter(
+            status__in=closure_statuses, batch=current_batch
+        )
 
         # 同步查询参数过滤
         search = request.query_params.get("search", "")

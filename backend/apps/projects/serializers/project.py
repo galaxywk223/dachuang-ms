@@ -304,6 +304,15 @@ class ProjectSerializer(serializers.ModelSerializer):
         is_draft = bool(self.context.get("is_draft", False))
         batch = attrs.get("batch") or (self.instance.batch if self.instance else None)
         if request and request.method == "POST":
+            current_batch = SystemSettingService.get_current_batch()
+            if not current_batch:
+                raise serializers.ValidationError("当前没有进行中的批次，无法创建项目")
+            if batch and batch.id != current_batch.id:
+                raise serializers.ValidationError({"batch": "只能选择当前进行中的批次"})
+            if not batch:
+                attrs["batch"] = current_batch
+                batch = current_batch
+        if request and request.method == "POST":
             user = request.user
             if user.is_student:
                 limits = SystemSettingService.get_setting("LIMIT_RULES", batch=batch)

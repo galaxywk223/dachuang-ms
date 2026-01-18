@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from ...models import Project
+from apps.system_settings.services import SystemSettingService
 from ...serializers import ProjectSerializer
 
 
@@ -28,7 +29,16 @@ class ProjectSelfMixin:
 
         from django.db.models import Q
 
-        projects = Project.objects.filter(Q(leader=user) | Q(members=user)).distinct()
+        current_batch = SystemSettingService.get_current_batch()
+        if not current_batch:
+            return Response(
+                {"code": 200, "message": "获取成功", "data": [], "total": 0},
+                status=status.HTTP_200_OK,
+            )
+
+        projects = Project.objects.filter(
+            Q(leader=user) | Q(members=user), batch=current_batch
+        ).distinct()
 
         if title:
             projects = projects.filter(title__icontains=title)
@@ -71,7 +81,16 @@ class ProjectSelfMixin:
         page = int(request.query_params.get("page", 1))
         page_size = int(request.query_params.get("page_size", 10))
 
-        drafts = Project.objects.filter(leader=user, status=Project.ProjectStatus.DRAFT)
+        current_batch = SystemSettingService.get_current_batch()
+        if not current_batch:
+            return Response(
+                {"code": 200, "message": "获取成功", "data": [], "total": 0},
+                status=status.HTTP_200_OK,
+            )
+
+        drafts = Project.objects.filter(
+            leader=user, status=Project.ProjectStatus.DRAFT, batch=current_batch
+        )
 
         if title:
             drafts = drafts.filter(title__icontains=title)

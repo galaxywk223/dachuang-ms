@@ -44,6 +44,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
         teacher_scope = self.request.query_params.get("teacher_scope")
         review_scope = self.request.query_params.get("review_scope")
 
+        current_batch = SystemSettingService.get_current_batch()
+        if not current_batch:
+            return queryset.none()
+        queryset = queryset.filter(project__batch=current_batch)
+
         # 学生只能看到自己项目的审核记录
         if user.is_student:
             queryset = queryset.filter(project__leader=user)

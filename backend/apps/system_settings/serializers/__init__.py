@@ -56,6 +56,14 @@ class ProjectBatchSerializer(serializers.ModelSerializer):
         new_status = attrs.get("status")
         if not instance and new_status and new_status != ProjectBatch.STATUS_DRAFT:
             raise serializers.ValidationError({"status": "新建批次仅允许草稿状态"})
+        if new_status == ProjectBatch.STATUS_ACTIVE:
+            active_qs = ProjectBatch.objects.filter(
+                status=ProjectBatch.STATUS_ACTIVE, is_active=True, is_deleted=False
+            )
+            if instance:
+                active_qs = active_qs.exclude(id=instance.id)
+            if active_qs.exists():
+                raise serializers.ValidationError({"status": "请先结束当前进行中的批次"})
         if instance and new_status and new_status != instance.status:
             transitions = {
                 ProjectBatch.STATUS_DRAFT: ProjectBatch.STATUS_ACTIVE,
@@ -120,4 +128,3 @@ class CertificateSettingSerializer(serializers.ModelSerializer):
 
     def get_seal_image_url(self, obj):
         return self._build_file_url(obj.seal_image)
-

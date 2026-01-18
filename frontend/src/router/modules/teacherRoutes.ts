@@ -17,6 +17,12 @@ export const teacherRoutes: RouteRecordRaw[] = [
         meta: { title: "我的项目" },
       },
       {
+        path: "history-projects",
+        name: "teacher-history-projects",
+        component: () => import("@/views/common/HistoryProjects.vue"),
+        meta: { title: "历史项目" },
+      },
+      {
         path: "change-reviews",
         name: "teacher-change-reviews",
         component: () => import("@/views/teacher/ChangeReviews.vue"),

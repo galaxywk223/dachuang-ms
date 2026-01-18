@@ -61,6 +61,12 @@ export const adminRoutes: RouteRecordRaw[] = [
         component: () => import("@/views/admin/level1/projects/Index.vue"),
         meta: { title: "项目库管理" },
       },
+      {
+        path: "history-projects",
+        name: "level1-history-projects",
+        component: () => import("@/views/common/HistoryProjects.vue"),
+        meta: { title: "历史项目" },
+      },
 
       {
         path: "statistics",

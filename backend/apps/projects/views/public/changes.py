@@ -14,7 +14,7 @@ from ...serializers import (
 )
 from ...services import ProjectChangeService
 from apps.notifications.services import NotificationService
-from apps.system_settings.services import AdminAssignmentService
+from apps.system_settings.services import AdminAssignmentService, SystemSettingService
 
 
 class ProjectChangeRequestViewSet(viewsets.ModelViewSet):
@@ -30,6 +30,10 @@ class ProjectChangeRequestViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         queryset = super().get_queryset()
+        current_batch = SystemSettingService.get_current_batch()
+        if not current_batch:
+            return queryset.none()
+        queryset = queryset.filter(project__batch=current_batch)
         teacher_scope = self.request.query_params.get("teacher_scope")
 
         if user.is_student:
@@ -56,8 +60,15 @@ class ProjectChangeRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        current_batch = SystemSettingService.get_current_batch()
+        if not current_batch:
+            return Response(
+                {"code": 400, "message": "当前没有可用批次"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         try:
-            project = Project.objects.get(id=project_id)
+            project = Project.objects.get(id=project_id, batch=current_batch)
         except Project.DoesNotExist:
             return Response(
                 {"code": 404, "message": "项目不存在"},

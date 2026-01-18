@@ -24,7 +24,7 @@
             </el-select>
             <el-switch
               v-model="showArchived"
-              active-text="显示归档/回收站"
+              active-text="显示归档批次"
               @change="handleFilterChange"
             />
             <el-button type="primary" @click="openBatchDialog">
@@ -92,7 +92,7 @@
               归档
             </el-button>
             <el-button
-              v-if="row.status === 'archived' || row.is_deleted"
+              v-if="row.status === 'archived'"
               type="success"
               link
               @click="restoreBatch(row)"
@@ -159,7 +159,6 @@ type BatchRow = {
   code?: string;
   status?: string;
   is_current?: boolean;
-  is_deleted?: boolean;
   updated_at?: string;
 };
 
@@ -202,7 +201,8 @@ const batchStatusOptions = [
   { value: "archived", label: "已归档" },
 ];
 
-const canDelete = (row: BatchRow) => row.status === "draft" && !row.is_deleted;
+const canDelete = (row: BatchRow) =>
+  row.status === "draft" || row.status === "archived";
 
 const getStatusLabel = (status?: string) => {
   const match = batchStatusOptions.find((item) => item.value === status);
@@ -244,7 +244,6 @@ const loadBatches = async () => {
   try {
     const res = (await listProjectBatches({
       include_archived: showArchived.value ? 1 : 0,
-      include_deleted: showArchived.value ? 1 : 0,
     })) as BatchListResponse | BatchRow[];
     const data = isRecord(res) && "data" in res ? res.data : res;
     batches.value = Array.isArray(data) ? data : [];
@@ -374,16 +373,16 @@ const restoreBatch = async (row: BatchRow) => {
 };
 
 const handleDelete = async (row: BatchRow) => {
+  const message =
+    row.status === "archived"
+      ? "确定删除该归档批次？删除后不可恢复。"
+      : "确定删除该草稿批次？删除后不可恢复。";
   try {
-    await ElMessageBox.confirm(
-      "确定删除该批次？若该批次已有项目，将移入归档并可在回收站恢复。",
-      "确认操作",
-      {
-        type: "warning",
-        confirmButtonText: "继续",
-        cancelButtonText: "取消",
-      }
-    );
+    await ElMessageBox.confirm(message, "确认操作", {
+      type: "warning",
+      confirmButtonText: "继续",
+      cancelButtonText: "取消",
+    });
   } catch {
     return;
   }

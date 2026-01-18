@@ -15,7 +15,7 @@ from apps.projects.models import ProjectPhaseInstance
 from apps.projects.services.phase_service import ProjectPhaseService
 from apps.projects.services.archive_service import ensure_project_archive
 from apps.system_settings.services import WorkflowService
-from apps.system_settings.services import AdminAssignmentService
+from apps.system_settings.services import AdminAssignmentService, SystemSettingService
 from apps.notifications.services import NotificationService
 
 
@@ -692,6 +692,9 @@ class ReviewService:
         """
         获取管理员的待审核列表
         """
+        current_batch = SystemSettingService.get_current_batch()
+        if not current_batch:
+            return Review.objects.none()
         # 排除已结题、已完成、已终止的项目
         excluded_statuses = [
             Project.ProjectStatus.CLOSED,
@@ -703,6 +706,7 @@ class ReviewService:
             status=Review.ReviewStatus.PENDING,
             reviewer__isnull=True,
             is_expert_review=False,
+            project__batch=current_batch,
         ).exclude(project__status__in=excluded_statuses)
 
         query = ReviewService._build_admin_review_filter(admin_user)
@@ -742,6 +746,10 @@ class ReviewService:
                         f"专家 {member.real_name}({member.employee_id}) 不属于 {creator_college}"
                     )
 
+        current_batch = SystemSettingService.get_current_batch()
+        if not current_batch:
+            raise ValueError("当前没有可用批次")
+
         created_reviews = []
         phase = ReviewService._get_phase_from_review_type(review_type)
         if not phase:
@@ -750,7 +758,7 @@ class ReviewService:
         with transaction.atomic():
             for pid in project_ids:
                 try:
-                    project = Project.objects.get(pk=pid)
+                    project = Project.objects.get(pk=pid, batch=current_batch)
                 except Project.DoesNotExist:
                     continue
 

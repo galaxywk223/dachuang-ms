@@ -239,6 +239,11 @@ class ProjectApplicationService:
         try:
             with transaction.atomic():
                 current_batch = _get_current_batch()
+                if not current_batch:
+                    return (
+                        {"code": 400, "message": "当前没有进行中的批次，无法申报项目"},
+                        status.HTTP_400_BAD_REQUEST,
+                    )
                 if not is_draft:
                     ok, msg = _check_application_window(current_batch)
                     if not ok:
@@ -474,6 +479,11 @@ class ProjectApplicationService:
         try:
             with transaction.atomic():
                 current_batch = _get_current_batch()
+                if not current_batch or project.batch_id != current_batch.id:
+                    return (
+                        {"code": 400, "message": "当前批次不允许操作该项目"},
+                        status.HTTP_400_BAD_REQUEST,
+                    )
                 if not is_draft:
                     ok, msg = _check_application_window(current_batch)
                     if not ok:
@@ -653,6 +663,13 @@ class ProjectApplicationService:
             return (
                 {"code": 404, "message": "项目不存在或无权限访问"},
                 status.HTTP_404_NOT_FOUND,
+            )
+
+        current_batch = _get_current_batch()
+        if not current_batch or project.batch_id != current_batch.id:
+            return (
+                {"code": 400, "message": "当前批次不允许操作该项目"},
+                status.HTTP_400_BAD_REQUEST,
             )
 
         if project.status not in [
