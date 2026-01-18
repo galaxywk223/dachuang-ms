@@ -97,14 +97,11 @@
                 <el-table-column label="退回设置" width="100" align="center">
                   <template #default="{ row }">
                     <el-tag
-                      v-if="
-                        row.allowed_reject_to &&
-                        row.allowed_reject_to.length > 0
-                      "
+                      v-if="row.allowed_reject_to"
                       type="danger"
                       size="small"
                     >
-                      {{ row.allowed_reject_to.length }} 个节点
+                      已设置
                     </el-tag>
                     <span v-else class="text-gray">无</span>
                   </template>

@@ -218,7 +218,7 @@ const getStatusType = (status: string) => {
     MID_TERM_DRAFT: "info",
     MID_TERM_SUBMITTED: "warning",
     MID_TERM_REVIEWING: "warning",
-    MID_TERM_APPROVED: "success",
+    READY_FOR_CLOSURE: "success",
     MID_TERM_REJECTED: "danger",
     MID_TERM_RETURNED: "danger",
   };
@@ -231,7 +231,7 @@ const getStatusText = (status: string) => {
     MID_TERM_DRAFT: "中期草稿",
     MID_TERM_SUBMITTED: "已提交",
     MID_TERM_REVIEWING: "审核中",
-    MID_TERM_APPROVED: "审核通过",
+    READY_FOR_CLOSURE: "待结题",
     MID_TERM_REJECTED: "审核不通过",
     MID_TERM_RETURNED: "退回修改",
   };

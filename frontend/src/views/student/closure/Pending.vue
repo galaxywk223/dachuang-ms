@@ -197,8 +197,6 @@ const getProjectYear = (projectNo: string) => {
 const getStatusType = (status: string) => {
   const typeMap: Record<string, string> = {
     READY_FOR_CLOSURE: "warning",
-    MID_TERM_APPROVED: "warning", // legacy
-    IN_PROGRESS: "primary", // legacy
     CLOSURE_RETURNED: "danger",
     CLOSURE_LEVEL2_REJECTED: "danger",
     CLOSURE_LEVEL1_REJECTED: "danger",

@@ -280,7 +280,7 @@ const fetchProjects = async () => {
       const res = await request.get("/projects/", {
         params: {
           status_in:
-            "IN_PROGRESS,MID_TERM_DRAFT,MID_TERM_SUBMITTED,MID_TERM_REVIEWING,MID_TERM_APPROVED",
+            "IN_PROGRESS,MID_TERM_DRAFT,MID_TERM_SUBMITTED,MID_TERM_REVIEWING,READY_FOR_CLOSURE",
         },
       });
       const payload = isRecord(res) && isRecord(res.data) ? res.data : res;

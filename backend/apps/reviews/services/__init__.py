@@ -14,7 +14,7 @@ from apps.projects.models import Project
 from apps.projects.models import ProjectPhaseInstance
 from apps.projects.services.phase_service import ProjectPhaseService
 from apps.projects.services.archive_service import ensure_project_archive
-from apps.system_settings.services import SystemSettingService, WorkflowService
+from apps.system_settings.services import WorkflowService
 from apps.system_settings.services import AdminAssignmentService
 from apps.notifications.services import NotificationService
 
@@ -42,7 +42,9 @@ class ReviewService:
         移动到下一个工作流节点
         返回: (next_node, status_updated) - 下一节点定义和是否更新了状态
         """
-        next_node = WorkflowService.get_next_node_by_id(current_node_id)
+        next_node = WorkflowService.get_next_node_by_id(
+            current_node_id, phase_instance.phase, project.batch
+        )
 
         if next_node:
             # 更新 phase_instance 的当前节点
@@ -92,12 +94,19 @@ class ReviewService:
         # 构造 WorkflowNodeDef（从数据库对象）
         from apps.system_settings.services.workflow_service import WorkflowNodeDef
 
+        role_code = target_node_obj.get_role_code()
+        if not role_code:
+            ReviewService.logger.error(
+                f"Target node {target_node_id} has no role configured"
+            )
+            return False
+
         target_node = WorkflowNodeDef(
             id=target_node_obj.id,
             code=target_node_obj.code,
             name=target_node_obj.name,
             node_type=target_node_obj.node_type,
-            role=target_node_obj.get_role_code() or target_node_obj.role,
+            role=role_code,
             review_level=target_node_obj.review_level,
             require_expert_review=target_node_obj.require_expert_review,
             return_policy=target_node_obj.return_policy,
@@ -184,13 +193,13 @@ class ReviewService:
             )
             return
 
-        # 从节点直接读取 review_level，不再硬编码映射
-        # 如果节点有 review_level，使用它
-        # 否则使用节点的 role 作为 review_level
-        review_level = node.review_level or node.role or "UNKNOWN"
+        # review_level 统一使用角色代码，保证权限逻辑一致
+        review_level = node.role or "UNKNOWN"
 
         # 检查是否已存在该节点的待审核记录
         workflow_node_id = ReviewService._resolve_workflow_node_id(node)
+        if not workflow_node_id:
+            raise ValueError("审核节点未绑定工作流配置，无法创建审核记录")
         existing_qs = Review.objects.filter(
             project=project,
             review_type=review_type,
@@ -254,7 +263,7 @@ class ReviewService:
                 )
 
         # 备用方案：根据阶段和节点属性推断（保持向后兼容）
-        role_code = node.role or node.get_role_code()
+        role_code = node.role
 
         if phase == ProjectPhaseInstance.Phase.APPLICATION:
             if role_code == "TEACHER":
@@ -363,21 +372,15 @@ class ReviewService:
         if node:
             expert_required = node.require_expert_review
 
-        if review.workflow_node_id:
-            expert_qs = Review.objects.filter(
-                project=review.project,
-                phase_instance=review.phase_instance,
-                workflow_node_id=review.workflow_node_id,
-                is_expert_review=True,
-            )
-        else:
-            expert_qs = Review.objects.filter(
-                project=review.project,
-                phase_instance=review.phase_instance,
-                review_type=review.review_type,
-                review_level=review.review_level,
-                is_expert_review=True,
-            )
+        if not review.workflow_node_id:
+            raise ValueError("审核记录缺少工作流节点，无法校验专家评审状态")
+
+        expert_qs = Review.objects.filter(
+            project=review.project,
+            phase_instance=review.phase_instance,
+            workflow_node_id=review.workflow_node_id,
+            is_expert_review=True,
+        )
 
         if node and not expert_required:
             return
@@ -423,6 +426,8 @@ class ReviewService:
         """
         创建审核记录
         """
+        if workflow_node is None:
+            raise ValueError("审核记录必须绑定工作流节点")
         payload = {
             "project": project,
             "phase_instance": phase_instance,
@@ -442,97 +447,37 @@ class ReviewService:
 
     @staticmethod
     @transaction.atomic
-    def create_teacher_review(project):
+    def start_phase_review(project, phase, *, created_by=None):
         """
-        创建导师审核记录（申报审核）
+        从学生提交节点进入流程并创建首个审核节点的 Review
         """
-        teacher_node = ReviewService._find_teacher_node(
-            ProjectPhaseInstance.Phase.APPLICATION, project.batch
-        )
-        step = teacher_node.code if teacher_node else "TEACHER_REVIEW"
-        review_level = teacher_node.review_level if teacher_node else "TEACHER"
+        initial_node = WorkflowService.get_initial_node(phase, project.batch)
+        if not initial_node:
+            raise ValueError("流程未配置学生提交节点")
+        if not WorkflowService.get_node_by_id(initial_node.id):
+            raise ValueError("流程未落库，请先配置并启用工作流")
+        if initial_node.role != "STUDENT":
+            raise ValueError("流程配置错误：首节点必须为学生提交")
+
         phase_instance = ProjectPhaseService.ensure_current(
-            project, ProjectPhaseInstance.Phase.APPLICATION, step=step
-        )
-        project.status = Project.ProjectStatus.TEACHER_AUDITING
-        project.save(update_fields=["status"])
-
-        return ReviewService.create_review(
-            project=project,
-            review_type=Review.ReviewType.APPLICATION,
-            review_level=review_level or "TEACHER",
-            phase_instance=phase_instance,
-            workflow_node=teacher_node.id if teacher_node else None,
+            project,
+            phase,
+            step=initial_node.code,
+            created_by=created_by,
         )
 
-    @staticmethod
-    @transaction.atomic
-    def create_level2_review(project):
-        """
-        创建二级审核记录（申报审核 - 学院）
-        """
-        # 导师通过后进入二级审核
-        # status usually SUBMITTED or COLLEGE_AUDITING
-        # If we use strict statuses: COLLEGE_AUDITING
-        project.status = Project.ProjectStatus.COLLEGE_AUDITING
-        project.save(update_fields=["status"])
+        if phase_instance.current_node_id and phase_instance.current_node_id != initial_node.id:
+            return phase_instance
 
-        node = WorkflowService.find_expert_node(
-            ProjectPhaseInstance.Phase.APPLICATION,
-            "LEVEL2",
-            project.batch,
-        )
-        step = node.code if node else "COLLEGE_REVIEW"
-        phase_instance = ProjectPhaseService.ensure_current(
-            project, ProjectPhaseInstance.Phase.APPLICATION, step=step
-        )
-        return ReviewService.create_review(
-            project=project,
-            review_type=Review.ReviewType.APPLICATION,
-            review_level="LEVEL2",
-            phase_instance=phase_instance,
-            workflow_node=node.id if node else None,
-        )
+        if phase_instance.current_node_id != initial_node.id:
+            phase_instance.current_node_id = initial_node.id
+            phase_instance.step = initial_node.code
+            phase_instance.save(
+                update_fields=["current_node_id", "step", "updated_at"]
+            )
 
-    @staticmethod
-    @transaction.atomic
-    def create_level1_review(project):
-        """
-        创建一级审核记录
-        """
-        node = WorkflowService.find_expert_node(
-            ProjectPhaseInstance.Phase.APPLICATION,
-            "LEVEL1",
-            project.batch,
-        )
-        existing_qs = Review.objects.filter(
-            project=project,
-            review_type=Review.ReviewType.APPLICATION,
-            review_level="LEVEL1",
-            status=Review.ReviewStatus.PENDING,
-        )
-        workflow_node_id = ReviewService._resolve_workflow_node_id(node)
-        if workflow_node_id:
-            existing_qs = existing_qs.filter(workflow_node_id=workflow_node_id)
-        existing = existing_qs.first()
-        if existing:
-            project.status = Project.ProjectStatus.LEVEL1_AUDITING
-            project.save(update_fields=["status"])
-            return existing
-
-        step = node.code if node else "SCHOOL_PUBLISH"
-        phase_instance = ProjectPhaseService.ensure_current(
-            project, ProjectPhaseInstance.Phase.APPLICATION, step=step
-        )
-        project.status = Project.ProjectStatus.LEVEL1_AUDITING
-        project.save(update_fields=["status"])
-        return ReviewService.create_review(
-            project=project,
-            review_type=Review.ReviewType.APPLICATION,
-            review_level="LEVEL1",
-            phase_instance=phase_instance,
-            workflow_node=workflow_node_id,
-        )
+        ReviewService._move_to_next_node(project, phase_instance, initial_node.id)
+        return phase_instance
 
     @staticmethod
     @transaction.atomic
@@ -576,11 +521,7 @@ class ReviewService:
         phase_instance = review.phase_instance
 
         if not phase_instance:
-            # 向后兼容：如果没有 phase_instance，使用旧逻辑
-            ReviewService.logger.warning(
-                f"Review {review.id} has no phase_instance, using legacy approval logic"
-            )
-            return ReviewService._legacy_approve_review(review, project)
+            raise ValueError("审核记录缺少阶段实例，无法流转")
 
         if (
             review.workflow_node_id
@@ -605,11 +546,7 @@ class ReviewService:
                 phase_instance.save(update_fields=["current_node_id", "updated_at"])
                 current_node_id = inferred_node.id
         if not current_node_id:
-            # 向后兼容：如果没有 current_node_id，根据 review_type 推断
-            ReviewService.logger.warning(
-                f"Phase instance {phase_instance.id} has no current_node_id, inferring from review"
-            )
-            return ReviewService._legacy_approve_review(review, project)
+            raise ValueError("流程状态异常：缺少当前节点")
 
         # 移动到下一个节点
         next_node, status_updated = ReviewService._move_to_next_node(
@@ -625,105 +562,7 @@ class ReviewService:
 
     @staticmethod
     @transaction.atomic
-    def _legacy_approve_review(review, project):
-        """
-        旧的审核通过逻辑（向后兼容）
-        """
-        # 申报审核
-        if review.review_type == Review.ReviewType.APPLICATION:
-            if review.review_level == "TEACHER":
-                project.status = Project.ProjectStatus.TEACHER_APPROVED
-                ReviewService.create_level2_review(project)
-            elif review.review_level == "LEVEL2":
-                if not Review.objects.filter(
-                    project=project,
-                    review_type=Review.ReviewType.APPLICATION,
-                    review_level="LEVEL1",
-                    status=Review.ReviewStatus.PENDING,
-                ).exists():
-                    ReviewService.create_level1_review(project)
-                else:
-                    project.status = Project.ProjectStatus.LEVEL1_AUDITING
-                    project.save(update_fields=["status"])
-            elif review.review_level == "LEVEL1":
-                project.status = Project.ProjectStatus.IN_PROGRESS
-                if review.phase_instance:
-                    ProjectPhaseService.mark_completed(
-                        review.phase_instance, step="PUBLISHED"
-                    )
-
-        # 中期审核
-        elif review.review_type == Review.ReviewType.MID_TERM:
-            if review.review_level == "TEACHER":
-                project.status = Project.ProjectStatus.MID_TERM_REVIEWING
-                project.save(update_fields=["status"])
-                node = WorkflowService.find_expert_node(
-                    ProjectPhaseInstance.Phase.MID_TERM,
-                    "LEVEL2",
-                    "COLLEGE",
-                    project.batch,
-                )
-                step = node.code if node else "COLLEGE_FINALIZE"
-                phase_instance = ProjectPhaseService.ensure_current(
-                    project, ProjectPhaseInstance.Phase.MID_TERM, step=step
-                )
-                review.phase_instance = phase_instance
-                review.save(update_fields=["phase_instance"])
-            else:
-                # 兼容动态角色：只要不是导师节点，视为中期完成
-                project.status = Project.ProjectStatus.READY_FOR_CLOSURE
-                if review.phase_instance:
-                    ProjectPhaseService.mark_completed(
-                        review.phase_instance, step="COMPLETED"
-                    )
-
-        # 结题审核
-        elif review.review_type == Review.ReviewType.CLOSURE:
-            if review.review_level == "TEACHER":
-                project.status = Project.ProjectStatus.CLOSURE_LEVEL2_REVIEWING
-                project.save(update_fields=["status"])
-                node = WorkflowService.find_expert_node(
-                    ProjectPhaseInstance.Phase.CLOSURE,
-                    "LEVEL2",
-                    "COLLEGE",
-                    project.batch,
-                )
-                step = node.code if node else "COLLEGE_REVIEW"
-                phase_instance = ProjectPhaseService.ensure_current(
-                    project, ProjectPhaseInstance.Phase.CLOSURE, step=step
-                )
-                review.phase_instance = phase_instance
-                review.save(update_fields=["phase_instance"])
-            elif review.review_level == "LEVEL2":
-                project.status = Project.ProjectStatus.CLOSURE_LEVEL1_REVIEWING
-                node = WorkflowService.find_expert_node(
-                    ProjectPhaseInstance.Phase.CLOSURE,
-                    "LEVEL1",
-                    "SCHOOL",
-                    project.batch,
-                )
-                step = node.code if node else "SCHOOL_FINALIZE"
-                phase_instance = ProjectPhaseService.ensure_current(
-                    project, ProjectPhaseInstance.Phase.CLOSURE, step=step
-                )
-                review.phase_instance = phase_instance
-                review.save(update_fields=["phase_instance"])
-            elif review.review_level == "LEVEL1":
-                project.status = Project.ProjectStatus.CLOSED
-                ensure_project_archive(project)
-                if review.phase_instance:
-                    ProjectPhaseService.mark_completed(
-                        review.phase_instance, step="COMPLETED"
-                    )
-
-        project.save()
-        return True
-
-    @staticmethod
-    @transaction.atomic
-    def reject_review(
-        review, reviewer, comments="", reject_to=None, target_node_id=None
-    ):
+    def reject_review(review, reviewer, comments="", target_node_id=None):
         """
         审核不通过 - 使用动态工作流引擎
 
@@ -731,7 +570,6 @@ class ReviewService:
             review: 审核记录
             reviewer: 审核人
             comments: 审核意见
-            reject_to: 旧参数，向后兼容 ("teacher", "student", None)
             target_node_id: 新参数，退回到指定节点ID
         """
         ReviewService._ensure_expert_reviews_completed(review)
@@ -749,6 +587,9 @@ class ReviewService:
 
         project = review.project
         phase_instance = review.phase_instance
+
+        if not phase_instance:
+            raise ValueError("审核记录缺少阶段实例，无法退回")
 
         # 使用动态流程引擎处理退回
         if (
@@ -773,317 +614,49 @@ class ReviewService:
                 phase_instance.current_node_id = inferred_node.id
                 phase_instance.save(update_fields=["current_node_id", "updated_at"])
 
-        if phase_instance and phase_instance.current_node_id:
-            current_node_id = phase_instance.current_node_id
+        if not phase_instance.current_node_id:
+            raise ValueError("流程状态异常：缺少当前节点")
 
-            # 如果指定了 target_node_id，退回到指定节点
-            if target_node_id:
-                success = ReviewService._move_to_target_node(
-                    project, phase_instance, target_node_id, comments
+        current_node_id = phase_instance.current_node_id
+
+        # 如果指定了 target_node_id，退回到指定节点
+        if target_node_id:
+            success = ReviewService._move_to_target_node(
+                project, phase_instance, target_node_id, comments
+            )
+            if success:
+                ReviewService.logger.info(
+                    f"Project {project.project_no} rejected from node {current_node_id}, "
+                    f"returned to node {target_node_id}"
                 )
-                if success:
-                    ReviewService.logger.info(
-                        f"Project {project.project_no} rejected from node {current_node_id}, "
-                        f"returned to node {target_node_id}"
-                    )
-                    return True
-                else:
-                    ReviewService.logger.error(
-                        f"Failed to return project {project.project_no} to node {target_node_id}"
-                    )
+                return True
+            ReviewService.logger.error(
+                f"Failed to return project {project.project_no} to node {target_node_id}"
+            )
+            return False
 
-            # 如果没有指定 target_node_id，获取当前节点的可退回节点列表
-            reject_targets = WorkflowService.get_reject_target_nodes(current_node_id)
+        reject_targets = WorkflowService.get_reject_target_nodes(
+            current_node_id, phase_instance.phase, project.batch
+        )
+        if not reject_targets:
+            raise ValueError("当前节点未配置退回目标")
 
-            if reject_targets and len(reject_targets) > 0:
-                # 默认退回到第一个可退回节点（通常是学生节点）
-                default_target = reject_targets[0]
-                success = ReviewService._move_to_target_node(
-                    project, phase_instance, default_target.id, comments
-                )
-                if success:
-                    ReviewService.logger.info(
-                        f"Project {project.project_no} rejected from node {current_node_id}, "
-                        f"auto-returned to node {default_target.id} ({default_target.name})"
-                    )
-                    return True
-            else:
-                # 没有配置退回规则，退回到学生节点
-                ReviewService.logger.warning(
-                    f"Node {current_node_id} has no reject targets configured, "
-                    f"using legacy reject logic"
-                )
+        default_target = reject_targets[0]
+        success = ReviewService._move_to_target_node(
+            project, phase_instance, default_target.id, comments
+        )
+        if success:
+            ReviewService.logger.info(
+                f"Project {project.project_no} rejected from node {current_node_id}, "
+                f"auto-returned to node {default_target.id} ({default_target.name})"
+            )
+            return True
 
-        # 向后兼容：使用旧的退回逻辑
-        return ReviewService._legacy_reject_review(review, project, reject_to)
+        return False
+
 
     @staticmethod
     @transaction.atomic
-    def _legacy_reject_review(review, project, reject_to=None):
-        """
-        旧的审核拒绝逻辑（向后兼容）
-        """
-        process_rules = SystemSettingService.get_setting(
-            "PROCESS_RULES", batch=project.batch
-        )
-        reject_to_previous = bool(process_rules.get("reject_to_previous", False))
-
-        # 申报审核
-        if review.review_type == Review.ReviewType.APPLICATION:
-            if review.review_level == "TEACHER":
-                project.status = Project.ProjectStatus.TEACHER_REJECTED
-            elif review.review_level == "LEVEL2":
-                if reject_to_previous:
-                    existing = Review.objects.filter(
-                        project=project,
-                        review_type=Review.ReviewType.APPLICATION,
-                        review_level="TEACHER",
-                        status=Review.ReviewStatus.PENDING,
-                    ).exists()
-                    if not existing:
-                        ReviewService.create_teacher_review(project)
-                    project.status = Project.ProjectStatus.TEACHER_AUDITING
-                else:
-                    project.status = Project.ProjectStatus.APPLICATION_RETURNED
-                    if review.phase_instance:
-                        ProjectPhaseService.mark_returned(
-                            review.phase_instance,
-                            return_to=ProjectPhaseInstance.ReturnTo.STUDENT,
-                            reason=review.comments,
-                        )
-            elif review.review_level == "LEVEL1":
-                if reject_to_previous:
-                    existing = Review.objects.filter(
-                        project=project,
-                        review_type=Review.ReviewType.APPLICATION,
-                        review_level="LEVEL2",
-                        status=Review.ReviewStatus.PENDING,
-                    ).exists()
-                    if not existing:
-                        ReviewService.create_level2_review(project)
-                    project.status = Project.ProjectStatus.COLLEGE_AUDITING
-                else:
-                    project.status = Project.ProjectStatus.APPLICATION_RETURNED
-                    if review.phase_instance:
-                        ProjectPhaseService.mark_returned(
-                            review.phase_instance,
-                            return_to=ProjectPhaseInstance.ReturnTo.STUDENT,
-                            reason=review.comments,
-                        )
-
-        # 中期审核
-        elif review.review_type == Review.ReviewType.MID_TERM:
-            if review.review_level == "LEVEL2" and reject_to_previous:
-                existing = Review.objects.filter(
-                    project=project,
-                    review_type=Review.ReviewType.MID_TERM,
-                    review_level="TEACHER",
-                    status=Review.ReviewStatus.PENDING,
-                ).exists()
-                if not existing:
-                    ReviewService.create_mid_term_teacher_review(project)
-                project.status = Project.ProjectStatus.MID_TERM_SUBMITTED
-            else:
-                project.status = Project.ProjectStatus.MID_TERM_REJECTED
-
-        # 结题审核
-        elif review.review_type == Review.ReviewType.CLOSURE:
-            if review.review_level == "TEACHER":
-                project.status = Project.ProjectStatus.CLOSURE_DRAFT
-            elif review.review_level == "LEVEL2":
-                if reject_to_previous:
-                    existing = Review.objects.filter(
-                        project=project,
-                        review_type=Review.ReviewType.CLOSURE,
-                        review_level="TEACHER",
-                        status=Review.ReviewStatus.PENDING,
-                    ).exists()
-                    if not existing:
-                        ReviewService.create_closure_teacher_review(project)
-                    project.status = Project.ProjectStatus.CLOSURE_SUBMITTED
-                else:
-                    project.status = Project.ProjectStatus.CLOSURE_LEVEL2_REJECTED
-            elif review.review_level == "LEVEL1":
-                if reject_to == "teacher":
-                    project.status = Project.ProjectStatus.CLOSURE_SUBMITTED
-                    ReviewService.create_closure_teacher_review(project)
-                elif reject_to == "student":
-                    project.status = Project.ProjectStatus.CLOSURE_DRAFT
-                elif reject_to_previous:
-                    existing = Review.objects.filter(
-                        project=project,
-                        review_type=Review.ReviewType.CLOSURE,
-                        review_level="LEVEL2",
-                        status=Review.ReviewStatus.PENDING,
-                    ).exists()
-                    if not existing:
-                        ReviewService.create_closure_level2_review(project)
-                    project.status = Project.ProjectStatus.CLOSURE_LEVEL2_REVIEWING
-                else:
-                    project.status = Project.ProjectStatus.CLOSURE_LEVEL1_REJECTED
-
-        project.save()
-        return True
-
-    @staticmethod
-    @transaction.atomic
-    def create_closure_level2_review(project):
-        """
-        创建结题二级审核记录
-        """
-        # 更新项目状态
-        project.status = Project.ProjectStatus.CLOSURE_LEVEL2_REVIEWING
-        project.save()
-        node = WorkflowService.find_expert_node(
-            ProjectPhaseInstance.Phase.CLOSURE,
-            "LEVEL2",
-            "COLLEGE",
-            project.batch,
-        )
-        step = node.code if node else "COLLEGE_REVIEW"
-        phase_instance = ProjectPhaseService.ensure_current(
-            project, ProjectPhaseInstance.Phase.CLOSURE, step=step
-        )
-        return ReviewService.create_review(
-            project=project,
-            review_type=Review.ReviewType.CLOSURE,
-            review_level="LEVEL2",
-            phase_instance=phase_instance,
-            workflow_node=node.id if node else None,
-        )
-
-    @staticmethod
-    @transaction.atomic
-    def create_closure_level1_review(project):
-        """
-        创建结题一级审核记录
-        """
-        node = WorkflowService.find_expert_node(
-            ProjectPhaseInstance.Phase.CLOSURE,
-            "LEVEL1",
-            "SCHOOL",
-            project.batch,
-        )
-        existing_qs = Review.objects.filter(
-            project=project,
-            review_type=Review.ReviewType.CLOSURE,
-            review_level="LEVEL1",
-            status=Review.ReviewStatus.PENDING,
-        )
-        workflow_node_id = ReviewService._resolve_workflow_node_id(node)
-        if workflow_node_id:
-            existing_qs = existing_qs.filter(workflow_node_id=workflow_node_id)
-        existing = existing_qs.first()
-        if existing:
-            project.status = Project.ProjectStatus.CLOSURE_LEVEL1_REVIEWING
-            project.save(update_fields=["status"])
-            return existing
-        step = node.code if node else "SCHOOL_FINALIZE"
-        phase_instance = ProjectPhaseService.ensure_current(
-            project, ProjectPhaseInstance.Phase.CLOSURE, step=step
-        )
-        # 更新项目状态
-        project.status = Project.ProjectStatus.CLOSURE_LEVEL1_REVIEWING
-        project.save(update_fields=["status"])
-
-        return ReviewService.create_review(
-            project=project,
-            review_type=Review.ReviewType.CLOSURE,
-            review_level="LEVEL1",
-            phase_instance=phase_instance,
-            workflow_node=workflow_node_id,
-        )
-
-    @staticmethod
-    @transaction.atomic
-    def create_mid_term_review(project):
-        """
-        创建中期审核记录（二级审核）
-        """
-        # 更新项目状态
-        project.status = Project.ProjectStatus.MID_TERM_REVIEWING
-        project.save(update_fields=["status"])
-
-        node = WorkflowService.find_expert_node(
-            ProjectPhaseInstance.Phase.MID_TERM,
-            "LEVEL2",
-            "COLLEGE",
-            project.batch,
-        )
-        step = node.code if node else "COLLEGE_FINALIZE"
-        phase_instance = ProjectPhaseService.ensure_current(
-            project, ProjectPhaseInstance.Phase.MID_TERM, step=step
-        )
-        return phase_instance
-
-    @staticmethod
-    @transaction.atomic
-    def create_mid_term_teacher_review(project):
-        """
-        创建中期审核记录（导师审核）
-        """
-        teacher_node = ReviewService._find_teacher_node(
-            ProjectPhaseInstance.Phase.MID_TERM, project.batch
-        )
-        step = teacher_node.code if teacher_node else "TEACHER_REVIEW"
-        phase_instance = ProjectPhaseService.ensure_current(
-            project, ProjectPhaseInstance.Phase.MID_TERM, step=step
-        )
-        existing_qs = Review.objects.filter(
-            project=project,
-            review_type=Review.ReviewType.MID_TERM,
-            review_level="TEACHER",
-            status=Review.ReviewStatus.PENDING,
-        )
-        workflow_node_id = ReviewService._resolve_workflow_node_id(teacher_node)
-        if workflow_node_id:
-            existing_qs = existing_qs.filter(workflow_node_id=workflow_node_id)
-        existing = existing_qs.first()
-        if existing:
-            return existing
-
-        return ReviewService.create_review(
-            project=project,
-            review_type=Review.ReviewType.MID_TERM,
-            review_level="TEACHER",
-            phase_instance=phase_instance,
-            workflow_node=workflow_node_id,
-        )
-
-    @staticmethod
-    @transaction.atomic
-    def create_closure_teacher_review(project):
-        """
-        创建结题审核记录（导师审核）
-        """
-        teacher_node = ReviewService._find_teacher_node(
-            ProjectPhaseInstance.Phase.CLOSURE, project.batch
-        )
-        existing_qs = Review.objects.filter(
-            project=project,
-            review_type=Review.ReviewType.CLOSURE,
-            review_level="TEACHER",
-            status=Review.ReviewStatus.PENDING,
-        )
-        workflow_node_id = ReviewService._resolve_workflow_node_id(teacher_node)
-        if workflow_node_id:
-            existing_qs = existing_qs.filter(workflow_node_id=workflow_node_id)
-        existing = existing_qs.first()
-        if existing:
-            return existing
-        step = teacher_node.code if teacher_node else "TEACHER_REVIEW"
-        phase_instance = ProjectPhaseService.ensure_current(
-            project, ProjectPhaseInstance.Phase.CLOSURE, step=step
-        )
-        return ReviewService.create_review(
-            project=project,
-            review_type=Review.ReviewType.CLOSURE,
-            review_level="TEACHER",
-            phase_instance=phase_instance,
-            workflow_node=workflow_node_id,
-        )
-
-    @staticmethod
     def _build_admin_review_filter(admin_user):
         """
         根据管理员角色和工作流节点配置构建审核过滤条件
@@ -1098,8 +671,8 @@ class ReviewService:
 
         # 查找所有该角色负责的工作流节点
         nodes = WorkflowNode.objects.filter(
-            role=role_code, is_active=True
-        ).select_related("workflow")
+            role_fk__code=role_code, is_active=True
+        ).select_related("workflow", "role_fk")
 
         if not nodes.exists():
             return None
@@ -1149,7 +722,6 @@ class ReviewService:
         project_ids,
         group_id,
         review_type=Review.ReviewType.APPLICATION,
-        review_level="LEVEL2",
         creator=None,
         target_node_id=None,
     ):
@@ -1246,11 +818,9 @@ class ReviewService:
                 )
                 if creator and assigned_user.id != creator.id:
                     raise ValueError("无权限分配该节点的专家评审任务")
-                review_level_value = (
-                    node_obj.review_level or node_obj.get_role_code() or review_level
-                )
+                review_level_value = node_obj.get_role_code()
                 if not review_level_value:
-                    raise ValueError("审核节点未配置审核级别或角色")
+                    raise ValueError("审核节点未配置角色")
 
                 for expert in experts:
                     # Check duplication

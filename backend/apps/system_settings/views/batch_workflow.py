@@ -150,14 +150,22 @@ class BatchWorkflowViewSet(viewsets.ViewSet):
 
         default_nodes = DEFAULT_WORKFLOWS.get(phase, [])
 
+        from apps.users.models import Role
+
         created_nodes = []
         for idx, node_def in enumerate(default_nodes):
+            role_obj = Role.objects.filter(code=node_def.role).first()
+            if not role_obj:
+                return Response(
+                    {"detail": f"未找到角色配置: {node_def.role}"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             node = WorkflowNode.objects.create(
                 workflow=workflow,
                 code=node_def.code,
                 name=node_def.name,
                 node_type=node_def.node_type,
-                role=node_def.role,
+                role_fk=role_obj,
                 review_level=node_def.review_level,
                 require_expert_review=node_def.require_expert_review,
                 return_policy=node_def.return_policy,
@@ -373,17 +381,17 @@ class BatchWorkflowViewSet(viewsets.ViewSet):
             node = node_map.get(node_id)
             if not node or not node.allowed_reject_to:
                 continue
-            for target_id in node.allowed_reject_to:
-                if target_id not in order_map:
-                    return Response(
-                        {"detail": "退回目标节点不存在，请先修正退回配置"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-                if order_map[target_id] >= order_map[node_id]:
-                    return Response(
-                        {"detail": "退回目标必须为前序节点"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
+            target_id = node.allowed_reject_to
+            if target_id not in order_map:
+                return Response(
+                    {"detail": "退回目标节点不存在，请先修正退回配置"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if order_map[target_id] >= order_map[node_id]:
+                return Response(
+                    {"detail": "退回目标必须为前序节点"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         # 更新排序
         for idx, node_id in enumerate(node_ids):

@@ -106,17 +106,17 @@ def _validate_limits(user, advisors_data, members_data, project=None, batch=None
         active_projects = active_projects.exclude(id=project.id)
         active_projects_all = active_projects_all.exclude(id=project.id)
 
-    if max_teacher_active:
-        excellent_project_ids = []
-        if teacher_excellent_bonus:
-            excellent_project_ids = list(
-                Review.objects.filter(
-                    review_type=Review.ReviewType.CLOSURE,
-                    review_level="LEVEL1",
-                    status=Review.ReviewStatus.APPROVED,
-                    closure_rating=Review.ClosureRating.EXCELLENT,
-                ).values_list("project_id", flat=True)
-            )
+        if max_teacher_active:
+            excellent_project_ids = []
+            if teacher_excellent_bonus:
+                excellent_project_ids = list(
+                    Review.objects.filter(
+                        review_type=Review.ReviewType.CLOSURE,
+                        workflow_node__role_fk__code="LEVEL1_ADMIN",
+                        status=Review.ReviewStatus.APPROVED,
+                        closure_rating=Review.ClosureRating.EXCELLENT,
+                    ).values_list("project_id", flat=True)
+                )
 
         for advisor in advisors_data:
             advisor_id = (
@@ -352,15 +352,7 @@ class ProjectApplicationService:
                         )
                 project.save()
 
-                if (
-                    not is_draft
-                    and not Review.objects.filter(
-                        project=project,
-                        review_type=Review.ReviewType.APPLICATION,
-                        review_level="TEACHER",
-                        status=Review.ReviewStatus.PENDING,
-                    ).exists()
-                ):
+                if not is_draft:
                     current_phase = ProjectPhaseService.get_current(
                         project, ProjectPhaseInstance.Phase.APPLICATION
                     )
@@ -375,7 +367,11 @@ class ProjectApplicationService:
                         )
                     from apps.reviews.services import ReviewService
 
-                    ReviewService.create_teacher_review(project)
+                    ReviewService.start_phase_review(
+                        project,
+                        ProjectPhaseInstance.Phase.APPLICATION,
+                        created_by=request.user,
+                    )
 
                 project.advisors.all().delete()
                 for idx, advisor_data in enumerate(advisors_data or []):
@@ -553,15 +549,7 @@ class ProjectApplicationService:
                         )
                 project.save()
 
-                if (
-                    not is_draft
-                    and not Review.objects.filter(
-                        project=project,
-                        review_type=Review.ReviewType.APPLICATION,
-                        review_level="TEACHER",
-                        status=Review.ReviewStatus.PENDING,
-                    ).exists()
-                ):
+                if not is_draft:
                     current_phase = ProjectPhaseService.get_current(
                         project, ProjectPhaseInstance.Phase.APPLICATION
                     )
@@ -576,7 +564,11 @@ class ProjectApplicationService:
                         )
                     from apps.reviews.services import ReviewService
 
-                    ReviewService.create_teacher_review(project)
+                    ReviewService.start_phase_review(
+                        project,
+                        ProjectPhaseInstance.Phase.APPLICATION,
+                        created_by=request.user,
+                    )
 
                 project.advisors.all().delete()
                 for idx, advisor_data in enumerate(advisors_data or []):

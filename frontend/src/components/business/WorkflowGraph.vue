@@ -185,68 +185,61 @@ function renderWorkflow() {
     }
 
     // Create Reject/Return Edges
-    const rejectTargets = Array.isArray(node.allowed_reject_to)
-      ? node.allowed_reject_to
-      : node.allowed_reject_to
-      ? [node.allowed_reject_to]
-      : [];
-
-    if (rejectTargets.length > 0) {
-      rejectTargets.forEach((targetId: number) => {
-        const targetIndex = props.nodes.findIndex((n) => n.id === targetId);
-        // Ensure filtering valid backward links
-        if (targetIndex !== -1 && targetIndex < index) {
-          // Calculate curve logic
-          g.addEdge({
-            source: { cell: `node-${node.id}`, anchor: "top" },
-            target: { cell: `node-${targetId}`, anchor: "top" },
-            router: {
-              name: "metro",
-              args: {
-                startDirections: ["top"],
-                endDirections: ["top"],
-                padding: 60 + (index - targetIndex) * 20, // Increased padding/step
+    const targetId = node.allowed_reject_to;
+    if (targetId) {
+      const targetIndex = props.nodes.findIndex((n) => n.id === targetId);
+      // Ensure filtering valid backward links
+      if (targetIndex !== -1 && targetIndex < index) {
+        // Calculate curve logic
+        g.addEdge({
+          source: { cell: `node-${node.id}`, anchor: "top" },
+          target: { cell: `node-${targetId}`, anchor: "top" },
+          router: {
+            name: "metro",
+            args: {
+              startDirections: ["top"],
+              endDirections: ["top"],
+              padding: 60 + (index - targetIndex) * 20, // Increased padding/step
+            },
+          },
+          connector: { name: "rounded", args: { radius: 20 } }, // Smoother radius
+          attrs: {
+            line: {
+              stroke: "#f87171", // Softer red
+              strokeWidth: 1.5,
+              strokeDasharray: "5 5",
+              targetMarker: {
+                name: "classic",
+                size: 6,
+                fill: "#f87171",
               },
             },
-            connector: { name: "rounded", args: { radius: 20 } }, // Smoother radius
-            attrs: {
-              line: {
-                stroke: "#f87171", // Softer red
-                strokeWidth: 1.5,
-                strokeDasharray: "5 5",
-                targetMarker: {
-                  name: "classic",
-                  size: 6,
+          },
+          labels: [
+            {
+              attrs: {
+                label: {
+                  text: "退回",
                   fill: "#f87171",
+                  fontSize: 11,
+                  fontWeight: 500,
+                },
+                rect: {
+                  fill: "#fff",
+                  stroke: "#f87171",
+                  strokeWidth: 1,
+                  rx: 4,
+                  ry: 4,
+                  refWidth: 10,
+                  refHeight: 6,
                 },
               },
+              position: 0.5,
             },
-            labels: [
-              {
-                attrs: {
-                  label: {
-                    text: "退回",
-                    fill: "#f87171",
-                    fontSize: 11,
-                    fontWeight: 500,
-                  },
-                  rect: {
-                    fill: "#fff",
-                    stroke: "#f87171",
-                    strokeWidth: 1,
-                    rx: 4,
-                    ry: 4,
-                    refWidth: 10,
-                    refHeight: 6,
-                  },
-                },
-                position: 0.5,
-              },
-            ],
-            zIndex: 1,
-          });
-        }
-      });
+          ],
+          zIndex: 1,
+        });
+      }
     }
   });
 

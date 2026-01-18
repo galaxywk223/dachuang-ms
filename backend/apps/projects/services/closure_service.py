@@ -186,7 +186,6 @@ class ProjectClosureService:
             leader=user,
             status__in=[
                 Project.ProjectStatus.READY_FOR_CLOSURE,
-                Project.ProjectStatus.MID_TERM_APPROVED,  # legacy
                 Project.ProjectStatus.CLOSURE_RETURNED,
                 Project.ProjectStatus.CLOSURE_LEVEL2_REJECTED,
                 Project.ProjectStatus.CLOSURE_LEVEL1_REJECTED,
@@ -317,7 +316,6 @@ class ProjectClosureService:
 
         allowed_statuses = {
             Project.ProjectStatus.READY_FOR_CLOSURE,
-            Project.ProjectStatus.MID_TERM_APPROVED,  # legacy
             Project.ProjectStatus.CLOSURE_RETURNED,
             Project.ProjectStatus.CLOSURE_DRAFT,
             Project.ProjectStatus.CLOSURE_LEVEL2_REJECTED,
@@ -390,27 +388,13 @@ class ProjectClosureService:
                 _upsert_project_achievements(project, achievements_data, request.FILES)
 
                 if not is_draft:
-                    # 使用工作流系统创建审核
                     from apps.reviews.services import ReviewService
-                    from apps.projects.services.phase_service import ProjectPhaseService
 
-                    # 确保 phase_instance 存在并设置为初始节点
-                    initial_node = WorkflowService.get_initial_node(
-                        ProjectPhaseInstance.Phase.CLOSURE, project.batch
-                    )
-
-                    phase_instance = ProjectPhaseService.ensure_current(
+                    ReviewService.start_phase_review(
                         project,
                         ProjectPhaseInstance.Phase.CLOSURE,
-                        step=initial_node.code if initial_node else "STUDENT_SUBMIT",
                         created_by=user,
                     )
-
-                    # 从初始节点（学生提交）移动到第一个审核节点
-                    if initial_node:
-                        ReviewService._move_to_next_node(
-                            project, phase_instance, initial_node.id
-                        )
 
                 return (
                     {
@@ -505,27 +489,13 @@ class ProjectClosureService:
                 _upsert_project_achievements(project, achievements_data, request.FILES)
 
                 if not is_draft:
-                    # 使用工作流系统创建审核
                     from apps.reviews.services import ReviewService
-                    from apps.projects.services.phase_service import ProjectPhaseService
 
-                    # 确保 phase_instance 存在并设置为初始节点
-                    initial_node = WorkflowService.get_initial_node(
-                        ProjectPhaseInstance.Phase.CLOSURE, project.batch
-                    )
-
-                    phase_instance = ProjectPhaseService.ensure_current(
+                    ReviewService.start_phase_review(
                         project,
                         ProjectPhaseInstance.Phase.CLOSURE,
-                        step=initial_node.code if initial_node else "STUDENT_SUBMIT",
                         created_by=user,
                     )
-
-                    # 从初始节点（学生提交）移动到第一个审核节点
-                    if initial_node:
-                        ReviewService._move_to_next_node(
-                            project, phase_instance, initial_node.id
-                        )
 
                 return (
                     {

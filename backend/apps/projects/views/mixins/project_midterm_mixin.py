@@ -69,7 +69,11 @@ class ProjectMidtermMixin:
                         ProjectPhaseInstance.Phase.MID_TERM,
                         created_by=request.user,
                     )
-                ReviewService.create_mid_term_teacher_review(project)
+                ReviewService.start_phase_review(
+                    project,
+                    ProjectPhaseInstance.Phase.MID_TERM,
+                    created_by=request.user,
+                )
                 NotificationService.notify_midterm_submitted(project)
 
             return Response({"code": 200, "message": message})
@@ -117,7 +121,11 @@ class ProjectMidtermMixin:
                         ProjectPhaseInstance.Phase.MID_TERM,
                         created_by=request.user,
                     )
-                ReviewService.create_mid_term_teacher_review(project)
+                ReviewService.start_phase_review(
+                    project,
+                    ProjectPhaseInstance.Phase.MID_TERM,
+                    created_by=request.user,
+                )
                 NotificationService.notify_midterm_submitted(project)
                 return Response({"code": 200, "message": "中期检查申请提交成功"})
 

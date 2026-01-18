@@ -59,7 +59,7 @@ class Review(models.Model):
         max_length=20, choices=ReviewType.choices, verbose_name="审核类型"
     )
     # review_level 改为纯CharField，允许任意角色值
-    # 值从工作流节点的 review_level 或 role 字段读取
+    # 值从工作流节点绑定的角色读取
     review_level = models.CharField(
         max_length=50,
         verbose_name="审核级别/角色",

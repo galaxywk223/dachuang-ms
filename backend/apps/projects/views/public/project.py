@@ -112,7 +112,9 @@ class ProjectViewSet(
                 phase_instance_id=OuterRef("_current_phase_instance_id"),
             )
             if exclude_review_level:
-                assigned_reviews = assigned_reviews.filter(review_level=exclude_review_level)
+                assigned_reviews = assigned_reviews.filter(
+                    workflow_node__role_fk__code=exclude_review_level
+                )
             queryset = queryset.annotate(_has_assigned=Exists(assigned_reviews)).filter(_has_assigned=False)
 
         phase = self.request.query_params.get("phase")

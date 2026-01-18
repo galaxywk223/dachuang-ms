@@ -41,7 +41,6 @@ class ProjectExpenditureViewSet(viewsets.ModelViewSet):
             Project.ProjectStatus.MID_TERM_DRAFT,
             Project.ProjectStatus.MID_TERM_SUBMITTED,
             Project.ProjectStatus.MID_TERM_REVIEWING,
-            Project.ProjectStatus.MID_TERM_APPROVED,
             Project.ProjectStatus.READY_FOR_CLOSURE,
             Project.ProjectStatus.MID_TERM_REJECTED,
             Project.ProjectStatus.MID_TERM_RETURNED,

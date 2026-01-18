@@ -65,7 +65,11 @@ class ProjectClosureMixin:
                         ProjectPhaseInstance.Phase.CLOSURE,
                         created_by=request.user,
                     )
-                ReviewService.create_closure_teacher_review(project)
+                ReviewService.start_phase_review(
+                    project,
+                    ProjectPhaseInstance.Phase.CLOSURE,
+                    created_by=request.user,
+                )
                 NotificationService.notify_closure_submitted(project)
 
             message = "结题申请已保存为草稿" if is_draft else "结题申请提交成功"
@@ -114,7 +118,11 @@ class ProjectClosureMixin:
                         ProjectPhaseInstance.Phase.CLOSURE,
                         created_by=request.user,
                     )
-                ReviewService.create_closure_teacher_review(project)
+                ReviewService.start_phase_review(
+                    project,
+                    ProjectPhaseInstance.Phase.CLOSURE,
+                    created_by=request.user,
+                )
                 NotificationService.notify_closure_submitted(project)
                 return Response({"code": 200, "message": "结题申请提交成功"})
 

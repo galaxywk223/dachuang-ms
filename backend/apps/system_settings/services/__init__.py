@@ -36,7 +36,6 @@ DEFAULT_SETTINGS = {
     },
     "PROCESS_RULES": {
         "allow_active_reapply": False,
-        "reject_to_previous": False,
         "show_material_in_closure_review": True,
     },
     "REVIEW_RULES": {

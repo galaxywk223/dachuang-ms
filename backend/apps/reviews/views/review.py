@@ -15,7 +15,6 @@ from apps.system_settings.services import SystemSettingService, AdminAssignmentS
 
 from ..models import Review
 from ..serializers import ReviewActionSerializer, ReviewSerializer
-from ..constants import REVIEW_LEVEL_LEVEL1
 from ..services import ReviewService
 
 
@@ -58,7 +57,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(reviewer=user, is_expert_review=True)
             else:
                 queryset = queryset.filter(
-                    project__advisors__user=user, review_level="TEACHER"
+                    project__advisors__user=user, workflow_node__role_fk__code="TEACHER"
                 ).distinct()
         elif user.is_admin:
             query = ReviewService._build_admin_review_filter(user)
@@ -71,7 +70,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         elif user.is_teacher:
             # 教师可以看到作为指导老师的审核和作为专家的审核
             teacher_reviews = queryset.filter(
-                project__advisors__user=user, review_level="TEACHER"
+                project__advisors__user=user, workflow_node__role_fk__code="TEACHER"
             )
             expert_reviews = queryset.filter(reviewer=user, is_expert_review=True)
             queryset = (teacher_reviews | expert_reviews).distinct()
@@ -137,7 +136,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
         score = serializer.validated_data.get("score")
         score_details = serializer.validated_data.get("score_details")
         closure_rating = serializer.validated_data.get("closure_rating")
-        reject_to = serializer.validated_data.get("reject_to")
         target_node_id = serializer.validated_data.get(
             "target_node_id"
         )  # 新增：退回目标节点ID
@@ -155,9 +153,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
             "REVIEW_RULES", batch=review.project.batch
         )
         min_len = int(review_rules.get("teacher_application_comment_min", 0) or 0)
+        review_role_code = (
+            review.workflow_node.get_role_code() if review.workflow_node else None
+        )
         if (
             min_len
-            and review.review_level == "TEACHER"
+            and review_role_code == "TEACHER"
             and review.review_type == Review.ReviewType.APPLICATION
             and len(comments or "") < min_len
         ):
@@ -166,7 +167,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if review.review_level == "TEACHER":
+        if review_role_code == "TEACHER":
             score = None
 
         # 执行审核
@@ -174,7 +175,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
             if (
                 action_type == "approve"
                 and review.review_type == Review.ReviewType.APPLICATION
-                and review.review_level == REVIEW_LEVEL_LEVEL1
+                and review_role_code == "LEVEL1_ADMIN"
                 and not review.is_expert_review
             ):
                 if approved_budget in (None, ""):
@@ -203,7 +204,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 )
             else:
                 result = ReviewService.reject_review(
-                    review, user, comments, reject_to, target_node_id
+                    review, user, comments, target_node_id
                 )
         except ValueError as exc:
             return Response(
@@ -261,8 +262,14 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 {"code": 200, "message": "该审核记录未配置工作流节点", "data": []}
             )
 
-        # 获取可退回的节点
-        reject_targets = WorkflowService.get_reject_target_nodes(node_id)
+        phase = (
+            review.phase_instance.phase
+            if review.phase_instance
+            else ReviewService._get_phase_from_review_type(review.review_type)
+        )
+        reject_targets = WorkflowService.get_reject_target_nodes(
+            node_id, phase, review.project.batch
+        )
 
         # 转换为可序列化的格式
         target_list = []
@@ -322,15 +329,17 @@ class ReviewViewSet(viewsets.ModelViewSet):
         score = serializer.validated_data.get("score")
         score_details = serializer.validated_data.get("score_details")
         closure_rating = serializer.validated_data.get("closure_rating")
-        reject_to = serializer.validated_data.get("reject_to")
 
         review_rules = SystemSettingService.get_setting(
             "REVIEW_RULES", batch=review.project.batch
         )
         min_len = int(review_rules.get("teacher_application_comment_min", 0) or 0)
+        review_role_code = (
+            review.workflow_node.get_role_code() if review.workflow_node else None
+        )
         if (
             min_len
-            and review.review_level == "TEACHER"
+            and review_role_code == "TEACHER"
             and review.review_type == Review.ReviewType.APPLICATION
             and len(comments or "") < min_len
         ):
@@ -368,7 +377,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         review.save()
 
         if action_type == "reject":
-            ReviewService.reject_review(review, user, comments, reject_to)
+            ReviewService.reject_review(review, user, comments)
 
         NotificationService.notify_review_result(
             review.project, action_type == "approve", comments
@@ -412,7 +421,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 is_expert_review=True,
             ).filter(
                 Q(workflow_node_id=OuterRef("workflow_node_id"))
-                | (Q(workflow_node_id__isnull=True) & Q(review_level=OuterRef("review_level")))
             )
             queryset = queryset.annotate(_has_expert=Exists(expert_qs)).filter(
                 _has_expert=False
@@ -432,15 +440,15 @@ class ReviewViewSet(viewsets.ModelViewSet):
         """
         if review.reviewer_id:
             return review.reviewer_id == user.id
-        if review.review_level == "TEACHER":
+        if not review.workflow_node:
+            raise ValueError("审核记录未绑定工作流节点，无法解析权限")
+        if review.workflow_node.get_role_code() == "TEACHER":
             # 导师审核：必须是该项目的导师
             # Check if user is in project advisors
             return (
                 (user.is_teacher or user.is_admin)
                 and review.project.advisors.filter(user=user).exists()
             )
-        if not review.workflow_node_id:
-            raise ValueError("审核记录未绑定工作流节点，无法解析管理员权限")
         phase = ReviewService._get_phase_from_review_type(review.review_type)
         if not phase:
             raise ValueError("审核类型不支持管理员分配")
@@ -461,7 +469,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
         score = request.data.get("score")
         score_details = request.data.get("score_details")
         closure_rating = request.data.get("closure_rating")
-        reject_to = request.data.get("reject_to")
 
         if not isinstance(review_ids, list) or not review_ids:
             return Response(
@@ -504,9 +511,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
                         score_details,
                     )
                 else:
-                    ReviewService.reject_review(
-                        review, request.user, comments, reject_to
-                    )
+                    ReviewService.reject_review(review, request.user, comments)
             except ValueError as exc:
                 failed.append({"id": review.id, "reason": str(exc)})
                 continue

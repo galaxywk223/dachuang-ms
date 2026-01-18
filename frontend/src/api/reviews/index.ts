@@ -13,7 +13,6 @@ export interface ReviewActionParams {
   score_details?: { item_id: number; score: number | null }[];
   closure_rating?: string;
   approved_budget?: number | null;
-  reject_to?: string; // 旧参数，向后兼容
   target_node_id?: number | null; // 新参数，退回到指定节点ID
 }
 

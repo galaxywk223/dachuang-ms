@@ -84,7 +84,11 @@ class ProjectCoreActionsMixin:
                 created_by=request.user,
             )
 
-        ReviewService.create_teacher_review(project)
+        ReviewService.start_phase_review(
+            project,
+            ProjectPhaseInstance.Phase.APPLICATION,
+            created_by=request.user,
+        )
 
         project.submitted_at = timezone.now()
         project.save(update_fields=["submitted_at"])

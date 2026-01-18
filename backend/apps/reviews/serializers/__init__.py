@@ -106,15 +106,10 @@ class ReviewActionSerializer(serializers.Serializer):
         required=False,
         help_text="结题评价等级（仅结题审核需要）",
     )
-    reject_to = serializers.ChoiceField(
-        choices=["teacher", "student"],
-        required=False,
-        help_text="结题驳回流向（teacher-退回导师，student-退回学生）- 已废弃，使用target_node_id",
-    )
     target_node_id = serializers.IntegerField(
         required=False,
         allow_null=True,
-        help_text="退回到指定工作流节点ID（新参数，优先于reject_to）",
+        help_text="退回到指定工作流节点ID",
     )
 
 

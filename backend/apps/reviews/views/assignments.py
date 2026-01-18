@@ -55,14 +55,11 @@ class ReviewAssignmentViewSet(viewsets.ViewSet):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        review_level = request.data.get("review_level")
-
         try:
             created = ReviewService.assign_project_to_group(
                 project_ids=project_ids,
                 group_id=group_id,
                 review_type=review_type,
-                review_level=review_level,
                 creator=request.user,
                 target_node_id=target_node_id,
             )

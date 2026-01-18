@@ -1,7 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from apps.projects.models import Project
-from apps.dictionaries.models import DictionaryItem, DictionaryType
 from apps.projects.services import ProjectService
 from apps.users.models import Role
 from django.utils.crypto import get_random_string
@@ -23,10 +22,6 @@ class BudgetTestCase(TestCase):
             employee_id='1001',
         )
         
-        # Create dictionary item for category
-        type_obj = DictionaryType.objects.create(code='EXPENDITURE_CATEGORY', name='支出类别', is_system=True)
-        self.category = DictionaryItem.objects.create(dict_type=type_obj, value='MATERIAL', label='Hardware', sort_order=1)
-
         # Create project with budget 1000
         self.project = Project.objects.create(
             project_no='DC20250002',
@@ -48,8 +43,7 @@ class BudgetTestCase(TestCase):
             self.project, 
             "Server", 
             500.00, 
-            datetime.date.today(), 
-            self.category,
+            datetime.date.today(),
             None,
             self.student,
         )
@@ -64,8 +58,7 @@ class BudgetTestCase(TestCase):
             self.project, 
             "Server", 
             500.00, 
-            datetime.date.today(), 
-            self.category,
+            datetime.date.today(),
             None,
             self.student,
         )
@@ -75,8 +68,7 @@ class BudgetTestCase(TestCase):
                 self.project, 
                 "GPU", 
                 600.00, 
-                datetime.date.today(), 
-                self.category,
+                datetime.date.today(),
                 None,
                 self.student,
             )

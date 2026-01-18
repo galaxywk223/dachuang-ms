@@ -169,7 +169,7 @@ class DashboardService:
         # 待审核任务
         pending_reviews = Review.objects.filter(
             project__in=guided_projects,
-            review_level="TEACHER",
+            workflow_node__role_fk__code="TEACHER",
             status=Review.ReviewStatus.PENDING,
         ).select_related("project")
 
@@ -232,7 +232,7 @@ class DashboardService:
         pending_reviews = (
             Review.objects.filter(
                 project__leader__college=user.college,
-                review_level="LEVEL2",
+                workflow_node__role_fk__code="LEVEL2_ADMIN",
                 status=Review.ReviewStatus.PENDING,
             )
             .values("review_type")
@@ -288,7 +288,7 @@ class DashboardService:
         # 待审核统计
         pending_reviews = (
             Review.objects.filter(
-                review_level="LEVEL1",
+                workflow_node__role_fk__code="LEVEL1_ADMIN",
                 status=Review.ReviewStatus.PENDING,
             )
             .values("review_type")

@@ -140,7 +140,6 @@ class ProjectService:
         """
         if project.status not in [
             Project.ProjectStatus.READY_FOR_CLOSURE,
-            Project.ProjectStatus.MID_TERM_APPROVED,  # legacy
             Project.ProjectStatus.CLOSURE_LEVEL2_REJECTED,
             Project.ProjectStatus.CLOSURE_LEVEL1_REJECTED,
             Project.ProjectStatus.CLOSURE_RETURNED,
@@ -282,23 +281,6 @@ class ProjectService:
         return False
 
     @staticmethod
-    @transaction.atomic
-    def submit_mid_term_review(project, reviewer, review_comments, is_approved=True):
-        """
-        提交中期审核
-        """
-        if project.status != Project.ProjectStatus.MID_TERM_REVIEWING:
-            raise ValueError("项目不在中期审核中")
-
-        if is_approved:
-            project.status = Project.ProjectStatus.READY_FOR_CLOSURE
-        else:
-            project.status = Project.ProjectStatus.MID_TERM_REJECTED
-
-        project.save()
-        return True
-
-    @staticmethod
     def get_budget_stats(project):
         """
         获取项目经费统计
@@ -326,7 +308,7 @@ class ProjectService:
         }
 
     @staticmethod
-    def add_expenditure(project, title, amount, expenditure_date, category, proof_file, created_by):
+    def add_expenditure(project, title, amount, expenditure_date, proof_file, created_by):
         """
         添加经费支出
         """
@@ -340,7 +322,6 @@ class ProjectService:
             title=title,
             amount=amount,
             expenditure_date=expenditure_date,
-            category=category,
             proof_file=proof_file,
             created_by=created_by,
         )

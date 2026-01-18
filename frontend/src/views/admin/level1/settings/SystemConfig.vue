@@ -205,7 +205,6 @@ const limitRules = reactive({
 
 const processRules = reactive({
   allow_active_reapply: false,
-  reject_to_previous: false,
   show_material_in_closure_review: true,
 });
 
@@ -294,7 +293,12 @@ const loadSettings = async () => {
       2
     );
 
-    Object.assign(processRules, data.PROCESS_RULES || {});
+    processRules.allow_active_reapply = Boolean(
+      data.PROCESS_RULES?.allow_active_reapply
+    );
+    processRules.show_material_in_closure_review = Boolean(
+      data.PROCESS_RULES?.show_material_in_closure_review ?? true
+    );
     Object.assign(reviewRules, data.REVIEW_RULES || {});
     Object.assign(validationRules, data.VALIDATION_RULES || {});
     allowedTypesByCollegeText.value = JSON.stringify(

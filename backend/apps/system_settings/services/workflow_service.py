@@ -183,21 +183,26 @@ class WorkflowService:
         )
         if not nodes:
             return DEFAULT_WORKFLOWS.get(phase, [])
-        return [
-            WorkflowNodeDef(
-                id=cast(Any, node).id,
-                code=node.code,
-                name=node.name,
-                node_type=node.node_type,
-                role=node.get_role_code() or node.role,
-                review_level=node.review_level,
-                require_expert_review=node.require_expert_review,
-                return_policy=node.return_policy,
-                allowed_reject_to=node.allowed_reject_to,
-                role_fk_id=cast(Any, node).role_fk_id,
+        node_defs: List[WorkflowNodeDef] = []
+        for node in nodes:
+            role_code = node.get_role_code()
+            if not role_code:
+                raise ValueError(f"工作流节点未绑定角色: {node.id}")
+            node_defs.append(
+                WorkflowNodeDef(
+                    id=cast(Any, node).id,
+                    code=node.code,
+                    name=node.name,
+                    node_type=node.node_type,
+                    role=role_code,
+                    review_level=node.review_level,
+                    require_expert_review=node.require_expert_review,
+                    return_policy=node.return_policy,
+                    allowed_reject_to=node.allowed_reject_to,
+                    role_fk_id=cast(Any, node).role_fk_id,
+                )
             )
-            for node in nodes
-        ]
+        return node_defs
 
     @staticmethod
     def get_node_by_id(node_id: int) -> Optional[WorkflowNode]:
@@ -218,15 +223,20 @@ class WorkflowService:
         return nodes[0] if nodes else None
 
     @staticmethod
-    def get_next_node_by_id(current_node_id: int) -> Optional[WorkflowNodeDef]:
+    def get_next_node_by_id(
+        current_node_id: int,
+        phase: Optional[str] = None,
+        batch: Optional[ProjectBatch] = None,
+    ) -> Optional[WorkflowNodeDef]:
         """根据当前节点ID获取下一节点"""
         current_node = WorkflowService.get_node_by_id(current_node_id)
-        if not current_node:
+        if current_node:
+            phase = current_node.workflow.phase
+            batch = current_node.workflow.batch
+        if not phase:
             return None
 
-        nodes = WorkflowService.get_nodes(
-            current_node.workflow.phase, current_node.workflow.batch
-        )
+        nodes = WorkflowService.get_nodes(phase, batch)
         for idx, node in enumerate(nodes):
             if node.id == current_node_id:
                 return nodes[idx + 1] if idx + 1 < len(nodes) else None
@@ -266,49 +276,55 @@ class WorkflowService:
         return None
 
     @staticmethod
-    def find_expert_node(
-        phase: str,
-        review_level: str,
+    def get_reject_target_nodes(
+        current_node_id: int,
+        phase: Optional[str] = None,
         batch: Optional[ProjectBatch] = None,
-    ) -> Optional[WorkflowNodeDef]:
-        """查找需要专家评审的节点"""
-        nodes = WorkflowService.get_nodes(phase, batch)
-        for node in nodes:
-            if node.require_expert_review and node.review_level == review_level:
-                return node
-        return None
-
-    @staticmethod
-    def get_reject_target_nodes(current_node_id: int) -> List[WorkflowNodeDef]:
+    ) -> List[WorkflowNodeDef]:
         """获取当前节点可退回的目标节点列表"""
         current_node = WorkflowService.get_node_by_id(current_node_id)
-        if not current_node or not current_node.allowed_reject_to:
+        if current_node:
+            if not current_node.allowed_reject_to:
+                return []
+            target_nodes = (
+                WorkflowNode.objects.filter(
+                    id=current_node.allowed_reject_to, is_active=True
+                )
+                .select_related("role_fk")
+                .order_by("sort_order", "id")
+            )
+            node_defs: List[WorkflowNodeDef] = []
+            for node in target_nodes:
+                role_code = node.get_role_code()
+                if not role_code:
+                    raise ValueError(f"工作流节点未绑定角色: {node.id}")
+                node_defs.append(
+                    WorkflowNodeDef(
+                        id=cast(Any, node).id,
+                        code=node.code,
+                        name=node.name,
+                        node_type=node.node_type,
+                        role=role_code,
+                        review_level=node.review_level,
+                        require_expert_review=node.require_expert_review,
+                        return_policy=node.return_policy,
+                        allowed_reject_to=node.allowed_reject_to,
+                        role_fk_id=cast(Any, node).role_fk_id,
+                    )
+                )
+            return node_defs
+
+        if not phase:
             return []
 
-        # 获取允许退回的节点
-        target_nodes = (
-            WorkflowNode.objects.filter(
-                id=current_node.allowed_reject_to, is_active=True
-            )
-            .select_related("role_fk")
-            .order_by("sort_order", "id")
+        nodes = WorkflowService.get_nodes(phase, batch)
+        current_def = next((node for node in nodes if node.id == current_node_id), None)
+        if not current_def or current_def.allowed_reject_to is None:
+            return []
+        target_def = next(
+            (node for node in nodes if node.id == current_def.allowed_reject_to), None
         )
-
-        return [
-            WorkflowNodeDef(
-                id=cast(Any, node).id,
-                code=node.code,
-                name=node.name,
-                node_type=node.node_type,
-                role=node.get_role_code() or node.role,
-                review_level=node.review_level,
-                require_expert_review=node.require_expert_review,
-                return_policy=node.return_policy,
-                allowed_reject_to=node.allowed_reject_to,
-                role_fk_id=cast(Any, node).role_fk_id,
-            )
-            for node in target_nodes
-        ]
+        return [target_def] if target_def else []
 
     @staticmethod
     def validate_workflow_nodes(workflow_id: int) -> Dict[str, Any]:
@@ -339,7 +355,7 @@ class WorkflowService:
             if len(submit_nodes) != 1:
                 errors.append("流程只能包含一个学生提交节点（SUBMIT类型）")
 
-            # 学生提交节点的角色必须是STUDENT
+            # 学生提交节点必须绑定学生角色
             if first_node.get_role_code() != "STUDENT":
                 errors.append("学生提交节点角色必须是学生（STUDENT）")
             # 验证学生节点不允许退回
@@ -352,7 +368,10 @@ class WorkflowService:
             node_ids = {cast(Any, n).id for n in nodes}
             node_order = {cast(Any, n).id: idx for idx, n in enumerate(nodes)}
             for idx, node in enumerate(nodes[1:], start=1):
-                role_code = node.get_role_code() or node.role
+                role_code = node.get_role_code()
+                if not role_code:
+                    errors.append(f"节点 '{node.name}' (序号{idx + 1}): 未绑定角色")
+                    continue
                 if role_code == "STUDENT":
                     errors.append(
                         f"节点 '{node.name}' (序号{idx + 1}): 审核节点不能使用学生角色"

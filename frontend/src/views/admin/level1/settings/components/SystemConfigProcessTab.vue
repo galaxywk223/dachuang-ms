@@ -7,13 +7,6 @@
       />
       <div class="form-hint">开启后，已有在研项目的学生仍可提交新申报。</div>
     </el-form-item>
-    <el-form-item label="审核退回上一级">
-      <el-switch
-        v-model="localProcessRules.reject_to_previous"
-        :disabled="isProcessLocked"
-      />
-      <div class="form-hint">开启后，退回会返回到上一级角色重新审核。</div>
-    </el-form-item>
     <el-form-item label="结题评审可见立项材料">
       <el-switch
         v-model="localProcessRules.show_material_in_closure_review"
@@ -38,7 +31,6 @@ import { reactive, watch } from "vue";
 const props = defineProps<{
   processRules: {
     allow_active_reapply: boolean;
-    reject_to_previous: boolean;
     show_material_in_closure_review: boolean;
   };
   reviewRules: {
