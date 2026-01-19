@@ -52,6 +52,7 @@ class ProjectManagementViewSet(
             if not current_batch:
                 return Project.objects.none()
             queryset = queryset.filter(batch=current_batch)
+        queryset = queryset.filter(batch__is_deleted=False)
 
         # 权限控制：非校级管理员只能看到本学院的项目
         user = self.request.user

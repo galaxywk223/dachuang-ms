@@ -33,7 +33,10 @@
                 />
               </el-form-item>
               <el-form-item label="显示历史" class="mb-0">
-                <el-switch v-model="reportFilters.include_archived" />
+                <el-switch
+                  v-model="reportFilters.include_archived"
+                  @change="fetchReport"
+                />
               </el-form-item>
               <el-form-item class="mb-0">
                 <el-button type="primary" @click="fetchReport">查询</el-button>

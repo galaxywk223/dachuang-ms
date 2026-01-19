@@ -33,6 +33,7 @@ class ProjectSelfMixin:
         include_archived = str(include_archived).lower() in ("true", "1", "yes")
 
         projects = Project.objects.filter(Q(leader=user) | Q(members=user)).distinct()
+        projects = projects.filter(batch__is_deleted=False)
         if not include_archived:
             current_batch = SystemSettingService.get_current_batch()
             if not current_batch:

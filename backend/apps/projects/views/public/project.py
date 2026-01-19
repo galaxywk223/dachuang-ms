@@ -78,13 +78,13 @@ class ProjectViewSet(
                 return queryset.none()
             queryset = queryset.filter(batch=batch)
         elif include_archived and str(include_archived).lower() in ("true", "1", "yes"):
-            # If include_archived is True, do not filter by batch (show all)
-            pass
+            # If include_archived is True, do not filter by batch (show all non-deleted)
+            queryset = queryset.filter(batch__is_deleted=False)
         else:
             current_batch = SystemSettingService.get_current_batch()
             if not current_batch:
                 return queryset.none()
-            queryset = queryset.filter(batch=current_batch)
+            queryset = queryset.filter(batch=current_batch, batch__is_deleted=False)
 
         # 学生只能看到自己参与的项目
         if user.is_student:

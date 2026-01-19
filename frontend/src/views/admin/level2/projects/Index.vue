@@ -124,7 +124,7 @@
           </el-form-item>
 
           <el-form-item label="显示历史">
-            <el-switch v-model="filters.include_archived" />
+            <el-switch v-model="filters.include_archived" @change="handleSearch" />
           </el-form-item>
 
           <el-form-item>
