@@ -4,9 +4,9 @@
 
 from django.utils import timezone
 from django.db import transaction
+from typing import Any, cast
 
 from ..models import (
-    Project,
     ProjectChangeRequest,
     ProjectChangeReview,
     ProjectPhaseInstance,
@@ -123,14 +123,15 @@ class ProjectChangeService:
 
         change_request = review.change_request
         _, review_nodes = ProjectChangeService._get_review_nodes(change_request)
-        if not review.workflow_node_id:
+        workflow_node_id = cast(Any, review).workflow_node_id
+        if not workflow_node_id:
             raise ValueError("审核记录缺少工作流节点")
 
         current_index = next(
             (
                 index
                 for index, node in enumerate(review_nodes)
-                if node.id == review.workflow_node_id
+                if node.id == workflow_node_id
             ),
             None,
         )

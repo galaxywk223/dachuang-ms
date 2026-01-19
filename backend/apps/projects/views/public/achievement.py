@@ -43,25 +43,5 @@ class ProjectAchievementViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        project = instance.project
-        payload = {
-            "achievement_type": instance.achievement_type_id,
-            "title": instance.title,
-            "description": instance.description,
-            "authors": instance.authors,
-            "journal": instance.journal,
-            "publication_date": instance.publication_date,
-            "doi": instance.doi,
-            "patent_no": instance.patent_no,
-            "patent_type": instance.patent_type,
-            "applicant": instance.applicant,
-            "copyright_no": instance.copyright_no,
-            "copyright_owner": instance.copyright_owner,
-            "competition_name": instance.competition_name,
-            "award_level": instance.award_level,
-            "award_date": instance.award_date,
-            "extra_data": instance.extra_data,
-            "attachment": instance.attachment.name if instance.attachment else "",
-        }
         self.perform_destroy(instance)
         return Response({"code": 200, "message": "删除成功"})

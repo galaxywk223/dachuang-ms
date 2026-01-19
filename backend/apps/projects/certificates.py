@@ -5,9 +5,6 @@ Certificate rendering helpers.
 from apps.system_settings.models import CertificateSetting
 
 
-from django.db.models import Q
-
-
 def get_best_match_setting(project=None):
     """
     根据项目获取最匹配的证书配置

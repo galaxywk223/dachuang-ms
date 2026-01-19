@@ -17,7 +17,6 @@ class ReviewAdmin(admin.ModelAdmin):
     search_fields = ["project__project_no", "project__title", "reviewer__real_name"]
     ordering = ["-created_at"]
 
+    @admin.display(description="角色")
     def role_code(self, obj):
         return obj.workflow_node.get_role_code() if obj.workflow_node else ""
-
-    role_code.short_description = "角色"

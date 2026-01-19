@@ -239,7 +239,7 @@ class WorkflowService:
         for node in nodes:
             role_code = node.get_role_code()
             if not role_code:
-                raise ValueError(f"工作流节点未绑定角色: {node.id}")
+                raise ValueError(f"工作流节点未绑定角色: {cast(Any, node).id}")
             node_defs.append(
                 WorkflowNodeDef(
                     id=cast(Any, node).id,
@@ -348,7 +348,7 @@ class WorkflowService:
             for node in target_nodes:
                 role_code = node.get_role_code()
                 if not role_code:
-                    raise ValueError(f"工作流节点未绑定角色: {node.id}")
+                    raise ValueError(f"工作流节点未绑定角色: {cast(Any, node).id}")
                 node_defs.append(
                     WorkflowNodeDef(
                         id=cast(Any, node).id,

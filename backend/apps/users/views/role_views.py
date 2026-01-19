@@ -11,8 +11,6 @@ from django.db.models import Count, Q
 import uuid
 
 from apps.users.models import Role
-from apps.users.permissions import IsLevel1Admin
-
 
 class RoleSimpleSerializer:
     """角色简化序列化（不使用DRF serializer，直接返回字典）"""

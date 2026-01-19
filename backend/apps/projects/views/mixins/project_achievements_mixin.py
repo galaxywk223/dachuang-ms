@@ -80,24 +80,5 @@ class ProjectAchievementsMixin:
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        payload = {
-            "achievement_type": achievement.achievement_type_id,
-            "title": achievement.title,
-            "description": achievement.description,
-            "authors": achievement.authors,
-            "journal": achievement.journal,
-            "publication_date": achievement.publication_date,
-            "doi": achievement.doi,
-            "patent_no": achievement.patent_no,
-            "patent_type": achievement.patent_type,
-            "applicant": achievement.applicant,
-            "copyright_no": achievement.copyright_no,
-            "copyright_owner": achievement.copyright_owner,
-            "competition_name": achievement.competition_name,
-            "award_level": achievement.award_level,
-            "award_date": achievement.award_date,
-            "extra_data": achievement.extra_data,
-            "attachment": achievement.attachment.name if achievement.attachment else "",
-        }
         achievement.delete()
         return Response({"code": 200, "message": "删除成功"})

@@ -3,6 +3,7 @@
 """
 
 from django.utils import timezone
+from typing import Any, cast
 
 from apps.system_settings.services import WorkflowService, AdminAssignmentService
 
@@ -144,8 +145,9 @@ class ExpenditureWorkflowService:
         review.save(update_fields=["status", "reviewer", "comments", "reviewed_at"])
 
         expenditure = review.expenditure
+        workflow_node_id = cast(Any, review).workflow_node_id
         next_node = ExpenditureWorkflowService._get_next_review_node(
-            expenditure, review.workflow_node_id
+            expenditure, workflow_node_id
         )
 
         if next_node:
@@ -217,7 +219,10 @@ class ExpenditureWorkflowService:
             return None
 
         pending_review = (
-            expenditure.reviews.filter(status=ProjectExpenditureReview.ReviewStatus.PENDING)
+            ProjectExpenditureReview.objects.filter(
+                expenditure=expenditure,
+                status=ProjectExpenditureReview.ReviewStatus.PENDING,
+            )
             .select_related("workflow_node", "workflow_node__role_fk")
             .order_by("id")
             .first()
@@ -247,4 +252,3 @@ class ExpenditureWorkflowService:
             if admin_user.id == user.id:
                 return {"type": "NODE", "review": pending_review}
         return None
-
