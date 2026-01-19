@@ -27,7 +27,6 @@ export function useProjectTable(filters: {
   search: string;
   level: string;
   category: string;
-  category: string;
   status: string;
   include_archived?: boolean;
 }) {

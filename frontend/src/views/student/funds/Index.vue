@@ -419,12 +419,6 @@ const resolveFileUrl = (url?: string) => {
   return `${CONFIG.api.BASE_URL}${url}`;
 };
 
-const getUsageStatus = (rate: number) => {
-  if (rate >= 100) return "exception";
-  if (rate >= 80) return "warning";
-  return "success";
-};
-
 const getUsageColor = (rate: number) => {
   if (rate >= 100) return "#ef4444";
   if (rate >= 80) return "#f59e0b";

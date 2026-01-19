@@ -235,6 +235,7 @@ export function useProjectApplication() {
     title: "",
     contact: "",
     email: "",
+    order: 1,
   });
   const newMember = reactive({ student_id: "", name: "" });
 

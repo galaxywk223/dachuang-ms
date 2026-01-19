@@ -105,7 +105,18 @@ type BatchInfo = {
   status?: string;
 };
 
-type SettingsPayload = Record<string, unknown>;
+type SettingsPayload = {
+  APPLICATION_WINDOW?: Record<string, unknown>;
+  MIDTERM_WINDOW?: Record<string, unknown>;
+  CLOSURE_WINDOW?: Record<string, unknown>;
+  LIMIT_RULES?: Record<string, unknown>;
+  PROCESS_RULES?: {
+    allow_active_reapply?: boolean;
+    show_material_in_closure_review?: boolean;
+  };
+  REVIEW_RULES?: Record<string, unknown>;
+  VALIDATION_RULES?: Record<string, unknown>;
+};
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;

@@ -80,7 +80,7 @@ const nodeIcon = computed(() => {
   if (type === "SUBMIT") return Document;
   if (type === "APPROVAL") return Check;
   // Default to REVIEW, vary by role if possible
-  const role = nodeData.value.role;
+  const role = nodeData.value.role_code;
   if (role === "TEACHER") return User;
   if (role === "LEVEL2_ADMIN") return Management; // School/Management
   if (role === "LEVEL1_ADMIN") return School;
@@ -89,7 +89,7 @@ const nodeIcon = computed(() => {
 });
 
 const roleLabel = computed(() => {
-  const role = nodeData.value.role_name || nodeData.value.role;
+  const role = nodeData.value.role_name || nodeData.value.role_code;
   if (
     nodeData.value.code === "STUDENT_SUBMIT" ||
     (nodeData.value.name && nodeData.value.name.includes("学生"))
@@ -99,7 +99,7 @@ const roleLabel = computed(() => {
 });
 
 const roleTagType = computed(() => {
-  const role = nodeData.value.role;
+  const role = nodeData.value.role_code;
   if (role === "TEACHER") return "success";
   if (role === "LEVEL2_ADMIN") return "primary";
   if (role === "LEVEL1_ADMIN") return "danger";

@@ -399,12 +399,6 @@ const showAddDialog = () => {
   dialogVisible.value = true;
 };
 
-const getUsageStatus = (rate: number) => {
-  if (rate < 60) return "success";
-  if (rate < 90) return "warning";
-  return "exception";
-};
-
 const getUsageColor = (rate: number) => {
   if (rate < 60) return "#10b981";
   if (rate < 90) return "#f59e0b";
