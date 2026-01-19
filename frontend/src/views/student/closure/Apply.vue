@@ -169,20 +169,6 @@
               </el-form-item>
             </el-col>
           </el-row>
-          <el-form-item
-            label="成果简介"
-            prop="achievement_summary"
-            style="margin-top: 16px"
-          >
-            <el-input
-              type="textarea"
-              v-model="formData.achievement_summary"
-              :rows="3"
-              placeholder="请简要描述项目取得的主要成果（200字以内）"
-              maxlength="200"
-              show-word-limit
-            />
-          </el-form-item>
         </div>
 
         <!-- Achievements List -->

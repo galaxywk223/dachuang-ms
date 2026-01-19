@@ -58,7 +58,6 @@ class ProjectLevel2ExportMixin:
             "项目类别",
             "研究领域",
             "项目状态",
-            "排名",
             "创建时间",
             "提交时间",
         ]
@@ -81,7 +80,6 @@ class ProjectLevel2ExportMixin:
                     category_label,
                     research_field,
                     project.get_status_display(),
-                    project.ranking or "",
                     project.created_at.strftime("%Y-%m-%d %H:%M:%S"),
                     (
                         project.submitted_at.strftime("%Y-%m-%d %H:%M:%S")

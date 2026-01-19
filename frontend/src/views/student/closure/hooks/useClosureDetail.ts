@@ -28,7 +28,6 @@ type ProjectDetail = {
   budget?: number;
   status?: string;
   status_display?: string;
-  achievement_summary?: string;
   final_report_url?: string;
   final_report_name?: string;
   achievement_file_url?: string;
@@ -122,7 +121,6 @@ export function useClosureDetail() {
     budget: 0,
     status: "",
     status_display: "",
-    achievement_summary: "",
     final_report_url: "",
     final_report_name: "",
     achievement_file_url: "",
@@ -168,7 +166,6 @@ export function useClosureDetail() {
           budget: projectData.budget ?? 0,
           status: projectData.status || "",
           status_display: projectData.status_display || "",
-          achievement_summary: projectData.achievement_summary || "",
           final_report_url: projectData.final_report_url || "",
           final_report_name: projectData.final_report_name || "",
           achievement_file_url: projectData.achievement_file_url || "",

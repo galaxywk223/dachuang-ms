@@ -43,16 +43,10 @@ class DocumentService:
             doc.add_paragraph("（包含研究意义、现状分析等）")
             doc.add_paragraph(project.description)
 
-            doc.add_heading('三、研究内容', level=1)
-            doc.add_paragraph(project.research_content)
-
-            doc.add_heading('四、研究方案', level=1)
-            doc.add_paragraph(project.research_plan)
-            
-            doc.add_heading('五、预期成果', level=1)
+            doc.add_heading('三、预期成果', level=1)
             doc.add_paragraph(project.expected_results)
             
-            doc.add_heading('六、经费预算', level=1)
+            doc.add_heading('四、经费预算', level=1)
             doc.add_paragraph(f"申请经费：{project.budget} 元")
             
             # Save to buffer

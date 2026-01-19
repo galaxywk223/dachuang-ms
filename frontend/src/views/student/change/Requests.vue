@@ -295,14 +295,9 @@ type ProjectDetail = {
   start_date?: string;
   end_date?: string;
   budget?: number | string;
-  research_content?: string;
-  research_plan?: string;
   expected_results?: string;
-  innovation_points?: string;
   is_key_field?: boolean;
   key_domain_code?: string;
-  category_description?: string;
-  self_funding?: number | string;
 };
 
 type ChangeFieldConfig = {
@@ -391,11 +386,7 @@ const changeFieldConfigs: ChangeFieldConfig[] = [
   { key: "start_date", label: "开始日期", type: "date" },
   { key: "end_date", label: "结束日期", type: "date" },
   { key: "budget", label: "项目经费(元)", type: "number" },
-  { key: "self_funding", label: "项目自筹(元)", type: "number" },
-  { key: "research_content", label: "研究内容", type: "textarea" },
-  { key: "research_plan", label: "研究方案", type: "textarea" },
   { key: "expected_results", label: "预期成果", type: "textarea" },
-  { key: "innovation_points", label: "创新点", type: "textarea" },
   { key: "is_key_field", label: "重点领域项目", type: "boolean" },
   {
     key: "key_domain_code",
@@ -404,7 +395,6 @@ const changeFieldConfigs: ChangeFieldConfig[] = [
     dictCode: DICT_CODES.KEY_FIELD_CODE,
     valueSource: "value",
   },
-  { key: "category_description", label: "立项类别描述", type: "textarea" },
 ];
 
 const getFieldConfig = (fieldKey: string) =>
@@ -486,8 +476,6 @@ const getCurrentValue = (fieldKey: string) => {
       return !!project.is_key_field;
     case "budget":
       return project.budget ?? null;
-    case "self_funding":
-      return project.self_funding ?? null;
     case "start_date":
       return project.start_date || "";
     case "end_date":
@@ -496,16 +484,8 @@ const getCurrentValue = (fieldKey: string) => {
       return project.title || "";
     case "description":
       return project.description || "";
-    case "research_content":
-      return project.research_content || "";
-    case "research_plan":
-      return project.research_plan || "";
     case "expected_results":
       return project.expected_results || "";
-    case "innovation_points":
-      return project.innovation_points || "";
-    case "category_description":
-      return project.category_description || "";
     default:
       return null;
   }
@@ -540,8 +520,6 @@ const formatCurrentValue = (fieldKey: string) => {
       return project.is_key_field ? "是" : "否";
     case "budget":
       return project.budget?.toString() || "";
-    case "self_funding":
-      return project.self_funding?.toString() || "";
     case "start_date":
       return project.start_date || "";
     case "end_date":
@@ -550,16 +528,8 @@ const formatCurrentValue = (fieldKey: string) => {
       return project.title || "";
     case "description":
       return project.description || "";
-    case "research_content":
-      return project.research_content || "";
-    case "research_plan":
-      return project.research_plan || "";
     case "expected_results":
       return project.expected_results || "";
-    case "innovation_points":
-      return project.innovation_points || "";
-    case "category_description":
-      return project.category_description || "";
     default:
       return "";
   }

@@ -23,7 +23,6 @@ from ..mixins import (
     ProjectLevel2ExportMixin,
     ProjectMembersMixin,
     ProjectMidtermMixin,
-    ProjectRankingMixin,
     ProjectSelfMixin,
     ProjectWorkflowMixin,
 )
@@ -37,7 +36,6 @@ class ProjectViewSet(
     ProjectMidtermMixin,
     ProjectClosureMixin,
     ProjectAchievementsMixin,
-    ProjectRankingMixin,
     ProjectSelfMixin,
     viewsets.ModelViewSet,
 ):

@@ -192,11 +192,6 @@
               </div>
               <span v-else class="text-gray-400">未上传</span>
             </el-descriptions-item>
-            <el-descriptions-item label="成果简介">
-              <div class="achievement-summary">
-                {{ projectInfo.achievement_summary || "暂无" }}
-              </div>
-            </el-descriptions-item>
           </el-descriptions>
         </div>
       </div>

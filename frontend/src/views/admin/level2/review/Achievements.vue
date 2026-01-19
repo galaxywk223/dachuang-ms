@@ -68,12 +68,6 @@
              </template>
         </el-table-column>
 
-        <el-table-column label="成果简介" min-width="200" show-overflow-tooltip>
-             <template #default="{ row }">
-                 {{ row.achievement_summary || '-' }}
-             </template>
-        </el-table-column>
-
         <el-table-column label="操作" width="120" align="center" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link size="small" @click="handleView(row)">
@@ -110,7 +104,6 @@ type AchievementRow = {
   title?: string;
   achievement_type_display?: string;
   achievement_types?: string;
-  achievement_summary?: string;
   publication_date?: string;
   award_date?: string;
   project_no?: string;

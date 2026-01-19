@@ -109,12 +109,6 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="成果简介" min-width="200" show-overflow-tooltip>
-          <template #default="{ row }">
-            {{ row.achievement_summary || "-" }}
-          </template>
-        </el-table-column>
-
         <el-table-column label="操作" width="220" align="center" fixed="right">
           <template #default="{ row }">
             <el-button
@@ -216,7 +210,6 @@ type ProjectRow = {
   budget?: number;
   advisors_info?: Array<{ name?: string }>;
   achievements?: AchievementInfo[];
-  achievement_summary?: string;
   status?: string;
 };
 

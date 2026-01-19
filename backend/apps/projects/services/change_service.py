@@ -207,14 +207,9 @@ class ProjectChangeService:
                 "end_date",
                 "budget",
                 "approved_budget",
-                "research_content",
-                "research_plan",
                 "expected_results",
-                "innovation_points",
                 "is_key_field",
                 "key_domain_code",
-                "category_description",
-                "self_funding",
             }
             updated_fields = []
             for field, value in change_data.items():

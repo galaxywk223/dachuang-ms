@@ -113,13 +113,6 @@ class Project(models.Model):
     )
     # 移除 redundant fields: college, major_code
     # 这些信息应直接从 leader 或 members 获取
-    self_funding = models.DecimalField(
-        max_digits=10, decimal_places=2, default=0, verbose_name="项目自筹（元）"
-    )
-    category_description = models.TextField(
-        blank=True, default="", verbose_name="立项类别描述"
-    )
-
     # 时间和经费
     start_date = models.DateField(null=True, blank=True, verbose_name="开始日期")
     end_date = models.DateField(null=True, blank=True, verbose_name="结束日期")
@@ -135,13 +128,10 @@ class Project(models.Model):
     )
 
     # 项目内容
-    research_content = models.TextField(blank=True, verbose_name="研究内容")
-    research_plan = models.TextField(blank=True, verbose_name="研究方案")
     expected_results = models.TextField(blank=True, verbose_name="预期成果")
     expected_results_data = models.JSONField(
         default=list, blank=True, verbose_name="预期成果清单"
     )
-    innovation_points = models.TextField(blank=True, verbose_name="创新点")
 
     # 申报材料
     proposal_file = models.FileField(
@@ -183,10 +173,6 @@ class Project(models.Model):
         max_length=255,
     )
 
-    achievement_summary = models.TextField(
-        blank=True, default="", verbose_name="结题成果简介"
-    )
-
     # 状态信息
     status = models.CharField(
         max_length=30,
@@ -194,9 +180,6 @@ class Project(models.Model):
         default=ProjectStatus.DRAFT,
         verbose_name="项目状态",
     )
-
-    # 项目排名（管理员可修改）
-    ranking = models.IntegerField(null=True, blank=True, verbose_name="项目排名")
 
     # 时间戳
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")

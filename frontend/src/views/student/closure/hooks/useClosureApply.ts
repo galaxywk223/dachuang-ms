@@ -29,7 +29,6 @@ type ProjectDetail = {
   category?: string;
   budget?: number;
   status?: string;
-  achievement_summary?: string;
   final_report_url?: string;
   final_report_name?: string;
   achievement_file_url?: string;
@@ -125,7 +124,6 @@ export function useClosureApply() {
   const formData = reactive({
     final_report: null as File | null,
     achievement_file: null as File | null,
-    achievement_summary: "",
   });
 
   const reportFileList = ref<UploadFile[]>([]);
@@ -216,9 +214,6 @@ export function useClosureApply() {
         },
         trigger: "change",
       },
-    ],
-    achievement_summary: [
-      { required: true, message: "请填写成果简介", trigger: "blur" },
     ],
   };
 
@@ -403,7 +398,6 @@ export function useClosureApply() {
     projectInfo.budget = data.budget ?? 0;
     projectInfo.status = data.status || "";
 
-    formData.achievement_summary = data.achievement_summary || "";
 
     reportFileList.value = [];
     achievementFileList.value = [];
@@ -515,7 +509,6 @@ export function useClosureApply() {
       if (formData.achievement_file) {
         payload.append("achievement_file", formData.achievement_file);
       }
-      payload.append("achievement_summary", formData.achievement_summary);
       payload.append("is_draft", String(isDraft));
 
       const achievementsData = achievements.value.map((item) => {

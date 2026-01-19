@@ -45,10 +45,7 @@ class ProjectAdminExportDocumentsMixin:
           <p>项目成员：{"；".join(members)}</p>
           <h2>项目内容</h2>
           <p>项目简介：{project.description or ""}</p>
-          <p>研究内容：{project.research_content or ""}</p>
-          <p>研究方案：{project.research_plan or ""}</p>
           <p>预期成果：{project.expected_results or ""}</p>
-          <p>创新点：{project.innovation_points or ""}</p>
         </body>
         </html>
         """

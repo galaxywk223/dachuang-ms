@@ -433,12 +433,8 @@ class ProjectClosureService:
                 if not is_draft:
                     project.closure_applied_at = timezone.now()
 
-                if data.get("research_content"):
-                    project.research_content = data.get("research_content")
                 if data.get("expected_results"):
                     project.expected_results = data.get("expected_results")
-                if "achievement_summary" in data:
-                    project.achievement_summary = data.get("achievement_summary") or ""
 
                 if "final_report" in request.FILES:
                     project.final_report = request.FILES["final_report"]
@@ -540,12 +536,8 @@ class ProjectClosureService:
                 if not is_draft:
                     project.closure_applied_at = timezone.now()
 
-                if data.get("research_content"):
-                    project.research_content = data.get("research_content")
                 if data.get("expected_results"):
                     project.expected_results = data.get("expected_results")
-                if "achievement_summary" in data:
-                    project.achievement_summary = data.get("achievement_summary") or ""
 
                 if "final_report" in request.FILES:
                     project.final_report = request.FILES["final_report"]
