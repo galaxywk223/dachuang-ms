@@ -81,24 +81,10 @@
             style="width: 100%"
           >
             <el-option label="项目变更" value="CHANGE" />
-            <el-option label="项目终止" value="TERMINATION" />
-            <el-option label="项目延期" value="EXTENSION" />
           </el-select>
         </el-form-item>
         <el-form-item label="原因">
           <el-input v-model="form.reason" type="textarea" :rows="3" />
-        </el-form-item>
-        <el-form-item
-          v-if="form.request_type === 'EXTENSION'"
-          label="延期至"
-          required
-        >
-          <el-date-picker
-            v-model="form.requested_end_date"
-            type="date"
-            value-format="YYYY-MM-DD"
-            style="width: 100%"
-          />
         </el-form-item>
         <el-form-item
           v-if="form.request_type === 'CHANGE'"
@@ -170,6 +156,14 @@
                       :value="option.value"
                     />
                   </el-select>
+                  <el-cascader
+                    v-else-if="getFieldConfig(item.field)?.type === 'key-field'"
+                    v-model="item.value"
+                    :options="keyFieldCascaderOptions"
+                    placeholder="请选择"
+                    style="width: 100%"
+                    :props="{ expandTrigger: 'hover' }"
+                  />
                   <el-select
                     v-else-if="getFieldConfig(item.field)?.type === 'boolean'"
                     v-model="item.value"
@@ -230,7 +224,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch } from "vue";
+import { ref, reactive, computed, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage, type UploadFile, type UploadUserFile } from "element-plus";
 import {
@@ -263,7 +257,6 @@ type ChangeRequest = {
   status?: string;
   status_display?: string;
   submitted_at?: string;
-  requested_end_date?: string;
   reason?: string;
   attachment_url?: string;
   change_data?: Record<string, unknown>;
@@ -274,12 +267,11 @@ type RequestForm = {
   project: number | null;
   request_type: string;
   reason: string;
-  requested_end_date: string;
 };
 
 type ChangeItem = {
   field: string;
-  value: string | number | boolean | null;
+  value: string | number | boolean | string[] | null;
 };
 
 type ProjectDetail = {
@@ -292,9 +284,6 @@ type ProjectDetail = {
   category_display?: string;
   source?: string;
   source_display?: string;
-  start_date?: string;
-  end_date?: string;
-  budget?: number | string;
   expected_results?: string;
   is_key_field?: boolean;
   key_domain_code?: string;
@@ -303,7 +292,14 @@ type ProjectDetail = {
 type ChangeFieldConfig = {
   key: string;
   label: string;
-  type: "text" | "textarea" | "select" | "date" | "number" | "boolean";
+  type:
+    | "text"
+    | "textarea"
+    | "select"
+    | "date"
+    | "number"
+    | "boolean"
+    | "key-field";
   dictCode?: string;
   valueSource?: "id" | "value";
 };
@@ -356,7 +352,6 @@ const form = reactive<RequestForm>({
   project: null,
   request_type: "CHANGE",
   reason: "",
-  requested_end_date: "",
 });
 
 const changeFieldConfigs: ChangeFieldConfig[] = [
@@ -383,18 +378,14 @@ const changeFieldConfigs: ChangeFieldConfig[] = [
     dictCode: DICT_CODES.PROJECT_SOURCE,
     valueSource: "id",
   },
-  { key: "start_date", label: "开始日期", type: "date" },
-  { key: "end_date", label: "结束日期", type: "date" },
-  { key: "budget", label: "项目经费(元)", type: "number" },
-  { key: "expected_results", label: "预期成果", type: "textarea" },
-  { key: "is_key_field", label: "重点领域项目", type: "boolean" },
   {
-    key: "key_domain_code",
-    label: "重点领域代码",
+    key: "expected_results",
+    label: "预期成果",
     type: "select",
-    dictCode: DICT_CODES.KEY_FIELD_CODE,
+    dictCode: DICT_CODES.ACHIEVEMENT_TYPE,
     valueSource: "value",
   },
+  { key: "is_key_field", label: "重点领域项目", type: "key-field" },
 ];
 
 const getFieldConfig = (fieldKey: string) =>
@@ -430,11 +421,18 @@ const normalizeChangeValue = (fieldKey: string, value: unknown) => {
       return getDictIdByValue(fieldConfig.dictCode || "", value);
     }
   }
+  if (Array.isArray(value)) return value;
   if (typeof value === "string") return value;
   return value as string | number | boolean | null;
 };
 
 const getSelectOptions = (fieldKey: string) => {
+  if (fieldKey === "expected_results") {
+    return getOptions(DICT_CODES.ACHIEVEMENT_TYPE).map((item) => ({
+      value: item.label,
+      label: item.label,
+    }));
+  }
   const fieldConfig = getFieldConfig(fieldKey);
   if (!fieldConfig || fieldConfig.type !== "select") return [];
   const dictCode = fieldConfig.dictCode;
@@ -460,6 +458,17 @@ const getFieldOptions = (currentIndex: number) => {
   }));
 };
 
+const keyFieldCascaderOptions = computed(() => {
+  const keyChildren = getOptions(DICT_CODES.KEY_FIELD_CODE).map((opt) => ({
+    value: opt.value,
+    label: opt.label,
+  }));
+  return [
+    { value: "GENERAL", label: "一般项目" },
+    { value: "KEY", label: "重点领域项目", children: keyChildren },
+  ];
+});
+
 const getCurrentValue = (fieldKey: string) => {
   const project = selectedProject.value;
   if (!project) return null;
@@ -470,16 +479,10 @@ const getCurrentValue = (fieldKey: string) => {
       return getDictIdByValue(DICT_CODES.PROJECT_CATEGORY, project.category);
     case "source_id":
       return getDictIdByValue(DICT_CODES.PROJECT_SOURCE, project.source);
-    case "key_domain_code":
-      return project.key_domain_code || "";
     case "is_key_field":
-      return !!project.is_key_field;
-    case "budget":
-      return project.budget ?? null;
-    case "start_date":
-      return project.start_date || "";
-    case "end_date":
-      return project.end_date || "";
+      return project.is_key_field
+        ? ["KEY", project.key_domain_code || ""].filter(Boolean)
+        : ["GENERAL"];
     case "title":
       return project.title || "";
     case "description":
@@ -512,18 +515,14 @@ const formatCurrentValue = (fieldKey: string) => {
         project.source_display ||
         (project.source ? getLabel(DICT_CODES.PROJECT_SOURCE, project.source) : "")
       );
-    case "key_domain_code":
-      return project.key_domain_code
-        ? getLabel(DICT_CODES.KEY_FIELD_CODE, project.key_domain_code)
-        : "";
     case "is_key_field":
-      return project.is_key_field ? "是" : "否";
-    case "budget":
-      return project.budget?.toString() || "";
-    case "start_date":
-      return project.start_date || "";
-    case "end_date":
-      return project.end_date || "";
+      return project.is_key_field
+        ? `重点领域项目${
+            project.key_domain_code
+              ? ` / ${getLabel(DICT_CODES.KEY_FIELD_CODE, project.key_domain_code)}`
+              : ""
+          }`
+        : "一般项目";
     case "title":
       return project.title || "";
     case "description":
@@ -628,7 +627,6 @@ const openDialog = () => {
   form.project = projectIdParam ? Number(projectIdParam) : null;
   form.request_type = "CHANGE";
   form.reason = "";
-  form.requested_end_date = "";
   changeItems.value = [];
   addChangeItem();
   attachmentFile.value = null;
@@ -641,15 +639,36 @@ const editRequest = (row: ChangeRequest) => {
   form.project = row.project;
   form.request_type = row.request_type ?? "";
   form.reason = row.reason || "";
-  form.requested_end_date = row.requested_end_date || "";
   if (row.request_type === "CHANGE" && isRecord(row.change_data)) {
-    const entries = Object.entries(row.change_data).filter(([key]) =>
-      changeFieldConfigs.some((field) => field.key === key)
-    );
-    changeItems.value = entries.map(([field, value]) => ({
-      field,
-      value: normalizeChangeValue(field, value),
-    }));
+    const changeData = row.change_data;
+    const items: ChangeItem[] = [];
+    const hasKeyField =
+      "is_key_field" in changeData || "key_domain_code" in changeData;
+    if (hasKeyField) {
+      let isKeyField =
+        typeof changeData.is_key_field === "boolean"
+          ? changeData.is_key_field
+          : Boolean(changeData.is_key_field);
+      const keyDomain =
+        typeof changeData.key_domain_code === "string"
+          ? changeData.key_domain_code
+          : "";
+      if (!("is_key_field" in changeData) && keyDomain) {
+        isKeyField = true;
+      }
+      items.push({
+        field: "is_key_field",
+        value: isKeyField
+          ? ["KEY", keyDomain].filter(Boolean)
+          : ["GENERAL"],
+      });
+    }
+    for (const [field, value] of Object.entries(changeData)) {
+      if (field === "is_key_field" || field === "key_domain_code") continue;
+      if (!changeFieldConfigs.some((cfg) => cfg.key === field)) continue;
+      items.push({ field, value: normalizeChangeValue(field, value) });
+    }
+    changeItems.value = items;
   } else {
     changeItems.value = [];
   }
@@ -672,12 +691,6 @@ const saveDraft = async () => {
       saving.value = false;
       return;
     }
-    if (form.request_type === "EXTENSION" && !form.requested_end_date) {
-      ElMessage.error("请选择延期日期");
-      saving.value = false;
-      return;
-    }
-
     let changeData: Record<string, unknown> = {};
     if (form.request_type === "CHANGE") {
       if (changeItems.value.length === 0) {
@@ -698,6 +711,23 @@ const saveDraft = async () => {
           return;
         }
         const value = item.value;
+        if (item.field === "is_key_field") {
+          if (!Array.isArray(value) || value.length === 0) {
+            ElMessage.error("请选择重点领域项目设置");
+            saving.value = false;
+            return;
+          }
+          const isKey = value[0] === "KEY";
+          const keyDomain = value[1] || "";
+          if (isKey && !keyDomain) {
+            ElMessage.error("请选择重点领域代码");
+            saving.value = false;
+            return;
+          }
+          changeData.is_key_field = isKey;
+          changeData.key_domain_code = isKey ? keyDomain : "";
+          continue;
+        }
         if (
           value === null ||
           value === "" ||
@@ -715,9 +745,6 @@ const saveDraft = async () => {
     payload.append("project", String(form.project || ""));
     payload.append("request_type", form.request_type);
     payload.append("reason", form.reason || "");
-    if (form.request_type === "EXTENSION" && form.requested_end_date) {
-      payload.append("requested_end_date", form.requested_end_date);
-    }
     if (form.request_type === "CHANGE") {
       payload.append("change_data", JSON.stringify(changeData));
     }
@@ -768,9 +795,6 @@ watch(
 watch(
   () => form.request_type,
   (value) => {
-    if (value !== "EXTENSION") {
-      form.requested_end_date = "";
-    }
     if (value !== "CHANGE") {
       changeItems.value = [];
     } else if (changeItems.value.length === 0) {
@@ -787,6 +811,7 @@ onMounted(() => {
     DICT_CODES.PROJECT_CATEGORY,
     DICT_CODES.PROJECT_SOURCE,
     DICT_CODES.KEY_FIELD_CODE,
+    DICT_CODES.ACHIEVEMENT_TYPE,
   ]);
 });
 </script>

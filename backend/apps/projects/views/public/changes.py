@@ -131,15 +131,6 @@ class ProjectChangeRequestViewSet(viewsets.ModelViewSet):
                 {"code": 400, "message": "当前状态不允许提交"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if (
-            change_request.request_type == ProjectChangeRequest.ChangeType.EXTENSION
-            and not change_request.requested_end_date
-        ):
-            return Response(
-                {"code": 400, "message": "延期申请必须填写延期日期"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         try:
             ProjectChangeService.submit_request(change_request)
         except ValueError as exc:

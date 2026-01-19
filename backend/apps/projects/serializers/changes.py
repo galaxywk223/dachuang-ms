@@ -59,7 +59,6 @@ class ProjectChangeRequestSerializer(serializers.ModelSerializer):
             "request_type_display",
             "reason",
             "change_data",
-            "requested_end_date",
             "attachment",
             "attachment_url",
             "status",
@@ -84,24 +83,6 @@ class ProjectChangeRequestSerializer(serializers.ModelSerializer):
             return url
         except Exception:
             return ""
-
-    def validate(self, attrs):
-        request_type = attrs.get("request_type") or (
-            self.instance.request_type if self.instance else None
-        )
-        requested_end_date = attrs.get("requested_end_date")
-        status_val = attrs.get("status") or (
-            self.instance.status
-            if self.instance
-            else ProjectChangeRequest.ChangeStatus.DRAFT
-        )
-        if (
-            request_type == ProjectChangeRequest.ChangeType.EXTENSION
-            and not requested_end_date
-            and status_val != ProjectChangeRequest.ChangeStatus.DRAFT
-        ):
-            raise serializers.ValidationError("延期申请必须填写延期日期")
-        return attrs
 
     def validate_change_data(self, value):
         if isinstance(value, str):

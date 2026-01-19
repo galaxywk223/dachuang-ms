@@ -13,13 +13,9 @@
       <div class="filter-section mb-4">
         <el-form :inline="true" class="filter-form">
           <el-form-item label="变更类型">
-             <el-select v-model="filters.changeType" placeholder="全部类型" clearable style="width: 150px">
+             <el-select v-model="filters.requestType" placeholder="全部类型" clearable style="width: 150px">
                 <el-option label="全部" value="" />
-                <el-option label="成员变更" value="MEMBER" />
-                <el-option label="导师变更" value="TEACHER" />
-                <el-option label="经费变更" value="BUDGET" />
-                <el-option label="延期变更" value="POSTPONE" />
-                <el-option label="终止项目" value="TERMINATION" />
+                <el-option label="项目变更" value="CHANGE" />
              </el-select>
           </el-form-item>
            <el-form-item label="项目名称">
@@ -59,9 +55,9 @@
                  <div class="text-xs text-gray-500">项目编号: {{ row.project_no || '-' }}</div>
              </template>
         </el-table-column>
-        <el-table-column prop="type_display" label="变更类型" width="120" align="center">
+        <el-table-column prop="request_type_display" label="变更类型" width="120" align="center">
           <template #default="{ row }">
-            <el-tag>{{ row.type_display }}</el-tag>
+            <el-tag>{{ row.request_type_display }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="created_at" label="申请时间" width="160" align="center">
@@ -126,7 +122,7 @@ type ChangeRequestRow = {
   id: number;
   project_title?: string;
   project_no?: string;
-  type_display?: string;
+  request_type_display?: string;
   created_at?: string;
   status?: string;
   status_display?: string;
@@ -138,6 +134,9 @@ type ChangeRequestListResponse = {
     results?: ChangeRequestRow[];
     total?: number;
   } | ChangeRequestRow[];
+  results?: ChangeRequestRow[];
+  count?: number;
+  total?: number;
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -164,7 +163,7 @@ const currentId = ref<number | null>(null);
 const comments = ref("");
 
 const filters = ref({
-  changeType: "",
+  requestType: "",
   search: "",
 });
 
@@ -176,24 +175,42 @@ const fetchRequests = async () => {
       page_size: pageSize.value,
       status: "LEVEL1_REVIEWING", // Only show pending reviews
     };
-    if (filters.value.changeType) params.type = filters.value.changeType;
+    if (filters.value.requestType) params.request_type = filters.value.requestType;
     if (filters.value.search) params.search = filters.value.search;
 
-    const res = (await getChangeRequests(params)) as ChangeRequestListResponse | ChangeRequestRow[];
-    // Handle different API response structures if needed, but assuming standard pagination
-    if (isRecord(res) && isRecord(res.data) && Array.isArray(res.data.results)) {
-      changeRequests.value = res.data.results ?? [];
-      total.value = typeof res.data.total === "number" ? res.data.total : changeRequests.value.length;
-    } else if (isRecord(res) && Array.isArray(res.data)) {
-      changeRequests.value = res.data as ChangeRequestRow[];
-      total.value = changeRequests.value.length;
-    } else if (Array.isArray(res)) {
+    const res = (await getChangeRequests(params)) as
+      | ChangeRequestListResponse
+      | ChangeRequestRow[];
+    if (Array.isArray(res)) {
       changeRequests.value = res;
       total.value = res.length;
-    } else {
-      changeRequests.value = [];
-      total.value = 0;
+      return;
     }
+    if (isRecord(res) && Array.isArray(res.results)) {
+      changeRequests.value = res.results;
+      total.value =
+        typeof res.count === "number"
+          ? res.count
+          : typeof res.total === "number"
+            ? res.total
+            : res.results.length;
+      return;
+    }
+    if (isRecord(res) && isRecord(res.data) && Array.isArray(res.data.results)) {
+      changeRequests.value = res.data.results ?? [];
+      total.value =
+        typeof res.data.total === "number"
+          ? res.data.total
+          : changeRequests.value.length;
+      return;
+    }
+    if (isRecord(res) && Array.isArray(res.data)) {
+      changeRequests.value = res.data as ChangeRequestRow[];
+      total.value = changeRequests.value.length;
+      return;
+    }
+    changeRequests.value = [];
+    total.value = 0;
   } catch (error) {
     console.error(error);
     ElMessage.error("获取数据失败");
@@ -208,7 +225,7 @@ const handleSearch = () => {
 };
 
 const resetFilters = () => {
-  filters.value.changeType = "";
+  filters.value.requestType = "";
   filters.value.search = "";
   handleSearch();
 };

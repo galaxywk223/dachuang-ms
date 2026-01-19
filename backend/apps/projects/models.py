@@ -586,8 +586,6 @@ class ProjectChangeRequest(models.Model):
 
     class ChangeType(models.TextChoices):
         CHANGE = "CHANGE", "项目变更"
-        TERMINATION = "TERMINATION", "项目终止"
-        EXTENSION = "EXTENSION", "项目延期"
 
     class ChangeStatus(models.TextChoices):
         DRAFT = "DRAFT", "草稿"
@@ -609,7 +607,6 @@ class ProjectChangeRequest(models.Model):
     )
     reason = models.TextField(blank=True, verbose_name="申请原因")
     change_data = models.JSONField(null=True, blank=True, verbose_name="变更内容")
-    requested_end_date = models.DateField(null=True, blank=True, verbose_name="延期至")
     attachment = models.FileField(
         upload_to="change_requests/",
         null=True,

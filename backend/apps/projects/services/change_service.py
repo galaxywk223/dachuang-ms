@@ -184,17 +184,6 @@ class ProjectChangeService:
         project = change_request.project
         request_type = change_request.request_type
 
-        if request_type == ProjectChangeRequest.ChangeType.EXTENSION:
-            if change_request.requested_end_date:
-                project.end_date = change_request.requested_end_date
-                project.save(update_fields=["end_date"])
-            return
-
-        if request_type == ProjectChangeRequest.ChangeType.TERMINATION:
-            project.status = Project.ProjectStatus.TERMINATED
-            project.save(update_fields=["status"])
-            return
-
         if request_type == ProjectChangeRequest.ChangeType.CHANGE:
             change_data = change_request.change_data or {}
             allowed_fields = {
@@ -203,9 +192,6 @@ class ProjectChangeService:
                 "level_id",
                 "category_id",
                 "source_id",
-                "start_date",
-                "end_date",
-                "budget",
                 "approved_budget",
                 "expected_results",
                 "is_key_field",
