@@ -50,8 +50,8 @@ yarn-error.log*
 # Local dev data
 .local/
 
-# # Course design report
-# course_design_report/
+# Course design report
+course_design_report/
 
 # System
 .DS_Store

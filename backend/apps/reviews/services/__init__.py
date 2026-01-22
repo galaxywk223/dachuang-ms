@@ -786,24 +786,53 @@ class ReviewService:
                         project.id,
                     )
                     continue
+                node_id = target_node_id or phase_instance.current_node_id
+                node_obj = (
+                    WorkflowService.get_node_by_id(node_id) if node_id else None
+                )
                 if (
                     target_node_id
                     and phase_instance.current_node_id
                     and target_node_id != phase_instance.current_node_id
                 ):
                     ReviewService.logger.warning(
-                        "Project %s current node mismatch for expert assignment",
+                        "Project %s current node mismatch for expert assignment (current=%s, target=%s)",
                         project.id,
+                        phase_instance.current_node_id,
+                        target_node_id,
                     )
-                    continue
-                node_id = target_node_id or phase_instance.current_node_id
+                    if node_obj:
+                        phase_instance.current_node_id = node_obj.id
+                        phase_instance.step = node_obj.code
+                        phase_instance.save(
+                            update_fields=["current_node_id", "step", "updated_at"]
+                        )
+                    else:
+                        node_id = None
+                if not node_obj and phase_instance.step:
+                    inferred_node = WorkflowService.get_node_by_code(
+                        phase, phase_instance.step, project.batch
+                    )
+                    if inferred_node:
+                        node_id = inferred_node.id
+                        node_obj = WorkflowService.get_node_by_id(node_id)
+                        if node_obj:
+                            update_fields = []
+                            if phase_instance.current_node_id != node_obj.id:
+                                phase_instance.current_node_id = node_obj.id
+                                update_fields.append("current_node_id")
+                            if phase_instance.step != node_obj.code:
+                                phase_instance.step = node_obj.code
+                                update_fields.append("step")
+                            if update_fields:
+                                update_fields.append("updated_at")
+                                phase_instance.save(update_fields=update_fields)
                 if not node_id:
                     ReviewService.logger.warning(
                         "Project %s has no current node for expert assignment",
                         project.id,
                     )
                     continue
-                node_obj = WorkflowService.get_node_by_id(node_id)
                 if not node_obj:
                     ReviewService.logger.warning(
                         "Node %s not found for expert assignment", node_id
