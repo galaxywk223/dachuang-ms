@@ -165,28 +165,6 @@
             </el-form-item>
           </el-col>
         </el-row>
-
-        <el-divider content-position="left">高级配置</el-divider>
-        <el-collapse v-model="advancedPanels">
-          <el-collapse-item name="advanced">
-            <template #title>JSON 样式配置</template>
-            <el-row :gutter="16">
-              <el-col :span="12">
-                <el-form-item label="模板编码">
-                  <el-input v-model="form.template_code" placeholder="系统自动生成" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-form-item label="样式配置(JSON)">
-              <el-input
-                v-model="styleConfigText"
-                type="textarea"
-                :rows="5"
-                placeholder='{"font": "SimSun", "layout": "classic"}'
-              />
-            </el-form-item>
-          </el-collapse-item>
-        </el-collapse>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
@@ -264,7 +242,6 @@ const saving = ref(false);
 const dialogVisible = ref(false);
 const dialogMode = ref<"create" | "edit">("create");
 const editingId = ref<number | null>(null);
-const advancedPanels = ref<string[]>([]);
 
 const settings = ref<CertificateSetting[]>([]);
 
@@ -275,7 +252,6 @@ const form = reactive<CertificateSetting>({
   name: "",
   school_name: "",
   issuer_name: "",
-  template_code: "",
   project_level: null,
   project_category: null,
   background_image_url: "",
@@ -283,7 +259,6 @@ const form = reactive<CertificateSetting>({
   is_active: true,
 });
 
-const styleConfigText = ref("{}");
 const backgroundFile = ref<File | null>(null);
 const sealFile = ref<File | null>(null);
 const backgroundFileList = ref<UploadUserFile[]>([]);
@@ -368,18 +343,15 @@ const resetForm = () => {
   form.name = "";
   form.school_name = "";
   form.issuer_name = "";
-  form.template_code = "";
   form.project_level = null;
   form.project_category = null;
   form.background_image_url = "";
   form.seal_image_url = "";
   form.is_active = true;
-  styleConfigText.value = "{}";
   backgroundFile.value = null;
   sealFile.value = null;
   backgroundFileList.value = [];
   sealFileList.value = [];
-  advancedPanels.value = [];
 };
 
 const openCreateDialog = () => {
@@ -395,43 +367,27 @@ const openEditDialog = (item: CertificateSetting) => {
   form.name = item.name || "";
   form.school_name = item.school_name || "";
   form.issuer_name = item.issuer_name || "";
-  form.template_code = item.template_code || "";
   form.project_level = item.project_level ?? null;
   form.project_category = item.project_category ?? null;
   form.background_image_url = item.background_image_url || "";
   form.seal_image_url = item.seal_image_url || "";
   form.is_active = item.is_active ?? true;
-  styleConfigText.value = JSON.stringify(item.style_config || {}, null, 2);
   backgroundFile.value = null;
   sealFile.value = null;
   backgroundFileList.value = [];
   sealFileList.value = [];
-  advancedPanels.value =
-    item.style_config && Object.keys(item.style_config).length > 0
-      ? ["advanced"]
-      : [];
   dialogVisible.value = true;
 };
 
 const buildPayload = () => {
-  let styleConfig: Record<string, unknown> = {};
-  try {
-    styleConfig = JSON.parse(styleConfigText.value || "{}");
-  } catch {
-    throw new Error("样式配置不是有效的JSON");
-  }
-
   const basePayload: Record<string, unknown> = {
     name: form.name || "",
     school_name: form.school_name || "",
     issuer_name: form.issuer_name || "",
-    style_config: styleConfig,
+    style_config: {},
     is_active: form.is_active ?? true,
   };
 
-  if (form.template_code) {
-    basePayload.template_code = form.template_code;
-  }
   if (form.project_level) {
     basePayload.project_level = form.project_level;
   }

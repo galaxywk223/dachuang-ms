@@ -69,9 +69,7 @@ def get_best_match_setting(project=None):
 
 def render_certificate_html(project, setting=None, request=None):
     setting = setting or get_best_match_setting(project)
-    school_name = setting.school_name if setting else ""
     issuer = setting.issuer_name if setting else ""
-    template_code = setting.template_code if setting else "DEFAULT"
     style_config = setting.style_config if setting else {}
 
     def build_asset_url(file_field):
@@ -89,16 +87,19 @@ def render_certificate_html(project, setting=None, request=None):
     seal_url = build_asset_url(setting.seal_image) if setting else ""
 
     font_family = style_config.get("font_family", "SimSun")
-    title_size = style_config.get("title_size", 32)
     body_size = style_config.get("body_size", 18)
     line_height = style_config.get("line_height", 1.8)
     padding = style_config.get("padding", 60)
-    title_margin = style_config.get("title_margin", 24)
+    content_margin_top = style_config.get("content_margin_top", 230)
     canvas_width = style_config.get("canvas_width", 1123)
     canvas_height = style_config.get("canvas_height", 794)
     seal_width = style_config.get("seal_width", 140)
     seal_right = style_config.get("seal_right", 120)
     seal_bottom = style_config.get("seal_bottom", 120)
+    issuer_right = style_config.get("issuer_right", seal_right)
+    issuer_bottom = style_config.get(
+        "issuer_bottom", seal_bottom + (seal_width + 20 if seal_url else 0)
+    )
     page_size = style_config.get("page_size", "A4 landscape")
     background_image = f'url("{bg_url}")' if bg_url else "none"
     return f"""
@@ -136,20 +137,19 @@ def render_certificate_html(project, setting=None, request=None):
               background-position: center;
               background-size: cover;
             }}
-            .title {{
-              font-size: {title_size}px;
-              font-weight: bold;
-              margin-bottom: {title_margin}px;
-              letter-spacing: 4px;
-            }}
             .content {{
               font-size: {body_size}px;
               line-height: {line_height};
+              margin-top: {content_margin_top}px;
+            }}
+            .content p {{
+              margin: 10px 0;
             }}
             .issuer {{
-              margin-top: 40px;
+              position: absolute;
+              right: {issuer_right}px;
+              bottom: {issuer_bottom}px;
               text-align: right;
-              padding-right: 80px;
             }}
             .seal {{
               position: absolute;
@@ -162,14 +162,11 @@ def render_certificate_html(project, setting=None, request=None):
         </head>
         <body>
           <div class="certificate">
-            <div class="title">结题证书</div>
             <div class="content">
-              <p>{school_name}</p>
               <p>兹证明：{project.leader.real_name} 负责的项目《{project.title}》已通过结题验收。</p>
               <p>项目编号：{project.project_no}</p>
               <p>项目级别：{project.level.label if project.level else ""}</p>
               <p>项目类别：{project.category.label if project.category else ""}</p>
-              <p>模板编号：{template_code}</p>
             </div>
             <div class="issuer">{issuer}</div>
             {f'<img class="seal" src="{seal_url}" alt="seal" />' if seal_url else ""}

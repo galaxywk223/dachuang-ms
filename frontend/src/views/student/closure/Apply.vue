@@ -504,6 +504,9 @@ const {
   confirmAchievement,
   removeAchievement,
 } = useClosureApply();
+
+// Used by template ref="formRef"
+void formRef;
 </script>
 
 <style scoped lang="scss">
