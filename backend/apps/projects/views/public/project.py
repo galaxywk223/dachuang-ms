@@ -3,6 +3,7 @@
 """
 
 from rest_framework import viewsets
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
@@ -49,6 +50,24 @@ class ProjectViewSet(
     filterset_fields = ["status", "level", "leader__college", "leader", "year"]
     search_fields = ["project_no", "title", "advisors__user__real_name"]
     ordering_fields = ["created_at", "updated_at", "submitted_at"]
+
+    def _ensure_student_can_write(self, project):
+        """
+        项目成员（非负责人）对项目本体只能查看，不能修改/删除。
+
+        备注：经费管理在 ProjectExpenditureViewSet 单独放行。
+        """
+        user = self.request.user
+        if not getattr(user, "is_student", False):
+            return None
+        if getattr(user, "is_admin", False):
+            return None
+        if project.leader_id == user.id:
+            return None
+        return Response(
+            {"code": 403, "message": "只有项目负责人可以操作该项目"},
+            status=status.HTTP_403_FORBIDDEN,
+        )
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -197,6 +216,27 @@ class ProjectViewSet(
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         return Response({"code": 200, "message": "获取成功", "data": serializer.data})
+
+    def update(self, request, *args, **kwargs):
+        project = self.get_object()
+        denied = self._ensure_student_can_write(project)
+        if denied is not None:
+            return denied
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        project = self.get_object()
+        denied = self._ensure_student_can_write(project)
+        if denied is not None:
+            return denied
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        project = self.get_object()
+        denied = self._ensure_student_can_write(project)
+        if denied is not None:
+            return denied
+        return super().destroy(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         """
