@@ -47,6 +47,9 @@ yarn-error.log*
 # VSCode
 .vscode/
 
+# JetBrains IDE
+.idea/
+
 # Local dev data
 .local/
 
