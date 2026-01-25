@@ -76,3 +76,19 @@ python manage.py migrate
 - `DB_HOST/DB_PORT` 是否正确
 - `DB_USER/DB_PASSWORD` 是否与本机实际账号一致
 
+## 4. （可选）重新导出 SQL（Windows）
+
+如你在本机修改了数据库，想重新导出 SQL 文件，可使用仓库自带的 Windows 脚本：
+
+```powershell
+# 导出“结构 + 数据”
+.\scripts\export_db_full.ps1
+
+# 仅导出结构
+.\scripts\export_db_schema.ps1
+```
+
+可用环境变量覆盖连接与输出路径（与后端一致）：
+
+- `DB_NAME/DB_USER/DB_PASSWORD/DB_HOST/DB_PORT`
+- `OUTPUT_FILE`：输出文件路径（默认分别为根目录的 `dachuang_db_full.sql` / `dachuang_db_schema.sql`）

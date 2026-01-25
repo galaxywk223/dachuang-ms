@@ -2,14 +2,15 @@
 -- PostgreSQL database dump
 --
 
-\restrict lTbDK5E1uuhnbuydiAaSYikt9ycPGd2HecehmUVIImfGUrSrEZBcMoTERhp4Wjh
+\restrict A6AhXmoXab3bgbFChXl8zgLIyhNo14F1nCdqgVNyGNu7nciqmUlnAP3CRsYguxM
 
--- Dumped from database version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
--- Dumped by pg_dump version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
+-- Dumped from database version 17.7
+-- Dumped by pg_dump version 17.7
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -1264,7 +1265,7 @@ COPY public.auth_permission (id, name, content_type_id, codename) FROM stdin;
 --
 
 COPY public.certificate_settings (id, name, school_name, issuer_name, template_code, background_image, seal_image, style_config, is_active, created_at, updated_at, project_category_id, project_level_id, updated_by_id) FROM stdin;
-1	默认模板	安徽工业大学	安徽工业大学	DEFAULT	certificates/backgrounds/vlcsnap-2025-11-15-17h33m42s565.png	certificates/seals/ahut_logo.jpg	{}	t	2026-01-15 04:31:06.052924+08	2026-01-19 11:08:09.953465+08	\N	\N	1
+1	默认模板	安徽工业大学	安徽工业大学	DEFAULT	certificates/backgrounds/dI7Job9UWg.jpg	certificates/seals/微信头像.jpg	{}	t	2026-01-15 04:31:06.052924+08	2026-01-24 18:34:11.537087+08	\N	\N	1
 \.
 
 
@@ -1610,6 +1611,7 @@ COPY public.django_session (session_key, session_data, expire_date) FROM stdin;
 COPY public.expert_groups (id, name, created_at, updated_at, created_by_id, scope) FROM stdin;
 4	12	2026-01-15 02:27:35.352537+08	2026-01-15 02:27:35.352548+08	1	SCHOOL
 5	专家组1	2026-01-18 18:24:09.291006+08	2026-01-18 18:24:09.29102+08	133	COLLEGE
+6	123	2026-01-20 22:54:14.401658+08	2026-01-20 22:54:14.401658+08	133	COLLEGE
 \.
 
 
@@ -1621,6 +1623,7 @@ COPY public.expert_groups_members (id, expertgroup_id, user_id) FROM stdin;
 6	4	166
 7	5	168
 8	5	167
+9	6	168
 \.
 
 
@@ -1630,13 +1633,11 @@ COPY public.expert_groups_members (id, expertgroup_id, user_id) FROM stdin;
 
 COPY public.notifications (id, title, content, notification_type, is_read, read_at, created_at, recipient_id, related_project_id) FROM stdin;
 37	新的评审任务	项目《12345123》已分配给您评审，请及时处理。	REVIEW	f	\N	2026-01-15 04:05:30.646355+08	170	17
-40	新的评审任务	项目《12345123》已分配给您评审，请及时处理。	REVIEW	f	\N	2026-01-15 04:07:23.52445+08	166	17
 44	中期报告待审核	项目《12345123》中期报告已提交，请及时审核。	REVIEW	f	\N	2026-01-15 04:08:52.313915+08	152	17
 47	项目审核通过	恭喜！您的项目《1234》审核通过。\n审核意见：123	REVIEW	f	\N	2026-01-15 10:44:25.858627+08	30	20
 48	新的评审任务	项目《1234》已分配给您评审，请及时处理。	REVIEW	f	\N	2026-01-15 10:46:58.107371+08	170	20
 49	项目审核通过	恭喜！您的项目《1234》审核通过。\n审核意见：123	REVIEW	f	\N	2026-01-15 10:56:53.799493+08	30	20
 50	项目审核通过	恭喜！您的项目《1234》审核通过。	REVIEW	f	\N	2026-01-15 10:57:25.906062+08	30	20
-51	新的评审任务	项目《1234》已分配给您评审，请及时处理。	REVIEW	f	\N	2026-01-15 11:07:41.185411+08	166	20
 52	项目审核通过	恭喜！您的项目《1234》审核通过。\n审核意见：12	REVIEW	f	\N	2026-01-15 11:08:11.95727+08	30	20
 53	项目审核通过	恭喜！您的项目《1234》审核通过。\n审核意见：1	REVIEW	f	\N	2026-01-15 11:08:34.648809+08	30	20
 54	项目审核通过	恭喜！您的项目《1》审核通过。\n审核意见：123	REVIEW	f	\N	2026-01-15 11:12:46.498731+08	25	21
@@ -1652,12 +1653,10 @@ COPY public.notifications (id, title, content, notification_type, is_read, read_
 45	项目审核通过	恭喜！您的项目《12345123》审核通过。\n审核意见：123	REVIEW	t	2026-01-18 18:13:50.795767+08	2026-01-15 04:09:17.077473+08	31	17
 46	项目审核通过	恭喜！您的项目《12345123》审核通过。\n审核意见：123	REVIEW	t	2026-01-18 18:13:50.795767+08	2026-01-15 04:09:36.063496+08	31	17
 58	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-18 18:21:59.388096+08	31	22
-59	新的评审任务	项目《镁电解熔盐中杂质的绿色高效分离》已分配给您评审，请及时处理。	REVIEW	f	\N	2026-01-18 18:24:23.563756+08	168	22
 60	新的评审任务	项目《镁电解熔盐中杂质的绿色高效分离》已分配给您评审，请及时处理。	REVIEW	f	\N	2026-01-18 18:24:23.566396+08	167	22
 61	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-18 18:25:11.566553+08	31	22
 62	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-18 18:25:39.450362+08	31	22
 63	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-18 18:26:16.884928+08	31	22
-64	新的评审任务	项目《镁电解熔盐中杂质的绿色高效分离》已分配给您评审，请及时处理。	REVIEW	f	\N	2026-01-18 18:29:02.249463+08	166	22
 65	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-18 18:29:33.90257+08	31	22
 66	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。	REVIEW	f	\N	2026-01-18 18:29:48.871309+08	31	22
 67	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-19 09:43:29.889719+08	31	22
@@ -1668,6 +1667,47 @@ COPY public.notifications (id, title, content, notification_type, is_read, read_
 72	中期报告待审核	项目《电解熔盐中杂质的绿色高效分离》中期报告已提交，请及时审核。	REVIEW	f	\N	2026-01-19 10:20:23.672355+08	169	22
 73	项目审核通过	恭喜！您的项目《电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-19 10:21:12.524138+08	31	22
 74	项目审核通过	恭喜！您的项目《电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-19 10:21:46.825772+08	31	22
+75	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-20 22:01:09.164378+08	31	23
+77	新的评审任务	项目《镁电解熔盐中杂质的绿色高效分离》已分配给您评审，请及时处理。	REVIEW	f	\N	2026-01-20 22:09:08.164833+08	167	23
+78	项目审核通过	恭喜！您的项目《钢铁厂污泥配矿烧结对烟气成分的影响研究》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-20 22:43:07.687721+08	98	25
+59	新的评审任务	项目《镁电解熔盐中杂质的绿色高效分离》已分配给您评审，请及时处理。	REVIEW	t	2026-01-25 19:02:19.914843+08	2026-01-18 18:24:23.563756+08	168	22
+76	新的评审任务	项目《镁电解熔盐中杂质的绿色高效分离》已分配给您评审，请及时处理。	REVIEW	t	2026-01-25 19:02:19.914843+08	2026-01-20 22:09:08.159833+08	168	23
+79	新的评审任务	项目《钢铁厂污泥配矿烧结对烟气成分的影响研究》已分配给您评审，请及时处理。	REVIEW	t	2026-01-25 19:02:19.914843+08	2026-01-20 22:44:00.475504+08	168	25
+80	新的评审任务	项目《钢铁厂污泥配矿烧结对烟气成分的影响研究》已分配给您评审，请及时处理。	REVIEW	f	\N	2026-01-20 22:44:00.479518+08	167	25
+81	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-20 22:46:07.210358+08	31	23
+82	项目审核通过	恭喜！您的项目《钢铁厂污泥配矿烧结对烟气成分的影响研究》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-20 22:47:10.090383+08	98	25
+83	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-20 22:48:48.961355+08	31	23
+84	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。	REVIEW	f	\N	2026-01-20 22:49:04.62316+08	31	23
+86	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-20 22:49:55.104303+08	31	23
+87	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。	REVIEW	f	\N	2026-01-20 22:50:11.379152+08	31	23
+88	中期报告提交成功	项目《镁电解熔盐中杂质的绿色高效分离》中期报告已提交，等待审核。	PROJECT	f	\N	2026-01-20 22:52:16.371819+08	31	23
+89	中期报告待审核	项目《镁电解熔盐中杂质的绿色高效分离》中期报告已提交，请及时审核。	REVIEW	f	\N	2026-01-20 22:52:16.375327+08	170	23
+90	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-20 22:53:33.208287+08	31	23
+92	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-20 22:55:02.78423+08	31	23
+93	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。	REVIEW	f	\N	2026-01-20 22:55:27.1595+08	31	23
+94	项目审核通过	恭喜！您的项目《钢包浇注末期汇流旋涡形成机理及其临界高度的预测模型》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-24 18:00:22.801089+08	90	26
+96	新的评审任务	项目《钢包浇注末期汇流旋涡形成机理及其临界高度的预测模型》已分配给您评审，请及时处理。	REVIEW	f	\N	2026-01-24 18:01:50.18804+08	167	26
+97	项目审核通过	恭喜！您的项目《钢包浇注末期汇流旋涡形成机理及其临界高度的预测模型》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-24 18:03:17.771604+08	90	26
+98	项目审核通过	恭喜！您的项目《钢包浇注末期汇流旋涡形成机理及其临界高度的预测模型》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-24 18:04:23.837159+08	90	26
+99	项目审核通过	恭喜！您的项目《钢包浇注末期汇流旋涡形成机理及其临界高度的预测模型》审核通过。	REVIEW	f	\N	2026-01-24 18:04:39.820209+08	90	26
+101	项目审核通过	恭喜！您的项目《钢包浇注末期汇流旋涡形成机理及其临界高度的预测模型》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-24 18:06:16.615008+08	90	26
+102	项目审核通过	恭喜！您的项目《钢包浇注末期汇流旋涡形成机理及其临界高度的预测模型》审核通过。	REVIEW	f	\N	2026-01-24 18:06:31.009225+08	90	26
+103	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-24 18:18:49.945244+08	31	23
+105	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-24 18:20:03.951306+08	31	23
+107	项目审核通过	恭喜！您的项目《镁电解熔盐中杂质的绿色高效分离》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-24 18:21:03.520664+08	31	23
+40	新的评审任务	项目《12345123》已分配给您评审，请及时处理。	REVIEW	t	2026-01-24 18:21:15.404168+08	2026-01-15 04:07:23.52445+08	166	17
+51	新的评审任务	项目《1234》已分配给您评审，请及时处理。	REVIEW	t	2026-01-24 18:21:15.404168+08	2026-01-15 11:07:41.185411+08	166	20
+64	新的评审任务	项目《镁电解熔盐中杂质的绿色高效分离》已分配给您评审，请及时处理。	REVIEW	t	2026-01-24 18:21:15.404168+08	2026-01-18 18:29:02.249463+08	166	22
+85	新的评审任务	项目《镁电解熔盐中杂质的绿色高效分离》已分配给您评审，请及时处理。	REVIEW	t	2026-01-24 18:21:15.404168+08	2026-01-20 22:49:29.414256+08	166	23
+100	新的评审任务	项目《钢包浇注末期汇流旋涡形成机理及其临界高度的预测模型》已分配给您评审，请及时处理。	REVIEW	t	2026-01-24 18:21:15.404168+08	2026-01-24 18:05:35.992262+08	166	26
+106	新的评审任务	项目《镁电解熔盐中杂质的绿色高效分离》已分配给您评审，请及时处理。	REVIEW	t	2026-01-24 18:21:15.404168+08	2026-01-24 18:20:47.408521+08	166	23
+108	项目审核通过	恭喜！您的项目《基于零膨润土高比例赤褐铁矿制备球团及强化焙烧研究》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-25 18:51:20.528827+08	78	27
+110	项目审核通过	恭喜！您的项目《基于零膨润土高比例赤褐铁矿制备球团及强化焙烧研究》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-25 18:53:41.198415+08	78	27
+111	项目审核通过	恭喜！您的项目《基于零膨润土高比例赤褐铁矿制备球团及强化焙烧研究》审核通过。\n审核意见：通过	REVIEW	f	\N	2026-01-25 18:54:06.613665+08	78	27
+91	新的评审任务	项目《镁电解熔盐中杂质的绿色高效分离》已分配给您评审，请及时处理。	REVIEW	t	2026-01-25 19:02:19.914843+08	2026-01-20 22:54:36.802307+08	168	23
+95	新的评审任务	项目《钢包浇注末期汇流旋涡形成机理及其临界高度的预测模型》已分配给您评审，请及时处理。	REVIEW	t	2026-01-25 19:02:19.914843+08	2026-01-24 18:01:50.182526+08	168	26
+104	新的评审任务	项目《镁电解熔盐中杂质的绿色高效分离》已分配给您评审，请及时处理。	REVIEW	t	2026-01-25 19:02:19.914843+08	2026-01-24 18:19:32.885987+08	168	23
+109	新的评审任务	项目《基于零膨润土高比例赤褐铁矿制备球团及强化焙烧研究》已分配给您评审，请及时处理。	REVIEW	t	2026-01-25 19:02:19.914843+08	2026-01-25 18:52:32.989581+08	168	27
 \.
 
 
@@ -1677,6 +1717,7 @@ COPY public.notifications (id, title, content, notification_type, is_read, read_
 
 COPY public.project_achievements (id, title, description, authors, journal, publication_date, doi, patent_no, patent_type, applicant, copyright_no, copyright_owner, competition_name, award_level, award_date, attachment, created_at, updated_at, achievement_type_id, project_id, extra_data) FROM stdin;
 3	123	123			\N									\N	achievements/0_lp8To1M.pdf	2026-01-15 04:10:42.49589+08	2026-01-15 04:13:11.411629+08	64	17	{}
+4	123	123			\N									\N	achievements/ChatGPT-周期采样与事件触发_1_sOeO4na.pdf	2026-01-22 10:46:05.789268+08	2026-01-22 10:49:49.348101+08	184	23	{}
 \.
 
 
@@ -1690,6 +1731,11 @@ COPY public.project_advisors (id, "order", project_id, user_id) FROM stdin;
 51	0	21	168
 54	0	22	170
 55	1	22	169
+57	0	23	170
+59	0	25	169
+62	0	26	163
+63	1	26	162
+65	0	27	161
 \.
 
 
@@ -1699,6 +1745,7 @@ COPY public.project_advisors (id, "order", project_id, user_id) FROM stdin;
 
 COPY public.project_archives (id, snapshot, attachments, archived_at, project_id, metadata) FROM stdin;
 2	{"id": 17, "batch": 7, "level": "省级", "title": "12345123", "budget": "3000.00", "leader": 31, "source": "TEACHER_RESEARCH", "status": "CLOSED", "college": "计算机科学与技术学院", "ranking": null, "category": "ENTREPRENEURSHIP_TRAINING", "end_date": null, "batch_name": "2026第二批", "batch_year": 2026, "created_at": "2026-01-15 04:03:29", "major_code": "110", "project_no": "2026107000001", "start_date": null, "updated_at": "2026-01-15 04:13:11", "description": "1234", "leader_name": "王凯", "final_report": "/media/final_reports/0_h57niS4.pdf", "is_key_field": true, "leader_email": "wangk2829@gmail.com", "leader_grade": "2023", "leader_major": "110", "members_info": [{"id": 95, "name": "姜茹茹", "role": "MEMBER", "user": 30, "join_date": "2026-01-15", "user_name": "姜茹茹", "student_id": "239074320", "contribution": ""}], "self_funding": "0.00", "submitted_at": "2026-01-15 04:03:49", "advisors_info": [{"id": 44, "name": "周建平", "user": 152, "email": "", "order": 0, "title": "教工", "contact": "", "user_name": "周建平", "department": "教工", "job_number": "052812"}], "contract_file": null, "level_display": "省级", "proposal_file": "/media/proposals/0_vHjJ3uu.pdf", "research_plan": "", "leader_contact": "18297838360", "source_display": "面向教师科研类", "status_display": "已结题", "task_book_file": null, "approved_budget": "3000.00", "attachment_file": null, "key_domain_code": "202406", "mid_term_report": "/media/mid_term_reports/0_IjzOokF.pdf", "achievement_file": "/media/achievements/0_VahHwDB.pdf", "category_display": "创业训练项目", "expected_results": "1234", "final_report_url": "/media/final_reports/0_h57niS4.pdf", "research_content": "", "contract_file_url": "", "final_report_name": "final_reports/0_h57niS4.pdf", "innovation_points": "", "leader_class_name": "软232", "leader_department": "", "leader_student_id": "239074336", "proposal_file_url": "/media/proposals/0_vHjJ3uu.pdf", "achievements_count": 1, "closure_applied_at": "2026-01-15 04:13:11", "contract_file_name": "", "proposal_file_name": "proposals/0_vHjJ3uu.pdf", "task_book_file_url": "", "achievement_summary": "123", "attachment_file_url": "", "mid_term_report_url": "/media/mid_term_reports/0_IjzOokF.pdf", "task_book_file_name": "", "achievement_file_url": "/media/achievements/0_VahHwDB.pdf", "attachment_file_name": "", "category_description": "", "mid_term_report_name": "mid_term_reports/0_IjzOokF.pdf", "achievement_file_name": "achievements/0_VahHwDB.pdf", "expected_results_data": [{"expected_count": 1, "achievement_type": "论文"}]}	[{"url": "/media/proposals/0_vHjJ3uu.pdf", "name": "proposals/0_vHjJ3uu.pdf", "size": 13, "field": "proposal_file"}, {"url": "/media/mid_term_reports/0_IjzOokF.pdf", "name": "mid_term_reports/0_IjzOokF.pdf", "size": 13, "field": "mid_term_report"}, {"url": "/media/final_reports/0_h57niS4.pdf", "name": "final_reports/0_h57niS4.pdf", "size": 13, "field": "final_report"}, {"url": "/media/achievements/0_VahHwDB.pdf", "name": "achievements/0_VahHwDB.pdf", "size": 13, "field": "achievement_file"}, {"name": "achievements/0_lp8To1M.pdf", "type": "achievement", "field": "achievement_3", "achievement_type": "论文"}]	2026-01-15 04:18:08.842386+08	17	{}
+3	{"id": 23, "batch": 9, "level": "国家级", "title": "镁电解熔盐中杂质的绿色高效分离", "budget": "10000.00", "leader": 31, "source": "TEACHER_RESEARCH", "status": "CLOSED", "college": "计算机科学与技术学院", "category": "创新训练项目", "end_date": null, "batch_name": "2026-A", "batch_year": 2026, "created_at": "2026-01-20 21:43:05", "major_code": "110", "project_no": "2026107000005", "start_date": null, "updated_at": "2026-01-24 18:20:16", "description": "熔盐电解法是工业上生产金属镁的常用方法。在电解法生产金属镁的过程中，氯化镁原料和电解槽损耗会引入有害的金属杂质，对镁电解过程产生不利影响。本项目通过控电位电解的方法对熔盐中的Fe(III)、Mn(II)和Al(III)等典型杂质进行分离，为熔盐电解制备高纯度金属镁提供理论依据。采用控电位电解法对NaCl-KCl-MgCl2熔盐中的金属杂质进行分离并计算镁电解质体系中杂质的去除率。", "leader_name": "王凯", "final_report": "/media/final_reports/ChatGPT-%E5%91%A8%E6%9C%9F%E9%87%87%E6%A0%B7%E4%B8%8E%E4%BA%8B%E4%BB%B6%E8%A7%A6%E5%8F%91_1.pdf", "is_key_field": true, "leader_email": "wangk2829@gmail.com", "leader_grade": "2023", "leader_major": "110", "members_info": [{"id": 108, "name": "周全", "role": "MEMBER", "user": 98, "join_date": "2026-01-20", "user_name": "周全", "student_id": "239074420", "contribution": ""}], "submitted_at": "2026-01-20 21:52:09", "advisors_info": [{"id": 57, "name": "刘恒", "user": 170, "email": "", "order": 0, "title": "教工", "contact": "", "user_name": "刘恒", "department": "教工", "job_number": "20140070"}], "level_display": "国家级", "proposal_file": "/media/proposals/V1.pdf", "leader_contact": "18297838360", "source_display": "面向教师科研类", "status_display": "已结题", "approved_budget": "10000.00", "attachment_file": null, "key_domain_code": "202406", "mid_term_report": "/media/mid_term_reports/V1.pdf", "achievement_file": "/media/achievements/ChatGPT-%E5%91%A8%E6%9C%9F%E9%87%87%E6%A0%B7%E4%B8%8E%E4%BA%8B%E4%BB%B6%E8%A7%A6%E5%8F%91_1.pdf", "category_display": "创新训练项目", "expected_results": "结题报告", "final_report_url": "/media/final_reports/ChatGPT-%E5%91%A8%E6%9C%9F%E9%87%87%E6%A0%B7%E4%B8%8E%E4%BA%8B%E4%BB%B6%E8%A7%A6%E5%8F%91_1.pdf", "final_report_name": "final_reports/ChatGPT-周期采样与事件触发_1.pdf", "leader_class_name": "软232", "leader_department": "", "leader_student_id": "239074336", "proposal_file_url": "/media/proposals/V1.pdf", "achievements_count": 1, "closure_applied_at": "2026-01-22 10:49:49", "proposal_file_name": "proposals/V1.pdf", "attachment_file_url": "", "mid_term_report_url": "/media/mid_term_reports/V1.pdf", "achievement_file_url": "/media/achievements/ChatGPT-%E5%91%A8%E6%9C%9F%E9%87%87%E6%A0%B7%E4%B8%8E%E4%BA%8B%E4%BB%B6%E8%A7%A6%E5%8F%91_1.pdf", "attachment_file_name": "", "mid_term_report_name": "mid_term_reports/V1.pdf", "achievement_file_name": "achievements/ChatGPT-周期采样与事件触发_1.pdf", "expected_results_data": [{"expected_count": 1, "achievement_type": "结题报告"}]}	[{"url": "/media/proposals/V1.pdf", "name": "proposals/V1.pdf", "size": 1274782, "field": "proposal_file"}, {"url": "/media/mid_term_reports/V1.pdf", "name": "mid_term_reports/V1.pdf", "size": 1274782, "field": "mid_term_report"}, {"url": "/media/final_reports/ChatGPT-%E5%91%A8%E6%9C%9F%E9%87%87%E6%A0%B7%E4%B8%8E%E4%BA%8B%E4%BB%B6%E8%A7%A6%E5%8F%91_1.pdf", "name": "final_reports/ChatGPT-周期采样与事件触发_1.pdf", "size": 720038, "field": "final_report"}, {"url": "/media/achievements/ChatGPT-%E5%91%A8%E6%9C%9F%E9%87%87%E6%A0%B7%E4%B8%8E%E4%BA%8B%E4%BB%B6%E8%A7%A6%E5%8F%91_1.pdf", "name": "achievements/ChatGPT-周期采样与事件触发_1.pdf", "size": 720038, "field": "achievement_file"}, {"name": "achievements/ChatGPT-周期采样与事件触发_1_sOeO4na.pdf", "type": "achievement", "field": "achievement_4", "achievement_type": "结题报告"}]	2026-01-24 18:21:40.117226+08	23	{}
 \.
 
 
@@ -1707,8 +1754,8 @@ COPY public.project_archives (id, snapshot, attachments, archived_at, project_id
 --
 
 COPY public.project_batches (id, name, year, code, is_current, is_active, created_at, updated_at, status, is_deleted) FROM stdin;
-9	2026-A	2026	2026-A	f	t	2026-01-18 16:33:54.787315+08	2026-01-18 16:33:54.787323+08	draft	f
 10	2025-B	2026	2025-B	f	t	2026-01-18 16:35:52.82855+08	2026-01-19 10:23:01.01424+08	finished	f
+9	2026-A	2026	2026-A	t	t	2026-01-18 16:33:54.787315+08	2026-01-20 21:38:32.645137+08	active	f
 \.
 
 
@@ -1739,6 +1786,7 @@ COPY public.project_change_reviews (id, status, comments, reviewed_at, created_a
 COPY public.project_expenditure_reviews (id, status, comments, reviewed_at, created_at, expenditure_id, reviewer_id, workflow_node_id) FROM stdin;
 2	APPROVED		2026-01-18 22:38:30.143839+08	2026-01-18 22:37:38.114746+08	4	133	63
 3	PENDING		\N	2026-01-18 22:39:49.237067+08	5	\N	63
+4	PENDING		\N	2026-01-24 18:08:04.818447+08	6	\N	80
 \.
 
 
@@ -1750,6 +1798,8 @@ COPY public.project_expenditures (id, title, amount, expenditure_date, proof_fil
 2	12	500.00	2026-01-21	expenditures/pdf模板_-_Google_搜索_Pk4URbA.pdf	RECORDED	2026-01-15 11:16:49.877374+08	30	20	f		\N	\N	2026-01-15 11:16:49.877383+08	SKIPPED	\N		\N	\N
 4	鼠标	50.00	2026-01-13	expenditures/2025-12-17_16-33_qWYwenF.png	APPROVED	2026-01-18 22:37:38.100353+08	31	22	f		2026-01-18 22:38:30.151779+08	133	2026-01-18 22:38:30.151833+08	SKIPPED	\N		\N	\N
 5	键盘	100.00	2026-01-14	expenditures/2025-12-17_16-33_KbvLa7k.png	PENDING	2026-01-18 22:39:26.332067+08	98	22	f		\N	\N	2026-01-18 22:39:49.238391+08	APPROVED	2026-01-18 22:39:49.226907+08		31	63
+6	买键盘	200.00	2026-01-21	expenditures/ER.drawio.png	PENDING	2026-01-24 18:08:04.810284+08	90	26	f		\N	\N	2026-01-24 18:08:04.823354+08	SKIPPED	\N		\N	80
+7	鼠标	150.00	2026-01-06	expenditures/239074336王凯基于DjangoVue3的大创项目管理系统.pdf	PENDING	2026-01-24 18:09:39.605339+08	89	26	f		\N	\N	2026-01-24 18:09:39.605339+08	PENDING	\N		\N	\N
 \.
 
 
@@ -1763,6 +1813,11 @@ COPY public.project_members (id, role, join_date, contribution, project_id, user
 102	MEMBER	2026-01-15		21	31
 105	MEMBER	2026-01-18		22	98
 106	MEMBER	2026-01-18		22	97
+108	MEMBER	2026-01-20		23	98
+110	MEMBER	2026-01-20		25	96
+113	MEMBER	2026-01-24		26	89
+114	MEMBER	2026-01-24		26	88
+116	MEMBER	2026-01-25		27	56
 \.
 
 
@@ -1778,6 +1833,12 @@ COPY public.project_phase_instances (id, phase, attempt_no, step, state, return_
 14	APPLICATION	1	SCHOOL_PUBLISH	IN_PROGRESS			\N	2026-01-15 11:12:24.76305+08	2026-01-15 11:12:24.763059+08	\N	21	39
 15	APPLICATION	1	PUBLISHED	COMPLETED			\N	2026-01-18 17:51:38.574738+08	2026-01-18 18:29:48.868647+08	31	22	54
 16	MID_TERM	1	COMPLETED	COMPLETED			\N	2026-01-19 10:20:23.63407+08	2026-01-19 10:21:46.819538+08	31	22	57
+18	APPLICATION	1	COLLEGE_REVIEW	IN_PROGRESS			\N	2026-01-20 22:40:20.744392+08	2026-01-20 22:40:20.744392+08	98	25	70
+17	APPLICATION	1	PUBLISHED	COMPLETED			\N	2026-01-20 21:52:09.840566+08	2026-01-20 22:50:11.375154+08	31	23	71
+19	MID_TERM	1	COMPLETED	COMPLETED			\N	2026-01-20 22:52:16.356258+08	2026-01-20 22:55:27.157487+08	31	23	74
+21	APPLICATION	1	PUBLISHED	COMPLETED			\N	2026-01-24 17:59:33.473608+08	2026-01-24 18:06:31.005051+08	90	26	71
+20	CLOSURE	1	COMPLETED	COMPLETED			\N	2026-01-22 10:49:49.36571+08	2026-01-24 18:21:40.120743+08	31	23	78
+22	APPLICATION	1	SCHOOL_PUBLISH	IN_PROGRESS			\N	2026-01-25 18:50:46.226795+08	2026-01-25 18:50:46.226795+08	78	27	71
 \.
 
 
@@ -1790,6 +1851,10 @@ COPY public.projects (id, project_no, title, description, is_key_field, start_da
 21	2026107000003	1	123	f	\N	\N	1000.00	123	proposals/pdf模板_-_Google_搜索_ykmRPy6.pdf				LEVEL1_AUDITING	2026-01-15 11:12:13.711141+08	2026-01-15 11:15:26.132408+08	2026-01-15 11:12:24.754577+08	\N	8	25	53	1	2026			\N	\N	\N	[{"expected_count": 1, "achievement_type": "论文"}]
 20	2026107000002	1234	123	t	\N	\N	1000.00	123	proposals/pdf模板_-_Google_搜索_jUTNZUa.pdf				IN_PROGRESS	2026-01-15 10:28:17.364829+08	2026-01-15 11:08:34.634701+08	2026-01-15 10:28:29.946222+08	\N	8	30	53	1	2026	202406		\N	999.00	\N	[{"expected_count": 1, "achievement_type": "论文"}]
 22	2026107000004	电解熔盐中杂质的绿色高效分离	熔盐电解法是工业上生产金属镁的常用方法。在电解法生产金属镁的过程中，氯化镁原料和电解槽损耗会引入有害的金属杂质，对镁电解过程产生不利影响。本项目通过控电位电解的方法对熔盐中的Fe(III)、Mn(II)和Al(III)等典型杂质进行分离，为熔盐电解制备高纯度金属镁提供理论依据。采用控电位电解法对NaCl-KCl-MgCl2熔盐中的金属杂质进行分离并计算镁电解质体系中杂质的去除率。	t	\N	\N	10000.00	结题报告	proposals/0_ejrGm1J.pdf				READY_FOR_CLOSURE	2026-01-18 17:51:32.912569+08	2026-01-19 10:21:12.510345+08	2026-01-18 17:51:38.568168+08	\N	8	31	55	1	2026	202406	mid_term_reports/0_Eo5UlU9.pdf	2026-01-19 10:20:23.590604+08	9999.00	10	[{"expected_count": 1, "achievement_type": "结题报告"}]
+25	2026107000006	钢铁厂污泥配矿烧结对烟气成分的影响研究	本项目拟从污泥固废特性解析、污泥配矿烧结实验、污泥配矿烧结有害组分脱除及对烟气组成的影响实验研究、污泥配矿烧结对废弃物的影响实验研究技术路线来开展研究工作，查明污泥配矿比例增加对烧结产质量指标及烟气污染物排放的影响规律，最终确定污泥配矿烧结极限添加比例，为污泥配矿烧结稳定运行提供技术支持。	f	\N	\N	1000.00	结题报告	proposals/V1_1_qEFR4rw.pdf				COLLEGE_AUDITING	2026-01-20 22:40:14.993091+08	2026-01-20 22:43:07.678428+08	2026-01-20 22:40:20.728102+08	\N	8	98	53	62	2026			\N	\N	9	[{"expected_count": 1, "achievement_type": "结题报告"}]
+26	2026107000007	钢包浇注末期汇流旋涡形成机理及其临界高度的预测模型	本项目以流体从反应器内排空过程中产生的汇流旋涡为研究对象，采用水模拟实验结合低温合金热态实验对汇流旋涡的形成和演化进行研究。分别在有无电磁场作用下，探索钢液非稳态流动旋涡界面演化与边界层的相互作用机理。并建立基于机器学习算法的电磁场作用下钢包浇注末期汇流旋涡临界高度的预测模型。	f	\N	\N	10000.00	结题报告	proposals/大学生创新创业管理系统设计方案.pdf				IN_PROGRESS	2026-01-24 17:59:28.119646+08	2026-01-24 18:06:30.994957+08	2026-01-24 17:59:33.459004+08	\N	44	90	55	1	2026			\N	9999.00	9	[{"expected_count": 1, "achievement_type": "结题报告"}]
+23	2026107000005	镁电解熔盐中杂质的绿色高效分离	熔盐电解法是工业上生产金属镁的常用方法。在电解法生产金属镁的过程中，氯化镁原料和电解槽损耗会引入有害的金属杂质，对镁电解过程产生不利影响。本项目通过控电位电解的方法对熔盐中的Fe(III)、Mn(II)和Al(III)等典型杂质进行分离，为熔盐电解制备高纯度金属镁提供理论依据。采用控电位电解法对NaCl-KCl-MgCl2熔盐中的金属杂质进行分离并计算镁电解质体系中杂质的去除率。	t	\N	\N	10000.00	结题报告	proposals/V1.pdf		final_reports/ChatGPT-周期采样与事件触发_1.pdf	achievements/ChatGPT-周期采样与事件触发_1.pdf	CLOSED	2026-01-20 21:43:05.946417+08	2026-01-24 18:20:16.118998+08	2026-01-20 21:52:09.825803+08	2026-01-22 10:49:49.338787+08	8	31	55	1	2026	202406	mid_term_reports/V1.pdf	2026-01-20 22:52:16.34014+08	10000.00	9	[{"expected_count": 1, "achievement_type": "结题报告"}]
+27	2026107000008	基于零膨润土高比例赤褐铁矿制备球团及强化焙烧研究	为拓宽冶金球团原料，优化高炉炉料结构，基于预处理褐铁矿的物化特性，探索不同褐铁矿比例对球团性能的影响规律；利用褐铁矿球团的高铝特点，调整MgO含量提高褐铁矿球团强度；基于高比例褐铁矿球团内配焦化除尘灰强化焙烧机理，通过带式焙烧机模拟平台，开展研究配碳量对褐铁矿球团质量以及料层偏析程度的影响规律，确定不同高炉除尘灰配比下最佳的预热焙烧工艺。为球团生产膨润土降耗、提高球团品位、降低生产成本提供重要参考	f	\N	\N	1000.00	结题报告	proposals/大学生创新创业管理系统设计方案_MyFZ8YK.pdf				LEVEL1_AUDITING	2026-01-25 18:50:36.81713+08	2026-01-25 18:54:06.605384+08	2026-01-25 18:50:46.206166+08	\N	44	78	53	1	2026			\N	\N	9	[{"expected_count": 1, "achievement_type": "结题报告"}]
 \.
 
 
@@ -1823,6 +1888,34 @@ COPY public.reviews (id, review_type, status, comments, score, closure_rating, c
 53	APPLICATION	APPROVED	1	0	\N	2026-01-15 11:13:32.724744+08	2026-01-15 11:13:50.453635+08	21	170	14	[]	\N	t
 52	APPLICATION	APPROVED		0	\N	2026-01-15 11:12:46.490973+08	2026-01-15 11:15:26.128732+08	21	133	14	[]	\N	f
 54	APPLICATION	PENDING		\N	\N	2026-01-15 11:15:26.134698+08	\N	21	\N	14	[]	\N	f
+63	APPLICATION	APPROVED	通过	0	\N	2026-01-20 21:52:09.855092+08	2026-01-20 22:01:09.146259+08	23	170	17	[]	69	f
+67	APPLICATION	APPROVED	通过	0	\N	2026-01-20 22:40:20.760207+08	2026-01-20 22:43:07.66931+08	25	169	18	[]	69	f
+68	APPLICATION	PENDING		\N	\N	2026-01-20 22:43:07.68245+08	\N	25	\N	18	[]	70	f
+70	APPLICATION	PENDING		\N	\N	2026-01-20 22:44:00.478517+08	\N	25	167	18	[]	70	t
+65	APPLICATION	APPROVED	通过	0	\N	2026-01-20 22:09:08.158848+08	2026-01-20 22:46:07.207377+08	23	168	17	[]	70	t
+69	APPLICATION	APPROVED	通过	0	\N	2026-01-20 22:44:00.474489+08	2026-01-20 22:47:10.087383+08	25	168	18	[]	70	t
+66	APPLICATION	APPROVED	通过	0	\N	2026-01-20 22:09:08.164833+08	2026-01-20 22:48:48.958384+08	23	167	17	[]	70	t
+64	APPLICATION	APPROVED		0	\N	2026-01-20 22:01:09.159377+08	2026-01-20 22:49:04.609592+08	23	133	17	[]	70	f
+72	APPLICATION	APPROVED	通过	0	\N	2026-01-20 22:49:29.412749+08	2026-01-20 22:49:55.10136+08	23	166	17	[]	71	t
+71	APPLICATION	APPROVED		0	\N	2026-01-20 22:49:04.620158+08	2026-01-20 22:50:11.368627+08	23	1	17	[]	71	f
+73	MID_TERM	APPROVED	通过	0	\N	2026-01-20 22:52:16.367796+08	2026-01-20 22:53:33.190669+08	23	170	19	[]	73	f
+75	MID_TERM	APPROVED	通过	0	\N	2026-01-20 22:54:36.802307+08	2026-01-20 22:55:02.780228+08	23	168	19	[]	74	t
+74	MID_TERM	APPROVED		0	\N	2026-01-20 22:53:33.20428+08	2026-01-20 22:55:27.151447+08	23	133	19	[]	74	f
+77	APPLICATION	APPROVED	通过	0	\N	2026-01-24 17:59:33.488877+08	2026-01-24 18:00:22.783587+08	26	163	21	[]	69	f
+79	APPLICATION	APPROVED	通过	0	\N	2026-01-24 18:01:50.181023+08	2026-01-24 18:03:17.767844+08	26	168	21	[]	70	t
+80	APPLICATION	APPROVED	通过	0	\N	2026-01-24 18:01:50.187043+08	2026-01-24 18:04:23.83314+08	26	167	21	[]	70	t
+78	APPLICATION	APPROVED		0	\N	2026-01-24 18:00:22.796234+08	2026-01-24 18:04:39.803427+08	26	133	21	[]	70	f
+82	APPLICATION	APPROVED	通过	0	\N	2026-01-24 18:05:35.990257+08	2026-01-24 18:06:16.612471+08	26	166	21	[]	71	t
+81	APPLICATION	APPROVED		0	\N	2026-01-24 18:04:39.816123+08	2026-01-24 18:06:30.999831+08	26	1	21	[]	71	f
+76	CLOSURE	APPROVED	通过	0	\N	2026-01-22 10:49:49.379741+08	2026-01-24 18:18:49.926823+08	23	170	20	[]	76	f
+84	CLOSURE	APPROVED	通过	0	\N	2026-01-24 18:19:32.884483+08	2026-01-24 18:20:03.948307+08	23	168	20	[]	77	t
+83	CLOSURE	APPROVED		\N	\N	2026-01-24 18:18:49.94006+08	2026-01-24 18:20:16.114281+08	23	133	20	[]	77	f
+86	CLOSURE	APPROVED	通过	0	\N	2026-01-24 18:20:47.40599+08	2026-01-24 18:21:03.517157+08	23	166	20	[]	78	t
+85	CLOSURE	APPROVED		\N	\N	2026-01-24 18:20:16.121003+08	2026-01-24 18:21:40.08231+08	23	1	20	[]	78	f
+87	APPLICATION	APPROVED	通过	0	\N	2026-01-25 18:50:46.241806+08	2026-01-25 18:51:20.508803+08	27	161	22	[]	69	f
+89	APPLICATION	APPROVED	通过	0	\N	2026-01-25 18:52:32.98703+08	2026-01-25 18:53:41.194387+08	27	168	22	[]	70	t
+88	APPLICATION	APPROVED	通过	0	\N	2026-01-25 18:51:20.523839+08	2026-01-25 18:54:06.598255+08	27	133	22	[]	70	f
+90	APPLICATION	PENDING		\N	\N	2026-01-25 18:54:06.610787+08	\N	27	\N	22	[]	71	f
 \.
 
 
@@ -1850,6 +1943,13 @@ COPY public.system_settings (id, code, name, data, is_locked, is_active, created
 55	VALIDATION_RULES	校验规则配置	{"title_max_length": 200, "title_min_length": 0}	f	t	2026-01-18 17:21:05.323815+08	2026-01-18 17:21:05.323824+08	1	10
 52	LIMIT_RULES	限制与校验规则	{"max_members": 5, "dedupe_title": true, "max_advisors": 2, "max_student_active": 1, "max_student_member": 1, "max_teacher_active": 5}	f	t	2026-01-18 17:21:05.273765+08	2026-01-18 17:21:05.273775+08	1	10
 53	PROCESS_RULES	流程规则配置	{"allow_active_reapply": false, "show_material_in_closure_review": true}	f	t	2026-01-18 17:21:05.290799+08	2026-01-18 17:21:05.290813+08	1	10
+58	PROCESS_RULES	流程规则配置	{"allow_active_reapply": false, "show_material_in_closure_review": true}	f	t	2026-01-20 21:38:28.161174+08	2026-01-20 21:38:28.161174+08	1	9
+61	LIMIT_RULES	限制与校验规则	{"max_members": 5, "dedupe_title": true, "max_advisors": 2, "max_student_active": 1, "max_student_member": 1, "max_teacher_active": 5}	f	t	2026-01-20 21:38:28.244382+08	2026-01-20 21:38:28.244382+08	1	9
+60	REVIEW_RULES	审核规则配置	{"teacher_application_comment_min": 0}	f	t	2026-01-20 21:38:28.245368+08	2026-01-20 21:38:28.245368+08	1	9
+62	VALIDATION_RULES	校验规则配置	{"title_max_length": 200, "title_min_length": 0}	f	t	2026-01-20 21:38:28.246385+08	2026-01-20 21:38:28.246385+08	1	9
+57	MIDTERM_WINDOW	中期流程时间设置	{"end": "2026-01-31", "start": "2026-01-01", "enabled": true}	f	t	2026-01-20 21:38:28.159147+08	2026-01-24 19:35:08.68465+08	1	9
+59	APPLICATION_WINDOW	立项流程时间设置	{"end": "2026-01-31", "start": "2026-01-01", "enabled": true}	f	t	2026-01-20 21:38:28.165279+08	2026-01-24 19:35:08.685784+08	1	9
+56	CLOSURE_WINDOW	结题流程时间设置	{"end": "2026-01-31", "start": "2026-01-01", "enabled": true}	f	t	2026-01-20 21:38:28.143805+08	2026-01-24 19:35:08.687067+08	1	9
 \.
 
 
@@ -1860,7 +1960,6 @@ COPY public.system_settings (id, code, name, data, is_locked, is_active, created
 COPY public.users (id, password, last_login, is_superuser, username, first_name, last_name, is_staff, date_joined, employee_id, real_name, phone, email, major, grade, class_name, college, department, avatar, is_active, created_at, updated_at, title, expert_scope, role_fk_id, managed_scope_value_id, gender, is_expert, expert_assigned_by_id) FROM stdin;
 30	pbkdf2_sha256$1200000$qMzUo2wZb3Btgjd5Tena9X$7FlrHEn0ac61QoUjZzFzCakMH5M7te9o5LPwwLpUsRM=	\N	f	239074320			f	2026-01-14 21:14:24.74192+08	239074320	姜茹茹	18297838360	123@qq.com	110	2023	软232	10700			t	2026-01-14 21:14:24.742168+08	2026-01-14 21:14:25.017319+08		COLLEGE	1	\N	女	f	\N
 25	pbkdf2_sha256$1200000$mVDnisDrFymufM6IPZPDP6$k2VcC9SnNwM/4kUqmIP69ZfmvSFX6sKQzgSn5Hb0sgo=	\N	f	239074280			f	2026-01-14 21:14:23.335668+08	239074280	陈诗卉	18297838360	123@q.com	110	2023	软231	10700			t	2026-01-14 21:14:23.336122+08	2026-01-14 21:14:23.613196+08		COLLEGE	1	\N	女	f	\N
-31	pbkdf2_sha256$1200000$FEf28yJOihBLbC3AF3ecjq$0DhN7S/9rnURykBvFytY0wWJlRkFu4cMXrnoQnWHc7Q=	\N	f	239074336			f	2026-01-14 21:14:25.019176+08	239074336	王凯	18297838360	wangk2829@gmail.com	110	2023	软232	10700			t	2026-01-14 21:14:25.019372+08	2026-01-14 21:14:25.292041+08		COLLEGE	1	\N	男	f	\N
 27	pbkdf2_sha256$1200000$IeXOsJMkQGuzNhmDOlWhjn$ST+kvDzmD8gFsqUTHv9mXQaJisLSMqWu/B7WeqMPCPU=	\N	f	239074295			f	2026-01-14 21:14:23.909548+08	239074295	刘丹丹			软件工程	2023	软231	10700			t	2026-01-14 21:14:23.909882+08	2026-01-14 21:14:24.181937+08		COLLEGE	1	\N	女	f	\N
 28	pbkdf2_sha256$1200000$EIdCMMmjllY3XcgQOpLdA3$OVeypgk6oRPm/D0kPSCiboriM2EQhzuCRGjO142bQLU=	\N	f	239074299			f	2026-01-14 21:14:24.183869+08	239074299	祁瑞			软件工程	2023	软231	10700			t	2026-01-14 21:14:24.184405+08	2026-01-14 21:14:24.463655+08		COLLEGE	1	\N	女	f	\N
 29	pbkdf2_sha256$1200000$N3b3sm4gOjbdGoZKTIeztj$LyqqaRD9T4+1SCIuDkOKIYhe78puz/UMG2AL93Qr04k=	\N	f	239074306			f	2026-01-14 21:14:24.46563+08	239074306	杨安瑜			软件工程	2023	软231	10700			t	2026-01-14 21:14:24.465838+08	2026-01-14 21:14:24.7399+08		COLLEGE	1	\N	女	f	\N
@@ -1912,7 +2011,6 @@ COPY public.users (id, password, last_login, is_superuser, username, first_name,
 75	pbkdf2_sha256$1200000$cAMIEoowBSNEH12ZGr35cX$fP09/tztmav6MkSTsjnnW7fxCSvuHFCiW14xE+moZfQ=	\N	f	239074394			f	2026-01-14 21:14:37.115794+08	239074394	乐如			软件工程	2023	软234	10700			t	2026-01-14 21:14:37.116072+08	2026-01-14 21:14:37.396774+08		COLLEGE	1	\N	女	f	\N
 76	pbkdf2_sha256$1200000$Ma2nOjCURCZZBsEA9qN8Ue$15loHi2ynUMzh440+7TdC3/QT3r453pr9VKChzCCK8c=	\N	f	239074395			f	2026-01-14 21:14:37.398085+08	239074395	李甫城			软件工程	2023	软234	10700			t	2026-01-14 21:14:37.398266+08	2026-01-14 21:14:37.666126+08		COLLEGE	1	\N	男	f	\N
 77	pbkdf2_sha256$1200000$pqE3hhhaNEWOQxqWqHAnuA$Lv2mDFRwAyr9APinmIm+mmd+tlEVMhLhniXVIGBHeTQ=	\N	f	239074396			f	2026-01-14 21:14:37.667874+08	239074396	李利娟			软件工程	2023	软234	10700			t	2026-01-14 21:14:37.668101+08	2026-01-14 21:14:37.936486+08		COLLEGE	1	\N	女	f	\N
-78	pbkdf2_sha256$1200000$tm9D8AsGSMtEdcolaTxiq9$tP8gd6lz55YQrJJ3B+pYg6fLS+7CB9yqL2IFpQLwuZk=	\N	f	239074397			f	2026-01-14 21:14:37.938427+08	239074397	李洋涛			软件工程	2023	软234	10700			t	2026-01-14 21:14:37.938629+08	2026-01-14 21:14:38.211338+08		COLLEGE	1	\N	男	f	\N
 79	pbkdf2_sha256$1200000$0zPhI3nHhAXGmxSVPVqlAR$KZ15LEjtNU7oPJTdq6lh8UpJOyAsk3phJihMRATJ758=	\N	f	239074398			f	2026-01-14 21:14:38.213864+08	239074398	李志远			软件工程	2023	软234	10700			t	2026-01-14 21:14:38.214195+08	2026-01-14 21:14:38.48777+08		COLLEGE	1	\N	男	f	\N
 80	pbkdf2_sha256$1200000$U79y5ROHVqgZuJNlVxsIdd$JPKCadODnsOleYBPvIpmGRl9X9elbQyo2dYyUkAy/EY=	\N	f	239074399			f	2026-01-14 21:14:38.489554+08	239074399	刘靖豪			软件工程	2023	软234	10700			t	2026-01-14 21:14:38.489727+08	2026-01-14 21:14:38.759521+08		COLLEGE	1	\N	男	f	\N
 81	pbkdf2_sha256$1200000$zTuxGfwtjpy1Frggj8lxoU$TIAiU9+451O61CoJAL9UFQ2zwbtJJkYR7HXHgHDt8FY=	\N	f	239074401			f	2026-01-14 21:14:38.761853+08	239074401	刘玉叶			软件工程	2023	软234	10700			t	2026-01-14 21:14:38.762119+08	2026-01-14 21:14:39.029862+08		COLLEGE	1	\N	女	f	\N
@@ -1924,7 +2022,6 @@ COPY public.users (id, password, last_login, is_superuser, username, first_name,
 87	pbkdf2_sha256$1200000$4ABdAhJMsogEvqC9gWp1ZL$vrTlC8H7IRDCTl82E9mIVqFELf+bdkOyNthWGGqwsvY=	\N	f	239074409			f	2026-01-14 21:14:40.400449+08	239074409	王乙安			软件工程	2023	软234	10700			t	2026-01-14 21:14:40.400681+08	2026-01-14 21:14:40.668877+08		COLLEGE	1	\N	男	f	\N
 88	pbkdf2_sha256$1200000$ayqZmCufueG7E0IMV9b3M0$yMhvNxPZpdG1qFGtk48y7/ljykC0ji7tHpGb+IQjQ8I=	\N	f	239074410			f	2026-01-14 21:14:40.670939+08	239074410	韦旭			软件工程	2023	软234	10700			t	2026-01-14 21:14:40.671186+08	2026-01-14 21:14:40.941382+08		COLLEGE	1	\N	男	f	\N
 89	pbkdf2_sha256$1200000$FDagBkfjswS6DlNGDEMQXo$gK2cNy3VNPF+SsPWfq7izs7fG3LB3gdad4Jallqbsqc=	\N	f	239074411			f	2026-01-14 21:14:40.943046+08	239074411	吴宏胜			软件工程	2023	软234	10700			t	2026-01-14 21:14:40.943264+08	2026-01-14 21:14:41.211192+08		COLLEGE	1	\N	男	f	\N
-90	pbkdf2_sha256$1200000$kBrESJkAkwhCwh5OwmZ14L$P/+BTNjm/j/rd2hLnyvL69Auwflj3FGKzoEQLOVUE+A=	\N	f	239074412			f	2026-01-14 21:14:41.213073+08	239074412	吴逍睿			软件工程	2023	软234	10700			t	2026-01-14 21:14:41.21328+08	2026-01-14 21:14:41.483699+08		COLLEGE	1	\N	女	f	\N
 91	pbkdf2_sha256$1200000$ko2MJBpNpQFiIccZc8PIla$yw+GLS2EwiWeKTEZOcxhQSuWRvYxXv2c7raGxrs8bmc=	\N	f	239074413			f	2026-01-14 21:14:41.485755+08	239074413	吴运辰			软件工程	2023	软234	10700			t	2026-01-14 21:14:41.485999+08	2026-01-14 21:14:41.754644+08		COLLEGE	1	\N	男	f	\N
 92	pbkdf2_sha256$1200000$pOYZGY9yTaj5T7laQYexPY$G1JgZpPD+8nSu+fxRZA/hoyLc18eQGO9Gv5Fv+R56Gg=	\N	f	239074414			f	2026-01-14 21:14:41.75627+08	239074414	许欣怡			软件工程	2023	软234	10700			t	2026-01-14 21:14:41.756499+08	2026-01-14 21:14:42.023989+08		COLLEGE	1	\N	女	f	\N
 93	pbkdf2_sha256$1200000$tuJTe7BNoU6572ADfF43pY$m6yo5goQr/RuBOtKLxcjxcgEYKIDQt2/hPvB/LnKqrg=	\N	f	239074415			f	2026-01-14 21:14:42.025736+08	239074415	杨磊			软件工程	2023	软234	10700			t	2026-01-14 21:14:42.025972+08	2026-01-14 21:14:42.299461+08		COLLEGE	1	\N	男	f	\N
@@ -1932,7 +2029,6 @@ COPY public.users (id, password, last_login, is_superuser, username, first_name,
 95	pbkdf2_sha256$1200000$eXY53WvJ2SKn0kKppxu5hB$HrX0pqYTChkf0n3qi5fVZtsUngLEgMxCGuT0bprQJAY=	\N	f	239074417			f	2026-01-14 21:14:42.626172+08	239074417	张恩涛			软件工程	2023	软234	10700			t	2026-01-14 21:14:42.626357+08	2026-01-14 21:14:42.905457+08		COLLEGE	1	\N	男	f	\N
 96	pbkdf2_sha256$1200000$0dZkyo5rCmHeS7q7XE8f9t$FibS7VjdRPHhLyHW1d9KTVubmjjXFhzdLOcSrUjDtw8=	\N	f	239074418			f	2026-01-14 21:14:42.907539+08	239074418	赵浩宇			软件工程	2023	软234	10700			t	2026-01-14 21:14:42.90781+08	2026-01-14 21:14:43.180938+08		COLLEGE	1	\N	男	f	\N
 97	pbkdf2_sha256$1200000$lm4JhNbaFWuD98vS0U4Ye8$OInd/6v8qktEg8lIQUcCdNgt52FzFZB7+bvpftXrQZY=	\N	f	239074419			f	2026-01-14 21:14:43.1827+08	239074419	赵英博			软件工程	2023	软234	10700			t	2026-01-14 21:14:43.182877+08	2026-01-14 21:14:43.45476+08		COLLEGE	1	\N	男	f	\N
-98	pbkdf2_sha256$1200000$ghigMfnGIFf5AzCUJIaU4E$ZAx+h3oSN3q0uBKgAx/0BtY5QQyvTST4OT5QURnD3bo=	\N	f	239074420			f	2026-01-14 21:14:43.456298+08	239074420	周全			软件工程	2023	软234	10700			t	2026-01-14 21:14:43.456474+08	2026-01-14 21:14:43.726357+08		COLLEGE	1	\N	男	f	\N
 99	pbkdf2_sha256$1200000$iiiIEPLbAYWkLRyIRvf2ye$BcHxId/LAeqE+cyuS1C7jx2kFzroVNGchiWsbNkEAas=	\N	f	050309			f	2026-01-14 21:19:41.293596+08	050309	陶陶						10700	10700		t	2026-01-14 21:19:41.293921+08	2026-01-14 21:19:41.57281+08	教工	COLLEGE	2	\N		f	\N
 100	pbkdf2_sha256$1200000$ena2vKPl4f3bFQBJVY6hpb$PS1BbJETpzHPN1XwPaT4BWsuaPASrajOlNrTO+9NnT0=	\N	f	050310			f	2026-01-14 21:19:41.580184+08	050310	黄瑾娉						10700	10700		t	2026-01-14 21:19:41.580407+08	2026-01-14 21:19:41.855397+08	教工	COLLEGE	2	\N		f	\N
 101	pbkdf2_sha256$1200000$GbJRcb3gKhzDgBzFu7X8HO$YqgcxZo2CY7Q0XH7n8rVM2Zh5kzysqCzOZdwAjVJ6po=	\N	f	050311			f	2026-01-14 21:19:41.857216+08	050311	陆勤						10700	10700		t	2026-01-14 21:19:41.857449+08	2026-01-14 21:19:42.128662+08	教工	COLLEGE	2	\N		f	\N
@@ -1952,6 +2048,7 @@ COPY public.users (id, password, last_login, is_superuser, username, first_name,
 116	pbkdf2_sha256$1200000$0ulVhOuWaNrUIrpH51b1AT$8HlfRhlgokKZcKNN+yfmn5kq2P5DFl5nBE3HrLcHOPM=	\N	f	050392			f	2026-01-14 21:19:45.95238+08	050392	郑啸						10700	10700		t	2026-01-14 21:19:45.952559+08	2026-01-14 21:19:46.222402+08	教工	COLLEGE	2	\N		f	\N
 117	pbkdf2_sha256$1200000$3VB2Mz33hGdL4PreW7OSk4$rRYcHsu5f+aH4lfCgbCL873qkw5RUdhvaXpfguC302s=	\N	f	050305			f	2026-01-14 21:19:46.224234+08	050305	吴曼						10700	10700		t	2026-01-14 21:19:46.224534+08	2026-01-14 21:19:46.49916+08	教工	COLLEGE	2	\N		f	\N
 108	pbkdf2_sha256$1200000$6GygNsFRfbBisIeR9pDG4h$cffnITKBdi9nC2EXbB/na4wH8EhMA0NmD+tsXeq4Q4c=	\N	f	050327			f	2026-01-14 21:19:43.780138+08	050327	许文方						10700	10700		t	2026-01-14 21:19:43.780386+08	2026-01-14 21:19:44.06299+08	教工	COLLEGE	2	\N		f	\N
+90	pbkdf2_sha256$1200000$kBrESJkAkwhCwh5OwmZ14L$P/+BTNjm/j/rd2hLnyvL69Auwflj3FGKzoEQLOVUE+A=	\N	f	239074412			f	2026-01-14 21:14:41.213073+08	239074412	吴逍睿	12312311234	123@qq.com	160	2023	软234	10700			t	2026-01-14 21:14:41.21328+08	2026-01-14 21:14:41.483699+08		COLLEGE	1	\N	女	f	\N
 118	pbkdf2_sha256$1200000$DJrVc1bPYqL8CqbBIAGSen$5lSkSwcbPyDnFvkBZX1yZ6RT1OXYN5MZAiOe8Emoi0s=	\N	f	050236			f	2026-01-14 21:19:46.500782+08	050236	汤志贵						10700	10700		t	2026-01-14 21:19:46.500961+08	2026-01-14 21:19:46.772037+08	教工	COLLEGE	2	\N		f	\N
 119	pbkdf2_sha256$1200000$F1XqSvMFbKx1H1nFbMEMv0$NOqi6SdOCgPsVccrwARPZ9qrsL2P05ZwASEXXN+22b0=	\N	f	050298			f	2026-01-14 21:19:46.773806+08	050298	段晓军						10700	10700		t	2026-01-14 21:19:46.774125+08	2026-01-14 21:19:47.052942+08	教工	COLLEGE	2	\N		f	\N
 120	pbkdf2_sha256$1200000$pXuGhBCKjJTcfCHAftNk4R$74K0iTCa1uf+kC9dNRO2/HdZd9Jex9cufgToSQP+O8g=	\N	f	050319			f	2026-01-14 21:19:47.054142+08	050319	叶红						10700	10700		t	2026-01-14 21:19:47.054319+08	2026-01-14 21:19:47.327661+08	教工	COLLEGE	2	\N		f	\N
@@ -1995,9 +2092,6 @@ COPY public.users (id, password, last_login, is_superuser, username, first_name,
 158	pbkdf2_sha256$1200000$218ga49SGDOL78v8PYNIdd$NM9PKi9jKOyE42OpMuEzwMu7rTTguSVaYBi8G2ft48c=	\N	f	052904			f	2026-01-14 21:19:57.495782+08	052904	李乔						10700	10700		t	2026-01-14 21:19:57.496062+08	2026-01-14 21:19:57.761295+08	教工	COLLEGE	2	\N		f	\N
 159	pbkdf2_sha256$1200000$WbjeUOOa3fUHZm3pMV03Q8$AVUjOaGJzHi5WxRb9vDTvaDL9B0e52irPDwSnUKmAmE=	\N	f	052910			f	2026-01-14 21:19:57.762584+08	052910	孙国华						10700	10700		t	2026-01-14 21:19:57.762764+08	2026-01-14 21:19:58.028235+08	教工	COLLEGE	2	\N		f	\N
 160	pbkdf2_sha256$1200000$3xDtC6NxVbOhsxbgj1ZMSr$lW5OTg76okM/rBiCCtOYPDoVnbez3ugqE4oKkr/9AC8=	\N	f	053037			f	2026-01-14 21:19:58.029502+08	053037	姜太平						10700	10700		t	2026-01-14 21:19:58.029711+08	2026-01-14 21:19:58.29538+08	教工	COLLEGE	2	\N		f	\N
-161	pbkdf2_sha256$1200000$wGEy1f6QyKh5pIqa7UieOw$G3An2Z028XAxqiwkG94znpgIdXAD3OdKrez6S0wQ7F4=	\N	f	053119			f	2026-01-14 21:19:58.297272+08	053119	王功成						10700	10700		t	2026-01-14 21:19:58.297567+08	2026-01-14 21:19:58.563967+08	教工	COLLEGE	2	\N		f	\N
-162	pbkdf2_sha256$1200000$OmDkiPMwswryGThBzAiR6F$0E0v+JnhjCAQ9AV6P9rl82QI3l0QdSMWzWmKDt1MZUs=	\N	f	053179			f	2026-01-14 21:19:58.565294+08	053179	李沁						10700	10700		t	2026-01-14 21:19:58.565483+08	2026-01-14 21:19:58.831759+08	教工	COLLEGE	2	\N		f	\N
-163	pbkdf2_sha256$1200000$Ek3uK104ADxlFjkNmlDj2j$wFJW6gXAteM74X8A1AXDjnFKoE5MJ23ZyoIhOT1ZZEU=	\N	f	053209			f	2026-01-14 21:19:58.833024+08	053209	张慧						10700	10700		t	2026-01-14 21:19:58.833192+08	2026-01-14 21:19:59.099161+08	教工	COLLEGE	2	\N		f	\N
 164	pbkdf2_sha256$1200000$1V2qbnIDr4XmAZnMQvGZv5$8UywBtwWSF29JtNJHwVNbFsyF8cz2AM6d31L+l51N4U=	\N	f	053370			f	2026-01-14 21:19:59.101039+08	053370	申元霞						10700	10700		t	2026-01-14 21:19:59.101238+08	2026-01-14 21:19:59.366942+08	教工	COLLEGE	2	\N		f	\N
 169	pbkdf2_sha256$1200000$6mG1IvFt4h39xjZxiRvhFb$M2R7ucoX8LsfvL5Zre1HULY0lpzcFZNCRo4Sto8wX3s=	\N	f	20160004			f	2026-01-14 21:20:00.479415+08	20160004	侯书东						10700	教工		t	2026-01-14 21:20:00.479589+08	2026-01-14 21:20:00.748781+08	教工	COLLEGE	2	\N		f	\N
 168	pbkdf2_sha256$1200000$nBBNlLivHDHx19ivyxm5h3$kwARy9kxLyagEIRbF8AFRmCQgVOut8faXjlolh2gV7c=	\N	f	20130016			f	2026-01-14 21:20:00.204745+08	20130016	吴宣够						10700	教工		t	2026-01-14 21:20:00.205139+08	2026-01-14 21:20:00.477903+08	教工	COLLEGE	2	\N		t	133
@@ -2005,6 +2099,12 @@ COPY public.users (id, password, last_login, is_superuser, username, first_name,
 170	pbkdf2_sha256$1200000$2n7C7IxT0AufxmyiwDfWc3$gXjrQnfKCO2dSmcY747T1Cpht3AntVd7Z1a1k2JaTeo=	\N	f	20140070			f	2026-01-14 21:20:00.750687+08	20140070	刘恒						10700	教工		t	2026-01-14 21:20:00.750889+08	2026-01-18 17:43:48.797218+08	教工	COLLEGE	2	\N		f	\N
 166	pbkdf2_sha256$1200000$zEstwGLUyYRBzPmtaR8bYm$O4Hlm9ZECEDzr9s/h4F2qND33ss002dUg1zF1NRCwxI=	\N	f	053400			f	2026-01-14 21:19:59.635746+08	053400	黄俊						10700	10700		t	2026-01-14 21:19:59.635923+08	2026-01-14 21:19:59.902655+08	教工	COLLEGE	2	\N		t	1
 165	pbkdf2_sha256$1200000$uIwmsyQFaC65FJisEUBDvV$FjzpcGUMCflgORq3fpN49QYgwuXWoPWJrLxzrc7UdPc=	\N	f	053387			f	2026-01-14 21:19:59.368972+08	053387	王修君						10700	10700		t	2026-01-14 21:19:59.369158+08	2026-01-14 21:19:59.634499+08	教工	COLLEGE	2	\N		f	\N
+31	pbkdf2_sha256$1200000$FEf28yJOihBLbC3AF3ecjq$0DhN7S/9rnURykBvFytY0wWJlRkFu4cMXrnoQnWHc7Q=	\N	f	239074336			f	2026-01-14 21:14:25.019176+08	239074336	王凯	18297838360	wangk2829@gmail.com	110	2023	软232	10700			t	2026-01-14 21:14:25.019372+08	2026-01-14 21:14:25.292041+08		COLLEGE	1	\N	男	f	\N
+98	pbkdf2_sha256$1200000$ghigMfnGIFf5AzCUJIaU4E$ZAx+h3oSN3q0uBKgAx/0BtY5QQyvTST4OT5QURnD3bo=	\N	f	239074420			f	2026-01-14 21:14:43.456298+08	239074420	周全	19855611242	123@qq.com	110	2023	软234	10700			t	2026-01-14 21:14:43.456474+08	2026-01-14 21:14:43.726357+08		COLLEGE	1	\N	男	f	\N
+163	pbkdf2_sha256$1200000$Ek3uK104ADxlFjkNmlDj2j$wFJW6gXAteM74X8A1AXDjnFKoE5MJ23ZyoIhOT1ZZEU=	\N	f	053209			f	2026-01-14 21:19:58.833024+08	053209	张慧						10700	教工		t	2026-01-14 21:19:58.833192+08	2026-01-14 21:19:59.099161+08	教工	COLLEGE	2	\N		f	\N
+162	pbkdf2_sha256$1200000$OmDkiPMwswryGThBzAiR6F$0E0v+JnhjCAQ9AV6P9rl82QI3l0QdSMWzWmKDt1MZUs=	\N	f	053179			f	2026-01-14 21:19:58.565294+08	053179	李沁						10700	教工		t	2026-01-14 21:19:58.565483+08	2026-01-14 21:19:58.831759+08	教工	COLLEGE	2	\N		f	\N
+78	pbkdf2_sha256$1200000$tm9D8AsGSMtEdcolaTxiq9$tP8gd6lz55YQrJJ3B+pYg6fLS+7CB9yqL2IFpQLwuZk=	\N	f	239074397			f	2026-01-14 21:14:37.938427+08	239074397	李洋涛	12345678901	1@q.com	350	2023	软234	10700			t	2026-01-14 21:14:37.938629+08	2026-01-14 21:14:38.211338+08		COLLEGE	1	\N	男	f	\N
+161	pbkdf2_sha256$1200000$wGEy1f6QyKh5pIqa7UieOw$G3An2Z028XAxqiwkG94znpgIdXAD3OdKrez6S0wQ7F4=	\N	f	053119			f	2026-01-14 21:19:58.297272+08	053119	王功成						10700	教工		t	2026-01-14 21:19:58.297567+08	2026-01-14 21:19:58.563967+08	教工	COLLEGE	2	\N		f	\N
 \.
 
 
@@ -2034,6 +2134,11 @@ COPY public.workflow_configs (id, name, phase, version, description, is_active, 
 15	2025-B-结题工作流	CLOSURE	1	结题阶段默认工作流	t	f	2026-01-18 16:59:02.028193+08	2026-01-18 16:59:02.0282+08	10	1	1
 16	2025-B-经费工作流	BUDGET	1	经费阶段默认工作流	t	f	2026-01-18 18:50:03.245642+08	2026-01-18 18:50:03.245657+08	10	1	1
 17	2025-B-异动工作流	CHANGE	1	异动阶段默认工作流	t	f	2026-01-19 09:42:15.532566+08	2026-01-19 09:42:15.532581+08	10	1	1
+18	2026-A-立项工作流	APPLICATION	1	立项阶段默认工作流	t	f	2026-01-20 21:38:14.502992+08	2026-01-20 21:38:14.502992+08	9	1	1
+19	2026-A-中期工作流	MID_TERM	1	中期阶段默认工作流	t	f	2026-01-20 21:38:17.938866+08	2026-01-20 21:38:17.938866+08	9	1	1
+20	2026-A-结题工作流	CLOSURE	1	结题阶段默认工作流	t	f	2026-01-20 21:38:20.809062+08	2026-01-20 21:38:20.809062+08	9	1	1
+21	2026-A-经费工作流	BUDGET	1	经费阶段默认工作流	t	f	2026-01-20 21:38:24.220407+08	2026-01-20 21:38:24.220407+08	9	1	1
+22	2026-A-异动工作流	CHANGE	1	异动阶段默认工作流	t	f	2026-01-20 21:38:26.841358+08	2026-01-20 21:38:26.841358+08	9	1	1
 \.
 
 
@@ -2059,6 +2164,23 @@ COPY public.workflow_nodes (id, code, name, node_type, return_policy, notice, so
 57	COLLEGE_FINALIZE	学院确认	APPROVAL	STUDENT		2	t	2026-01-18 16:58:57.608144+08	2026-01-19 10:19:33.396207+08	14	4	f	56
 55	STUDENT_SUBMIT	学生提交中期	SUBMIT	NONE		0	t	2026-01-18 16:58:57.60533+08	2026-01-18 16:58:57.605337+08	14	1	f	\N
 56	TEACHER_REVIEW	导师审核	REVIEW	STUDENT		1	t	2026-01-18 16:58:57.606967+08	2026-01-18 16:58:57.608532+08	14	2	f	55
+68	STUDENT_SUBMIT	学生提交立项	SUBMIT	NONE		0	t	2026-01-20 21:38:14.510022+08	2026-01-20 21:38:14.510022+08	18	1	f	\N
+69	TEACHER_REVIEW	导师审核	REVIEW	STUDENT		1	t	2026-01-20 21:38:14.514556+08	2026-01-20 21:38:14.517572+08	18	2	f	68
+71	SCHOOL_PUBLISH	校级发布立项	APPROVAL	PREVIOUS		3	t	2026-01-20 21:38:14.517572+08	2026-01-20 21:38:14.522092+08	18	5	t	70
+72	STUDENT_SUBMIT	学生提交中期	SUBMIT	NONE		0	t	2026-01-20 21:38:17.940871+08	2026-01-20 21:38:17.940871+08	19	1	f	\N
+73	TEACHER_REVIEW	导师审核	REVIEW	STUDENT		1	t	2026-01-20 21:38:17.943882+08	2026-01-20 21:38:17.945876+08	19	2	f	72
+75	STUDENT_SUBMIT	学生提交结题	SUBMIT	NONE		0	t	2026-01-20 21:38:20.811096+08	2026-01-20 21:38:20.811096+08	20	1	f	\N
+76	TEACHER_REVIEW	导师审核	REVIEW	STUDENT		1	t	2026-01-20 21:38:20.813674+08	2026-01-20 21:38:20.816653+08	20	2	f	75
+77	COLLEGE_REVIEW	学院审核	APPROVAL	PREVIOUS		2	t	2026-01-20 21:38:20.814656+08	2026-01-20 21:38:20.817652+08	20	4	t	76
+78	SCHOOL_FINALIZE	校级确认结题	APPROVAL	STUDENT		3	t	2026-01-20 21:38:20.816653+08	2026-01-20 21:38:20.817652+08	20	5	t	77
+79	STUDENT_SUBMIT	成员/负责人提交经费	SUBMIT	NONE		0	t	2026-01-20 21:38:24.222406+08	2026-01-20 21:38:24.222406+08	21	1	f	\N
+80	COLLEGE_REVIEW	学院审核	APPROVAL	PREVIOUS		1	t	2026-01-20 21:38:24.224408+08	2026-01-20 21:38:24.22541+08	21	4	f	79
+81	STUDENT_SUBMIT	学生提交异动	SUBMIT	NONE		0	t	2026-01-20 21:38:26.843359+08	2026-01-20 21:38:26.843359+08	22	1	f	\N
+82	TEACHER_REVIEW	导师审核	REVIEW	STUDENT		1	t	2026-01-20 21:38:26.845355+08	2026-01-20 21:38:26.848864+08	22	2	f	81
+83	COLLEGE_REVIEW	学院审核	APPROVAL	PREVIOUS		2	t	2026-01-20 21:38:26.847358+08	2026-01-20 21:38:26.850869+08	22	4	f	82
+84	SCHOOL_REVIEW	校级审核	APPROVAL	PREVIOUS		3	t	2026-01-20 21:38:26.847358+08	2026-01-20 21:38:26.850869+08	22	5	f	83
+74	COLLEGE_FINALIZE	学院确认	APPROVAL	STUDENT		2	t	2026-01-20 21:38:17.944876+08	2026-01-24 17:50:15.727476+08	19	4	t	72
+70	COLLEGE_REVIEW	学院审核	APPROVAL	PREVIOUS		2	t	2026-01-20 21:38:14.515572+08	2026-01-24 19:34:57.195034+08	18	4	t	68
 \.
 
 
@@ -2129,42 +2251,42 @@ SELECT pg_catalog.setval('public.django_migrations_id_seq', 114, true);
 -- Name: expert_groups_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.expert_groups_id_seq', 5, true);
+SELECT pg_catalog.setval('public.expert_groups_id_seq', 6, true);
 
 
 --
 -- Name: expert_groups_members_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.expert_groups_members_id_seq', 8, true);
+SELECT pg_catalog.setval('public.expert_groups_members_id_seq', 9, true);
 
 
 --
 -- Name: notifications_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.notifications_id_seq', 74, true);
+SELECT pg_catalog.setval('public.notifications_id_seq', 111, true);
 
 
 --
 -- Name: project_achievements_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.project_achievements_id_seq', 3, true);
+SELECT pg_catalog.setval('public.project_achievements_id_seq', 4, true);
 
 
 --
 -- Name: project_advisors_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.project_advisors_id_seq', 55, true);
+SELECT pg_catalog.setval('public.project_advisors_id_seq', 65, true);
 
 
 --
 -- Name: project_archives_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.project_archives_id_seq', 2, true);
+SELECT pg_catalog.setval('public.project_archives_id_seq', 3, true);
 
 
 --
@@ -2192,42 +2314,42 @@ SELECT pg_catalog.setval('public.project_change_reviews_id_seq', 3, true);
 -- Name: project_expenditure_reviews_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.project_expenditure_reviews_id_seq', 3, true);
+SELECT pg_catalog.setval('public.project_expenditure_reviews_id_seq', 4, true);
 
 
 --
 -- Name: project_expenditures_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.project_expenditures_id_seq', 5, true);
+SELECT pg_catalog.setval('public.project_expenditures_id_seq', 7, true);
 
 
 --
 -- Name: project_members_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.project_members_id_seq', 106, true);
+SELECT pg_catalog.setval('public.project_members_id_seq', 116, true);
 
 
 --
 -- Name: project_phase_instances_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.project_phase_instances_id_seq', 16, true);
+SELECT pg_catalog.setval('public.project_phase_instances_id_seq', 22, true);
 
 
 --
 -- Name: projects_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.projects_id_seq', 22, true);
+SELECT pg_catalog.setval('public.projects_id_seq', 27, true);
 
 
 --
 -- Name: reviews_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.reviews_id_seq', 62, true);
+SELECT pg_catalog.setval('public.reviews_id_seq', 90, true);
 
 
 --
@@ -2241,7 +2363,7 @@ SELECT pg_catalog.setval('public.roles_id_seq', 6, true);
 -- Name: system_settings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.system_settings_id_seq', 55, true);
+SELECT pg_catalog.setval('public.system_settings_id_seq', 62, true);
 
 
 --
@@ -2269,14 +2391,14 @@ SELECT pg_catalog.setval('public.users_user_permissions_id_seq', 1, false);
 -- Name: workflow_configs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.workflow_configs_id_seq', 17, true);
+SELECT pg_catalog.setval('public.workflow_configs_id_seq', 22, true);
 
 
 --
 -- Name: workflow_nodes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.workflow_nodes_id_seq', 67, true);
+SELECT pg_catalog.setval('public.workflow_nodes_id_seq', 84, true);
 
 
 --
@@ -3709,5 +3831,5 @@ ALTER TABLE ONLY public.workflow_nodes
 -- PostgreSQL database dump complete
 --
 
-\unrestrict lTbDK5E1uuhnbuydiAaSYikt9ycPGd2HecehmUVIImfGUrSrEZBcMoTERhp4Wjh
+\unrestrict A6AhXmoXab3bgbFChXl8zgLIyhNo14F1nCdqgVNyGNu7nciqmUlnAP3CRsYguxM
 
