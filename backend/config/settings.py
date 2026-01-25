@@ -77,14 +77,20 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 # Database
+_db_name = os.environ.get("DB_NAME") or "dachuang_db"
+_db_user = os.environ.get("DB_USER") or "postgres"
+_db_password = os.environ.get("DB_PASSWORD") or "123456"
+_db_host = os.environ.get("DB_HOST") or "localhost"
+_db_port = os.environ.get("DB_PORT") or "5432"
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "dachuang_db",
-        "USER": "postgres",
-        "PASSWORD": "123456",
-        "HOST": "localhost",
-        "PORT": "5432",
+        "NAME": _db_name,
+        "USER": _db_user,
+        "PASSWORD": _db_password,
+        "HOST": _db_host,
+        "PORT": _db_port,
     }
 }
 

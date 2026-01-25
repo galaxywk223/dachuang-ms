@@ -28,6 +28,14 @@ if [[ ! -f "$VENV_DIR/.deps-installed" || "requirements.txt" -nt "$VENV_DIR/.dep
   touch "$VENV_DIR/.deps-installed"
 fi
 
+# Load environment variables from backend/.env (optional).
+# shellcheck disable=SC1091
+if [[ -f ".env" ]]; then
+  set -a
+  source ".env"
+  set +a
+fi
+
 SERVER_MODE="${DJANGO_SERVER_MODE:-gunicorn}"
 
 if [[ "$SERVER_MODE" == "runserver" ]]; then
