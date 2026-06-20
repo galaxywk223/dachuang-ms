@@ -60,6 +60,18 @@ class DictionaryTemplateUploadValidationTestCase(SimpleTestCase):
             serializer.validate_template_file(upload)
 
 
+class DictionarySeedDataTestCase(TestCase):
+    def test_teacher_staff_title_is_seeded(self):
+        self.assertTrue(
+            DictionaryItem.objects.filter(
+                dict_type__code="title",
+                value="教工",
+                label="教工",
+                is_active=True,
+            ).exists()
+        )
+
+
 class DictionaryItemApiValidationTestCase(TestCase):
     def setUp(self):
         self.temp_dir = TemporaryDirectory()
