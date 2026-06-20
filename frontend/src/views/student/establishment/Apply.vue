@@ -1,0 +1,149 @@
+<template>
+  <div class="apply-page page-shell">
+    <el-card class="main-card" shadow="never">
+      <template #header>
+        <div class="card-header">
+          <div class="header-left">
+            <span class="header-title">项目申报</span>
+          </div>
+          <div class="header-actions">
+            <el-button @click="handleReset">重置</el-button>
+            <el-button
+              type="info"
+              plain
+              :loading="loading"
+              :disabled="loading"
+              @click="saveAsDraft"
+              >保存草稿</el-button
+            >
+            <el-button
+              type="primary"
+              :loading="loading"
+              :disabled="loading"
+              @click="submitForm"
+              >提交申请</el-button
+            >
+          </div>
+        </div>
+      </template>
+
+      <el-form
+        ref="formRef"
+        :model="formData"
+        :rules="rules"
+        label-position="right"
+        label-width="120px"
+        status-icon
+        size="default"
+        class="main-form"
+      >
+        <ApplyBasicInfoSection
+          :form-data="formData"
+          :source-options="sourceOptions"
+          :level-options="levelOptions"
+          :category-options="categoryOptions"
+          :key-field-cascader-options="keyFieldCascaderOptions"
+          :college-options="collegeOptions"
+          :major-options="majorOptions"
+          v-model:key-field-cascader-value="keyFieldCascaderValue"
+          @update:form-data="(value) => Object.assign(formData, value)"
+        />
+
+        <ApplyLeaderSection
+          :form-data="formData"
+          :current-user="currentUser"
+          @update:form-data="(value) => Object.assign(formData, value)"
+        />
+
+        <ApplyAdvisorSection
+          :form-data="formData"
+          :new-advisor="newAdvisor"
+          :advisor-title-options="advisorTitleOptions"
+          :get-label="getLabel"
+          :handle-search-new-advisor="handleSearchNewAdvisor"
+          :handle-add-new-advisor="handleAddNewAdvisor"
+          :remove-advisor="removeAdvisor"
+          @update:new-advisor="(value) => Object.assign(newAdvisor, value)"
+        />
+
+        <ApplyMemberSection
+          :form-data="formData"
+          :new-member="newMember"
+          :handle-search-new-member="handleSearchNewMember"
+          :handle-add-new-member="handleAddNewMember"
+          :remove-member="removeMember"
+          @update:new-member="(value) => Object.assign(newMember, value)"
+        />
+
+        <ApplyContentSection
+          :form-data="formData"
+          :achievement-type-options="achievementTypeOptions"
+          :get-label="getLabel"
+          @update:form-data="(value) => Object.assign(formData, value)"
+        />
+
+        <ApplyAttachmentSection
+          v-model:file-list="fileList"
+          :current-template-url="currentTemplateUrl"
+          :handle-download-template="handleDownloadTemplate"
+          :handle-file-change="handleFileChange"
+          :handle-file-remove="handleFileRemove"
+        />
+      </el-form>
+    </el-card>
+  </div>
+</template>
+
+<script setup lang="ts">
+import ApplyBasicInfoSection from "./components/ApplyBasicInfoSection.vue";
+import ApplyLeaderSection from "./components/ApplyLeaderSection.vue";
+import ApplyAdvisorSection from "./components/ApplyAdvisorSection.vue";
+import ApplyMemberSection from "./components/ApplyMemberSection.vue";
+import ApplyContentSection from "./components/ApplyContentSection.vue";
+import ApplyAttachmentSection from "./components/ApplyAttachmentSection.vue";
+import { useProjectApplication } from "./hooks/useProjectApplication";
+
+defineOptions({
+  name: "StudentEstablishmentApplyView",
+});
+
+const {
+  formRef,
+  formData,
+  rules,
+  sourceOptions,
+  levelOptions,
+  categoryOptions,
+  keyFieldCascaderOptions,
+  keyFieldCascaderValue,
+  collegeOptions,
+  majorOptions,
+  currentUser,
+  newAdvisor,
+  newMember,
+  achievementTypeOptions,
+  advisorTitleOptions,
+  fileList,
+  currentTemplateUrl,
+  handleDownloadTemplate,
+  handleFileChange,
+  handleFileRemove,
+  handleSearchNewAdvisor,
+  handleAddNewAdvisor,
+  removeAdvisor,
+  handleSearchNewMember,
+  handleAddNewMember,
+  removeMember,
+  getLabel,
+  loading,
+  submitForm,
+  saveAsDraft,
+  handleReset,
+} = useProjectApplication();
+
+void formRef;
+</script>
+
+<style scoped lang="scss">
+@use "./Apply.scss";
+</style>

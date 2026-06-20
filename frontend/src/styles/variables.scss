@@ -1,0 +1,79 @@
+// Design tokens - Art Design Pro + Tabler inspired.
+
+// 1. Color Palette - Calm blue-green platform style
+$primary-50: #eefdf8;
+$primary-100: #d5f8ee;
+$primary-200: #aef0df;
+$primary-300: #78dfc9;
+$primary-400: #3fc5ad;
+$primary-500: #1ea18e;
+$primary-600: #147f73;
+$primary-700: #12665d;
+$primary-800: #11514b;
+$primary-900: #0f433f;
+
+$slate-50: #f8fafc;
+$slate-100: #f1f5f9;
+$slate-200: #e2e8f0;
+$slate-300: #cbd5e1;
+$slate-400: #94a3b8;
+$slate-500: #64748b;
+$slate-600: #475569;
+$slate-700: #334155;
+$slate-800: #1e293b;
+$slate-900: #0f172a;
+
+$success: #16a34a;
+$warning: #f59e0b;
+$danger: #ef4444;
+$info: #2563eb;
+
+$color-bg-body: #f6f8fb;
+$color-bg-card: #ffffff;
+$color-bg-sidebar: #111827;
+$color-sidebar-text: #a8b3c7;
+$color-sidebar-active: #ffffff;
+$color-sidebar-active-bg: rgba(20, 127, 115, 0.18);
+
+$color-text-primary: #101828;
+$color-text-regular: $slate-600;
+$color-text-light: $slate-400;
+$color-border: $slate-200;
+$color-border-light: $slate-100;
+
+// 2. Typography
+$font-family-sans: "HarmonyOS Sans SC", "MiSans", "Alibaba PuHuiTi", "Inter", "Segoe UI", sans-serif;
+$font-size-xs: 0.75rem;
+$font-size-sm: 0.875rem;
+$font-size-base: 1rem; // 16px
+$font-size-lg: 1.125rem;
+$font-size-xl: 1.25rem;
+$font-size-2xl: 1.5rem;
+$font-size-3xl: 1.875rem;
+
+// 3. Spacing & Layout
+$radius-sm: 4px;
+$radius-md: 8px;
+$radius-lg: 12px;
+$radius-xl: 16px;
+$radius-2xl: 22px;
+
+// 4. Shadows
+$shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+$shadow-md: 0 10px 24px rgba(15, 23, 42, 0.06);
+$shadow-lg: 0 18px 45px rgba(15, 23, 42, 0.08);
+$shadow-xl: 0 24px 64px rgba(15, 23, 42, 0.12);
+$shadow-2xl: 0 32px 80px rgba(15, 23, 42, 0.18);
+
+// 5. Transitions
+$transition-fast: 150ms ease-in-out;
+$transition-base: 200ms ease-in-out;
+$transition-slow: 300ms ease-in-out;
+
+// 6. Spacing Tokens
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+$spacing-2xl: 48px;

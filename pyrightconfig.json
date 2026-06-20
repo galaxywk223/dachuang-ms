@@ -1,0 +1,15 @@
+{
+  "include": ["backend"],
+  "venvPath": "backend",
+  "venv": "venv",
+  "executionEnvironments": [
+    {
+      "root": "backend",
+      "extraPaths": ["backend"]
+    }
+  ],
+
+  "reportUnknownVariableType": "none",
+  "reportUnknownMemberType": "none",
+  "reportGeneralTypeIssues": "warning"
+}

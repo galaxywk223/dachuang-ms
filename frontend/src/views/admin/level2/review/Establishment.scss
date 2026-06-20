@@ -1,0 +1,115 @@
+@use "@/styles/variables.scss" as *;
+
+.filter-section {
+  background: white;
+  padding: 20px 24px 0 24px;
+  border-radius: $radius-lg;
+  margin-bottom: 16px;
+  box-shadow: $shadow-sm;
+  border: 1px solid $color-border-light;
+
+  .filter-form {
+    display: flex;
+    gap: 16px;
+  }
+}
+
+.table-container {
+  background: white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+  border: 1px solid $color-border-light;
+  overflow: hidden;
+
+  .table-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid $slate-100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .title-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .title {
+        font-size: 16px;
+        font-weight: 600;
+        color: $slate-800;
+        position: relative;
+        padding-left: 14px;
+
+        &::before {
+          content: "";
+          position: absolute;
+          left: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 4px;
+          height: 16px;
+          background: $primary-600; // Updated Blue
+          border-radius: 2px;
+        }
+      }
+    }
+  }
+}
+
+.pagination-footer {
+  padding: 16px 24px;
+  border-top: 1px solid $slate-100;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.project-title {
+  font-weight: 500;
+  color: $slate-800;
+  font-size: 14px;
+}
+
+.date-text {
+  color: $slate-500;
+  font-size: 13px;
+}
+
+.operation-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  line-height: 1;
+
+  :deep(.el-button) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 24px;
+    margin: 0;
+    padding: 0;
+    line-height: 1;
+    vertical-align: middle;
+  }
+
+  :deep(.el-dropdown) {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    vertical-align: middle;
+  }
+
+  :deep(.el-icon--right) {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 4px;
+  }
+}
+
+.text-success {
+  color: $success;
+}
+
+.text-danger {
+  color: $danger;
+}

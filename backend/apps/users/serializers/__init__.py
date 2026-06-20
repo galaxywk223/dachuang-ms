@@ -1,0 +1,296 @@
+"""
+用户序列化器
+"""
+
+from rest_framework import serializers
+
+from apps.utils.upload_validation import ValidatedImageField
+
+from ..models import User, Role
+from ..password_validation import get_password_validation_errors
+
+
+class RoleAssignMixin:
+    def _resolve_role_fk(self, attrs):
+        if attrs.get("role_fk"):
+            self._validate_assignable_role(attrs["role_fk"])
+            attrs.pop("role", None)
+            return attrs
+
+        role_code = attrs.pop("role", None)
+        if role_code:
+            role = Role.objects.filter(code=role_code).first()
+            if not role:
+                raise serializers.ValidationError({"role": "角色不存在"})
+            self._validate_assignable_role(role)
+            attrs["role_fk"] = role
+        return attrs
+
+    def _validate_assignable_role(self, role):
+        if role.code == User.UserRole.EXPERT:
+            raise serializers.ValidationError(
+                {"role": "不支持直接设置专家角色，请从教师中勾选"}
+            )
+
+    def _normalize_scope_fields(self, attrs, role, instance=None):
+        managed_scope_value = attrs.get(
+            "managed_scope_value",
+            instance.managed_scope_value if instance else None,
+        )
+
+        if role and role.scope_dimension == "COLLEGE":
+            if not managed_scope_value:
+                raise serializers.ValidationError(
+                    {"managed_scope_value": "学院管理员必须选择管理范围"}
+                )
+            if managed_scope_value.dict_type.code != "college":
+                raise serializers.ValidationError(
+                    {"managed_scope_value": "管理范围必须是学院字典项"}
+                )
+            scope_college = managed_scope_value.value
+            provided_college = attrs.get("college")
+            if provided_college and provided_college != scope_college:
+                raise serializers.ValidationError({"college": "学院必须与管理范围一致"})
+            attrs["college"] = scope_college
+        else:
+            attrs["managed_scope_value"] = None
+        return attrs
+
+
+class UserSerializer(RoleAssignMixin, serializers.ModelSerializer):
+    """
+    用户序列化器
+    """
+
+    role = serializers.CharField(required=False, allow_blank=True, write_only=True)
+    role_info = serializers.SerializerMethodField()
+    avatar = ValidatedImageField(label="头像", required=False, allow_null=True)
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "username",
+            "employee_id",
+            "real_name",
+            "role",
+            "role_fk",
+            "role_info",
+            "is_expert",
+            "expert_scope",
+            "phone",
+            "email",
+            "major",
+            "grade",
+            "gender",
+            "class_name",
+            "college",
+            "department",
+            "title",
+            "avatar",
+            "is_active",
+            "created_at",
+            "updated_at",
+            "expert_assigned_by",
+            "managed_scope_value",
+        ]
+        read_only_fields = [
+            "id",
+            "username",
+            "created_at",
+            "updated_at",
+            "expert_assigned_by",
+        ]
+
+    def to_representation(self, instance):
+        # 检查实例是否有 role_fk 属性（防止 AnonymousUser 引起错误）
+        if not hasattr(instance, "role_fk"):
+            return {}
+        data = super().to_representation(instance)
+        if instance.role_fk:
+            # 将系统角色代码转为小写并加下划线，保留一级/二级管理员差异。
+            data["role"] = instance.role_fk.code.lower()
+        else:
+            data["role"] = None
+        return data
+
+    def get_role_info(self, obj):
+        """获取角色信息"""
+        if hasattr(obj, "role_fk") and obj.role_fk:
+            return {
+                "id": obj.role_fk.id,
+                "code": obj.role_fk.code,
+                "name": obj.role_fk.name,
+                "default_route": obj.role_fk.default_route,
+                "scope_dimension": obj.role_fk.scope_dimension,
+            }
+        return None
+
+    def validate(self, attrs):
+        attrs = self._resolve_role_fk(attrs)
+        role = attrs.get("role_fk") or (self.instance.role_fk if self.instance else None)
+        return self._normalize_scope_fields(attrs, role, instance=self.instance)
+
+    def create(self, validated_data):
+        validated_data = self._resolve_role_fk(validated_data)
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data = self._resolve_role_fk(validated_data)
+        return super().update(instance, validated_data)
+
+
+class PublicUserLookupSerializer(serializers.ModelSerializer):
+    """
+    用户公开精确查询序列化器
+    """
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "employee_id",
+            "real_name",
+            "title",
+            "phone",
+            "email",
+        ]
+        read_only_fields = fields
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        role_code = instance.get_role_code()
+        if role_code != User.UserRole.TEACHER:
+            data["title"] = ""
+            data["phone"] = ""
+            data["email"] = ""
+        return data
+
+
+class LoginSerializer(serializers.Serializer):
+    """登录序列化器（使用学号/工号和密码直接登录）"""
+
+    employee_id = serializers.CharField(required=True, help_text="学号/工号")
+    password = serializers.CharField(required=True, write_only=True, help_text="密码")
+
+    default_error_messages = {
+        "invalid_credentials": "学号/工号或密码错误",
+        "inactive": "用户账号已被禁用",
+        "required": "必须提供学号/工号和密码",
+        "no_role": "用户未分配角色，请联系管理员",
+    }
+
+    def validate(self, attrs):
+        employee_id = attrs.get("employee_id")
+        password = attrs.get("password")
+
+        if not (employee_id and password):
+            raise serializers.ValidationError(self.error_messages["required"])
+
+        try:
+            user = User.objects.select_related("role_fk").get(employee_id=employee_id)
+        except User.DoesNotExist:
+            raise serializers.ValidationError(
+                self.error_messages["invalid_credentials"]
+            )
+
+        if not user.check_password(password):
+            raise serializers.ValidationError(
+                self.error_messages["invalid_credentials"]
+            )
+
+        if not user.is_active:
+            raise serializers.ValidationError(self.error_messages["inactive"])
+
+        # 检查用户是否有角色
+        if not user.role_fk:
+            raise serializers.ValidationError(self.error_messages["no_role"])
+
+        attrs["user"] = user
+        return attrs
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    """
+    修改密码序列化器
+    """
+
+    old_password = serializers.CharField(required=True, write_only=True)
+    new_password = serializers.CharField(required=True, write_only=True)
+    confirm_password = serializers.CharField(required=True, write_only=True)
+
+    def validate(self, attrs):
+        if attrs["new_password"] != attrs["confirm_password"]:
+            raise serializers.ValidationError("两次输入的密码不一致")
+        errors = get_password_validation_errors(
+            attrs["new_password"], user=self.context.get("user")
+        )
+        if errors:
+            raise serializers.ValidationError({"new_password": errors})
+        return attrs
+
+
+class UserCreateSerializer(RoleAssignMixin, serializers.ModelSerializer):
+    """
+    用户创建序列化器
+    """
+
+    password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    role = serializers.CharField(required=False, allow_blank=True)
+
+    class Meta:
+        model = User
+        fields = [
+            "employee_id",
+            "real_name",
+            "role",
+            "role_fk",
+            "expert_scope",
+            "password",
+            "phone",
+            "email",
+            "major",
+            "grade",
+            "class_name",
+            "college",
+            "department",
+            "title",
+            "managed_scope_value",
+        ]
+
+    def validate(self, attrs):
+        attrs = self._resolve_role_fk(attrs)
+        role = attrs.get("role_fk")
+        return self._normalize_scope_fields(attrs, role)
+
+    def validate_password(self, value):
+        if not value:
+            return value
+        errors = get_password_validation_errors(value)
+        if errors:
+            raise serializers.ValidationError(errors)
+        return value
+
+    def create(self, validated_data):
+        password = validated_data.pop("password", "")
+        if not password:
+            raise serializers.ValidationError({"password": "请提供密码"})
+        if not validated_data.get("role_fk"):
+            default_role = Role.objects.filter(code=User.UserRole.STUDENT).first()
+            if not default_role:
+                raise serializers.ValidationError({"role": "默认角色不存在"})
+            validated_data["role_fk"] = default_role
+
+        role_code = (
+            validated_data["role_fk"].code if validated_data.get("role_fk") else None
+        )
+        if role_code == User.UserRole.EXPERT:
+            raise serializers.ValidationError(
+                {"role": "不支持直接创建专家，请先创建教师"}
+            )
+        validated_data.pop("expert_scope", None)
+        user = User.objects.create(**validated_data)
+        user.username = user.employee_id  # 使用学号/工号作为用户名
+        user.set_password(password)
+        user.save()
+        return user

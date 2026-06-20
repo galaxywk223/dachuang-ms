@@ -1,0 +1,156 @@
+@use "@/styles/variables.scss" as *;
+
+.form-container {
+  overflow: hidden;
+  border: 1px solid $slate-200;
+  border-radius: $radius-xl;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: $shadow-md;
+}
+
+.detail-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 24px;
+  border-bottom: 1px solid $slate-100;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+}
+
+.detail-copy {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.detail-meta,
+.detail-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.main-form {
+  padding: 24px;
+}
+
+.form-section {
+  margin-bottom: 20px;
+  padding: 22px;
+  border: 1px solid $slate-200;
+  border-radius: $radius-xl;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid $slate-100;
+
+    .section-title {
+      color: $slate-900;
+      font-size: 16px;
+      font-weight: 800;
+    }
+  }
+}
+
+.w-full {
+  width: 100%;
+}
+
+.empty-text {
+  padding: 8px 0;
+  color: $slate-400;
+  font-size: 13px;
+  text-align: center;
+}
+
+.file-hint {
+  margin-top: 6px;
+  color: $slate-500;
+  font-size: 12px;
+}
+
+.result-grid {
+  row-gap: 16px;
+}
+
+.result-item {
+  min-height: 90px;
+  padding: 16px;
+  border: 1px solid $slate-200;
+  border-radius: $radius-lg;
+  background: linear-gradient(135deg, #f8fbfd 0%, #ffffff 100%);
+
+  .label {
+    display: block;
+    margin-bottom: 8px;
+    color: $slate-500;
+    font-size: 12px;
+  }
+
+  strong {
+    color: $slate-900;
+    font-size: 16px;
+    font-weight: 850;
+  }
+}
+
+.timeline-panel {
+  margin: 0 24px 24px;
+  padding: 22px;
+  border: 1px solid $slate-200;
+  border-radius: $radius-xl;
+  background: #fff;
+
+  .section-header {
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid $slate-100;
+
+    .section-title {
+      color: $slate-900;
+      font-size: 16px;
+      font-weight: 800;
+    }
+  }
+}
+
+.timeline-card {
+  padding: 16px 18px;
+  border: 1px solid $slate-200;
+  border-radius: $radius-lg;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: $shadow-sm;
+
+  p {
+    margin: 8px 0 0;
+    color: $slate-600;
+  }
+}
+
+.timeline-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: $slate-800;
+  font-weight: 800;
+}
+
+.timeline-reviewer {
+  display: inline-block;
+  margin-top: 8px;
+  color: $slate-500;
+  font-size: 12px;
+}

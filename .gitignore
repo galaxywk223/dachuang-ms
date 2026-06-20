@@ -1,0 +1,77 @@
+# .gitignore for Dachuang-MS Project
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.env
+*.venv
+env/
+venv/
+ENV/
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Django
+*.log
+db.sqlite3
+media/
+staticfiles/
+local_settings.py
+.env
+
+# Node
+node_modules/
+dist/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Vite
+.vite/
+
+# VSCode
+.vscode/
+
+# JetBrains IDE
+.idea/
+
+# Local dev data
+.local/
+local_data.sql
+
+# Course design report
+course_design_report/
+output/
+
+# System
+.DS_Store
+Thumbs.db
+
+# Local Scripts
+local_scripts/
+
+# VSCode Counter
+.VSCodeCounter/
+
+# Type check output
+frontend/type_check_output.txt
+
+# Temp
+temp/
+.codex-python-env.local.json
+.playwright-cli/

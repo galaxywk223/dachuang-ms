@@ -1,0 +1,231 @@
+<template>
+  <el-form
+    ref="loginFormRef"
+    :model="loginForm"
+    :rules="rules"
+    label-width="0"
+    class="login-form-content"
+    @submit.prevent="handleSubmit"
+    hide-required-asterisk
+  >
+    <div class="input-group">
+      <label class="input-label">学号 / 工号</label>
+      <el-form-item prop="employeeId">
+        <el-input
+          v-model="loginForm.employeeId"
+          placeholder="请输入学号或工号"
+          size="large"
+          class="modern-input"
+        >
+          <template #prefix>
+            <el-icon class="input-icon"><User /></el-icon>
+          </template>
+        </el-input>
+      </el-form-item>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">密码</label>
+      <el-form-item prop="password">
+        <el-input
+          v-model="loginForm.password"
+          type="password"
+          placeholder="请输入密码"
+          show-password
+          size="large"
+          class="modern-input"
+          @keyup.enter="handleSubmit"
+        >
+          <template #prefix>
+            <el-icon class="input-icon"><Lock /></el-icon>
+          </template>
+        </el-input>
+      </el-form-item>
+    </div>
+
+    <div class="form-actions">
+      <el-checkbox v-model="loginForm.rememberMe" class="custom-checkbox"
+        >记住我</el-checkbox
+      >
+      <a href="#" class="forgot-link">忘记密码？</a>
+    </div>
+
+    <el-button
+      type="primary"
+      class="login-btn"
+      :loading="loading"
+      @click="handleSubmit"
+      size="large"
+    >
+      登 录
+    </el-button>
+
+    <div class="demo-tips">
+      <el-alert
+        title="演示账号密码以本地数据或管理员配置为准"
+        type="info"
+        show-icon
+        :closable="false"
+        class="custom-alert"
+      />
+    </div>
+  </el-form>
+</template>
+
+<script setup>
+import { ref, reactive } from "vue";
+import { User, Lock } from "@element-plus/icons-vue";
+
+const emit = defineEmits(["submit"]);
+
+defineProps({
+  loading: {
+    type: Boolean,
+    default: false,
+  },
+});
+
+const loginFormRef = ref(null);
+
+const loginForm = reactive({
+  employeeId: "",
+  password: "",
+  rememberMe: false,
+});
+
+const rules = {
+  employeeId: [
+    { required: true, message: "请输入学号或工号", trigger: "blur" },
+  ],
+  password: [
+    { required: true, message: "请输入密码", trigger: "blur" },
+    { min: 6, message: "密码长度不能少于6位", trigger: "blur" },
+  ],
+};
+
+const handleSubmit = async () => {
+  if (!loginFormRef.value) return;
+
+  try {
+    await loginFormRef.value.validate();
+    emit("submit", {
+      employeeId: loginForm.employeeId,
+      password: loginForm.password,
+    });
+  } catch {
+    // 验证失败，不做任何操作
+  }
+};
+</script>
+
+<style scoped lang="scss">
+@use "@/styles/variables.scss" as *;
+
+.login-form-content {
+  width: 100%;
+}
+
+.input-group {
+  margin-bottom: 24px;
+}
+
+.input-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: $font-size-sm;
+  font-weight: 500;
+  color: $slate-700;
+}
+
+/* Customizing Element Plus Inputs */
+:deep(.modern-input .el-input__wrapper),
+:deep(.modern-select .el-select__wrapper) {
+  background-color: $slate-50;
+  border: 1px solid $slate-200;
+  box-shadow: none !important;
+  border-radius: $radius-md;
+  padding: 12px 16px;
+  // height: auto; // Element size="large" handles this usually
+  transition: all 0.2s;
+
+  &:hover,
+  &.is-focus {
+    background-color: white;
+    border-color: $primary-500;
+    box-shadow: 0 0 0 3px rgba($primary-500, 0.1) !important;
+  }
+}
+
+:deep(.modern-select) {
+  width: 100%;
+}
+
+:deep(.modern-input .el-input__inner) {
+  font-weight: 500;
+  color: $slate-800;
+  // height: 24px;
+}
+
+.input-icon {
+  font-size: 16px;
+  color: $slate-400;
+  margin-right: 8px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.forgot-link {
+  font-size: $font-size-sm;
+  color: $primary-600;
+  text-decoration: none;
+  font-weight: 500;
+
+  &:hover {
+    text-decoration: underline;
+    color: $primary-700;
+  }
+}
+
+.login-btn {
+  width: 100%;
+  height: 48px;
+  font-size: $font-size-base;
+  font-weight: 600;
+  border-radius: $radius-md;
+  // Primary color handled by Element Plus theme override in index.scss
+  // But can be explicit:
+  // background-color: $primary-600;
+  // border-color: $primary-600;
+  margin-bottom: 24px;
+  transition: all 0.2s;
+
+  &:hover {
+    // background-color: $primary-700;
+    transform: translateY(-1px);
+    box-shadow: $shadow-md; // Using shadow variable
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.demo-tips {
+  margin-top: 24px;
+}
+
+.custom-alert {
+  background-color: $slate-50;
+  border: 1px solid $slate-200;
+  color: $slate-500;
+}
+
+:deep(.custom-alert .el-alert__title) {
+  color: $slate-600;
+}
+</style>

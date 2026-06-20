@@ -1,0 +1,277 @@
+@use "@/styles/variables.scss" as *;
+
+.layout-container {
+  height: 100vh;
+  background:
+    radial-gradient(circle at 12% 4%, rgba($primary-400, 0.12), transparent 28%),
+    linear-gradient(180deg, #f8fbfd 0%, $color-bg-body 60%, #eef3f8 100%);
+}
+
+.app-sidebar {
+  background:
+    radial-gradient(circle at 50% -10%, rgba($primary-400, 0.22), transparent 36%),
+    linear-gradient(180deg, #111827 0%, #0f172a 54%, #101828 100%);
+  transition: width $transition-base;
+  border-right: none;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 10px 0 38px rgba(15, 23, 42, 0.16);
+  z-index: 20;
+
+  .logo-area {
+    height: 76px;
+    display: flex;
+    align-items: center;
+    padding: 0 18px;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+    transition: background 0.3s;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      padding: 2px;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      flex-shrink: 0;
+      box-shadow: 0 12px 26px rgba(0, 0, 0, 0.22);
+    }
+
+    .app-title {
+      margin-left: 14px;
+      color: $slate-100;
+      font-weight: 800;
+      font-size: 16px;
+      white-space: nowrap;
+      letter-spacing: 0.2px;
+    }
+
+    &.collapsed {
+      padding: 0;
+      justify-content: center;
+    }
+  }
+
+  .sidebar-menu {
+    border-right: none;
+    padding: 14px 0 20px;
+
+    /* Standard Menu Item Styles */
+    :deep(.el-menu-item),
+    :deep(.el-sub-menu__title) {
+      height: 44px;
+      margin: 5px 12px;
+      border-radius: 13px;
+      color: rgba(226, 232, 240, 0.72);
+      font-weight: 600;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.07);
+        color: #fff;
+      }
+
+      &.is-active {
+        background: linear-gradient(135deg, rgba($primary-500, 0.92), rgba($primary-700, 0.92));
+        color: #fff;
+        box-shadow: 0 12px 26px rgba(20, 127, 115, 0.28);
+        font-weight: 800;
+      }
+    }
+
+    /* Collapsed State Overrides */
+    &.el-menu--collapse {
+      :deep(.el-menu-item),
+      :deep(.el-sub-menu__title) {
+        margin: 4px 0 !important;
+        padding: 0 !important;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      :deep(.el-menu-item.is-active),
+      :deep(.el-sub-menu__title.is-active) {
+        background: transparent !important;
+
+        .el-icon {
+          color: $primary-300;
+          filter: drop-shadow(0 0 8px rgba($primary-400, 0.4));
+        }
+      }
+    }
+
+    :deep(.el-sub-menu .el-menu-item) {
+      min-width: unset;
+    }
+  }
+}
+
+.main-wrapper {
+  flex-direction: column;
+}
+
+.app-header {
+  height: 70px;
+  margin: 14px 18px 0;
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  border: 1px solid rgba($slate-200, 0.88);
+  border-radius: 18px;
+  z-index: 10;
+  box-shadow: $shadow-md;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .toggle-btn {
+      display: grid;
+      width: 38px;
+      height: 38px;
+      place-items: center;
+      align-items: center;
+      cursor: pointer;
+      color: $slate-500;
+      border-radius: 12px;
+      transition: color 0.2s;
+
+      &:hover {
+        background: $slate-100;
+        color: $slate-800;
+      }
+    }
+
+    .breadcrumb {
+      font-size: 14px;
+      :deep(.el-breadcrumb__inner.is-link) {
+        color: $slate-500;
+        font-weight: normal;
+        &:hover {
+          color: $primary-600;
+        }
+      }
+    }
+
+    .current-batch {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border: 1px solid $slate-200;
+      border-radius: 999px;
+      background: #fff;
+      color: $slate-500;
+      font-size: 13px;
+
+      .batch-label {
+        white-space: nowrap;
+      }
+    }
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    .icon-btn {
+      color: $slate-400;
+      background: #fff;
+      border: 1px solid $slate-200;
+      transition: all 0.2s;
+
+      &:hover {
+        color: $slate-700;
+        background: $slate-50;
+        border-color: $primary-200;
+      }
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      padding: 5px 10px 5px 5px;
+      border-radius: 999px;
+      transition: background $transition-fast;
+      border: 1px solid $slate-200;
+      background: #fff;
+
+      &:hover {
+        background: $slate-50;
+        border-color: $primary-200;
+      }
+
+      .username {
+        font-weight: 500;
+        color: $slate-700;
+        font-size: 14px;
+      }
+
+      .avatar-gradient {
+        // Default (Student)
+        background: linear-gradient(135deg, $primary-500, $primary-800);
+        font-weight: 700;
+        color: white;
+        border: 2px solid white;
+        box-shadow: $shadow-sm;
+
+        &.role-admin-1 {
+          // Admin Level 1 (Gold/Amber hint or distinct)
+          background: linear-gradient(135deg, $slate-700, $slate-900);
+        }
+        &.role-admin-2 {
+          // Admin Level 2
+          background: linear-gradient(135deg, $primary-600, $primary-800);
+        }
+      }
+    }
+  }
+}
+
+.app-main {
+  padding: 22px 18px 24px;
+  background: transparent;
+  overflow-y: auto;
+}
+
+/* Transitions */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.fade-transform-enter-active,
+.fade-transform-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.fade-transform-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.fade-transform-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}

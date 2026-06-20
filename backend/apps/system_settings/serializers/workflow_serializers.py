@@ -1,0 +1,205 @@
+"""
+工作流配置序列化器
+"""
+
+from rest_framework import serializers
+from apps.system_settings.models import WorkflowConfig, WorkflowNode
+
+
+class WorkflowNodeSerializer(serializers.ModelSerializer):
+    """工作流节点序列化器"""
+
+    role_name = serializers.CharField(
+        source="role_fk.name", read_only=True, allow_null=True
+    )
+    role_code = serializers.CharField(
+        source="role_fk.code", read_only=True, allow_null=True
+    )
+    can_edit = serializers.SerializerMethodField()
+
+    class Meta:
+        model = WorkflowNode
+        fields = [
+            "id",
+            "code",
+            "name",
+            "node_type",
+            "role_fk",
+            "role_name",
+            "role_code",
+            "require_expert_review",
+            "return_policy",
+            "allowed_reject_to",
+            "notice",
+            "sort_order",
+            "is_active",
+            "can_edit",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+    def get_can_edit(self, obj):
+        """学生提交节点不可编辑"""
+        return obj.node_type != "SUBMIT"
+
+
+class WorkflowNodeCreateUpdateSerializer(serializers.ModelSerializer):
+    """工作流节点创建/更新序列化器"""
+
+    class Meta:
+        model = WorkflowNode
+        fields = [
+            "code",
+            "name",
+            "node_type",
+            "role_fk",
+            "require_expert_review",
+            "return_policy",
+            "allowed_reject_to",
+            "notice",
+            "sort_order",
+            "is_active",
+        ]
+
+    def validate(self, attrs):
+        """验证节点配置"""
+        node_type = attrs.get("node_type")
+        if node_type is None and self.instance:
+            node_type = self.instance.node_type
+        role_fk = attrs.get("role_fk") if "role_fk" in attrs else None
+        if role_fk is None and self.instance:
+            role_fk = self.instance.role_fk
+        workflow = self.instance.workflow if self.instance else self.context.get("workflow")
+        if "allowed_reject_to" in attrs:
+            allowed_reject_to = attrs["allowed_reject_to"]
+        elif self.instance:
+            allowed_reject_to = self.instance.allowed_reject_to
+        else:
+            allowed_reject_to = None
+        if "sort_order" in attrs:
+            sort_order = attrs["sort_order"]
+        elif self.instance:
+            sort_order = self.instance.sort_order
+        else:
+            sort_order = 0
+
+        # 学生节点只能在第一个位置
+        if node_type == "SUBMIT":
+            if attrs.get("sort_order", 0) != 0:
+                raise serializers.ValidationError(
+                    "学生提交节点必须排在第一位（sort_order=0）"
+                )
+            if attrs.get("allowed_reject_to") is not None:
+                raise serializers.ValidationError("学生提交节点不允许退回")
+            if attrs.get("require_expert_review"):
+                raise serializers.ValidationError("学生提交节点不能启用专家评审")
+
+        # 非学生节点必须绑定角色，且不能使用学生角色
+        if node_type != "SUBMIT":
+            if not role_fk:
+                raise serializers.ValidationError("审核节点必须绑定执行角色")
+            if role_fk.code == "STUDENT":
+                raise serializers.ValidationError("审核节点不能使用学生角色")
+
+        if allowed_reject_to is not None:
+            if not workflow:
+                raise serializers.ValidationError("退回目标校验缺少工作流上下文")
+            target_node = WorkflowNode.objects.filter(
+                id=allowed_reject_to, workflow=workflow, is_active=True
+            ).first()
+            if not target_node:
+                raise serializers.ValidationError("退回目标节点不存在")
+            current_id = self.instance.id if self.instance else None
+            if current_id and target_node.id == current_id:
+                raise serializers.ValidationError("退回目标不能是当前节点")
+            if target_node.sort_order >= sort_order:
+                raise serializers.ValidationError("退回目标必须为前序节点")
+
+        return attrs
+
+
+class WorkflowConfigSerializer(serializers.ModelSerializer):
+    """工作流配置序列化器"""
+
+    nodes = serializers.SerializerMethodField()
+    node_count = serializers.SerializerMethodField()
+    batch_name = serializers.CharField(
+        source="batch.name", read_only=True, allow_null=True
+    )
+
+    class Meta:
+        model = WorkflowConfig
+        fields = [
+            "id",
+            "name",
+            "phase",
+            "batch",
+            "batch_name",
+            "version",
+            "description",
+            "is_active",
+            "is_locked",
+            "nodes",
+            "node_count",
+            "created_by",
+            "updated_by",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "created_at",
+            "updated_at",
+            "created_by",
+            "updated_by",
+        ]
+
+    def get_nodes(self, obj):
+        """只返回活跃的节点"""
+        active_nodes = obj.nodes.filter(is_active=True).order_by("sort_order")
+        return WorkflowNodeSerializer(active_nodes, many=True).data
+
+    def get_node_count(self, obj):
+        """统计活跃节点数量"""
+        return obj.nodes.filter(is_active=True).count()
+
+
+class WorkflowConfigCreateSerializer(serializers.ModelSerializer):
+    """工作流配置创建序列化器"""
+
+    class Meta:
+        model = WorkflowConfig
+        fields = ["name", "phase", "batch", "version", "description", "is_active"]
+
+    def validate(self, attrs):
+        """验证工作流配置"""
+        phase = attrs.get("phase")
+        batch = attrs.get("batch")
+        version = attrs.get("version", 1)
+
+        # 检查是否已存在相同配置
+        exists = WorkflowConfig.objects.filter(
+            phase=phase, batch=batch, version=version
+        ).exists()
+
+        if exists:
+            raise serializers.ValidationError(f"该批次的{phase}阶段版本{version}已存在")
+
+        return attrs
+
+
+class BatchWorkflowSummarySerializer(serializers.Serializer):
+    """批次工作流汇总序列化器"""
+
+    phase = serializers.CharField()
+    phase_display = serializers.CharField()
+    workflow_id = serializers.IntegerField(allow_null=True)
+    workflow_name = serializers.CharField(allow_null=True)
+    node_count = serializers.IntegerField()
+    is_active = serializers.BooleanField()
+    is_locked = serializers.BooleanField()
+    has_student_node = serializers.BooleanField()
+    validation_errors = serializers.ListField(
+        child=serializers.CharField(), required=False
+    )

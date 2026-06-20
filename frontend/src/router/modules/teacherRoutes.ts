@@ -1,0 +1,52 @@
+import type { RouteRecordRaw } from "vue-router";
+
+export const teacherRoutes: RouteRecordRaw[] = [
+  {
+    path: "/teacher",
+    component: () => import("@/layouts/AppLayout.vue"),
+    meta: { requiresAuth: true, role: "teacher" },
+    children: [
+      {
+        path: "",
+        redirect: "/teacher/dashboard",
+      },
+      {
+        path: "dashboard",
+        name: "teacher-dashboard",
+        component: () => import("@/views/teacher/Dashboard.vue"),
+        meta: { title: "我的项目" },
+      },
+      {
+        path: "history-projects",
+        name: "teacher-history-projects",
+        component: () => import("@/views/common/HistoryProjects.vue"),
+        meta: { title: "历史项目" },
+      },
+      {
+        path: "change-reviews",
+        name: "teacher-change-reviews",
+        component: () => import("@/views/admin/shared/ChangeReviewTable.vue"),
+        props: {
+          title: "项目异动审核",
+          status: "TEACHER_REVIEWING",
+          teacherScope: true,
+          showFilters: false,
+          showPagination: false,
+          showIndex: false,
+          showLeader: true,
+          showCreatedAt: false,
+          showProjectNoHint: false,
+          showTotal: false,
+        },
+        meta: { title: "项目异动审核" },
+      },
+
+      {
+        path: "projects/:id",
+        name: "teacher-project-detail",
+        component: () => import("@/views/admin/level1/projects/Detail.vue"),
+        meta: { title: "项目详情" },
+      },
+    ],
+  },
+];

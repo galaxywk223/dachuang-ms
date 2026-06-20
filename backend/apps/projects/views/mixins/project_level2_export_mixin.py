@@ -1,0 +1,213 @@
+"""
+Project export actions.
+"""
+
+from io import BytesIO
+import zipfile
+import logging
+
+import openpyxl  # type: ignore[import-untyped]
+from django.http import HttpResponse
+from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
+from ...models import Project
+from apps.system_settings.services import SystemSettingService
+from apps.utils.downloads import attachment_content_disposition
+from apps.utils.export import safe_zip_path
+
+
+def _write_file_field_to_zip(zip_file, file_field, arcname):
+    with file_field.open("rb") as source:
+        zip_file.writestr(arcname, source.read())
+
+
+def _has_school_admin_scope(user):
+    return user.is_school_admin or user.is_level1_admin
+
+
+class ProjectLevel2ExportMixin:
+    logger = logging.getLogger(__name__)
+    @action(methods=["get"], detail=False, url_path="export-excel")
+    def export_excel(self, request):
+        """
+        批量导出项目数据为Excel（仅非校级管理员）
+        """
+        user = request.user
+        if not user.is_admin or _has_school_admin_scope(user):
+            return Response(
+                {"code": 403, "message": "无权限导出数据"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        current_batch = SystemSettingService.get_current_batch()
+        if not current_batch:
+            return Response(
+                {"code": 200, "message": "当前无可用批次"},
+                status=status.HTTP_200_OK,
+            )
+
+        projects = Project.objects.filter(
+            leader__college=user.college, batch=current_batch
+        )
+
+        status_filter = request.query_params.get("status")
+        if status_filter:
+            projects = projects.filter(status=status_filter)
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "项目列表"
+
+        headers = [
+            "项目编号",
+            "项目名称",
+            "项目级别",
+            "负责人",
+            "指导教师",
+            "项目类别",
+            "研究领域",
+            "项目状态",
+            "创建时间",
+            "提交时间",
+        ]
+        ws.append(headers)
+
+        for project in projects:
+            level_label = project.level.label if project.level else ""
+            category_label = project.category.label if project.category else ""
+            advisor_names = ", ".join(
+                [advisor.user.real_name for advisor in project.advisors.all()]
+            )
+            research_field = project.key_domain_code if project.is_key_field else ""
+            ws.append(
+                [
+                    project.project_no,
+                    project.title,
+                    level_label,
+                    project.leader.real_name,
+                    advisor_names,
+                    category_label,
+                    research_field,
+                    project.get_status_display(),
+                    project.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                    (
+                        project.submitted_at.strftime("%Y-%m-%d %H:%M:%S")
+                        if project.submitted_at
+                        else ""
+                    ),
+                ]
+            )
+
+        for column in ws.columns:
+            max_length = 0
+            column_cells = [cell for cell in column]
+            for cell in column_cells:
+                try:
+                    max_length = max(max_length, len(str(cell.value)))
+                except Exception as exc:
+                    self.logger.debug("Failed to size column: %s", exc)
+            adjusted_width = (max_length + 2) * 1.2
+            ws.column_dimensions[column_cells[0].column_letter].width = adjusted_width
+
+        response = HttpResponse(
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        response["Content-Disposition"] = attachment_content_disposition(
+            f"projects_{user.college}.xlsx",
+            fallback="projects.xlsx",
+        )
+        wb.save(response)
+        return response
+
+    @action(methods=["get"], detail=False, url_path="export-attachments")
+    def export_attachments(self, request):
+        """
+        批量下载项目附件为ZIP（仅非校级管理员）
+        """
+        user = request.user
+        if not user.is_admin or _has_school_admin_scope(user):
+            return Response(
+                {"code": 403, "message": "无权限下载附件"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        current_batch = SystemSettingService.get_current_batch()
+        if not current_batch:
+            return Response(
+                {"code": 200, "message": "当前无可用批次"},
+                status=status.HTTP_200_OK,
+            )
+
+        projects = Project.objects.filter(
+            leader__college=user.college, batch=current_batch
+        )
+
+        status_filter = request.query_params.get("status")
+        if status_filter:
+            projects = projects.filter(status=status_filter)
+
+        zip_buffer = BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            for project in projects:
+                if project.proposal_file:
+                    try:
+                        _write_file_field_to_zip(
+                            zip_file,
+                            project.proposal_file,
+                            safe_zip_path(
+                                project.project_no,
+                                f"申报书_{project.proposal_file.name.split('/')[-1]}",
+                            ),
+                        )
+                    except Exception as exc:
+                        self.logger.warning("Skip proposal file for project %s: %s", project.id, exc)
+
+                if project.mid_term_report:
+                    try:
+                        _write_file_field_to_zip(
+                            zip_file,
+                            project.mid_term_report,
+                            safe_zip_path(
+                                project.project_no,
+                                f"中期报告_{project.mid_term_report.name.split('/')[-1]}",
+                            ),
+                        )
+                    except Exception as exc:
+                        self.logger.warning("Skip mid-term report for project %s: %s", project.id, exc)
+
+                if project.final_report:
+                    try:
+                        _write_file_field_to_zip(
+                            zip_file,
+                            project.final_report,
+                            safe_zip_path(
+                                project.project_no,
+                                f"结题报告_{project.final_report.name.split('/')[-1]}",
+                            ),
+                        )
+                    except Exception as exc:
+                        self.logger.warning("Skip final report for project %s: %s", project.id, exc)
+
+                for achievement in project.achievements.all():
+                    if achievement.attachment:
+                        try:
+                            _write_file_field_to_zip(
+                                zip_file,
+                                achievement.attachment,
+                                safe_zip_path(
+                                    project.project_no,
+                                    f"成果_{achievement.title}_{achievement.attachment.name.split('/')[-1]}",
+                                ),
+                            )
+                        except Exception as exc:
+                            self.logger.warning("Skip achievement attachment for project %s: %s", project.id, exc)
+
+        zip_buffer.seek(0)
+        response = HttpResponse(zip_buffer.read(), content_type="application/zip")
+        response["Content-Disposition"] = attachment_content_disposition(
+            f"attachments_{user.college}.zip",
+            fallback="attachments.zip",
+        )
+        return response

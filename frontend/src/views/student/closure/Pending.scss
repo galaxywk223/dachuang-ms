@@ -1,0 +1,57 @@
+@use "@/styles/variables.scss" as *;
+
+.pending-page {
+    padding: 20px;
+}
+
+.main-card {
+    border-radius: 8px;
+
+    :deep(.el-card__header) {
+        padding: 16px 20px;
+        font-weight: 600;
+        border-bottom: 1px solid $color-border-light;
+    }
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.header-title {
+    font-size: 16px;
+    color: $slate-800;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+}
+
+// Ensure table header fits standard
+:deep(.el-table th.el-table__cell) {
+    background-color: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+}
+
+.pagination-container {
+    margin-top: 16px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.ml-2 {
+    margin-left: 8px;
+}
+
+.mr-2 {
+    margin-right: 8px;
+}

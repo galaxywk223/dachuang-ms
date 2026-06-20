@@ -1,0 +1,78 @@
+@use "@/styles/variables.scss" as *;
+
+.teacher-management-page {
+  padding: 20px;
+}
+
+.main-card {
+  border-radius: 8px;
+
+  :deep(.el-card__header) {
+    padding: 16px 20px;
+    font-weight: 600;
+    border-bottom: 1px solid $color-border-light;
+  }
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.header-title {
+  font-size: 16px;
+  color: $slate-800;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.filter-section {
+  padding-bottom: 20px;
+  border-bottom: 1px dashed $color-border-light;
+  margin-bottom: 20px;
+
+  .filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+
+    :deep(.el-form-item) {
+      margin-bottom: 0;
+      margin-right: 0;
+    }
+  }
+}
+
+.table-section {
+  // Custom table styles if needed
+}
+
+.pagination-footer {
+  padding-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.mr-1 {
+  margin-right: 4px;
+}
+
+.ml-3 {
+  margin-left: 12px;
+}
+
+// Dialog styles
+.admin-form {
+  padding: 0 20px;
+}
