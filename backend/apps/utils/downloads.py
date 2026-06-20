@@ -7,12 +7,15 @@ from rest_framework import status
 from rest_framework.response import Response
 
 
-SAFE_DOWNLOAD_FILENAME_RE = re.compile(r'[\x00-\x1f\x7f<>:"\\|?*/]+')
+SAFE_DOWNLOAD_FILENAME_RE = re.compile(r'[\x00-\x1f\x7f<>:"\\|?*/]')
 
 
 def safe_download_filename(value, fallback="download"):
-    filename = PureWindowsPath(PurePosixPath(str(value or "")).name).name
+    raw = str(value or "").replace("\\", "/")
+    filename = PureWindowsPath(PurePosixPath(raw).name).name
+    filename = filename.lstrip(". ")
     filename = SAFE_DOWNLOAD_FILENAME_RE.sub("_", filename)
+    filename = re.sub(r"\.+(?=_)", "", filename)
     filename = filename.strip().strip(". ")
     return filename or fallback
 

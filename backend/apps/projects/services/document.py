@@ -4,7 +4,7 @@ import logging
 from docx import Document  # type: ignore[import-untyped]
 from docx.enum.text import WD_ALIGN_PARAGRAPH  # type: ignore[import-untyped]
 from apps.projects.models import Project
-from apps.utils.export import safe_zip_path
+from apps.utils.downloads import safe_download_filename
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ class DocumentService:
             buffer = io.BytesIO()
             doc.save(buffer)
             buffer.seek(0)
-            return buffer, safe_zip_path(f"{project.title}_申报书.docx")
+            return buffer, safe_download_filename(f"{project.title}_申报书.docx")
 
         except Exception:
             logger.exception("Failed to generate project doc for project %s", project_id)
@@ -88,7 +88,7 @@ class DocumentService:
             buffer = io.BytesIO()
             doc.save(buffer)
             buffer.seek(0)
-            return buffer, safe_zip_path(f"{project.title}_{report_type}.docx")
+            return buffer, safe_download_filename(f"{project.title}_{report_type}.docx")
         except Exception:
             logger.exception(
                 "Failed to generate %s for project %s", report_type, project_id

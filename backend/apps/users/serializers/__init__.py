@@ -264,11 +264,6 @@ class UserCreateSerializer(RoleAssignMixin, serializers.ModelSerializer):
         return self._normalize_scope_fields(attrs, role)
 
     def validate_password(self, value):
-        if not value:
-            return value
-        errors = get_password_validation_errors(value)
-        if errors:
-            raise serializers.ValidationError(errors)
         return value
 
     def create(self, validated_data):

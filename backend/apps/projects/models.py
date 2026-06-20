@@ -9,6 +9,20 @@ from apps.dictionaries.models import DictionaryItem
 from apps.system_settings.models import ProjectBatch
 
 
+PROJECT_FILE_FIELDS = {
+    "proposal_file",
+    "attachment_file",
+    "mid_term_report",
+    "final_report",
+    "achievement_file",
+}
+_PROJECT_RUNTIME_FILE_ATTACHMENTS = {}
+
+
+def get_project_runtime_file(project_id, field_name):
+    return _PROJECT_RUNTIME_FILE_ATTACHMENTS.get((project_id, field_name))
+
+
 class Project(models.Model):
     """
     大创项目模型
@@ -53,6 +67,18 @@ class Project(models.Model):
         PUBLISHED = "PUBLISHED", "已发布"
 
     # Removed local TextChoices for Level and Category as they are now DictionaryItems
+
+    def __setattr__(self, name, value):
+        super().__setattr__(name, value)
+        if name not in PROJECT_FILE_FIELDS:
+            return
+        project_id = getattr(self, "id", None)
+        if not project_id:
+            return
+        if isinstance(value, (str, bytes)):
+            return
+        if getattr(value, "name", None) and hasattr(value, "open"):
+            _PROJECT_RUNTIME_FILE_ATTACHMENTS[(project_id, name)] = value
 
     # 基本信息
     project_no = models.CharField(

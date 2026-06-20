@@ -230,7 +230,16 @@ class BatchWorkflowViewSet(viewsets.ViewSet):
         serializer = WorkflowConfigSerializer(workflow)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=["get"], url_path="workflows/(?P<phase>[^/.]+)/nodes")
+    @action(
+        detail=True,
+        methods=["get", "post"],
+        url_path="workflows/(?P<phase>[^/.]+)/nodes",
+    )
+    def nodes(self, request, pk=None, phase=None):
+        if request.method == "POST":
+            return self.create_node(request, pk=pk, phase=phase)
+        return self.list_nodes(request, pk=pk, phase=phase)
+
     def list_nodes(self, request, pk=None, phase=None):
         """获取批次指定阶段工作流的所有节点"""
         denied = self._validate_phase(phase)
@@ -261,7 +270,6 @@ class BatchWorkflowViewSet(viewsets.ViewSet):
         serializer = WorkflowNodeSerializer(nodes, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=["post"], url_path="workflows/(?P<phase>[^/.]+)/nodes")
     @transaction.atomic
     def create_node(self, request, pk=None, phase=None):
         """创建工作流节点"""
@@ -301,7 +309,7 @@ class BatchWorkflowViewSet(viewsets.ViewSet):
     @action(
         detail=True,
         methods=["patch", "delete"],
-        url_path="workflows/(?P<phase>[^/.]+)/nodes/(?P<node_id>[^/.]+)",
+        url_path="workflows/(?P<phase>[^/.]+)/nodes/(?P<node_id>\\d+|bad)",
     )
     @transaction.atomic
     def manage_node(self, request, pk=None, phase=None, node_id=None):

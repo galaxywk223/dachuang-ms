@@ -57,7 +57,7 @@ class SystemSettingService:
             ProjectBatch.objects.filter(
                 status=ProjectBatch.STATUS_ACTIVE, is_active=True, is_deleted=False
             )
-            .order_by("-year", "-id")
+            .order_by("-is_current", "-year", "-id")
             .first()
         )
 

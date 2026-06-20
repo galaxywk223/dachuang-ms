@@ -121,16 +121,16 @@ def validate_platform_material_file(
 
 class ValidatedImageField(serializers.ImageField):
     def __init__(self, *args, label, max_size_mb=5, **kwargs):
-        self.label = label
+        self.validation_label = label
         self.max_size_mb = max_size_mb
         super().__init__(*args, **kwargs)
 
     def to_internal_value(self, data):
         data = validate_image_file(
             data,
-            label=self.label,
+            label=self.validation_label,
             max_size_mb=self.max_size_mb,
         )
         if data is None:
             return None
-        return super().to_internal_value(data)
+        return serializers.FileField.to_internal_value(self, data)

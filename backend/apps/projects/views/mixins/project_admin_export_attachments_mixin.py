@@ -13,10 +13,32 @@ from rest_framework.response import Response
 from apps.utils.downloads import attachment_content_disposition
 from apps.utils.export import safe_zip_path
 from apps.utils.pagination import positive_int_csv
+from apps.projects.models import get_project_runtime_file
 
 
 class ProjectAdminExportAttachmentsMixin:
     logger = logging.getLogger(__name__)
+
+    def _append_attachment_file(
+        self, files_to_zip, file_field, project, field_name, filename_label
+    ):
+        if not getattr(file_field, "name", ""):
+            runtime_file = get_project_runtime_file(project.id, field_name)
+            if runtime_file is not None:
+                file_field = runtime_file
+        name = str(getattr(file_field, "name", "") or "")
+        if not name:
+            return
+        ext = name.rsplit(".", 1)[-1] if "." in name else "file"
+        files_to_zip.append(
+            (
+                file_field,
+                safe_zip_path(
+                    f"{project.project_no}_{project.title}", f"{filename_label}.{ext}"
+                ),
+            )
+        )
+
     @action(methods=["get"], detail=False, url_path="batch-download")
     def batch_download_attachments(self, request):
         """
@@ -47,84 +69,56 @@ class ProjectAdminExportAttachmentsMixin:
         files_to_zip = []
         for p in queryset:
             # 申请书
-            if p.proposal_file:
-                try:
-                    ext = p.proposal_file.name.split(".")[-1]
-                    files_to_zip.append(
-                        (
-                            p.proposal_file,
-                            safe_zip_path(
-                                f"{p.project_no}_{p.title}", f"申请书.{ext}"
-                            ),
-                        )
-                    )
-                except Exception as exc:
-                    self.logger.warning("Skip proposal file for project %s: %s", p.id, exc)
+            try:
+                self._append_attachment_file(
+                    files_to_zip, p.proposal_file, p, "proposal_file", "申请书"
+                )
+            except Exception as exc:
+                self.logger.warning("Skip proposal file for project %s: %s", p.id, exc)
 
             # 中期报告
-            if p.mid_term_report:
-                try:
-                    name = p.mid_term_report.name
-                    ext = name.rsplit(".", 1)[-1] if "." in name else "file"
-                    files_to_zip.append(
-                        (
-                            p.mid_term_report,
-                            safe_zip_path(
-                                f"{p.project_no}_{p.title}", f"中期报告.{ext}"
-                            ),
-                        )
-                    )
-                except Exception as exc:
-                    self.logger.warning("Skip mid-term report for project %s: %s", p.id, exc)
+            try:
+                self._append_attachment_file(
+                    files_to_zip, p.mid_term_report, p, "mid_term_report", "中期报告"
+                )
+            except Exception as exc:
+                self.logger.warning("Skip mid-term report for project %s: %s", p.id, exc)
 
             # 结题报告
-            if p.final_report:
-                try:
-                    name = p.final_report.name
-                    ext = name.rsplit(".", 1)[-1] if "." in name else "file"
-                    files_to_zip.append(
-                        (
-                            p.final_report,
-                            safe_zip_path(
-                                f"{p.project_no}_{p.title}", f"结题报告.{ext}"
-                            ),
-                        )
-                    )
-                except Exception as exc:
-                    self.logger.warning("Skip final report for project %s: %s", p.id, exc)
+            try:
+                self._append_attachment_file(
+                    files_to_zip, p.final_report, p, "final_report", "结题报告"
+                )
+            except Exception as exc:
+                self.logger.warning("Skip final report for project %s: %s", p.id, exc)
 
             # 成果附件 (zip/rar/pdf/doc/docx)
-            if p.achievement_file:
-                try:
-                    ext = p.achievement_file.name.split(".")[-1]
-                    files_to_zip.append(
-                        (
-                            p.achievement_file,
-                            safe_zip_path(
-                                f"{p.project_no}_{p.title}", f"成果附件.{ext}"
-                            ),
-                        )
-                    )
-                except Exception as exc:
-                    self.logger.warning("Skip achievement file for project %s: %s", p.id, exc)
+            try:
+                self._append_attachment_file(
+                    files_to_zip, p.achievement_file, p, "achievement_file", "成果附件"
+                )
+            except Exception as exc:
+                self.logger.warning("Skip achievement file for project %s: %s", p.id, exc)
 
             # 独立的成果附件 (ProjectAchievement)
             for ach in p.achievements.all():
-                if ach.attachment:
-                    try:
-                        ext = ach.attachment.name.split(".")[-1]
-                        files_to_zip.append(
-                            (
-                                ach.attachment,
-                                safe_zip_path(
-                                    f"{p.project_no}_{p.title}",
-                                    "成果",
-                                    f"{ach.title}.{ext}",
-                                ),
-                            )
+                try:
+                    name = str(getattr(ach.attachment, "name", "") or "")
+                    if not name:
+                        continue
+                    ext = name.rsplit(".", 1)[-1] if "." in name else "file"
+                    files_to_zip.append(
+                        (
+                            ach.attachment,
+                            safe_zip_path(
+                                f"{p.project_no}_{p.title}",
+                                "成果",
+                                f"{ach.title}.{ext}",
+                            ),
                         )
-                    except Exception as exc:
-                        self.logger.warning("Skip achievement attachment for project %s: %s", p.id, exc)
+                    )
+                except Exception as exc:
+                    self.logger.warning("Skip achievement attachment for project %s: %s", p.id, exc)
 
         if not files_to_zip:
             return Response(

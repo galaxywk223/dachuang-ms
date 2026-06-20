@@ -205,6 +205,21 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         data = request.data.copy()
         data.setdefault("role", User.UserRole.STUDENT)
 
+        if data.get("role_fk"):
+            from ...models import Role
+
+            role_obj = Role.objects.filter(pk=data.get("role_fk")).first()
+            if role_obj and role_obj.code == User.UserRole.EXPERT:
+                return self._resp(
+                    request,
+                    {
+                        "code": 400,
+                        "message": "不支持直接创建专家，请从教师中勾选",
+                        "errors": {"role": "不支持直接创建专家，请从教师中勾选"},
+                    },
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                )
+
         if request.user.is_admin and not has_school_admin_scope(request.user):
             return self._resp(
                 request,

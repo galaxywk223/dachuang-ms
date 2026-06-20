@@ -46,6 +46,20 @@ def _visible_to_user(queryset, user):
     return visible
 
 
+def _can_manage_all_platform_content(user):
+    role_code = user.get_role_code()
+    return bool(
+        user.is_superuser
+        or role_code == User.UserRole.LEVEL1_ADMIN
+        or (
+            user.is_admin
+            and user.role_fk
+            and user.role_fk.scope_dimension in (None, "")
+            and role_code != User.UserRole.LEVEL2_ADMIN
+        )
+    )
+
+
 def _ensure_notice_published_at(data, instance=None):
     status_value = data.get("status")
     if not status_value:
@@ -241,7 +255,7 @@ class PlatformNoticeViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = PlatformNotice.objects.all()
-        if self.request.user.is_admin:
+        if _can_manage_all_platform_content(self.request.user):
             return queryset
         return _visible_to_user(
             queryset.filter(status=PlatformNotice.NoticeStatus.PUBLISHED),
@@ -302,7 +316,7 @@ class PlatformMaterialViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = PlatformMaterial.objects.all()
-        if self.request.user.is_admin:
+        if _can_manage_all_platform_content(self.request.user):
             return queryset
         return _visible_to_user(queryset.filter(is_active=True), self.request.user)
 

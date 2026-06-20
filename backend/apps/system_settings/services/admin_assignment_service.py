@@ -40,21 +40,23 @@ class AdminAssignmentService:
 
         # 根据维度类型提取项目的维度值（DictionaryItem.id）
         scope_value_id = AdminAssignmentService.get_scope_value_id(
-            project, scope_dimension
+            project, scope_dimension, required=False
         )
+        scope_value = AdminAssignmentService.get_scope_value(project, scope_dimension)
 
         # 查找管理员用户。优先使用规范化后的 managed_scope_value；为旧账号保留
         # college 字段兜底，避免迁移前数据或脚本创建账号无法处理学院节点。
-        user = (
-            User.objects.filter(
+        user = None
+        if scope_value_id is not None:
+            user = User.objects.filter(
                 role_fk=role, managed_scope_value_id=scope_value_id, is_active=True
             ).first()
-            or User.objects.filter(
+        if user is None:
+            user = User.objects.filter(
                 role_fk=role,
-                college=AdminAssignmentService.get_scope_value(project, scope_dimension),
+                college=scope_value,
                 is_active=True,
             ).first()
-        )
 
         if not user:
             raise ValueError(
@@ -66,7 +68,7 @@ class AdminAssignmentService:
         return user
 
     @staticmethod
-    def get_scope_value_id(project, scope_dimension):
+    def get_scope_value_id(project, scope_dimension, *, required=True):
         """
         根据维度类型提取项目的维度值ID（DictionaryItem.id）
 
@@ -90,6 +92,8 @@ class AdminAssignmentService:
                 dict_type__code="college", value=college_value
             ).first()
             if not item:
+                if not required:
+                    return None
                 raise ValueError(f"未找到学院字典项：{college_value}")
             return item.id
 

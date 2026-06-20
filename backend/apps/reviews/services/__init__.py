@@ -126,7 +126,7 @@ class ReviewService:
                     project=project,
                     phase_instance=phase_instance,
                     workflow_node_id__in=later_node_ids,
-                ).delete()
+                ).exclude(status=Review.ReviewStatus.REJECTED).delete()
 
         Review.objects.filter(
             project=project,

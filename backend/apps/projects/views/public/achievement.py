@@ -37,6 +37,32 @@ class ProjectAchievementViewSet(viewsets.ModelViewSet):
             return True
         return False
 
+    def _find_project_write_target(self, user, project_id):
+        project = Project.objects.filter(id=project_id).only(
+            "id", "leader_id", "batch_id"
+        ).first()
+        if not project:
+            return None, Response(
+                {"code": 404, "message": "项目不存在"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if getattr(user, "is_admin", False) and not _has_school_admin_scope(user):
+            if Project.objects.filter(id=project_id, leader__college=user.college).exists():
+                return project, None
+            return None, Response(
+                {"code": 404, "message": "项目不存在"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        current_batch = SystemSettingService.get_current_batch()
+        if not current_batch or project.batch_id != current_batch.id:
+            return None, Response(
+                {"code": 400, "message": "当前批次不允许操作该项目成果"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not self._can_write(user, project):
+            raise PermissionDenied("只有项目负责人可以操作项目成果")
+        return project, None
+
     def _validate_project_write_target(self, request, message):
         project_id = request.data.get("project")
         if project_id in (None, ""):
@@ -49,26 +75,8 @@ class ProjectAchievementViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        project = (
-            self._visible_project_queryset()
-            .filter(id=project_id)
-            .only("id", "leader_id", "batch_id")
-            .first()
-        )
-        if not project:
-            return Response(
-                {"code": 404, "message": "项目不存在"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        current_batch = SystemSettingService.get_current_batch()
-        if not current_batch or project.batch_id != current_batch.id:
-            return Response(
-                {"code": 400, "message": "当前批次不允许操作该项目成果"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if project and not self._can_write(request.user, project):
-            raise PermissionDenied(message)
-        return None
+        _project, response = self._find_project_write_target(request.user, project_id)
+        return response
 
     def _visible_project_queryset(self):
         from django.db.models import Q
@@ -134,6 +142,31 @@ class ProjectAchievementViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(achievement_type_id=parsed_achievement_type)
 
         return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return Response(
+                {
+                    "code": 200,
+                    "message": "获取成功",
+                    "data": {
+                        "results": serializer.data,
+                        "count": self.paginator.page.paginator.count,
+                    },
+                }
+            )
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(
+            {
+                "code": 200,
+                "message": "获取成功",
+                "data": {"results": serializer.data, "count": len(serializer.data)},
+            }
+        )
 
     @action(detail=True, methods=["get"])
     def download(self, request, pk=None):
